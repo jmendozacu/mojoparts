@@ -1,0 +1,20 @@
+# pack-refs with: peeled fully-peeled 
+030b0735ab6f412aa6ff288f25e7ad85eaa636bf refs/remotes/origin/MOJO-24
+3b988e2562c3dad33f141ffdbdd00c2242b96804 refs/remotes/origin/MOJO-25
+eda0d103efdae52268b6d2a35e4ce8f5c9379e2a refs/remotes/origin/MOJO-30
+56b74a089d5c1c9eddef5959ea8d175e21dc904d refs/remotes/origin/MOJO-34
+23f82688e11a0cf4ef5f38cf88f358b9d3a27449 refs/remotes/origin/MOJO-37
+98a9132afb3ceda1e32c6ff8603ce51706f9fff4 refs/remotes/origin/MOJO-38
+e9717cfc492018f8ea674d502569544303c4c3ae refs/remotes/origin/MOJO-39
+c869c34065e1306124a6928da12f09a04500974f refs/remotes/origin/MOJO-41
+a95b6a88b814810dff93b074657226bfccba33f5 refs/remotes/origin/MOJO-42
+870c78095aa2d0da0abcc314c9a42791ba04079b refs/remotes/origin/MOJO-43
+e9717cfc492018f8ea674d502569544303c4c3ae refs/remotes/origin/MOJO-45
+3379718efb87a8d24570d7ce33c77012ed4cbb82 refs/remotes/origin/MOJO-47
+57cd7aff6b8e6dd346b40318c9844def609f64c9 refs/remotes/origin/MOJO-57
+bca4910d49095a375dd9500548712c624fe96fa4 refs/remotes/origin/MOJO-58
+b239e2abc1c77b706e2e477e16a3b49e5e225cb8 refs/remotes/origin/MOJO-65
+c963a8ee70890425bef1fd6887a1fa966a803dd7 refs/remotes/origin/ebaycopy-updates
+b028e1ce73704980a838b070a8215fff47edb51c refs/remotes/origin/master
+5760e68fd84be22d16a02ce5ff8b51f28bf29766 refs/remotes/origin/release-24-25
+a00cbbe78ba49431f88aab07d0ffec5227e6df2a refs/remotes/origin/staging

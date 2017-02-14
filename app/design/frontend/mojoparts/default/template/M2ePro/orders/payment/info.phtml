@@ -1,0 +1,56 @@
+<table>
+    <tr>
+        <td style="width: 200px;"><?php echo $this->getMethod()->getTitle(); ?></td>
+        <?php if ($this->getInfo()->getAdditionalData()) { ?>
+            <?php if ($this->getEbayPaymentMethod()) { ?>
+                <td><strong><?php echo $this->escapeHtml($this->getEbayPaymentMethod()); ?></strong></td>
+            <?php } ?>
+        <?php } ?>
+    </tr>
+    <?php if ($this->getInfo()->getAdditionalData()) { ?>
+        <?php if ($this->getEbayAccount()) { ?>
+            <tr>
+                <td style="width: 200px;">eBay Account</td>
+                <td><strong><?php echo $this->escapeHtml($this->getEbayAccount()); ?></strong></td>
+            </tr>
+        <?php } ?>
+        <?php if ($this->getEbayOrderId()) { ?>
+            <tr>
+                <td style="width: 200px;">eBay Order ID</td>
+                <td><strong><?php echo $this->escapeHtml($this->getEbayOrderId()); ?></strong></td>
+            </tr>
+        <?php } ?>
+        <?php if (count($this->getExternalTransactions())) { ?>
+            <tr>
+                <td class="grid" colspan="2">
+                    <br/>
+                    <h4><?php echo Mage::helper('M2ePro')->__('External Transactions'); ?></h4>
+                    <table class="data" cellpadding="0" cellspacing="0">
+                        <thead>
+                            <tr class="headings">
+                                <th><?php echo Mage::helper('M2ePro')->__('Transaction #'); ?></th>
+                                <th><?php echo Mage::helper('M2ePro')->__('Fee'); ?></th>
+                                <th><?php echo Mage::helper('M2ePro')->__('Amount'); ?></th>
+                                <th><?php echo Mage::helper('M2ePro')->__('Date'); ?></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                                $externalTransactions = $this->getExternalTransactions();
+                                $order = $this->getOrder();
+                            ?>
+                            <?php foreach ($externalTransactions as $key => $externalTransaction) { ?>
+                                <tr class="<?php echo $key%2?'odd':'even'?>">
+                                    <td><?php echo $externalTransaction['ebay_id']; ?></td>
+                                    <td><?php echo !is_null($order) ? $order->formatPrice($externalTransaction['fee']) : $externalTransaction['fee']; ?></td>
+                                    <td><?php echo !is_null($order) ? $order->formatPrice($externalTransaction['sum']) : $externalTransaction['sum']; ?></td>
+                                    <td><?php echo Mage::helper('core')->formatDate($externalTransaction['time'], 'medium', true); ?></td>
+                                </tr>
+                            <?php } ?>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+        <?php } ?>
+    <?php } ?>
+</table>

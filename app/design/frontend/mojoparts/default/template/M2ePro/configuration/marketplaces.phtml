@@ -1,0 +1,126 @@
+<div id="block_notice_marketplaces_choose" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Marketplaces'); ?>">
+    <?php echo Mage::helper('M2ePro')->__('This section allows you to set up eBay Marketplaces you will work with.<br/>
+    Enable certain marketplaces and press the <u>Save And Update</u> button in the top right corner, all necessary marketplace data will be downloaded and synchronized with eBay settings.<br/><br/>
+	<b>Note:</b> Installation and update processes might be time-consuming, depending on the number of enabled marketplaces and your server environment. <br/>
+	<br/>It is recommended to update marketplaces when eBay announces any changes to take place. <br/>'); ?>
+</div>
+
+<script type="text/javascript">
+
+    if (typeof M2ePro == 'undefined') {
+		M2ePro = {};
+		M2ePro.url = {};
+		M2ePro.formData = {};
+		M2ePro.customData = {};
+		M2ePro.text = {};
+	}
+
+	M2ePro.url.formSubmit = '<?php echo $this->getUrl('*/*/save'); ?>';
+    M2ePro.url.logViewUrl = '<?php echo $this->getUrl('*/adminhtml_logs/synchronizations',array('back'=>Mage::helper('M2ePro')->makeBackUrlParam('*/adminhtml_synchronization/index'))); ?>';
+    
+    M2ePro.url.runSynchNow = '<?php echo $this->getUrl('*/adminhtml_marketplaces/runSynchNow'); ?>';
+    
+    M2ePro.url.runAllEnabledNow = '<?php echo $this->getUrl('*/adminhtml_synchronization/runAllEnabledNow'); ?>';
+    M2ePro.url.runNowTemplates = '<?php echo $this->getUrl('*/adminhtml_synchronization/runNowTemplates'); ?>';
+    M2ePro.url.runNowOrders = '<?php echo $this->getUrl('*/adminhtml_synchronization/runNowOrders'); ?>';
+    M2ePro.url.runNowFeedbacks = '<?php echo $this->getUrl('*/adminhtml_synchronization/runNowFeedbacks'); ?>';
+    M2ePro.url.runNowEbayListings = '<?php echo $this->getUrl('*/adminhtml_synchronization/runNowEbayListings'); ?>';
+    M2ePro.url.runNowMessages = '<?php echo $this->getUrl('*/adminhtml_synchronization/runNowMessages'); ?>';
+
+    M2ePro.url.synchCheckState = '<?php echo $this->getUrl('*/adminhtml_general/synchCheckState'); ?>';
+    M2ePro.url.synchGetLastResult = '<?php echo $this->getUrl('*/adminhtml_general/synchGetLastResult'); ?>';
+    M2ePro.url.synchGetExecutingInfo = '<?php echo $this->getUrl('*/adminhtml_general/synchGetExecutingInfo'); ?>';
+
+    M2ePro.text.marketplaces_settings_save_success_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Marketplaces settings have been saved.')); ?>';
+    M2ePro.text.marketplaces_settings_save_error_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('You must select at least one marketplace you will work with.')); ?>';
+
+    M2ePro.text.synch_already_running_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Another Synchronization Is Already Running')); ?>';
+    M2ePro.text.synch_getting_information_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Getting information. Please wait ...')); ?>';
+    M2ePro.text.synch_prepare_to_start_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Preparing to start. Please wait ...')); ?>';
+
+    M2ePro.text.synch_end_success_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Synchronization has successfully ended.')); ?>';
+    M2ePro.text.synch_end_warning_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Synchronization ended with warnings. <a href="%url%">View log</a> for details.')); ?>';
+    M2ePro.text.synch_end_error_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Synchronization ended with errors. <a href="%url%">View log</a> for details.')); ?>';
+
+    Event.observe(window, 'load', function() {
+        setTimeout(function() {
+            MarketplacesProgressHandlersObj = new SynchProgressHandlers(MarketplacesProgressBarObj, MarketplacesWrapperObj );
+            MarketplacesHandlersObj = new MarketplacesHandlers(MarketplacesProgressHandlersObj);
+            MarketplacesProgressHandlersObj.initPageCheckState();
+
+            editForm = new varienForm('edit_form', '<?php echo $this->getValidationUrl(); ?>');
+        }, 350);
+    });
+
+</script>
+
+<form id="<?php echo $this->getForm()->getId(); ?>" action="<?php echo $this->getForm()->getData('action'); ?>" method="post" enctype="multipart/form-data">
+
+    <input name="form_key" value="<?php echo $this->getFormKey(); ?>" type="hidden" />
+        
+    <?php foreach($this->groups as $group): ?>
+
+        <div class="entry-edit" id="magento_block_marketplaces_group_<?php echo $group['id']; ?>">
+
+            <div class="entry-edit-head">
+                <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__($group['title']); ?></h4>
+            </div>
+
+            <div class="fieldset">
+                <div class="hor-scroll">
+
+                    <table class="form-list" cellspacing="0" cellpadding="0">
+
+                        <?php foreach($group['marketplaces'] as $marketplace): ?>
+
+                            <tr>
+                                <td class="label">
+                                    <label for="status_<?php echo $marketplace['instance']->getId(); ?>">
+                                        <?php if ($marketplace['params']['locked']) { ?>
+                                            <span style="color:gray;">
+                                        <?php } ?>
+                                            <?php echo Mage::helper('M2ePro')->__($marketplace['instance']->getData('title')); ?>:
+                                        <?php if ($marketplace['params']['locked']) { ?>
+                                            </span>
+                                        <?php } ?>
+                                    </label>
+                                </td>
+                                <td class="value">
+                                    <?php if ($marketplace['params']['locked']) { ?>
+                                        <select disabled="disabled" id="status_<?php echo $marketplace['instance']->getId(); ?>" name="status_<?php echo $marketplace['instance']->getId(); ?>" marketplace_id="<?php echo $marketplace['instance']->getId(); ?>" class="locked_selected marketplace_status_select">
+                                            <option value="<?php echo Ess_M2ePro_Model_Marketplaces::STATUS_ENABLE; ?>" selected="selected"><?php echo Mage::helper('M2ePro')->__('Enabled'); echo ' - '.Mage::helper('M2ePro')->__('Used in General Template(s)'); ?></option>
+                                        </select>
+                                    <?php } else { ?>
+                                        <select id="status_<?php echo $marketplace['instance']->getId(); ?>" name="status_<?php echo $marketplace['instance']->getId(); ?>" marketplace_id="<?php echo $marketplace['instance']->getId(); ?>" onchange="MarketplacesHandlersObj.changeStatus('<?php echo $marketplace['instance']->getId(); ?>');" <?php if (Ess_M2ePro_Model_Marketplaces::STATUS_ENABLE == $marketplace['instance']->getStatus()) echo ' class="hightlight_selected marketplace_status_select"'; else echo ' class="lacklustre_selected marketplace_status_select"'; ?>>
+                                                <option value="<?php echo Ess_M2ePro_Model_Marketplaces::STATUS_DISABLE; ?>"<?php if (Ess_M2ePro_Model_Marketplaces::STATUS_DISABLE == $marketplace['instance']->getStatus()) echo ' selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('Disabled'); ?></option>
+                                                <option value="<?php echo Ess_M2ePro_Model_Marketplaces::STATUS_ENABLE; ?>"<?php if (Ess_M2ePro_Model_Marketplaces::STATUS_ENABLE == $marketplace['instance']->getStatus()) echo ' selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('Enabled'); ?></option>
+                                        </select>
+                                    <?php } ?>
+                                    <p class="note">
+                                        <span><?php echo Mage::helper('M2ePro')->__($marketplace['instance']->getData('url')); ?></span>
+                                    </p>
+                                </td>
+                                <td id="synch_info_wait_<?php echo $marketplace['instance']->getId(); ?>" class="value" style="display: none; color: gray;">
+                                    &nbsp; <?php echo Mage::helper('M2ePro')->__('Wait'); ?>
+                                </td>
+                                <td id="synch_info_process_<?php echo $marketplace['instance']->getId(); ?>" class="value" style="display: none; color: blue;">
+                                    &nbsp; <?php echo Mage::helper('M2ePro')->__('Processing'); ?>
+                                </td>
+                                <td id="synch_info_complete_<?php echo $marketplace['instance']->getId(); ?>" class="value" style="display: none; color: green;">
+                                    &nbsp; <?php echo Mage::helper('M2ePro')->__('Completed'); ?>
+                                </td>
+                                <td id="marketplace_title_<?php echo $marketplace['instance']->getId(); ?>" class="value" style="display: none;"><?php echo Mage::helper('M2ePro')->__($marketplace['instance']->getTitle()); ?></td>
+                            </tr>
+
+                        <?php endforeach; ?>
+
+                    </table>
+
+               </div>
+            </div>
+
+        </div>
+
+    <?php endforeach; ?>
+
+</form>

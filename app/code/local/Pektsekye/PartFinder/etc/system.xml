@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+
+<config>
+
+    <tabs>
+        <pfilter translate="label" module="partfinder">
+            <label>Part Finder</label>
+            <sort_order>300</sort_order>
+        </pfilter>
+    </tabs>
+    
+    <sections>
+         <partfinder translate="label" module="partfinder">
+            <label>Settings</label>
+            <tab>pfilter</tab>
+            <sort_order>10</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+            <groups>
+                <frontendsettings translate="label">
+                    <label>Front-end Settings</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>1</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <categorysearch translate="label">
+                            <label>Add category drop-down</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </categorysearch> 
+                        <wordsearch translate="label">
+                            <label>Add search field</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                        </wordsearch>                                          
+                    </fields>
+                </frontendsettings>
+                <backendsettings translate="label">
+                    <label>Back-end Settings</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>2</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>0</show_in_website>
+                    <show_in_store>0</show_in_store>
+                    <fields>
+                        <matchyearrange translate="label comment">
+                            <label>Match year range</label>
+                            <comment>Year ranges YY-YY or YYYY-YYYY in product Partfinder Restriction attribute text.</comment>                          
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>                         
+                        </matchyearrange>                                          
+                    </fields>
+                </backendsettings>                
+            </groups>
+        </partfinder>       
+    </sections>
+</config>

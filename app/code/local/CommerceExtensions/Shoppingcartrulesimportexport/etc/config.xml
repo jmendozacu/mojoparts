@@ -1,0 +1,34 @@
+<config>
+    <modules>
+        <CommerceExtensions_Shoppingcartrulesimportexport>
+            <version>0.1.0</version>
+        </CommerceExtensions_Shoppingcartrulesimportexport>
+    </modules>   
+    <global>
+        <models>
+            <commerceextensions_shoppingcartrulesimportexport>
+                <class>CommerceExtensions_Shoppingcartrulesimportexport_Model</class>
+            </commerceextensions_shoppingcartrulesimportexport>
+        </models>
+        <resources><!--
+            <shoppingcartrulesimportexport_setup>
+                <setup>
+                    <module>CommerceExtensions_Customerreviewsimportexport</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </shoppingcartrulesimportexport_setup> -->
+            <shoppingcartrulesimportexport_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </shoppingcartrulesimportexport_write>
+            <shoppingcartrulesimportexport_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </shoppingcartrulesimportexport_read>
+        </resources>
+    </global>
+</config>

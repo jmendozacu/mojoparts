@@ -1,0 +1,50 @@
+<?php $amazoncore = Mage::getModel('amazonimport/amazonimport'); ?>
+
+<?php if(Mage::getStoreConfig('amazonint/general/hide_help_tips') == 0){ ?>
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields4">
+	<b>Help Tip:</b> This section allows you to tell Amazon extra information which helps it to classify your products and expose them to customers searching the catalogue better.
+	To begin, please choose the product type in the list below which most closely matches your product. 
+	</div>
+</div>
+<?php } ?>
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Item Type</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields4">
+    <div class="hor-scroll">
+    	<div id="outputitvalue">
+             <center><b>Current Setting:</b> <?php echo $this->getCategoryItemType($this->getRequest()->getParam('id'), $amazoncore->loadSessionValue('camiloo_amazon_categorise_marketplace')); ?></center>
+			 </div>
+            </div>
+        </div>
+</div>
+<?php if(Mage::getStoreConfig('amazonint/general/hide_help_tips') == 0){ ?>
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields4">
+	<b>Help Tip:</b> Once you have selected an option above, the below section will update to show you the possible Variation Themes products within this category may use. Think of a Variation Theme as a way of telling Amazon what products within this category could <i>potentially</i> vary by.<br /><br />
+	
+	The Amazon search engine is a very advanced system, and setting the Variation Theme helps to train it to suggest your product to potential customers. For example, if you sell a product simply titled '2 pack of Socks' but within a product attribute you tell Amazon that the socks are Red, it is the Variation Theme which connects these two pieces of Information and tells Amazon that the socks are Red. Setting the Variation Theme to 'Color' then, for example, allows Amazon to suggest your socks if a customer searches for 'Red Socks' over another retailers product named '2 pack of Socks' which happen to be blue. You may think of this as a search term tie-breaker question, perhaps.<br /><br />
+	
+	If you sell configurable or grouped products on Magento, set the below option to the type of product attributes your products are configurable by and the configurable product will appear on Amazon in a similar way - one product page for your product line with multiple options. So for example if you sell Jeans, these may come in different Sizes and Colours, and therefore you may choose Size Color from below.
+	
+	</div>
+</div>
+<?php } ?>
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Variation Theme</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields4">
+    <div class="hor-scroll">
+    	<div id="outputvtvalue">
+          <center><b>Current Setting:</b> <?php echo $this->getCategoryVariationTheme($this->getRequest()->getParam('id'),$amazoncore->loadSessionValue('camiloo_amazon_categorise_marketplace')); ?></center></div>
+            </div>
+        </div>
+        
+</div>

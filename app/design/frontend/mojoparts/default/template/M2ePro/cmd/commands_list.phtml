@@ -1,0 +1,107 @@
+<html>
+    <head>
+        <title>M2ePro / Commands</title>
+        <script type="text/javascript">
+            function showContent(number)
+            {
+                document.getElementById('content_tr_'+number).style.display='';
+                document.getElementById('content_show_'+number).style.display='none';
+                document.getElementById('content_hide_'+number).style.display='';
+            }
+            function hideContent(number)
+            {
+                document.getElementById('content_tr_'+number).style.display='none';
+                document.getElementById('content_show_'+number).style.display='';
+                document.getElementById('content_hide_'+number).style.display='none';
+            }
+        </script>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <td>
+                    <b>#</b>
+                </td>
+                <td>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                </td>
+                <td>
+                    <b>Command</b>
+                </td>
+                <td>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                </td>
+                <td>
+                    <b>Description</b>
+                </td>
+                <td>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                </td>
+                <td>
+                    <b>Link</b>
+                </td>
+                <td>
+                    &nbsp;&nbsp;|&nbsp;&nbsp;
+                </td>
+                <td>
+                    <b>Code</b>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="9">
+                    <hr/>
+                </td>
+            </tr>
+
+            <?php foreach($this->commands as $command) { ?>
+
+                <tr>
+                    <td>
+                        <b><?php echo $command['number']; ?></b>
+                    </td>
+                    <td>
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                    </td>
+                    <td>
+                        <a href="<?php echo $command['url']; ?>" <?php if ($command['confirm'] != ''): ?>onclick="return confirm('<?php echo $command['confirm']; ?>');"<?php endif; ?>><?php echo $command['title']; ?></a>
+                    </td>
+                    <td>
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                    </td>
+                    <td>
+                        <?php echo $command['description']; ?>
+                    </td>
+                    <td>
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                    </td>
+                    <td>
+                        <small style="color:#aaaaa9;"><?php echo $command['url']; ?></small>
+                    </td>
+                    <td>
+                        &nbsp;&nbsp;|&nbsp;&nbsp;
+                    </td>
+                    <td>
+                        <span id="content_show_<?php echo $command['number']; ?>"><a href="javascript:void(0);" onclick="showContent('<?php echo $command['number']; ?>');">show</a><span>&nbsp;<small>&darr;</small></span></span>
+                        <span id="content_hide_<?php echo $command['number']; ?>" style="display: none;"><a href="javascript:void(0);" onclick="hideContent('<?php echo $command['number']; ?>');">hide</a><span>&nbsp;<small>&uarr;</small></span></span>
+                    </td>
+                </tr>
+            
+                <tr id="content_tr_<?php echo $command['number']; ?>" style="display: none;">
+                    <td colspan="9" style="padding: 10px; border: 1px solid gray;">
+                        <pre><?php echo Mage::helper('M2ePro')->escapeHtml($command['content']); ?></pre>
+                    </td>
+                </tr>
+
+                <?php if ($command['new_line']): ?>
+                    <tr>
+                        <td colspan="9">
+                            <hr />
+                        </td>
+                    </tr>
+                <?php endif; ?>
+
+            <?php } ?>
+
+        </table>
+    </body>
+</html>

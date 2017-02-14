@@ -1,0 +1,74 @@
+<?php $amazoncore = Mage::getModel('amazonimport/amazonimport'); ?>
+
+<div class="entry-edit" id="topthanksarea" style="display:block;">
+        <fieldset id="my-fieldset">		
+		<?php if(isset($_REQUEST['activatetrial'])){ ?>
+		<p class="grand-total">Thank you</p>
+		Your risk free trial license of the Camiloo Amazon Integration for Magento has now been activated. You now have 14 days to ensure that our software meets your needs.<br /><br />
+		
+		Should you have any problems while using this software, please do not hesistate to contact us for support. We are open Monday - Friday from 10am - 5pm UK Time.<br /><br /> Please visit our website at <a href="http://www.camiloo.co.uk/" target="_blank">www.camiloo.co.uk</a> for telephone contact details, or you can email support@camiloo.co.uk 24 hours a day, 7 days a week and a member of our team will respond to your query as soon as possible.<br /><br />
+		
+		Alternatively you may access our Support Centre using the link we have added to the 'Amazon' menu for you.<br /><br />
+		
+		Wishing you the best experience selling on Amazon,<br />
+		
+		Camiloo Support.
+		</fieldset>
+</div>
+		<?php }else{ ?>
+		<p class="grand-total">Updating Category Cache, please wait...</p>
+		The software will now connect to a Content Delivery Network and will download data files containing category listings. It will then also download the inventory loading templates you may have used previously and will dynamically process these into the database, meaning that help tips from these files produced by Amazon may be shown to you within this integration.<br /><br />
+		
+		As this process may take a few moments minutes to complete, we recommend using this time to read our welcome guide which includes video tutorials if you are new to this software. The guide can be accessed from the 'Amazon' menu at the top of the screen. This will open in a new browser window, meaning the installation may continue in the background.<br /><br />
+		</fieldset>
+						
+</div>
+
+<div class="entry-edit" id="downloading"  style="display:none;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Downloading Data into Magento - Please wait</h4>
+<div class="form-buttons"></div>
+</div>
+       <fieldset id="my-fieldset">		
+	   <center>
+					<img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" alt="Loading..." class="v-middle">
+					<img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" alt="Loading..." class="v-middle">
+					<img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" alt="Loading..." class="v-middle">
+					<img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" alt="Loading..." class="v-middle">
+					<img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" alt="Loading..." class="v-middle">
+					<br />
+				Please wait - this may take a few moments.
+				</center>				
+	    </fieldset>						
+</div>
+
+<div class="entry-edit" id="thanksarea" style="display:none;">
+      
+		
+		<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Update Complete</h4>
+<div class="form-buttons"></div>
+</div>  <fieldset id="my-fieldset">		
+		Thank you. We have successfully updated downloaded all necessary information from Amazon. It is now safe to navigate away from this page.
+		</fieldset>
+						
+</div>
+<form action="<?php echo $this->getUrl('amazonimport/licensing/updateamzcaches'); ?>" method="POST" id="runupdatecaches" name="runupdatecaches" target="runupdatecachesif">		
+	<input type="hidden" name="form_key" id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+</form>
+
+<iframe src="about:blank" id="runupdatecachesif" name="runupdatecachesif" frameborder="0"></iframe>
+<script type="text/javascript">
+		
+		function updateCaches() {
+			Effect.Appear('downloading');
+			$('runupdatecaches').submit();
+		}
+		function doneshowthanks() {
+			Effect.Fade('downloading');
+			Effect.Appear('thanksarea');
+		}
+		
+		updateCaches();
+</script>
+<?php } ?>

@@ -1,0 +1,386 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magentocommerce.com for more information.
+ *
+ * @category    design
+ * @package     default_default
+ * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+
+<?php
+//$_htmlId = $this->getHtmlId() ? $this->getHtmlId() : '_' . uniqid();
+$_htmlId = '_' . $this->MAPPING_ID;
+
+$_colspan = 2;
+if (!$this->_addAfter) {
+    $_colspan -= 1;
+}
+$_colspan = $_colspan > 1 ? 'colspan="' . $_colspan . '"' : '';
+?>
+
+<div class="grid" id="grid<?php echo $_htmlId ?>" style="position:relative;">
+<?php if ($this->getArrayRows()):?>
+    <div id="<?php echo $this->MAPPING_ID?>DivOverlay" style="position: absolute; background-color:#000; -moz-opacity:0.85;opacity:0.85;filter:alpha(opacity=85);">
+        <div style="text-align:center; margin-top: 20px; padding: 20px;">
+            <span style="font-weight:bold;color: #fff; font-size: 120%;">Please wait until the page has finished loading. If the mapping table does not show up after 5-10 seconds or after the site has completely loaded, please refresh this site in your browser.<br/><br/>If this problem persists, please contact us at info@xtento.com.</span>
+        </div>
+    </div>
+<?php endif; ?>
+    <table cellpadding="0" cellspacing="0" class="border">
+        <tbody>
+
+            <tr class="headings" id="headings<?php echo $_htmlId ?>">
+<?php foreach ($this->_columns as $columnName => $column):?>
+                <th><?php echo $column['label'] ?></th>
+<?php endforeach;?>
+                <th><?php echo $this->__('Additional Configuration')?></th>
+                <th <?php echo $_colspan?>></th>
+            </tr>
+
+            <tr id="addRow<?php echo $_htmlId ?>">
+                <td colspan="<?php echo count($this->_columns) +1 ?>"></td>
+                <td <?php echo $_colspan?>>
+                    <button style="" onclick="" class="scalable add" type="button" id="addToEndBtn<?php echo $_htmlId ?>">
+                        <span><?php echo $this->_addButtonLabel ?></span>
+                    </button><br/>
+                    <button style="margin-top: 3px;" onclick="" class="scalable add" type="button" id="addAllBtn<?php echo $_htmlId ?>">
+                        <span><?php echo $this->_addAllButtonLabel ?></span>
+                    </button>
+                </td>
+            </tr>
+
+        </tbody>
+    </table>
+    <input type="hidden" name="<?php echo $this->getElement()->getName() ?>[__empty]" value="" />
+    <input type="hidden" name="<?php echo $this->getElement()->getName() ?>[__type]" value="<?php echo $this->MAPPING_ID?>" />
+</div>
+<div id="empty<?php echo $_htmlId ?>">
+    <button style="" onclick="" class="scalable add" type="button" id="emptyAddBtn<?php echo $_htmlId ?>">
+        <span><?php echo $this->_addButtonLabel ?></span>
+    </button>&nbsp;&nbsp;<button style="" onclick="" class="scalable add" type="button" id="emptyAddAllBtn<?php echo $_htmlId ?>">
+        <span><?php echo $this->_addAllButtonLabel ?></span>
+    </button>
+</div>
+
+<?php if ($this->getArrayRows()):?>
+<script>
+    Event.observe(window, 'load', function() {
+        if (Position.cumulativeOffset($('grid<?php echo $_htmlId?>'))[1] !== 0) {
+            $('<?php echo $this->MAPPING_ID?>DivOverlay').setStyle({
+                position: 'absolute',
+                width: Element.getDimensions($('grid<?php echo $_htmlId?>')).width+'px',
+                height: Element.getDimensions($('grid<?php echo $_htmlId?>')).height+'px'
+            });
+        }
+    });
+</script>
+<?php endif; ?>
+
+<script type="text/javascript">
+//<![CDATA[
+// create row creator
+var arrayRow<?php echo $_htmlId ?> = {
+    // define row prototypeJS template
+    template : new Template(
+        '<tr id="#{_id}">'
+<?php foreach ($this->_columns as $columnName => $column):?>
+            +'<td>'
+                +'<?php echo $this->_renderCellTemplate($columnName)?>'
+            +'<\/td>'
+<?php endforeach;?>
+            +'<td><button onclick="" class="scalable" type="button" id="configureBtn#{_id}"><span><?php echo Mage::helper('xtento_trackingimport')->__('Configure') ?><\/span>&nbsp;<!--<img id="configurationSetupImg#{_id}" src="<?php echo $this->getSkinUrl('images/btn_show-hide_icon.gif')?>" style="vertical-align: bottom; float: right; margin-top:1px;"\/>--><\/button><\/td>'
+<?php if ($this->_addAfter):?>
+            +'<td><button onclick="" class="scalable add" type="button" id="addAfterBtn#{_id}"><span><?php echo Mage::helper('adminhtml')->__('Add after') ?><\/span><\/button><\/td>'
+<?php endif;?>
+            +'<td><button onclick="arrayRow<?php echo $_htmlId ?>.del(\'#{_id}\')" class="scalable delete" type="button"><span><?php echo Mage::helper('adminhtml')->__('Delete') ?><\/span><\/button><\/td>'
+        +'<\/tr>'
+    ),
+
+    rowsCount : 0,
+
+    add : function(templateData, insertAfterId)
+    {
+        // generate default template data
+        if ('' == templateData) {
+            var d = new Date();
+            var templateData = {
+<?php foreach ($this->_columns as $columnName => $column):?>
+                <?php echo $columnName ?> : '',
+<?php endforeach;?>
+                _id : '_' + d.getTime() + '_' + d.getMilliseconds()
+            };
+        }
+
+        // insert before last row
+        if ('' == insertAfterId) {
+            Element.insert($('addRow<?php echo $_htmlId ?>'), {before: this.template.evaluate(templateData)});
+        }
+        // insert after specified row
+        else {
+            Element.insert($(insertAfterId), {after: this.template.evaluate(templateData)});
+        }
+
+<?php if ($this->_addAfter):?>
+        Event.observe('addAfterBtn' + templateData._id, 'click', this.add.bind(this, '', templateData._id));
+<?php endif;?>
+        Event.observe('configureBtn' + templateData._id, 'click', this.showConfigurationPopup.bind(this, templateData._id));
+
+        this.rowsCount += 1;
+    },
+
+    del : function(rowId)
+    {
+        $(rowId).remove();
+        if (<?php echo $this->MAPPING_ID?>_mapping_values[rowId]) {
+            <?php echo $this->MAPPING_ID?>_mapping_values[rowId] = '';
+        }
+        this.rowsCount -= 1;
+        if (0 == this.rowsCount) {
+            this.showButtonOnly();
+        }
+    },
+
+    showConfigurationPopup : function(rowId)
+    {
+        //var url = '<?php echo Mage::helper('adminhtml')->getUrl('*/trackingimport_profile/editFieldConfiguration') ?>?profile_id=<?php echo Mage::app()->getRequest()->getParam('id') ?>&row_id=' + encodeURIComponent(rowId);
+        if ($('browser_window') && typeof(Windows) != 'undefined') {
+            Windows.focus('browser_window');
+            return;
+        }
+        fieldName = $('select_'+rowId).options[$('select_'+rowId).selectedIndex].innerHTML.replace(/ \*/, '');
+        var dialogWindow = Dialog.info(null, {
+            closable:true,
+            resizable:false,
+            draggable:true,
+            className:'magento',
+            windowClassName:'popup-window',
+            title:'<?php echo Mage::helper('xtento_trackingimport')->__('Advanced Configuration')?>: '+ fieldName,
+            //top:100,
+            width:700,
+            height:420,
+            zIndex:10000,
+            recenterAuto:false,
+            hideEffect:Element.hide,
+            showEffect:Element.show,
+            id:'browser_window',
+            //url:url,
+            onClose:function (param, el) {
+
+            },
+            onShow: function (param, el) {
+                //if ($('overlay_modal')) $('overlay_modal').observe('click', function(){ Windows.closeAll(); }); // window.parent.closeWindows();
+            }
+        });
+        var xmlContents = '<\?xml version="1.0" encoding="UTF-8"?>\n<configuration>\n</configuration>';
+        if ($('<?php echo $this->getElement()->getName()?>['+rowId+'][xml]') && $('<?php echo $this->getElement()->getName()?>['+rowId+'][xml]').value != '') {
+            xmlContents = $('<?php echo $this->getElement()->getName()?>['+rowId+'][xml]').value;
+        }
+        dialogWindow.getContent().update('<div style="padding: 10px;">' +
+            //'<h3>Field Configuration: '+fieldName+'</h3>' +
+            '<strong><?php echo Mage::helper('xtento_trackingimport')->__('Configuration XML')?></strong> - <?php echo Mage::helper('xtento_trackingimport')->__('Attention: This needs to be valid XML.')?>' +
+            '<a id="page-help-link" href="http://support.xtento.com/wiki/Magento_Extensions:Tracking_Number_Import_Module#.22Additional_Configuration.22" target="_blank" style="color: #EA7601; text-decoration: underline; line-height: 16px; float: right;"><?php echo Mage::helper('xtento_trackingimport')->__('Show help') ?></a>' +
+            '<textarea style="width:100%; height:345px; display:none;" id="'+rowId+'_xml">'+xmlContents+'</textarea><br/>' +
+            '<div id="'+rowId+'_editor_div" style="position:relative; width:100%; height:350px; margin-bottom: 5px;">' +
+            '</div>' +
+            '<button type="button" class="scalable save" onclick="xtSaveHiddenData(\'<?php echo $this->getElement()->getName()?>\', \''+rowId+'\', \'xml\', $(\''+rowId+'_xml\').value, false); return false;"><span><?php echo Mage::helper('xtento_trackingimport')->__('Save Configuration')?></span></button>&nbsp;' +
+            '<button type="button" class="scalable delete" onclick="xtSaveHiddenData(\'<?php echo $this->getElement()->getName()?>\', \''+rowId+'\', \'xml\', \'\', true); return false;"><span><?php echo Mage::helper('xtento_trackingimport')->__('Empty Configuration')?></span></button>&nbsp;' +
+            '<button type="button" class="scalable" onclick="Windows.closeAll(); return false;"><span>Cancel</span></button>' +
+            '</div>');
+
+        if (typeof ace !== "undefined") {
+            editor = ace.edit(rowId+"_editor_div");
+            editor.setTheme("ace/theme/eclipse");
+            editor.getSession().setMode("ace/mode/xml");
+            editor.getSession().setUseWrapMode(true);
+            editor.setBehavioursEnabled(false);
+            editor.getSession().setValue($(rowId+"_xml").value);
+        } else {
+            $(rowId+"_editor_div").hide();
+            $(rowId+"_xml").show();
+        }
+
+        dialogWindow.showCenter();
+    },
+
+    showButtonOnly : function()
+    {
+        $('grid<?php echo $_htmlId ?>').hide();
+        $('empty<?php echo $_htmlId ?>').show();
+    }
+}
+
+// bind add action to "Add" button in last row
+Event.observe('addToEndBtn<?php echo $_htmlId ?>', 'click', arrayRow<?php echo $_htmlId ?>.add.bind(arrayRow<?php echo $_htmlId ?>, '', ''));
+
+// add existing rows
+<?php
+$_addAfterId = "headings{$_htmlId}";
+foreach ($this->getArrayRows() as $_rowId => $_row) {
+    echo "arrayRow{$_htmlId}.add(" . $_row->toJson() . ", '{$_addAfterId}');\n";
+    $_addAfterId = $_rowId;
+}
+?>
+
+// initialize standalone button
+$('empty<?php echo $_htmlId ?>').hide();
+Event.observe('emptyAddBtn<?php echo $_htmlId ?>', 'click', function () {
+    $('grid<?php echo $_htmlId ?>').show();
+    $('empty<?php echo $_htmlId ?>').hide();
+    arrayRow<?php echo $_htmlId ?>.add('', '');
+});
+
+// Add all buttons
+Event.observe('addAllBtn<?php echo $_htmlId ?>', 'click', function() {
+    <?php echo $this->getElement()->getName() ?>xtAddAllFields();
+});
+Event.observe('emptyAddAllBtn<?php echo $_htmlId ?>', 'click', function () {
+    $('grid<?php echo $_htmlId ?>').show();
+    $('empty<?php echo $_htmlId ?>').hide();
+    <?php echo $this->getElement()->getName() ?>xtAddAllFields();
+});
+
+function <?php echo $this->getElement()->getName() ?>xtAddAllFields() {
+    <?php
+        $mappingFields = $this->getMappingFields();
+        $fieldCounter = 0;
+        foreach ($mappingFields as $code => $field) {
+            if (isset($field['disabled']) && $field['disabled']) continue;
+            $fieldCounter ++;
+            $fieldId = $this->getElement()->getName() . '_' . time() . '_' . $fieldCounter;
+            $array = array('field' => $code, 'value' => '', 'default_value' => '', '_id' => $fieldId);
+    ?>
+        <?php echo $this->getElement()->getName()?>_mapping_values['<?php echo $fieldId?>'] = '<?php echo $code;?>';
+        <?php echo $this->getElement()->getName()?>_default_values['<?php echo $fieldId?>'] = '';
+        arrayRow<?php echo $_htmlId ?>.add(<?php echo json_encode($array) ?>, '');
+    <?php } ?>
+}
+
+// if no rows, hide grid and show button only
+<?php if (!$this->getArrayRows()):?>
+arrayRow<?php echo $_htmlId ?>.showButtonOnly();
+<?php endif;?>
+
+// toggle the grid, if element is disabled (depending on scope)
+<?php if ($this->getElement()->getDisabled()):?>
+toggleValueElements({checked:true}, $('grid<?php echo $_htmlId ?>').parentNode);
+<?php endif;?>
+//]]>
+
+function updateCustomizedConfigurationButton() {
+
+}
+
+// Load ace.js
+var editor = false;
+if (typeof aceLoaded == 'undefined') {
+    var aceLoaded = false;
+}
+Event.observe(window, 'load', function () {
+    (function () {
+        if (aceLoaded == false) {
+            aceLoaded = true;
+            var s = document.createElement('script');
+            s.type = 'text/javascript';
+            s.async = true;
+            s.src = '<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS); ?>xtento/trackingimport/ace/ace.js';
+            var x = document.getElementsByTagName('script')[0];
+            x.parentNode.insertBefore(s, x);
+            try {
+                s.onload = function () {
+                    if (typeof ace !== 'undefined') {
+                        ace.aceBaseUrl = "<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS); ?>xtento/trackingimport/ace";
+                    }
+                }
+            }
+            catch (err) {
+            }
+        }
+    })();
+    // Update "customized" button:
+    updateCustomizedConfigurationButton();
+});
+</script>
+
+<div id="<?php echo $this->getElement()->getName() ?>_additional_config" style="display: none;">
+<?php
+$profile = Mage::registry('tracking_import_profile');
+$configuration = $profile->getConfiguration();
+if (isset($configuration[$this->getElement()->getName()])) {
+    $mapping = $configuration[$this->getElement()->getName()];
+    foreach ($mapping as $rowId => $configuration) {
+        if (isset($configuration['xml'])) {
+            echo '<input type="hidden" id="'.$this->getElement()->getName().'['.$rowId.'][xml]" name="'.$this->getElement()->getName().'['.$rowId.'][xml]" value="'.htmlspecialchars($configuration['xml']).'"/>'."\n";
+        }
+    }
+}
+?>
+</div>
+
+<style>
+    .dialog { border:1px solid #555; }
+    .dialog .bot { display:none !important; }
+    .overlay_magento { background-color:#000; filter:alpha(opacity=60); -moz-opacity:.6; opacity:.6; -webkit-opacity:.6; }
+    .top.table_window { border-bottom:1px solid #e6e6e6; background:#6a838b; }
+
+    .magento_nw { width:6px; height:28px; }
+    .magento_n { height:28px; }
+    .magento_ne { width:6px; height:28px; }
+
+    .magento_w { width:6px; }
+    .magento_e { width:6px; }
+    .magento_w,
+    .magento_e,
+    .magento_content { background: #fafafa; }
+
+    .magento_sw { background:#deebf0; width:5px; height:3px; }
+    .magento_s { background:#deebf0; height:3px; }
+    .magento_se,
+
+    .magento_sizer { background:#deebf0; width:5px; height:3px; }
+    .magento_sizer { cursor:se-resize; }
+
+    .magento_close { width:16px; height:16px; background:url(<?php echo $this->getSkinUrl('images/cancel_btn_icon.gif')?>) no-repeat 0 0; position:absolute; top:5px; right:7px; cursor:pointer; z-index:1000; }
+
+    .magento_title { float:left; width:100%; font:bold 12px/28px Arial, Helvetica, sans-serif; color:#fff; text-align:left; }
+
+    .magento_content { overflow:auto; font-size:12px; }
+    .magento_content,
+    .magento_content label { color:#333; font-family:Arial, sans-serif; }
+
+    .magento_buttons { padding:10px; text-align:right; }
+    .magento_buttons input.button { border-width:1px; border-style:solid; border-color:#ed6502 #a04300 #a04300 #ed6502;  background:#ffac47; padding:0 7px 1px 7px; font:bold 12px/18px Arial, Helvetica, sans-serif; color:#fff; cursor:pointer; text-align:center; white-space:nowrap; }
+
+    /* FOR IE */
+    * html .magento_close { background-image:none; filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src="../themes/magento/window_maximize.png", sizingMethod="crop"); }
+    * html .magento_minimize { background-image:none; filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src="../themes/magento/window_close.png", sizingMethod="crop");}
+    * html .magento_maximize { background-image:none; filter:progid:DXImageTransform.Microsoft.AlphaImageLoader(src="../themes/magento/window_minimize.png", sizingMethod="crop"); }
+
+    .magento_w, .magento_e, .magento_content {
+        background: white !important;
+    }
+    #editor {
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        left: 0;
+    }
+</style>

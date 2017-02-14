@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<config>
+    <menu>
+        <system>
+            <children>
+                <convert>
+                    <children>
+                        <sitetransferimportexport translate="title">
+                            <title>CommerceExtensions Site 2 Site Transfer</title>
+                            <sort_order>100</sort_order>
+							<children>
+								<sitetransferimport translate="title">
+									<title>Import</title>
+									<action>sitetransferimportexport/system_convert_gui</action>
+									<sort_order>110</sort_order>
+								</sitetransferimport>
+								<sitetransferexport translate="title">
+									<title>Export</title>
+									<action>sitetransferimportexport/system_convert_gui</action>
+									<sort_order>120</sort_order>
+								</sitetransferexport>
+							</children>
+                        </sitetransferimportexport>
+                    </children>
+                </convert>
+            </children>
+        </system>
+    </menu>
+    <acl>
+        <resources>
+            <admin>
+                <children>
+                    <system>
+                        <children>
+                            <convert>
+                                <children>
+                                    <sitetransferimportexport translate="title">
+                                        <title>CommerceExtensions Site 2 Site Transfer</title>
+										<children>
+											<sitetransferimport translate="title">
+												<title>Import</title>
+											</sitetransferimport>
+											<sitetransferexport translate="title">
+												<title>Export</title>
+											</sitetransferexport>
+										</children>
+                                    </sitetransferimportexport>
+                                </children>
+                            </convert>
+                        </children>
+                    </system>
+                </children>
+            </admin>
+        </resources>
+    </acl>
+</config>

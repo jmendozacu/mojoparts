@@ -1,0 +1,134 @@
+<?xml version="1.0"?>
+<config>
+    <menu>
+        <system>
+            <children>
+                <xtento_extensions translate="title">
+                    <title>XTENTO Extensions</title>
+                    <sort_order>1</sort_order>
+                    <children>
+                        <trackingimport translate="title">
+                            <title>Tracking Import Configuration</title>
+                            <sort_order>95</sort_order>
+                            <action>adminhtml/system_config/edit/section/trackingimport</action>
+                        </trackingimport>
+                    </children>
+                </xtento_extensions>
+            </children>
+        </system>
+        <sales>
+            <children>
+                <trackingimport translate="title">
+                    <title>Tracking Import</title>
+                    <sort_order>1100</sort_order>
+                    <action>adminhtml/trackingimport_index/redirect</action>
+                    <children>
+                        <manual translate="title">
+                            <title>Manual Import</title>
+                            <sort_order>5</sort_order>
+                            <action>adminhtml/trackingimport_manual</action>
+                        </manual>
+                        <log translate="title">
+                            <title>Execution Log</title>
+                            <sort_order>10</sort_order>
+                            <action>adminhtml/trackingimport_log</action>
+                        </log>
+                        <profile translate="title">
+                            <title>Import Profiles</title>
+                            <sort_order>20</sort_order>
+                            <action>adminhtml/trackingimport_profile</action>
+                        </profile>
+                        <source>
+                            <title>Import Sources</title>
+                            <sort_order>30</sort_order>
+                            <action>adminhtml/trackingimport_source</action>
+                        </source>
+                        <tools>
+                            <title>Tools</title>
+                            <sort_order>40</sort_order>
+                            <action>adminhtml/trackingimport_tools</action>
+                        </tools>
+                    </children>
+                </trackingimport>
+            </children>
+        </sales>
+    </menu>
+    <acl>
+        <resources>
+            <all>
+                <title>Allow Everything</title>
+            </all>
+            <admin>
+                <children>
+                    <sales>
+                        <children>
+                            <trackingimport>
+                                <title>XTENTO Tracking Import</title>
+                                <sort_order>1100</sort_order>
+                                <children>
+                                    <manual translate="title">
+                                        <title>Manual Import</title>
+                                        <sort_order>5</sort_order>
+                                    </manual>
+                                    <log translate="title">
+                                        <title>Execution Log</title>
+                                        <sort_order>10</sort_order>
+                                    </log>
+                                    <!--<history translate="title">
+                                        <title>Import History</title>
+                                        <sort_order>15</sort_order>
+                                    </history>-->
+                                    <profile translate="title">
+                                        <title>Import Profiles</title>
+                                        <sort_order>20</sort_order>
+                                    </profile>
+                                    <source>
+                                        <title>Import Sources</title>
+                                        <sort_order>30</sort_order>
+                                    </source>
+                                    <tools>
+                                        <title>Tools</title>
+                                        <sort_order>40</sort_order>
+                                    </tools>
+                                </children>
+                            </trackingimport>
+                        </children>
+                    </sales>
+                    <system>
+                        <children>
+                            <config>
+                                <children>
+                                    <trackingimport translate="title">
+                                        <title>XTENTO Tracking Import Configuration</title>
+                                        <sort_order>1</sort_order>
+                                    </trackingimport>
+                                </children>
+                            </config>
+                            <xtento_extensions translate="title">
+                                <title>XTENTO Extensions</title>
+                                <sort_order>1</sort_order>
+                                <children>
+                                    <trackingimport_config translate="title">
+                                        <title>Tracking Import Configuration</title>
+                                        <sort_order>495</sort_order>
+                                        <action>adminhtml/system_config/edit/section/trackingimport</action>
+                                    </trackingimport_config>
+                                </children>
+                            </xtento_extensions>
+                        </children>
+                    </system>
+                </children>
+            </admin>
+        </resources>
+    </acl>
+</config>
+<!--
+/**
+ * Product:       Xtento_TrackingImport (2.1.0)
+ * ID:            0CE91KDAymk40+soa+YSqrvRuUQaAJq7YPuI3zFkClU=
+ * Packaged:      2015-10-07T21:36:35+00:00
+ * Last Modified: 2013-11-09T13:55:31+01:00
+ * File:          app/code/local/Xtento/TrackingImport/etc/adminhtml.xml
+ * Copyright:     Copyright (c) 2015 XTENTO GmbH & Co. KG <info@xtento.com> / All rights reserved.
+ */
+-->

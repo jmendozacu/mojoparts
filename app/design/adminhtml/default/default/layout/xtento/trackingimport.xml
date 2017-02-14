@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+<layout>
+    <adminhtml_trackingimport_profile_index>
+        <reference name="content">
+            <block type="xtento_trackingimport/adminhtml_profile" name="xtento_trackingimport_profile"/>
+        </reference>
+    </adminhtml_trackingimport_profile_index>
+    <adminhtml_trackingimport_profile_edit>
+        <reference name="head">
+            <action method="addJs">
+                <script>xtento/trackingimport/profile.js</script>
+            </action>
+            <action method="addItem">
+                <type>js_css</type>
+                <name>prototype/windows/themes/default.css</name>
+            </action>
+            <!--<action method="addItem">
+                <type>js_css</type>
+                <name>prototype/windows/themes/magento.css</name>
+            </action>-->
+        </reference>
+    </adminhtml_trackingimport_profile_edit>
+    <adminhtml_trackingimport_profile_editfieldconfiguration>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="core/template" name="adminhtml_trackingimport_profile_editFieldCondition" template="xtento/trackingimport/popup/field_configuration.phtml"/>
+        </block>
+    </adminhtml_trackingimport_profile_editfieldconfiguration>
+    <adminhtml_trackingimport_profile_editactioncondition>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="core/template" name="adminhtml_trackingimport_profile_editFieldCondition" template="xtento/trackingimport/popup/action_conditions.phtml"/>
+        </block>
+    </adminhtml_trackingimport_profile_editactioncondition>
+    <adminhtml_trackingimport_profile_grid>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="xtento_trackingimport/adminhtml_profile_grid" name="xtento_trackingimport_profile_grid"/>
+        </block>
+    </adminhtml_trackingimport_profile_grid>
+    <adminhtml_trackingimport_profile_source>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="xtento_trackingimport/adminhtml_profile_edit_tab_source" name="trackingimport.profile.edit.tab.source"/>
+            <block type="xtento_trackingimport/adminhtml_widget_grid_serializer" name="source_grid_serializer">
+                <reference name="source_grid_serializer">
+                    <action method="initSerializerBlock">
+                        <grid_block_name>trackingimport.profile.edit.tab.source</grid_block_name>
+                        <data_callback>getSelectedSources</data_callback>
+                        <hidden_input_name>source_ids</hidden_input_name>
+                        <reload_param_name>profile_sources</reload_param_name>
+                    </action>
+                </reference>
+            </block>
+        </block>
+    </adminhtml_trackingimport_profile_source>
+    <adminhtml_trackingimport_profile_sourcegrid>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="xtento_trackingimport/adminhtml_profile_edit_tab_source" name="trackingimport.profile.edit.tab.source"/>
+        </block>
+    </adminhtml_trackingimport_profile_sourcegrid>
+    <adminhtml_trackingimport_profile_loggrid>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="xtento_trackingimport/adminhtml_profile_edit_tab_log" name="trackingimport.profile.edit.tab.log"/>
+        </block>
+    </adminhtml_trackingimport_profile_loggrid>
+    <adminhtml_trackingimport_profile_historygrid>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="xtento_trackingimport/adminhtml_profile_edit_tab_history" name="trackingimport.profile.edit.tab.history"/>
+        </block>
+    </adminhtml_trackingimport_profile_historygrid>
+    <adminhtml_trackingimport_source_index>
+        <reference name="content">
+            <block type="xtento_trackingimport/adminhtml_source" name="xtento_trackingimport_source"/>
+        </reference>
+    </adminhtml_trackingimport_source_index>
+    <adminhtml_trackingimport_source_grid>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="xtento_trackingimport/adminhtml_source_grid" name="xtento_trackingimport_source_grid"/>
+        </block>
+    </adminhtml_trackingimport_source_grid>
+    <adminhtml_trackingimport_log_index>
+        <reference name="content">
+            <block type="xtento_trackingimport/adminhtml_log" name="xtento_trackingimport_log"/>
+        </reference>
+    </adminhtml_trackingimport_log_index>
+    <adminhtml_trackingimport_log_grid>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="xtento_trackingimport/adminhtml_log_grid" name="xtento_trackingimport_log_grid"/>
+        </block>
+    </adminhtml_trackingimport_log_grid>
+    <adminhtml_trackingimport_history_index>
+        <reference name="content">
+            <block type="xtento_trackingimport/adminhtml_history" name="xtento_trackingimport_history"/>
+        </reference>
+    </adminhtml_trackingimport_history_index>
+    <adminhtml_trackingimport_history_grid>
+        <block type="core/text_list" name="root" output="toHtml">
+            <block type="xtento_trackingimport/adminhtml_history_grid" name="xtento_trackingimport_history_grid"/>
+        </block>
+    </adminhtml_trackingimport_history_grid>
+    <adminhtml_trackingimport_manual_index>
+        <reference name="head">
+            <action method="addJs">
+                <file>mage/cookies.js</file>
+            </action>
+        </reference>
+        <reference name="content">
+            <block type="xtento_trackingimport/adminhtml_manual" name="xtento_trackingimport_manual"/>
+        </reference>
+    </adminhtml_trackingimport_manual_index>
+    <adminhtml_trackingimport_tools_index>
+        <reference name="content">
+            <block type="xtento_trackingimport/adminhtml_tools" name="xtento_trackingimport_tools">
+                <block type="xtento_trackingimport/adminhtml_tools_import" name="xtento_trackingimport_tools_import" template="xtento/trackingimport/tools/import.phtml"/>
+                <block type="xtento_trackingimport/adminhtml_tools_export" name="xtento_trackingimport_tools_export" template="xtento/trackingimport/tools/export.phtml"/>
+            </block>
+        </reference>
+    </adminhtml_trackingimport_tools_index>
+</layout>

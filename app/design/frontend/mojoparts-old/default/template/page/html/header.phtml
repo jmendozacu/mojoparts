@@ -1,0 +1,74 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magentocommerce.com for more information.
+ *
+ * @category    design
+ * @package     base_default
+ * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+/**
+ * @var Mage_Page_Block_Html_Header $this
+ */
+?>
+<div class="header-container">
+    <div class="header">
+        <?php if ($this->getIsHomePage()):?>
+        <h1><strong><?php echo $this->getLogoAlt() ?></strong><a class="logo" href="<?php echo $this->getUrl('') ?>" title="<?php echo $this->getLogoAlt() ?>" class="logo"></a></h1>
+        <?php else:?>
+        <a href="<?php echo $this->getUrl('') ?>" title="<?php echo $this->getLogoAlt() ?>" class="logo"><strong><?php echo $this->getLogoAlt() ?></strong></a>
+        <?php endif?>
+        <div class="quick-access">
+            <?php echo $this->getChildHtml('topSearch') ?>
+            <?php echo $this->getChildHtml('topLinks') ?>
+            <?php echo $this->getChildHtml('store_language') ?>
+        </div>
+        <?php echo $this->getChildHtml('topContainer'); ?>
+    </div>
+</div>
+<div class="nav-container">
+    <ul id="nav">
+		<li><a href="#" class="all-categories" >All Categories</a>
+			<ul>
+			<?php echo $this->getChildHtml('topMenu') ?>
+			</ul>
+		</li>
+	</ul>
+	<ul id="nav">
+		<li id="our-policies"><a href="#" class="our-policies">Our Policies</a>
+			<ul>
+				<li><a href="/return-policy"><span>Return Policy</span></a></li>
+				<li><a href="/warranty"><span>Warranty</span></a></li>
+				<li><a href="/customer-service"><span>Customer Service</span></a></li>
+			</ul>
+		</li>
+	</ul>
+	<script type="text/javascript">
+	document.observe("dom:loaded", function() {
+		$$("#our-policies").invoke('observe', 'mouseover', function(event) {
+			$('our-policies').addClassName('over');
+		});
+		$$("#our-policies").invoke('observe', 'mouseout', function(event) {
+			$('our-policies').removeClassName('over');
+		});
+	});
+	</script>
+	<a href="/about-mojo-parts">About Us</a>
+	<a href="/contacts">Contact Us</a>
+</div>

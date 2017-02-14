@@ -1,0 +1,46 @@
+<?php
+/**
+ * Camiloo Limited
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the EULA
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://www.camiloo.co.uk/license.txt
+ *
+ * @category   Camiloo
+ * @package    Camiloo_Amazonimport
+ * @copyright  Copyright (c) 2011 Camiloo Limited (http://www.camiloo.co.uk)
+ * @license    http://www.camiloo.co.uk/license.txt
+ */
+ ?>
+
+<b><?php echo $this->htmlEscape($this->getMethod()->getTitle()) ?></b><br />
+<?php 
+        // Bugfix for issue reported by S. Young - undefined variable warning.
+        $amazonid = 0;
+        $country = "";
+
+	$magento_order_id = $this->getMethod()->getInfoInstance()->getData('parent_id');
+	
+	if(version_compare(Mage::getVersion(), "1.4.1.0", ">=")){
+					
+		$data = Mage::getModel('amazonimport/amazonimport')->flatordersLookupHelper($magento_order_id);
+		if(sizeof($data) > 0){
+			$amazonid = $data[0];
+			$country = $data[1];
+		}
+	
+	}else{
+		
+		$amazon_resource = Mage::getResourceModel('amazonimport/amazonimport_orderDetails_Collection');
+		$amazon_data = $amazon_resource->addAttributeToSelect('amazon_order_id')->addAttributeToSelect('amazon_country_id')
+			->setOrderFilter($magento_order_id)->load();	
+		
+			foreach ($amazon_data as $amazon) {
+					$amazonid = $amazon->getAmazonOrderId();
+					$country = $amazon->getAmazonCountryId();
+			}
+	}
+?>Amazon Order ID: <?php echo $amazonid; ?><br />

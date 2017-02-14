@@ -1,0 +1,413 @@
+
+<?php 
+
+	if($this->getData('addon') != ""){
+		$addon = $this->getData('addon');		
+	}else{
+		$addon = "";		
+	}
+
+	if($this->getData('producttype') == "Product"){
+		
+		?>
+		
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields4">
+	Below and on the tabs to the left, please find a listing of all possible product attributes Amazon could request based on your categorisation.<br /><br />
+	Please now complete as much information as possible on your product. When you feel that you have completed all the information you can and would like to publish this information to Amazon, Click 'Save as Complete' above.<br /><br />
+	
+	Should you need to leave this listing incomplete for the time being or wish to flag the listing for revision (temporarily removing it from the publish cycle), please click 'Save as Incomplete'.
+	</div>
+</div>
+<script type="text/javascript">
+// Tooltip Object
+var Tooltip = Class.create();
+Tooltip.prototype = {
+    initialize: function(el, options) {
+        this.el = $(el);
+        this.initialized = false;
+        this.setOptions(options);
+        
+        // Event handlers
+        this.showEvent = this.show.bindAsEventListener(this);
+        this.hideEvent = this.hide.bindAsEventListener(this);
+        this.updateEvent = this.update.bindAsEventListener(this);
+        Event.observe(this.el, "mouseover", this.showEvent );
+        Event.observe(this.el, "mouseout", this.hideEvent );
+        
+        // Removing title from DOM element to avoid showing it
+        this.content = this.el.title;
+        this.el.title = "";
+
+        // If descendant elements has 'alt' attribute defined, clear it
+        this.el.descendants().each(function(el){
+            if(Element.readAttribute(el, 'alt'))
+                el.alt = "";
+        });
+    },
+    setOptions: function(options) {
+        this.options = {
+            backgroundColor: '#F9F9F9', // Default background color
+            borderColor: '#666', // Default border color
+            textColor: '', // Default text color (use CSS value)
+            textShadowColor: '', // Default text shadow color (use CSS value)
+            maxWidth: 350,  // Default tooltip width
+            align: "left", // Default align
+            delay: 250, // Default delay before tooltip appears in ms
+            mouseFollow: true, // Tooltips follows the mouse moving
+            opacity: .75, // Default tooltips opacity
+            appearDuration: .25, // Default appear duration in sec
+            hideDuration: .25 // Default disappear duration in sec
+        };
+        Object.extend(this.options, options || {});
+    },
+    show: function(e) {
+        this.xCord = Event.pointerX(e);
+        this.yCord = Event.pointerY(e);
+        if(!this.initialized)
+            this.timeout = window.setTimeout(this.appear.bind(this), this.options.delay);
+    },
+    hide: function(e) {
+        if(this.initialized) {
+            this.appearingFX.cancel();
+            if(this.options.mouseFollow)
+                Event.stopObserving(this.el, "mousemove", this.updateEvent);
+            new Effect.Fade(this.tooltip, {duration: this.options.hideDuration, afterFinish: function() { Element.remove(this.tooltip) }.bind(this) });
+        }
+        this._clearTimeout(this.timeout);
+        
+        this.initialized = false;
+    },
+    update: function(e){
+        this.xCord = Event.pointerX(e);
+        this.yCord = Event.pointerY(e);
+        this.setup();
+    },
+    appear: function() {
+        // Building tooltip container
+        this.tooltip = Builder.node("div", {className: "tooltip", style: "display: none;" }, [
+            Builder.node("div", {className:"xtop"}, [
+                Builder.node("div", {className:"xb1", style:"background-color:" + this.options.borderColor + ";"}),
+                Builder.node("div", {className:"xb2", style: "background-color:" + this.options.backgroundColor + "; border-color:" + this.options.borderColor + ";"}),
+                Builder.node("div", {className:"xb3", style: "background-color:" + this.options.backgroundColor + "; border-color:" + this.options.borderColor + ";"}),
+                Builder.node("div", {className:"xb4", style: "background-color:" + this.options.backgroundColor + "; border-color:" + this.options.borderColor + ";"})
+            ]),
+            Builder.node("div", {className: "xboxcontent", innerHTML: unescape(this.content), style: "background-color:" + this.options.backgroundColor + 
+                "; border-color:" + this.options.borderColor + 
+                ((this.options.textColor != '') ? "; color:" + this.options.textColor : "") + 
+                ((this.options.textShadowColor != '') ? "; text-shadow:2px 2px 0" + this.options.textShadowColor + ";" : "")}, this.content), 
+            Builder.node("div", {className:"xbottom"}, [
+                Builder.node("div", {className:"xb4", style: "background-color:" + this.options.backgroundColor + "; border-color:" + this.options.borderColor + ";"}),
+                Builder.node("div", {className:"xb3", style: "background-color:" + this.options.backgroundColor + "; border-color:" + this.options.borderColor + ";"}),
+                Builder.node("div", {className:"xb2", style: "background-color:" + this.options.backgroundColor + "; border-color:" + this.options.borderColor + ";"}),
+                Builder.node("div", {className:"xb1", style:"background-color:" + this.options.borderColor + ";"})
+            ]),
+        ]);
+        document.body.insertBefore(this.tooltip, document.body.childNodes[0]);
+        
+        Element.extend(this.tooltip); // IE needs element to be manually extended
+
+		$$('.xboxcontent').each( function(element){
+			element.innerHTML = unescape(element.innerHTML);
+		});
+	
+		this.options.width = this.tooltip.getWidth();
+        this.tooltip.style.width = this.options.width + 'px'; // IE7 needs width to be defined
+
+        this.setup();
+        
+        if(this.options.mouseFollow)
+            Event.observe(this.el, "mousemove", this.updateEvent);
+            
+        this.initialized = true;
+        this.appearingFX = new Effect.Appear(this.tooltip, {duration: this.options.appearDuration, to: this.options.opacity });
+    },
+    setup: function(){
+        // If content width is more then allowed max width, set width to max
+        if(this.options.width > this.options.maxWidth) {
+            this.options.width = this.options.maxWidth;
+            this.tooltip.style.width = this.options.width + 'px';
+        }
+            
+        // Tooltip doesn't fit the current document dimensions
+        if(this.xCord + this.options.width >= Element.getWidth(document.body)) {
+            this.options.align = "right";
+            this.xCord = this.xCord - this.options.width + 20;
+        }
+        
+        this.tooltip.style.left = this.xCord - 7 + "px";
+        this.tooltip.style.top = this.yCord + 12 + "px";
+    },
+    _clearTimeout: function(timer) {
+        clearTimeout(timer);
+        clearInterval(timer);
+        return null;
+    }
+};
+    document.observe("dom:loaded", function() {
+  	$$(".amzhelp").each( function(link) {
+			new Tooltip(link, {mouseFollow: true, opacity: 100, background: "#F9F9F9", borderColor: "#F77C16"});
+		});
+	});
+
+</script>
+<style type="text/css">
+
+.tooltip {
+    position: absolute!important;
+    overflow:hidden;
+    font-size: 12px;
+	width:300px;
+	z-index: 10000!important;
+}
+    .tooltip .xtop, .tooltip .xbottom { display: block; background: transparent; font-size: 1px; }
+    .tooltip .xb1, .tooltip .xb2, .tooltip .xb3, .tooltip .xb4 { display: block; overflow: hidden; }
+    .tooltip .xb1, .tooltip .xb2, .tooltip .xb3 { height: 1px; }
+    .tooltip .xb2, .tooltip .xb3, .tooltip .xb4 { background: #666; border-left: 1px solid #333; border-right: 1px solid #333; }
+    .tooltip .xbottom .xb2, .tooltip .xbottom .xb3, .tooltip .xbottom .xb4 { background: #666; }
+    .tooltip .xb1 { margin: 0 5px; background: #00; }
+    .tooltip .xb2 { margin: 0 3px; border-width: 0 1px; }
+    .tooltip .xb3 { margin: 0 2px; }
+    .tooltip .xb4 { height: 2px; margin: 0 1px; }
+
+    .tooltip .xboxcontent {
+        padding: 0 .5em;
+        margin: 0;
+        color: #000000;
+        text-align: left;
+        word-wrap:break-word;
+        border: 1px solid #333;
+        border-width: 0px 1px 0 1px;
+        background-color: #F9F9F9;
+    }
+</style>
+<?php 
+
+
+		if(strpos($_SERVER['REQUEST_URI'],"reviewerr") > 0){
+			$productid = $this->getProductid();
+			$url = Mage::getModel('amazonimport/amazonimport')->getRootUrl()."amazonimport/reviewerrors/save/cachebuster/".time();
+			$errorid = $this->getRequest()->getParam('id');
+		}else{
+		
+			if(isset($_POST['product'])){
+				$productid = implode(",",$_POST['product']);
+			}else{
+				$productid = $this->getRequest()->getParam('id');
+			}
+			
+			$url = Mage::getModel('amazonimport/amazonimport')->getRootUrl()."amazonimport/manualsetup/save/cachebuster/".time();
+			
+		}	
+
+?>
+	
+<form action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/manualsetup/getentryform/cachebuster/<?php echo time(); ?>" method="POST" id="getentryform" name="getentryform" target="saveformuploader">
+	<input type="hidden" name="form_key" id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+	<input type="hidden" name="getentryform-xmlkey" id="getentryform-xmlkey" value="0" />
+	<input type="hidden" name="getentryform-currentvalue" id="getentryform-currentvalue" value="" />
+	<input type="hidden" name="productid" id="productid" value="<?php echo $productid; ?>" />
+	<input type="hidden" name="editformopen" id="editformopen" value="0" />
+	<input type="hidden" name="getentryform-repelemindex" id="getentryform-repelemindex" value="-1" />
+</form>
+
+	
+<form action="<?php echo $url; ?>" method="POST" id="mainsaveform" name="mainsaveform">
+	<input type="hidden" name="form_key" id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+	<input type="hidden" name="has_setup_completed" id="has_setup_completed" value="0" />
+	<input type="hidden" name="productid" id="productid" value="<?php echo $productid; ?>" />
+	<?php if(isset($errorid)){ ?>
+		<input type="hidden" name="elog_id" id="elog_id" value="<?php echo $errorid; ?>" />
+	<?php } ?>
+	
+</form>
+
+<form action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/manualsetup/savevalue/id/<?php echo $productid; ?>/cachebuster/<?php echo time(); ?>" method="POST" id="saveentry" name="saveentry"  target="saveformuploader">
+	<input type="hidden" name="form_key" id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+	<input type="hidden" name="serialized_values" id="serialized_values" value="" />
+	<input type="hidden" name="saveentry_element_index" id="saveentry_element_index" value="-1" />
+</form>
+
+
+	<input type="hidden" name="canceledit-xmlkey" id="canceledit-xmlkey" value="0" />
+	<input type="hidden" name="canceledit-elementcontents" id="canceledit-elementcontents" value="" />
+	<input type="hidden" name="canceledit-buttoncontents" id="canceledit-buttoncontents" value="" />
+
+
+<iframe src="about:blank" id="saveformuploader" name="saveformuploader" style="height: 1px; width: 1px;" frameborder="0"></iframe>
+		
+	<script type="text/javascript">
+		function serialize (mixed_value) {
+    // http://kevin.vanzonneveld.net
+    // +   original by: Arpad Ray (mailto:arpad@php.net)
+    // +   improved by: Dino
+    // +   bugfixed by: Andrej Pavlovic
+    // +   bugfixed by: Garagoth
+    // +      input by: DtTvB (http://dt.in.th/2008-09-16.string-length-in-bytes.html)
+    // +   bugfixed by: Russell Walker (http://www.nbill.co.uk/)
+    // +   bugfixed by: Jamie Beck (http://www.terabit.ca/)
+    // +      input by: Martin (http://www.erlenwiese.de/)
+    // +   bugfixed by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+    // -    depends on: utf8_encode
+    // %          note: We feel the main purpose of this function should be to ease the transport of data between php & js
+    // %          note: Aiming for PHP-compatibility, we have to translate objects to arrays
+    // *     example 1: serialize(['Kevin', 'van', 'Zonneveld']);
+    // *     returns 1: 'a:3:{i:0;s:5:"Kevin";i:1;s:3:"van";i:2;s:9:"Zonneveld";}'
+    // *     example 2: serialize({firstName: 'Kevin', midName: 'van', surName: 'Zonneveld'});
+    // *     returns 2: 'a:3:{s:9:"firstName";s:5:"Kevin";s:7:"midName";s:3:"van";s:7:"surName";s:9:"Zonneveld";}'
+
+    var _getType = function (inp) {
+        var type = typeof inp, match;
+        var key;
+        if (type == 'object' && !inp) {
+            return 'null';
+        }
+        if (type == "object") {
+            if (!inp.constructor) {
+                return 'object';
+            }
+            var cons = inp.constructor.toString();
+            match = cons.match(/(\w+)\(/);
+            if (match) {
+                cons = match[1].toLowerCase();
+            }
+            var types = ["boolean", "number", "string", "array"];
+            for (key in types) {
+                if (cons == types[key]) {
+                    type = types[key];
+                    break;
+                }
+            }
+        }
+        return type;
+    };
+    var type = _getType(mixed_value);
+    var val, ktype = '';
+    
+    switch (type) {
+        case "function": 
+            val = ""; 
+            break;
+        case "boolean":
+            val = "b:" + (mixed_value ? "1" : "0");
+            break;
+        case "number":
+            val = (Math.round(mixed_value) == mixed_value ? "i" : "d") + ":" + mixed_value;
+            break;
+        case "string":
+            mixed_value = this.utf8_encode(mixed_value);
+            val = "s:" + encodeURIComponent(mixed_value).replace(/%../g, 'x').length + ":\"" + mixed_value + "\"";
+            break;
+        case "array":
+        case "object":
+            val = "a";
+            /*
+            if (type == "object") {
+                var objname = mixed_value.constructor.toString().match(/(\w+)\(\)/);
+                if (objname == undefined) {
+                    return;
+                }
+                objname[1] = this.serialize(objname[1]);
+                val = "O" + objname[1].substring(1, objname[1].length - 1);
+            }
+            */
+            var count = 0;
+            var vals = "";
+            var okey;
+            var key;
+            for (key in mixed_value) {
+                ktype = _getType(mixed_value[key]);
+                if (ktype == "function") { 
+                    continue; 
+                }
+                
+                okey = (key.match(/^[0-9]+$/) ? parseInt(key, 10) : key);
+                vals += this.serialize(okey) +
+                        this.serialize(mixed_value[key]);
+                count++;
+            }
+            val += ":" + count + ":{" + vals + "}";
+            break;
+        case "undefined": // Fall-through
+        default: // if the JS object has a property which contains a null value, the string cannot be unserialized by PHP
+            val = "N";
+            break;
+    }
+    if (type != "object" && type != "array") {
+        val += ";";
+    }
+    return val;
+}
+
+		function utf8_encode ( argString ) {
+		    // http://kevin.vanzonneveld.net
+		    // +   original by: Webtoolkit.info (http://www.webtoolkit.info/)
+		    // +   improved by: Kevin van Zonneveld (http://kevin.vanzonneveld.net)
+		    // +   improved by: sowberry
+		    // +    tweaked by: Jack
+		    // +   bugfixed by: Onno Marsman
+		    // +   improved by: Yves Sucaet
+		    // +   bugfixed by: Onno Marsman
+		    // +   bugfixed by: Ulrich
+		    // *     example 1: utf8_encode('Kevin van Zonneveld');
+		    // *     returns 1: 'Kevin van Zonneveld'
+
+		    var string = (argString+''); // .replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+		    var utftext = "";
+		    var start, end;
+		    var stringl = 0;
+
+		    start = end = 0;
+		    stringl = string.length;
+		    for (var n = 0; n < stringl; n++) {
+		        var c1 = string.charCodeAt(n);
+		        var enc = null;
+
+		        if (c1 < 128) {
+		            end++;
+		        } else if (c1 > 127 && c1 < 2048) {
+		            enc = String.fromCharCode((c1 >> 6) | 192) + String.fromCharCode((c1 & 63) | 128);
+		        } else {
+		            enc = String.fromCharCode((c1 >> 12) | 224) + String.fromCharCode(((c1 >> 6) & 63) | 128) + String.fromCharCode((c1 & 63) | 128);
+		        }
+		        if (enc !== null) {
+		            if (end > start) {
+		                utftext += string.substring(start, end);
+		            }
+		            utftext += enc;
+		            start = end = n+1;
+		        }
+		    }
+
+		    if (end > start) {
+		        utftext += string.substring(start, string.length);
+		    }
+
+		    return utftext;
+		}
+		
+</script>		
+		
+		<?php 
+			
+	}
+
+?>
+
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    	<h4 class="icon-head head-edit-form fieldset-legend">Attributes for <?php echo ucwords($this->from_camel_case("".$this->getData('producttype')."")) ?></h4>
+    </div>
+    
+    <div class="fieldset " id="group_fields4">
+    <div class="hor-scroll">
+	            
+	        <?php echo $this->outputChildren($this->getData('producttype'),$this->getData('nodedata')); ?>
+	        
+     </div>
+   </div>
+ </div>
+  	
+			

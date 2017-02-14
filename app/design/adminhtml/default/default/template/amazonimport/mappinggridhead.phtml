@@ -1,0 +1,31 @@
+<div class="content-header">
+    <table cellspacing="0">
+        <tbody><tr>
+            <td><h3>Step One: Field Mapping</h3></td><td class="form-buttons">&nbsp;</td>
+         </tr>
+    </tbody></table>
+</div>
+
+<?php $is_ssl = (Mage::getStoreConfig('web/secure/use_in_adminhtml') == 1)? true : false; ?>
+
+<div class="entry-edit">
+        <fieldset id="my-fieldset">		
+		In this step of the Amazon setup process, you will link attributes within your product catalog to the attributes required by Amazon. To begin, please click on the orange link below. <br />
+		If you have a multi-store setup, you can also select the default store view the module should load product data from.<br /><br />
+		<center><a href="<?php echo $this->getUrl("amazonimport/mapping/edit/id/1",array('_secure' => $is_ssl)); ?>">&gt;&gt;&gt; Click here to edit Default Field Mapping &lt;&lt;&lt;</a></center>
+		<br />
+		Once you have saved this field mapping, you can then adjust your field mappings on a country specific basis by clicking 'Edit' on the country specific field mappings below.<br />
+		As above, you can also select a store view to load product data from on a per-country basis.
+		
+						</fieldset>
+						
+</div>
+
+
+<div class="content-header">
+    <table cellspacing="0">
+        <tbody><tr>
+            <td><h3>Country Specific Mappings</h3></td><td class="form-buttons">&nbsp;</td>
+         </tr>
+    </tbody></table>
+</div>

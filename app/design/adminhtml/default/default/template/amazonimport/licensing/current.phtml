@@ -1,0 +1,75 @@
+<div class="entry-edit">
+        <fieldset id="my-fieldset">		
+		Please use the form below to check the next expiry date. If you have subscribed to this module on a monthly license,
+		the 'expiry date' is the next date this subscription will be billed.
+		</fieldset>
+						
+</div>
+
+
+<div class="content-header">
+    <table cellspacing="0">
+        <tbody><tr>
+            <td><h3>License Information</h3></td><td class="form-buttons"><button class="scalable" type="button" onclick="reloadLicense();" name="button" value="Refresh"><span>Refresh</span></button></td>
+         </tr>
+    </tbody></table>    
+</div>
+
+
+<div class="entry-edit">
+   
+    <div class="fieldset " id="group_fields47">
+    <div class="hor-scroll" id="licensedisplay">
+                <table cellspacing="0" class="form-list">
+            <tbody>
+            <?php $xml = Mage::getModel('amazonimport/amazonlink')->displayLicense(); ?>
+            
+<?php foreach($xml as $node){ 
+
+		if(($node->getName() != "id")&&($node->getName() != "sku")&&($node->getName() != "datetest")){
+	
+	?>
+<tr>
+	<?php if($node->getName() == "ddiff"){ ?>
+    <td class="label"><label for="name">Days Remaining</label></td>
+    <td class="value" style="width:450px;"><?php echo $node; ?></td>
+    <?php }else{ ?>
+    <td class="label"><label for="name"><?php echo ucwords(str_replace("_"," ",$node->getName())); ?></label></td>
+    <td class="value" style="width:450px;"><?php echo $node; ?></td>
+    
+    <?php }?>
+</tr>
+
+<?php } } 
+
+
+if(!isset($xml->ddiff)) {
+	
+	echo Mage::getModel('amazonimport/amazonlink')->displayTempLicense();
+	
+}
+
+
+?>
+
+            </tbody>
+        </table>
+            </div>
+        </div>
+</div>
+
+<form action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/licensing/refreshlicense/cachebuster/<?php echo time(); ?>" method="POST" id="reloadlicense" name="reloadlicense" target="searcher">
+		<input type="hidden" name="form_key" id="form_key" value="<?=Mage::getSingleton('core/session')->getFormKey() ?>"/>
+	</form>
+        
+<iframe src="about:blank" id="searcher" name="searcher" style="width:1px;height:1px;" frameborder="0"></iframe>
+
+		<script type="text/javascript">
+			function reloadLicense() {
+				$('reloadlicense').submit();
+			}
+
+			function updateLicensing(display){
+				$('licensedisplay').innerHTML = unescape(display);
+			}
+        </script>

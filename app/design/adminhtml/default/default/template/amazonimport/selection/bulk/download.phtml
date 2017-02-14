@@ -1,0 +1,135 @@
+<?php $amazoncore = Mage::getModel('amazonimport/amazonimport'); ?>
+<img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" alt="Loading..." class="v-middle">
+<div class="entry-edit">
+<div class="fieldset " id="group_fields4">To begin, please press
+'download' below. Magento will generate a CSV file and will then serve
+it to you (this may take a few minutes).</div>
+</div>
+
+<div class="entry-edit" id="downloadbuttonzone"
+	name="downloadbuttonzone" style="display: block;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Commence
+Download</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+<center>
+<button id="downloadbutton" type="button" class="scalable "
+	onclick="startdownload();" style=""><span>Download</span></button>
+</center>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="entry-edit" id="downloadprep" name="downloadprep"
+	style="display: none;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Preparing
+download file</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+<table cellspacing="0" class="form-list">
+	<tbody>
+
+		<tr>
+			<td class="label"><label for="color">Current Progress</label></td>
+			<td class="value">
+			<div style="width: 200px; border: 1px solid #999999; float: left;">
+			<div id="currentprogress" style="width: 0%; background: green;">&nbsp;</div>
+			</div>
+			&nbsp; <span id="progresspercent">0%</span> <span
+				id="download_indicator" class="autocomplete-indicator"> <img
+				src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif"
+				alt="Loading..." class="v-middle"> </span></td>
+			<td class="scope-label"></td>
+			<td><small>&nbsp;</small></td>
+		</tr>
+
+		<tr>
+			<td class="label"><label for="color">Estimated Time
+			Remaining</label></td>
+			<td class="value"><span id="timeleft">Estimating time
+			required...</span></td>
+			<td class="scope-label"></td>
+			<td><small>&nbsp;</small></td>
+		</tr>
+
+	</tbody>
+</table>
+</div>
+</div>
+</div></div>
+
+
+<div class="entry-edit" id="downloader" name="downloader"
+	style="display: none;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Download is
+ready</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode"><a href="#" onclick="goredownload();">Please
+click here if your download does not begin automatically.</a><br />
+<br />
+<a href="#" onclick="goregenerate();">To regenerate this file,
+please click here</a></div>
+</div>
+</div>
+</div>
+
+<form action="<?php echo $amazoncore->getRootUrl(); ?>amazonimport/bulkdownloadhelper/selection/cachebuster/<?php echo time(); ?>"
+	method="POST" id="preparedownloadfile" name="preparedownloadfile"
+	target="iframedownload"><input type="hidden" name="form_key"
+	id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" /> <input
+	type="hidden" name="regenerate" id="regenerate" value="0" /></form>
+
+<iframe src="about:blank" id="iframedownload" name="iframedownload"
+	style="width: 1px; height: 1px;" frameborder="0"></iframe> <script
+	type="text/javascript">
+	
+			function startdownload() {
+				$('regenerate').value = "1";
+				Effect.Fade('downloadbuttonzone');
+				Effect.Appear('downloadprep');
+				$('preparedownloadfile').submit();
+				$('regenerate').value = "0";
+			}
+
+			function updatestatus(percentval,alttext,timeleft){
+				$('timeleft').innerHTML = timeleft;
+				$('progresspercent').innerHTML = percentval;
+				$('currentprogress').morph('width:'+percentval+';background:green;');
+				$('currentprogress').alt = alttext;
+				$('currentprogress').title = alttext;
+				<?php echo $amazoncore->browserCheckForReloader('preparedownloadfile'); ?>
+			}
+
+			function godownload(){
+				<?php echo $amazoncore->browserCheckForReloader('preparedownloadfile'); ?>
+				Effect.Fade('downloadprep');
+				Effect.Appear('downloader');
+			}
+
+			function goredownload(){
+				<?php echo $amazoncore->browserCheckForReloader('preparedownloadfile'); ?>
+			}
+
+			function goregenerate(){
+				$('regenerate').value = "1";
+				$('preparedownloadfile').submit();
+				Effect.Fade('downloader');
+				Effect.Appear('downloadprep');
+				$('regenerate').value = "0";
+			}
+			
+        </script>

@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<layout>
+
+  <adminhtml_pf_selector_index>
+    <reference name="content">
+      <block type="partfinder/pf_selector" name="partfinder_selector" template="partfinder/pf/selector.phtml"/>
+    </reference>    
+  </adminhtml_pf_selector_index>	
+      
+</layout>

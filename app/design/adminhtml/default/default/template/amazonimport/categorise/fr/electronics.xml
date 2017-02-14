@@ -1,0 +1,1284 @@
+<?xml version="1.0" encoding="UTF-8"?>
+ <electronics>
+ <BrowseNode>
+  <ID>14061111</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Cartes Compactflash]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14061131</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Cartes MMC]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14061141</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Cartes SD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14061161</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Cartes XD-Picture]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14061151</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Memory stick]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323647011</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Mini et micros/Cartes RS - MMC]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323636011</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Mini et micros/Cartes micro SD - Transflash]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323633011</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Mini et micros/Cartes mini SD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323642011</ID>
+  <Name><![CDATA[Catégories/Cartes mémoire/Mini et micros/Memory stick micro]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055311</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires GPS et Systèmes de navigation]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055041</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires Ordinateurs portables]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055191</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires PDA/Accessoires GPS pour PDA]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055181</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires PDA/Cartes mémoire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055141</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires PDA/Câbles]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055121</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires PDA/Etuis et fourre tout]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055151</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires PDA/Feuilles de protection]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055171</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires PDA/Piles et adaptateurs secteur]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055161</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires PDA/Stations d'accueil]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055131</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires PDA/Stylets]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351255011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Accessoires pour la voiture]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>16251521</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Alimentation/Distribution d'alimentation]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14107241</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Casques et accessoires Image et Son/Microphones]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054991</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Casques et accessoires Image et Son/Nettoyage Vidéo]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14063391</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Cassettes, CD et DVD vierges/DVD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342627011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Cassettes, CD et DVD vierges/DVD Double Couche]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054481</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Cassettes, CD et DVD vierges/VHS]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054571</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Cartes et bristols]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323684011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Cartouche jet d'encre/Cartouches compatibles]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323683011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Cartouche jet d'encre/Cartouches d'origine]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054531</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Etiquettes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054781</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Maintenance et nettoyage]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323697011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Média vierges/Blu Ray]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14063381</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Média vierges/CD-R]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14063411</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Média vierges/DVD-R]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054491</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Média vierges/Mini-discs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054541</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Papier créatif]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323693011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Papier ordinaire/format A3]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323692011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Papier ordinaire/format A4]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323691011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Papier photo/Autres format]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323688011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Papier photo/format 10x15]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323689011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Papier photo/format 13x18]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323690011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Papier photo/format A4]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323687011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Toner laser/Cartouches compatibles]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323686011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Consommables informatique/Toner laser/Cartouches d'origine]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054641</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/Adaptateurs audio]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054681</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/Composite]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>16251591</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/Câbles Coaxiaux]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054701</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/Câbles IEEE 1394 - iLink]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342637011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/Câbles d'antennes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342636011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/Optique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054661</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/Peritel]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054671</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/S-Video]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342635011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Câbles Connectique HE/YUV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351256011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Outil et Nettoyage]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342639011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Prise/Multiprise]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>372855011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Prise/Rallonge]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351253011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Racks]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351257011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Sacoches]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351258011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Sécurité et Surveillance]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342633011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Transmetteurs/PC-TV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342632011</ID>
+  <Name><![CDATA[Catégories/Consommables et Accessoires/Transmetteurs/TV-TV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345179011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/Accessoires GPS/Antennes - info trafic]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345175011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/Accessoires GPS/Cartographie]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345420011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/Accessoires GPS/Housse]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345180011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/Accessoires GPS/Logiciels]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345178011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/Accessoires GPS/Système de fixation]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345169011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/Alerte - Radar]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345181011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/GPS Auto]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345172011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/GPS Marine]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345171011</ID>
+  <Name><![CDATA[Catégories/GPS & Accessoires/GPS Sports]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323701011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Accessoires pour PC/Accessoires PC de bureau]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055061</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Accessoires pour PC/Alimentation PC portable]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054761</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Accessoires pour PC/Batterie PC portable]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055081</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Accessoires pour PC/Enceintes PC portable]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055051</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Accessoires pour PC/Sacoche]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323700011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Accessoires pour PC/Station d'accueil]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062601</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Accessoires pour imprimantes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062511</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Accessoires pour moniteurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059031</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Boitiers nus]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323709011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Cables et connectique/Accessoires cables]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054721</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Cables et connectique/Autres cables]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323704011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Cables et connectique/Cables FireWire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323708011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Cables et connectique/Cables HDMI]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323707011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Cables et connectique/Cables RJ11 - Téléphone]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323705011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Cables et connectique/Cables RJ45 - Ethernet]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323703011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Cables et connectique/Cables USB]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323706011</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Cables et connectique/Cables parallèle - série]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14107221</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Calculatrice]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054511</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Rangement CD-DVD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058801</ID>
+  <Name><![CDATA[Catégories/Informatique/Accessoires IT/Tapis de souris]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058721</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Claviers/Claviers classiques]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058731</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Claviers/Claviers gaming]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058811</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Claviers/Ensemble claviers - souris]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323673011</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Pavé numérique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058761</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Souris/Souris classiques]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058791</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Souris/Souris pour ordinateurs portables]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058771</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Souris/Souris sans fil]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058781</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Souris/Trackball]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058841</ID>
+  <Name><![CDATA[Catégories/Informatique/Claviers, souris, tablettes/Tablettes graphiques]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059051</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Alimentation]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058951</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Aquisitions audio video]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323660011</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Boitiers PC]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323659011</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Boitiers externes pour disques durs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058891</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Carte graphique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058881</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Carte mère]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058901</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Carte son]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058931</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Cartes Tuner TV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323662011</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Cartes controleurs/Cartes PCI]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323663011</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Cartes controleurs/Cartes PCMCIA]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14061181</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Lecteurs de cartes mémoires]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058981</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Mémoire PC]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059041</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Processeurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059121</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Tuning PC]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059061</ID>
+  <Name><![CDATA[Catégories/Informatique/Composants/Ventilateurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14061101</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Clés USB]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059181</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Disques durs externes/Disques durs FireWire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323610011</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Disques durs externes/Disques durs externes 8,9cm (3,5")]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323609011</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Disques durs externes/Disques durs externes portables 6,4cm (2,5")]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059191</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Disques durs externes/Disques durs multimédia]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>307993031</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Disques durs externes/NAS]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323621011</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Disques durs internes/Disques durs Fire Wire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323616011</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Disques durs internes/Disques durs internes 3,5 pouces]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323615011</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Disques durs internes/Disques durs internes jusqu'à 2,5 pouces]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062721</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Graveurs CD-DVD externes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062711</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Graveurs CD-DVD internes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059231</ID>
+  <Name><![CDATA[Catégories/Informatique/Disques durs & Clé USB & Stockage optique/Lecteurs de disquettes et sauveguarde magnétique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062781</ID>
+  <Name><![CDATA[Catégories/Informatique/Enceintes PC/Enceintes 2.0]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323672011</ID>
+  <Name><![CDATA[Catégories/Informatique/Enceintes PC/Enceintes 2.1]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062801</ID>
+  <Name><![CDATA[Catégories/Informatique/Enceintes PC/Enceintes 5.1]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062591</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Imprimante A3]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062571</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Imprimante Photo]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062551</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Imprimante jet d'encre]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062561</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Imprimante laser]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323607011</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Imprimante matricielles]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062671</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Imprimante multifonction jet d'encre]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323606011</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Imprimante multifonction laser]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351259011</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Lecteur de code-barre]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062621</ID>
+  <Name><![CDATA[Catégories/Informatique/Imprimantes, scanners et multifonctions/Scanner]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062461</ID>
+  <Name><![CDATA[Catégories/Informatique/Moniteurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>171583031</ID>
+  <Name><![CDATA[Catégories/Informatique/Netbooks]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062831</ID>
+  <Name><![CDATA[Catégories/Informatique/Onduleur et protection électrique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323604011</ID>
+  <Name><![CDATA[Catégories/Informatique/Ordinateurs de bureau]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323603011</ID>
+  <Name><![CDATA[Catégories/Informatique/Ordinateurs portables]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323679011</ID>
+  <Name><![CDATA[Catégories/Informatique/Périphérique de jeux/Joy stick]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323677011</ID>
+  <Name><![CDATA[Catégories/Informatique/Périphérique de jeux/Manettes - Game Pad]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323680011</ID>
+  <Name><![CDATA[Catégories/Informatique/Périphérique de jeux/Souris Gaming]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323678011</ID>
+  <Name><![CDATA[Catégories/Informatique/Périphérique de jeux/Volants]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059331</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Antennes et amplificateurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059391</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Cartes réseaux PCI]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323652011</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Cartes réseaux PCMCIA]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062421</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Commutateurs KVM]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059321</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Courant porteur CPL]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062451</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Câbles et accessoires]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323654011</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Dongle - clé bluetooth Wifi]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062431</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Firewall - Pare-feux]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059381</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/HUBs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059361</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Modems]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059401</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Points d'accès]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059371</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Routeurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059411</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Switchs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323658011</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Téléphonie sur Internet - VOIP/Casques et micros]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323656011</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Téléphonie sur Internet - VOIP/Téléphone VOIP]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323657011</ID>
+  <Name><![CDATA[Catégories/Informatique/Réseaux/Téléphonie sur Internet - VOIP/Webcam]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14058831</ID>
+  <Name><![CDATA[Catégories/Informatique/Webcam -micro - casques/Micro]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323675011</ID>
+  <Name><![CDATA[Catégories/Informatique/Webcam -micro - casques/Webcam, micro, casques pour téléphonie VoIP]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14062751</ID>
+  <Name><![CDATA[Catégories/Informatique/Webcam -micro - casques/Webcams]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>323674011</ID>
+  <Name><![CDATA[Catégories/Informatique/Webcam -micro - casques/Webcams, Micros & Casques]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>122031011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires Ipod/Alimentation, cables et stations d'accueil]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334743011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires Ipod/Autres enceintes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>122025011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires Ipod/Enceintes portables]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>122030011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires Ipod/Housse et étuis]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>343152011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires Ipod/Pour la balade]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>343153011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires Ipod/Pour la maison]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>122029011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires Ipod/Pour la voiture]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334748011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires et consommables Audio/Accessoires DJ]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334746011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires et consommables Audio/Connectique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334747011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires et consommables Audio/Connectique sans fil]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054771</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires et consommables Audio/Piles et batteries]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires et consommables Audio/Rangement]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055001</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires et consommables Audio/Supports enceintes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334738011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires lecteur MP3/Alimentation, cables et stations d'accueil]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334740011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires lecteur MP3/Autres enceintes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054971</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires lecteur MP3/Enceintes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334739011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires lecteur MP3/Housse et étuis]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334741011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Accessoires lecteur MP3/Pour la voiture]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334732011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Autoradio, hautparleurs et accessoires/Accessories autoradio]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334731011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Autoradio, hautparleurs et accessoires/Amplificateurs, hautparleur, caissons de basse]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334728011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Autoradio, hautparleurs et accessoires/Autoradio/Autoradio lecteur CD - MP3]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334729011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Autoradio, hautparleurs et accessoires/Autoradio/Autres autoradios]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060271</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Baladeur CD et autres formats]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351244011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Baladeur K7]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334724011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Baladeur Video/Au-delà de 20 Go]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334725011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Baladeur Video/Baladeur Video avec FM]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334726011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Baladeur Video/Baladeur Video avec slot]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334722011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Baladeur Video/Jusqu'à 4 Go]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334723011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Baladeur Video/de 5 à 20 Go]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060211</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Baladeurs et Lecteurs MP3]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334734011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Casques et écouteurs/Autres casques audio]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334733011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Casques et écouteurs/Casque Hifi]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334735011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Casques et écouteurs/Casques intra-auriculaire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334737011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Casques et écouteurs/Casques sans fil Bluetooth]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334736011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Casques et écouteurs/Casques sans fil UHF]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060341</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Chaine Hifi et éléments séparés/Amplificateurs et tuners]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060111</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Chaine Hifi et éléments séparés/Chaînes DVD Home Cinéma]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060391</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Chaine Hifi et éléments séparés/Chaînes Hi-Fi]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14288711</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Chaine Hifi et éléments séparés/Platines CD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060361</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Chaine Hifi et éléments séparés/Platines cassettes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060351</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Chaine Hifi et éléments séparés/Platines vinyles]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060481</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Dictaphones]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>334749011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Equipement Son/Eléments DJ]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>362178011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Equipement Son/Enceintes amplifiées]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>362175011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Equipement Son/Home Studio]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>362176011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Equipement Son/Karaoke]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>362174011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Equipement Son/Lumières]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>362177011</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Equipement Son/Sonorisation]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060471</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Radio & Radio - Réveil/Radio]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060451</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Radio & Radio - Réveil/Radio-cassette-CD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060441</ID>
+  <Name><![CDATA[Catégories/Lecteurs MP3, Audio, HiFi/Radio & Radio - Réveil/Radio-réveil]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>372654011</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Accessoires Caméscopes/Câbles et connectique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054811</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Accessoires Photo/Câbles et connectique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342781031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Accessoires pour Flash]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342782031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Accessoires pour objectifs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342769031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Batteries, piles & chargeurs/Adaptateurs secteur]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342768031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Batteries, piles & chargeurs/Batteries de remplacement pour appareils photo]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342767031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Batteries, piles & chargeurs/Batteries de remplacement pour caméscopes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342766031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Batteries, piles & chargeurs/Chargeurs de batteries]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054921</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Batteries, piles & chargeurs/Piles]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342783031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Eclairages]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342780031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Filtres/Filtres UV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342777031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Filtres/Filtres de couleur]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342778031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Filtres/Filtres gris]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342779031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Filtres/Filtres polarisants]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342776031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Filtres/Filtres à effets]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054831</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Housses, étuis et protections/Housses et étuis pour appareils photo]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>372651011</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Housses, étuis et protections/Sacs et sacoches pour caméscopes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342770031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Media vierges/DV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342771031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Media vierges/Hi-8]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342772031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Media vierges/MiniDV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342773031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Media vierges/VHS]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342775031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Nettoyage]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054891</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Pellicules]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342784031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Studio photo/Fonds de studio photo]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342785031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Accessoires/Studio photo/Rangements et matériel de présentation]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059681</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Appareils photo argentiques]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059601</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Appareils photo numériques/Compacts et bridges]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059661</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Appareils photo numériques/Reflex]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>316255011</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Cadres photo numériques]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059771</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Caméscopes/Caméscopes DVD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342792031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Caméscopes/Caméscopes Digital8]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>16404601</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Caméscopes/Caméscopes HDD et cartes mémoire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342794031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Caméscopes/Caméscopes Haute Définition]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>16404591</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Caméscopes/Caméscopes mini DV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342791031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Caméscopes/Caméscopes professionnels]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342793031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Caméscopes/Caméscopes à mémoire flash]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054841</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Flash]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351249011</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Jumelles, téléscopes et Optique/Jumelles]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342790031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Jumelles, téléscopes et Optique/Longue-vues]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342789031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Jumelles, téléscopes et Optique/Lunettes de tir]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351250011</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Jumelles, téléscopes et Optique/Microscopes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342788031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Jumelles, téléscopes et Optique/Monoculaire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351251011</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Jumelles, téléscopes et Optique/Télescopes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342787031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Jumelles, téléscopes et Optique/Télémètres]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>372653011</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Objectifs/Objectifs pour caméscope]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342796031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Objectifs/Objectifs pour reflex]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054821</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Photographie sous-marine]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>163515031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Trépieds/Monopods]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342797031</ID>
+  <Name><![CDATA[Catégories/Photo et Caméscopes/Trépieds/Trépieds]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>357866011</ID>
+  <Name><![CDATA[Catégories/Station météo - baromètre]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>498008011</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Accessoires/Accessoires Projecteurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342631011</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Accessoires/Antennes/Antennes extérieures]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342630011</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Accessoires/Antennes/Antennes intérieures]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>680830011</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Accessoires/Meubles TV]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>369482011</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Accessoires/Supports]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14054981</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Accessoires/Télécommandes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060191</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Amplificateurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060071</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Combi VHS DVD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060131</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Enceintes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060101</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Ensembles Home Cinéma]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342606011</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/HD DVD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060061</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Lecteurs DVD/Lecteurs - Enregistreurs de DVD]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060051</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Lecteurs DVD/Lecteurs DVD - DivX]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060041</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Lecteurs DVD/Lecteurs DVD portables]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>351246011</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Lecteurs Laserdisc]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>342605011</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Lecteurs et Enregistreurs Blu-ray]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345932031</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Media Streamers]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14107261</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/TNT/Antennes]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059921</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/TNT/Tuner]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059871</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Téléviseurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345934031</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Télévision par satellite]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14059971</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Vidéoprojecteurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>345933031</ID>
+  <Name><![CDATA[Catégories/TV & Vidéo/Écrans de projection]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055221</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Batteries]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339913011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Chargeurs/Secteur]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339914011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Chargeurs/Voiture]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055281</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Connectique]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339911011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Coques]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339915011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Dongle bluetooth - Wifi]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055271</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Façade]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339916011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Gadget et goodies]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339923011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Housses et étuis smartphone PDAs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055231</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Housses et étuis téléphones portables]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055261</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Kit mains libres/Kit mains libres bluetooth]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339909011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Kit mains libres/Kit mains libres filaire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14055251</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Kit mains libres/Kit mains libres voiture]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339910011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Oreillettes bluetooth]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339918011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Protection écran]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339919011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Station d'accueil]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339917011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Accessoires téléphones mobiles et PDAs/Stylet]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14061011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/PDAs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060601</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones fixes et résidentiels/Avec 1 combiné]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339896011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones fixes et résidentiels/Avec 2 combinés]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339897011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones fixes et résidentiels/Avec 3 combinés et plus]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060611</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones fixes et résidentiels/Avec répondeur]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060631</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones fixes et résidentiels/Combinés supplémentaires]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060691</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones fixes et résidentiels/Fax - Télécopieurs]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339898011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones fixes et résidentiels/Filaire]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>14060581</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones portables/Smartphones]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>218194031</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones portables/Téléphones portable prépayés]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>218193031</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphones portables/Téléphones portables débloqués]]></Name>
+ </BrowseNode>
+ <BrowseNode>
+  <ID>339899011</ID>
+  <Name><![CDATA[Catégories/Téléphonie et PDA/Téléphonie sur Internet - VOIP]]></Name>
+ </BrowseNode>
+ </electronics>
+

@@ -1,0 +1,534 @@
+<div id="block_notice_accounts_orders" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Orders'); ?>">
+    <?php echo Mage::helper('M2ePro')->__('This tab contains settings of eBay Orders, eBay Customers import; Magento Orders and Products creation.<br/>
+    If you set Import eBay Orders to <i>Yes</i>, a new eBay order will be imported to the system and
+    can be found in eBay > Sales > eBay Orders.<br/><br/>
+	It is possible to allow auto creation of Magento Orders based on imported eBay Orders for products listed by:
+    <ul class="list">
+        <li>M2E Pro;</li>
+        <li>Any Other Software.</li>
+    </ul>
+	<b>Note:</b> The Product Stock QTY is only reduced after Magento Order is created.<br/>
+    These type of orders can be managed as typical Magento Orders in Magento > Sales > Orders.<br/><br/>
+	<b>Note:</b> To receive orders from eBay, Order Synchronization should be enabled in eBay > Configuration > Synchronization.'); ?>
+</div>
+
+<?php
+    $formData = Mage::registry('M2ePro_data') ? Mage::registry('M2ePro_data')->toArray() : array();
+    $defaults = array(
+        'orders_mode' => Ess_M2ePro_Model_Accounts::ORDERS_MODE_YES,
+        'orders_listings_mode' => Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_YES,
+        'orders_listings_store_mode' => Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_STORE_MODE_NO,
+        'orders_listings_store_id' => 0,
+        'orders_ebay_mode' => Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_YES,
+        'orders_ebay_create_product' => Ess_M2ePro_Model_Accounts::ORDERS_EBAY_CREATE_PRODUCT_YES,
+        'orders_ebay_store_id' => 0,
+        'orders_customer_mode' => Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_GUEST,
+        'orders_customer_exist_id' => '',
+        'orders_customer_new_website' => '',
+        'orders_customer_new_group' => '',
+        'orders_customer_new_subscribe_news' => Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_NEW_SUBSCRIBE_NEWS_NO,
+        'orders_customer_new_send_notifications_account' => 0,
+        'orders_customer_new_send_notifications_order' => 0,
+        'orders_customer_new_send_notifications_invoice' => 0,
+
+        'orders_status_checkout_incomplete' =>Ess_M2ePro_Model_Accounts::ORDERS_STATUS_CHECKOUT_INCOMPLETE_NO,
+        'orders_status_mode' => Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_DEFAULT,
+        'orders_status_checkout_completed' => 'pending',
+        'orders_status_payment_completed' => 'processing',
+        'orders_status_shipping_completed' => 'complete',
+        'orders_status_invoice' => Ess_M2ePro_Model_Accounts::ORDERS_STATUS_INVOICE_YES,
+        'orders_status_shipping' => Ess_M2ePro_Model_Accounts::ORDERS_STATUS_SHIPPING_YES
+    );
+
+    $formData = array_merge($defaults, $formData);
+
+    if (isset($formData['orders_customer_new_send_notifications']) && $formData['orders_customer_new_send_notifications']) {
+        $temp = explode('_',$formData['orders_customer_new_send_notifications']);
+
+        $formData['orders_customer_new_send_notifications_account'] = (int)$temp[0]{1};
+        $formData['orders_customer_new_send_notifications_order'] = (int)$temp[1]{1};
+        $formData['orders_customer_new_send_notifications_invoice'] = (int)$temp[2]{1};
+    }
+
+    $isEdit = !!$this->getRequest()->getParam('id');
+?>
+
+<script type="text/javascript">
+
+    // Data for current tab
+    //-----------------------------
+    M2ePro.formData.orders_mode = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_mode']); ?>';
+    M2ePro.formData.orders_listings_mode = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_listings_mode']); ?>';
+    M2ePro.formData.orders_listings_store_mode = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_listings_store_mode']); ?>';
+    M2ePro.formData.orders_listings_store_id = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_listings_store_id']); ?>';
+    M2ePro.formData.orders_ebay_mode = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_ebay_mode']); ?>';
+    M2ePro.formData.orders_ebay_create_product = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_ebay_create_product']); ?>';
+    M2ePro.formData.orders_ebay_store_id = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_ebay_store_id']); ?>';
+    M2ePro.formData.orders_customer_mode = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_customer_mode']); ?>';
+    M2ePro.formData.orders_customer_exist_id = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_customer_exist_id']); ?>';
+    M2ePro.formData.orders_customer_new_website = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_customer_new_website']); ?>';
+    M2ePro.formData.orders_customer_new_group = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_customer_new_group']); ?>';
+    M2ePro.formData.orders_customer_new_subscribe_news = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['orders_customer_new_subscribe_news']); ?>';
+
+    M2ePro.text.wrong_customer_id_error = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('No Customer entry is found for specified ID.')); ?>';
+    M2ePro.url.checkCustomerId = '<?php echo $this->getUrl('*/*/checkCustomerId'); ?>';
+
+    Event.observe(window, 'load', function() {
+        setTimeout(function() {
+            $('orders_mode').observe('change', AccountsHandlersObj.ordersMode_change);
+            $('orders_listings_mode').observe('change', AccountsHandlersObj.ordersListingsMode_change);
+            $('orders_listings_store_mode').observe('change', AccountsHandlersObj.ordersListingsStoreMode_change);
+            $('orders_ebay_mode').observe('change', AccountsHandlersObj.ordersEbayMode_change);
+            $('orders_customer_mode').observe('change', AccountsHandlersObj.ordersCustomerMode_change);
+            $('orders_status_mode').observe('change', AccountsHandlersObj.ordersStatusMode_change);
+        }, 350);
+    });
+    //-----------------------------
+
+</script>
+
+<div class="entry-edit" id="magento_block_accounts_orders_mode">
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('General'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label for="orders_mode"><?php echo Mage::helper('M2ePro')->__('Import eBay Orders'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_mode" name="orders_mode" class="M2ePro-required-when-visible">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_MODE_NO; ?>" <?php if ($formData['orders_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_MODE_NO): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_MODE_YES; ?>" <?php if ($formData['orders_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_MODE_YES): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Allows importing orders from eBay to M2E Pro.'); ?></span>
+                        </p>
+						
+                    </td>
+                </tr>
+
+           </table>
+
+       </div>
+   </div>
+
+</div>
+
+<div class="entry-edit" id="magento_block_accounts_orders_listings" <?php if($formData['orders_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_MODE_NO): ?>style="display: none;"<?php endif; ?>>
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Product Is Listed By M2E Pro'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label for="orders_listings_mode"><?php echo Mage::helper('M2ePro')->__('Create Order in Magento'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_listings_mode" name="orders_listings_mode" class="M2ePro-required-when-visible">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_NO; ?>" <?php if ($formData['orders_listings_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_NO): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_YES; ?>" <?php if ($formData['orders_listings_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_YES): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Whether an order should be created in Magento if a sold product belongs to M2E Pro Listings.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_listings_store_mode_container" <?php if($formData['orders_listings_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_NO): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label for="orders_listings_store_mode"><?php echo Mage::helper('M2ePro')->__('Store View Source'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_listings_store_mode" name="orders_listings_store_mode" class="M2ePro-required-when-visible">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_STORE_MODE_NO; ?>" <?php if ($formData['orders_listings_store_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_STORE_MODE_NO): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Use Store View from Listing'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_STORE_MODE_YES; ?>" <?php if ($formData['orders_listings_store_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_STORE_MODE_YES): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Choose Store View Manually'); ?></option>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('If Store View should be automatically taken from the listing or manually chosen from available Store View values.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_listings_store_id_container" <?php if($formData['orders_listings_store_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_STORE_MODE_NO): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label><?php echo Mage::helper('M2ePro')->__('Store View'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <?php echo $this->getChildHtml('orders_listings_store_id'); ?>
+                        <p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Store in which orders will be placed.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+<div class="entry-edit" id="magento_block_accounts_orders_ebay" <?php if($formData['orders_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_MODE_NO): ?>style="display: none;"<?php endif; ?>>
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Product Is Listed By Any Other Software'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label for="orders_ebay_mode"><?php echo Mage::helper('M2ePro')->__('Create Order in Magento'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_ebay_mode" name="orders_ebay_mode" class="required-entry">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_NO; ?>" <?php if ($formData['orders_ebay_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_NO): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_YES; ?>" <?php if ($formData['orders_ebay_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_YES): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                        </select>
+                        <p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Whether an order should be created in Magento if a sold product does not belong to M2E Pro Listings.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_ebay_store_id_container" <?php if($formData['orders_ebay_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_NO): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label><?php echo Mage::helper('M2ePro')->__('Store View'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <?php echo $this->getChildHtml('orders_ebay_store_id'); ?>
+                        <p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Store in which orders will be placed.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_ebay_create_product_container" <?php if($formData['orders_ebay_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_NO): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label for="orders_ebay_create_product"><?php echo Mage::helper('M2ePro')->__('Product Not Found'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_ebay_create_product" name="orders_ebay_create_product" class="M2ePro-required-when-visible">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_EBAY_CREATE_PRODUCT_NO; ?>" <?php if ($formData['orders_ebay_create_product'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_CREATE_PRODUCT_NO): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Do Not Create Order'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_EBAY_CREATE_PRODUCT_YES; ?>" <?php if ($formData['orders_ebay_create_product'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_CREATE_PRODUCT_YES): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Create Product and Order'); ?></option>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('What should be done if a listed product does not exist in Magento.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+
+<div class="entry-edit" id="magento_block_accounts_orders_customer" <?php if($formData['orders_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_MODE_NO || ($formData['orders_listings_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_NO && $formData['orders_ebay_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_NO) ): ?>style="display: none;"<?php endif; ?>>
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Customer Settings'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <div id="block_notice_accounts_orders_customers" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Customers'); ?>">
+                <?php echo Mage::helper('M2ePro')->__('There are several ways to specify a customer for which Magento Orders will be created:
+                <ul class="list">
+                    <li><b>Guest Account</b> - the system does not require a customer account to be created. Default Guest Account will be defined as a customer. <br/>
+                    <b>Note:</b> The Guest Checkout option should be enabled in Magento. (<i>Yes</i> should be chosen in the Allow Guest Checkout option in Magento > System > Configuration > Sales > Checkout tab). </li>
+                    <li><b>Predefined Customer</b> - the system uses one predefined customer for all eBay orders related to this account. You will be required
+                    to provide an ID of the existing Customer, which you can find in Magento > Customers > Manage Customers table.</li>
+                    <li><b>Create New</b> - a new customer will be created in Magento, using eBay customer data of eBay Order.
+                    <br/><b>Note:</b> A unique customer identifier is his e-mail address. If the one already exists among Magento customers e-mails,
+                    the system uses this customer as owner of order and links order to him. A new customer will not be created.</li>
+                </ul>'); ?>
+            </div>
+
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label for="orders_customer_mode"><?php echo Mage::helper('M2ePro')->__('Customer'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_customer_mode" name="orders_customer_mode" class="M2ePro-required-when-visible">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_GUEST; ?>" <?php if ($formData['orders_customer_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_GUEST): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Guest Account'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_EXIST; ?>" <?php if ($formData['orders_customer_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_EXIST): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Predefined Customer'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_NEW; ?>" <?php if ($formData['orders_customer_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_NEW): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Create New'); ?></option>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Customer for which Magento Orders will be created.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_customer_exist_id_container" <?php if($formData['orders_customer_mode'] != Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_EXIST): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label for="orders_customer_exist_id"><?php echo Mage::helper('M2ePro')->__('Customer ID'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <input id="orders_customer_exist_id" name="orders_customer_exist_id" value="<?php echo $this->escapeHtml($formData['orders_customer_exist_id']); ?>" type="text" class="M2ePro-required-when-visible validate-digits M2ePro-account-customer-id input-text" />
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Enter Magento customer ID.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_customer_new_website_container" <?php if($formData['orders_customer_mode'] != Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_NEW): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label for="orders_customer_new_website"><?php echo Mage::helper('M2ePro')->__('Associate to Website'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_customer_new_website" name="orders_customer_new_website" class="M2ePro-required-when-visible">
+                            <option value="" <?php if ($formData['orders_customer_new_website'] == ''): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('-- Please Select --'); ?></option>
+                            <?php foreach($this->websites as $website) { ?>
+                                <option value="<?php echo $website['website_id']; ?>" <?php if ($formData['orders_customer_new_website'] == $website['website_id']): echo ' selected="selected"'; endif; ?>><?php echo $website['name']; ?></option>
+                            <?php } ?>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Website in which a customer account will be created.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_customer_new_group_container" <?php if($formData['orders_customer_mode'] != Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_NEW): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label for="orders_customer_new_group"><?php echo Mage::helper('M2ePro')->__('Customer Group'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_customer_new_group" name="orders_customer_new_group" class="M2ePro-required-when-visible">
+                            <option value="" <?php if ($formData['orders_customer_new_group'] == ''): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('-- Please Select --'); ?></option>
+                            <?php foreach($this->groups as $group) { ?>
+                                <option value="<?php echo $group['customer_group_id']; ?>" <?php if ($formData['orders_customer_new_group'] == $group['customer_group_id']): echo ' selected="selected"'; endif; ?>><?php echo $group['customer_group_code']; ?></option>
+                            <?php } ?>
+                        </select>
+                        <p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Customer Group to which a customer will be assigned.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_customer_new_subscribe_news_container" <?php if($formData['orders_customer_mode'] != Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_NEW): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label for="orders_customer_new_subscribe_news"><?php echo Mage::helper('M2ePro')->__('Subscribe to Newsletter'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_customer_new_subscribe_news" name="orders_customer_new_subscribe_news" class="M2ePro-required-when-visible">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_NEW_SUBSCRIBE_NEWS_NO; ?>" <?php if ($formData['orders_customer_new_subscribe_news'] == Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_NEW_SUBSCRIBE_NEWS_NO): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_NEW_SUBSCRIBE_NEWS_YES; ?>" <?php if ($formData['orders_customer_new_subscribe_news'] == Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_NEW_SUBSCRIBE_NEWS_YES): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Select <i>Yes</i> to subscribe a new customer to newsletters.'); ?></span>
+						</p>
+                    </td>
+                </tr>
+
+                <tr id="orders_customer_new_send_notifications_container" <?php if($formData['orders_customer_mode'] != Ess_M2ePro_Model_Accounts::ORDERS_CUSTOMER_MODE_NEW): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label for="orders_customer_new_send_notifications"><?php echo Mage::helper('M2ePro')->__('Send Emails When The Following Is Created'); ?>: </label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_customer_new_send_notifications" name="orders_customer_new_send_notifications[]" multiple="multiple" class="M2ePro-required-when-visible" >
+                            <option value="a" <?php if ($formData['orders_customer_new_send_notifications_account'] == 1): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Customer Account'); ?></option>
+                            <option value="o" <?php if ($formData['orders_customer_new_send_notifications_order'] == 1): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Magento Order'); ?></option>
+                            <option value="i" <?php if ($formData['orders_customer_new_send_notifications_invoice'] == 1): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Invoice'); ?></option>
+                        </select>
+                        <p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Necessary emails will be sent according to Magento settings in Magento > System > Configuration > Sales Emails.<br/> 
+																		Hold Ctrl button, to choose more, than one option.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>
+<div class="entry-edit" id="magento_block_accounts_orders_force_checkout" <?php if ($formData['orders_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_MODE_NO || ($formData['orders_listings_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_NO && $formData['orders_ebay_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_NO)): ?>style="display: none;"<?php endif; ?>>
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Force Order Creation'); ?></h4>
+    </div>
+		
+    <div class="fieldset">
+        <div class="hor-scroll">
+		    <div id="block_notice_force_order_creation" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Force Order Creation'); ?>">
+                <?php echo Mage::helper('M2ePro')->__('Magento Orders can be only created after a buyer specifies payment and shipping methods 
+				on eBay (Checkout is completed). Therefore there may be the situation when the product item was ordered on eBay, but while 
+				Checkout was being completed, all products were sold.<br/> 
+				To avoid it you can use the Create Orders at Incomplete Checkout option, which allows 
+				forcing order creation when the Checkout status is Incomplete. <br/><br/>
+				<b>Note:</b> Payment, shipping methods and shipping price may not be specified in such orders.'); ?>
+            </div>
+			
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label for="orders_status_checkout_incomplete"><?php echo Mage::helper('M2ePro')->__('Create Orders at Incomplete Checkout'); ?>: <span class="required">*</span></label>
+                    </td>
+					
+                            
+                        
+                    <td class="value" style="width: auto;">
+                        <select id="orders_status_checkout_incomplete" name="orders_status_checkout_incomplete" class="M2ePro-required-when-visible">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_STATUS_CHECKOUT_INCOMPLETE_NO; ?>" <?php echo ($formData['orders_status_checkout_incomplete'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_CHECKOUT_INCOMPLETE_NO)?"selected='selected'":"";?>><?php echo $this->__("No"); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_STATUS_CHECKOUT_INCOMPLETE_YES; ?>"<?php echo ($formData['orders_status_checkout_incomplete'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_CHECKOUT_INCOMPLETE_YES)?"selected='selected'":"";?>><?php echo $this->__("Yes"); ?></option>
+                        </select>
+                        <p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Allows orders creation when checkout is Incomplete.'); ?></span>
+							</span>
+                        </p>
+                    </td>
+                </tr>
+               </table>
+        </div>
+    </div>
+</div>
+
+<!--
+orders_status_checkout_incomplete
+orders_status_mode
+orders_status_checkout_completed
+orders_status_payment_completed
+orders_status_shipping_completed
+
+orders_status_invoice
+orders_status_shipping
+
+-->
+<?php $statusList = $this->getMagentoOrderStatusList(); ?>
+
+<div class="entry-edit" id="magento_block_accounts_orders_status" <?php if ($formData['orders_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_MODE_NO || ($formData['orders_listings_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_LISTINGS_MODE_NO && $formData['orders_ebay_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_EBAY_MODE_NO)): ?>style="display: none;"<?php endif; ?>>
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Order Status Mapping'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <div id="block_notice_status" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Order Status Mapping'); ?>">
+                <?php echo Mage::helper('M2ePro')->__('In this block you can configure mapping between eBay Order state and Magento Order statuses.
+                Depending on the state of eBay Order you can manually determine certain statuses for Magento Order and enable automatic Shipment and Invoice
+                creation by selecting appropriate check-boxes, or use predefined default settings. (i.e. eBay: Order is Paid -> Magento Order is Processing).<br/>
+                <br/><b>Note:</b> The Order activity in Magento is automatically reflected in eBay Order:
+				<ul class="list">
+					<li><b>Invoice is created</b> - the Payment status becomes Paid on eBay.</li>
+					<li><b>Shipment is created</b> - the Shipment status becomes Shipped on eBay. If the Tracking Number(s) is specified, it also
+					appears in eBay Order.</li>
+				</ul>'); ?>
+			</div>
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label for="orders_status_mode"><?php echo Mage::helper('M2ePro')->__('Status Mapping'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_status_mode" name="orders_status_mode" class="M2ePro-required-when-visible">
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_DEFAULT; ?>" <?php echo ($formData['orders_status_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_DEFAULT)?"selected='selected'":"";?>><?php echo Mage::helper('M2ePro')->__('Default Order Statuses'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_CUSTOM; ?>" <?php echo ($formData['orders_status_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_CUSTOM)?"selected='selected'":"";?>><?php echo Mage::helper('M2ePro')->__('Custom Order Statuses'); ?></option>
+                        </select>
+                        <p class="note">
+                            <span></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <?php $isDisabledStatusStyle = ($formData['orders_status_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_DEFAULT)?"disabled='disabled'":''; ?>
+                <?php
+                    if ($formData['orders_status_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_DEFAULT) {
+                        $formData['orders_status_checkout_completed'] = 'pending';
+                        $formData['orders_status_payment_completed'] = 'processing';
+                        $formData['orders_status_shipping_completed'] = 'complete';
+                        $formData['orders_status_invoice'] = Ess_M2ePro_Model_Accounts::ORDERS_STATUS_INVOICE_YES;
+                        $formData['orders_status_shipping'] = Ess_M2ePro_Model_Accounts::ORDERS_STATUS_SHIPPING_YES;
+                    }
+                ?>
+
+                <tr id="orders_status_checkout_completed_container">
+                    <td class="label">
+                        <label for="orders_status_checkout_completed"><?php echo Mage::helper('M2ePro')->__('Checkout Status is complete'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_status_checkout_completed" name="orders_status_checkout_completed" class="M2ePro-required-when-visible" <?php echo $isDisabledStatusStyle; ?>>
+                            <?php foreach ($statusList as $statusKey => $statusValue) { ?>
+                            <option value="<?php echo $statusKey; ?>" <?php echo ($formData['orders_status_checkout_completed'] == $statusKey)?"selected='selected'":"";?>><?php echo $statusValue; ?></option>
+                            <?php } ?>
+                        </select>
+                        <p class="note">
+                            <span></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_status_payment_completed_container">
+                    <td class="label">
+                        <label for="orders_status_payment_completed"><?php echo Mage::helper('M2ePro')->__('Payment Status is complete'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_status_payment_completed" name="orders_status_payment_completed" class="M2ePro-required-when-visible" <?php echo $isDisabledStatusStyle; ?>>
+                            <?php foreach ($statusList as $statusKey => $statusValue) { ?>
+                                <option value="<?php echo $statusKey; ?>" <?php echo ($formData['orders_status_payment_completed'] == $statusKey)?"selected='selected'":"";?>><?php echo $statusValue; ?></option>
+                            <?php } ?>
+                        </select>
+
+                        &nbsp;
+                        <input name="orders_status_invoice" value="0" type="hidden">
+                        <input id="orders_status_invoice" name="orders_status_invoice" type="checkbox" <?php echo ($formData['orders_status_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_DEFAULT || $formData['orders_status_invoice'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_INVOICE_YES)?"checked='checked'":"";?> <?php echo $isDisabledStatusStyle; ?>> <label for="orders_status_invoice"><?php echo Mage::helper('M2ePro')->__("Automatic Invoice Creation");?></label>
+
+                        <p class="note">
+                            <span></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="orders_status_shipping_completed_container" <?php echo $isDisabledStatusStyle; ?>>
+                    <td class="label">
+                        <label for="orders_status_shipping_completed"><?php echo Mage::helper('M2ePro')->__('Shipping Status is complete'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="orders_status_shipping_completed" name="orders_status_shipping_completed" class="M2ePro-required-when-visible" <?php echo $isDisabledStatusStyle; ?>>
+                            <?php foreach ($statusList as $statusKey => $statusValue) { ?>
+                                <option value="<?php echo $statusKey; ?>" <?php echo ($formData['orders_status_shipping_completed'] == $statusKey)?"selected='selected'":"";?>><?php echo $statusValue; ?></option>
+                            <?php } ?>
+                        </select>
+
+                        &nbsp;
+                        <input name="orders_status_shipping" value="0" type="hidden">
+                        <input id="orders_status_shipping" name="orders_status_shipping" type="checkbox" <?php echo ($formData['orders_status_mode'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_MAPPING_DEFAULT || $formData['orders_status_shipping'] == Ess_M2ePro_Model_Accounts::ORDERS_STATUS_SHIPPING_YES)?"checked='checked'":"";?> <?php echo $isDisabledStatusStyle; ?>> <label for="orders_status_shipping"><?php echo Mage::helper('M2ePro')->__("Automatic Shipment Creation");?></label>
+
+                        <p class="note">
+                            <span></span>
+                        </p>
+                    </td>
+                </tr>
+                
+            </table>
+
+        </div>
+    </div>
+
+</div>

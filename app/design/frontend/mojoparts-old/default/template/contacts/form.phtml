@@ -1,0 +1,99 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magentocommerce.com for more information.
+ *
+ * @category    design
+ * @package     base_default
+ * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+<div id="messages_product_view"><?php echo $this->getMessagesBlock()->getGroupedHtml() ?></div>
+<form action="<?php echo $this->getFormAction(); ?>" id="contactForm" method="post">
+    <div class="fieldset">
+        <h2 class="legend"><?php /* echo Mage::helper('contacts')->__('Contact Information') */ ?></h2>
+        <ul class="form-list">
+            <li class="fields">
+                <div class="field">
+                    <label for="name" class="required"><em>*</em><?php echo Mage::helper('contacts')->__('Name') ?></label>
+                    <div class="input-box">
+                        <input name="name" id="name" title="<?php echo Mage::helper('contacts')->__('Name') ?>" value="<?php echo $this->htmlEscape($this->helper('contacts')->getUserName()) ?>" class="input-text required-entry" type="text" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="email" class="required"><em>*</em><?php echo Mage::helper('contacts')->__('Email') ?></label>
+                    <div class="input-box">
+                        <input name="email" id="email" title="<?php echo Mage::helper('contacts')->__('Email') ?>" value="<?php echo $this->htmlEscape($this->helper('contacts')->getUserEmail()) ?>" class="input-text required-entry validate-email" type="text" />
+                    </div>
+                </div>
+            </li>
+            <li class="wide">
+                <label for="comment" class="required"><em>*</em><?php echo Mage::helper('contacts')->__('Comment') ?></label>
+                <div class="input-box">
+                    <textarea name="comment" id="comment" title="<?php echo Mage::helper('contacts')->__('Comment') ?>" class="required-entry input-text" cols="3" rows="3"></textarea>
+                </div>
+            </li>
+			<p><br/><b><font color="red">Problem with an order?  Request a return or replacement?  Please let us know the following >></font></b></p>
+            <li class="fields">
+                <div class="field">
+                    <label for="reason">Reason </label><br/>&nbsp;(describe this fully above)
+                    <div class="input-box">
+						<select name="reason" id="reason">
+							<option value="" selected>Please select...</option>
+							<option value="question">Just need a question answered about this</option>
+							<option value="no longer needed, return only">No longer needed, send me the return information I need to send this back</option>
+							<option value="problem, replace">Problem with the part, please send a replacement</option>
+							<option value="problem, return">Problem with the part, I would like to return</option>
+						</select>
+					</div>
+                </div>
+                <div class="field">
+                    <label for="order">Order Number </label><br/>&nbsp;(starts with 1000)
+                    <div class="input-box">
+                        <input name="order" id="order" title="Order Number" value="" class="input-text" type="text" />
+                    </div>
+                </div>
+            </li>
+            <li class="fields">
+                <div class="field">
+                    <label for="partnum">Part Number </label><br/>&nbsp;(find this on the part/package)
+                    <div class="input-box">
+                        <input name="partnum" id="partnum" title="Parts Numbers" value="" class="input-text" type="text" />
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="vin">VIN</label>&nbsp;(or Year, Make, Model, Trim, Engine)<br/>&nbsp;(check VIN on <a style="color: #0000ff; text-decoration: underline;" href="http://www.decodethis.com">decodethis.com</a> first)
+                    <div class="input-box">
+                        <input name="vin" id="vin" title="VIN Code" value="" class="input-text" type="text" />
+                    </div>
+                </div>
+            </li>
+        </ul>
+    </div>
+    <div class="buttons-set">
+        <p class="required"><?php echo Mage::helper('contacts')->__('* Required Fields') ?></p>
+        <input type="text" name="hideit" id="hideit" value="" style="display:none !important;" />
+        <button type="submit" title="<?php echo Mage::helper('contacts')->__('Submit') ?>" class="button"><span><span><?php echo Mage::helper('contacts')->__('Submit') ?></span></span></button>
+    </div>
+</form>
+<script type="text/javascript">
+//<![CDATA[
+    var contactForm = new VarienForm('contactForm', true);
+//]]>
+</script>

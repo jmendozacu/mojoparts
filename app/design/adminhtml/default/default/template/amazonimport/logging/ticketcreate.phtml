@@ -1,0 +1,180 @@
+<?php $is_ssl = (Mage::getStoreConfig('web/secure/use_in_adminhtml') == 1)? true : false; ?>
+<?php 
+
+	if($this->getRequest()->getParam('id') != ""){
+		$id = $this->getRequest()->getParam('id');
+		$model = Mage::getModel('amazonimport/amazonimportlog')->load($id);
+	}else if($this->getRequest()->getParam('log_id') != ""){
+		$id = $this->getRequest()->getParam('log_id');
+		$model = Mage::getModel('amazonimport/amazonimportlog')->load($id);
+	}else{
+		$model = Mage::getModel('amazonimport/amazonimportlog');
+	}
+	
+?>
+
+<?php if (isset($id)){ ?>
+<div class="entry-edit">
+        <fieldset id="my-fieldset">		
+		At Camiloo, we are committed to providing the highest possible levels of Customer Support. Therefore, if you are believe this communication log message indicates a bug or an error in this module, please use the form below to contact our support helpdesk via email with a copy of the messages.
+		We will aim to reply to all support requests via email within 2 business days.
+						</fieldset>
+						
+</div>
+
+
+<div class="content-header">
+    <table cellspacing="0">
+        <tbody><tr>
+            <td><h3>Review the outgoing / incoming messages</h3></td><td class="form-buttons">&nbsp;</td>
+         </tr>
+    </tbody></table>
+</div>
+
+<div class="entry-edit">
+   
+    <div class="fieldset " id="group_fields47">
+    <div class="hor-scroll">
+                <table cellspacing="0" class="form-list">
+            <tbody>
+                
+<tr>
+    <td class="label"><label for="name">Outgoing Message</label></td>
+    <td class="value"><input id="name" name="outgoing" type="hidden" value="<?php echo htmlspecialchars($model->getOutgoing()); ?>" /><?php echo nl2br(htmlspecialchars($model->getOutgoing())); ?></td>
+    <td class="scope-label"></td>
+        <td><small>&nbsp;</small></td>
+</tr>
+
+<tr>
+    <td class="label"><label for="incoming">Incoming Message</label></td>
+    <td class="value"><input id=""incoming"" name="incoming"  value="<?php echo htmlspecialchars($model->getIncoming()); ?>" type="hidden"/><?php echo nl2br(htmlspecialchars($model->getIncoming())); ?></td>
+    <td class="scope-label"></td>
+        <td><small>&nbsp;</small></td>
+</tr>
+
+<tr>
+    <td class="label"><label for="error">Error Message</label></td>
+    <td class="value"><input id="error" name="error" value="<?php echo htmlspecialchars($model->getError()); ?>" type="hidden"/><?php echo nl2br(htmlspecialchars($model->getError())); ?></td>
+    <td class="scope-label"></td>
+        <td><small>&nbsp;</small></td>
+</tr>
+
+<tr>
+    <td class="label"><label for="message_time">Date / Time</label></td>
+    <td class="value"><input type="hidden" id="message_time" name="message_time" value="<?php echo htmlspecialchars($model->getMessageTime()); ?>" />  <?php echo nl2br(htmlspecialchars($model->getMessageTime())); ?></td>
+    <td class="scope-label"></td>
+        <td><small>&nbsp;</small></td>
+</tr>
+
+            </tbody>
+        </table>
+            </div>
+        </div>
+</div>
+
+<?php }else{ ?>
+
+<div class="entry-edit">
+        <fieldset id="my-fieldset">		
+		At Camiloo, we are committed to providing the highest possible levels of Customer Support. Therefore, if you are believe there is a bug or an error in this module, please use the form below to contact our support helpdesk via email.
+		We will aim to reply to all support requests via email within 2 business days.
+						</fieldset>
+						
+</div>
+
+
+<?php } ?>
+
+
+<div class="content-header">
+    <table cellspacing="0">
+        <tbody><tr>
+            <td><h3>Ticket information</h3></td><td class="form-buttons">&nbsp;</td>
+         </tr>
+    </tbody></table>
+</div>
+
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields47">
+    <div class="hor-scroll">
+                <table cellspacing="0" class="form-list">
+            <tbody>
+         <tr>   
+    <td class="label"><label for="customer_name">Contact Name<span class="required">*</span></label></td>
+    <td class="value"><input name="customer_name" id="customer_name" value="" class="required-entry input-text" type="text" style="width:300px;"></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr>
+     <tr>   
+    <td class="label"><label for="customer_email">Contact Email<span class="required">*</span></label></td>
+    <td class="value"><input name="customer_email" id="customer_email" value="" class="required-entry input-text" type="text" style="width:300px;"></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr><tr>   
+    <td class="label"><label for="support_query">Message to Support<span class="required">*</span></label></td>
+    <td class="value"><textarea name="support_query" id="support_query" class="required-entry input-text" type="text" style="width:400px;height:300px;"></textarea></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr>
+            </tbody>
+        </table>
+            </div>
+        </div>
+</div>
+<div class="content-header">
+    <table cellspacing="0">
+        <tbody><tr>
+            <td><h3>FTP & Magento Admin Credentials</h3></td><td class="form-buttons">&nbsp;</td>
+         </tr>
+    </tbody></table>
+</div>
+
+<div class="entry-edit">
+        <fieldset id="my-fieldset">		
+		If possible, please provide FTP and Magento Admin area login details below. These details will only be used to diagnose & solve this issue and will not be saved on our server after your issue has been resolved. Our support area is protected by a 128-bit SSL certificate and passwords are stored in secret key AES encrypted database.
+		</fieldset>						
+</div>
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields47">
+    <div class="hor-scroll">
+                <table cellspacing="0" class="form-list">
+            <tbody>
+         <tr>   
+    <td class="label"><label for="ftp_address">FTP Address</label></td>
+    <td class="value"><input name="ftp_address" id="ftp_address" value="" class=" input-text" type="text" style="width:200px;"></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr>
+     <tr>   
+    <td class="label"><label for="ftp_username">FTP Username</label></td>
+    <td class="value"><input name="ftp_username" id="ftp_username" value="" class=" input-text" type="text" style="width:200px;"></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr><tr>   
+    <td class="label"><label for="ftp_password">FTP Password</label></td>
+    <td class="value"><input name="ftp_password" id="ftp_password" value="" class=" input-text" type="password" style="width:200px;"></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr>        <tr>   
+    <td class="label"><label for="admin_url">Magento Admin Area Address</label></td>
+    <td class="value"><input name="admin_url" id="admin_url" value="" class=" input-text" type="text" style="width:200px;"></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr>
+     <tr>   
+    <td class="label"><label for="admin_username">Magento Admin Area Username</label></td>
+    <td class="value"><input name="admin_username" id="admin_username" value="" class=" input-text" type="text" style="width:200px;"></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr><tr>   
+    <td class="label"><label for="admin_password">Magento Admin Area Password</label></td>
+    <td class="value"><input name="admin_password" id="admin_password" value="" class=" input-text" type="password" style="width:200px;"></td>
+    <td class="scope-label"></td>
+    <td><small>&nbsp;</small></td>
+</tr>
+            </tbody>
+        </table>
+            </div>
+        </div>
+</div>
+

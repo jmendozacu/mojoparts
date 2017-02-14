@@ -1,0 +1,71 @@
+
+<div class="block partfinder">
+    <div class="block-title">
+        <strong><span><?php echo $this->__('Part Finder'); ?></span></strong>        
+    </div>
+        <div class="block-content">
+
+			      <?php foreach($this->getLevelCollection() as $item): ?>
+
+                <?php echo $this->getLevelSelectHtml($item); ?>
+
+			      <?php endforeach; ?>
+			      <button class="button" onclick="partFinder.submit()"><span><span>Find Parts</span></span></button>
+			      
+            <?php if (Mage::getStoreConfig('partfinder/frontendsettings/categorysearch') == 1 || Mage::getStoreConfig('partfinder/frontendsettings/wordsearch') == 1): ?>      	
+              <div id="partfinder_extra"  <?php if (!$this->productsFound()): ?> style="display:none" <?php endif; ?> >
+              
+                <?php if (Mage::getStoreConfig('partfinder/frontendsettings/categorysearch') == 1): ?>            
+                  <div id="partfinder_category_container">
+                    <?php echo $this->getCategorySelectsHtml(); ?>
+                  </div>
+		            <?php endif; ?>	
+		            	          
+                <?php if (Mage::getStoreConfig('partfinder/frontendsettings/categorysearch') == 1 && Mage::getStoreConfig('partfinder/frontendsettings/wordsearch') == 1): ?> 
+                  <?php echo $this->__('Or search'); ?>:            		          
+		            <?php endif; ?>
+		            
+                <?php if (Mage::getStoreConfig('partfinder/frontendsettings/wordsearch') == 1): ?> 		          	           
+                  <div class="search">
+                    <form action="#" onsubmit="partFinder.submitSearch(); return false;">
+                       <table width="100%">
+                         <tr>
+                          <td>                  
+                            <input id="partfinder_search" type="text" name="<?php echo $this->getSearchQueryParamName() ?>" value="<?php echo $this->getSearchQueryText() ?>" class="input-text"/>
+                          </td>                        
+                          <td width="70" >                       
+                            <button type="submit" title="<?php echo $this->__('Search') ?>" class="button"><span><span><?php echo $this->__('Search') ?></span></span></button>		      		            	          		                                                                       
+                          </td>                        
+                         </tr>                       
+                       </table> 
+                    </form>                   
+		              </div>
+		            <?php endif; ?>
+		          </div>          
+		        <?php endif; ?>
+		        <div id="partfinder_not_found" style="display:none"><?php echo $this->__('No matches found.') ?></div>			        		      	          		      	      
+		    </div>
+</div>
+<script type="text/javascript">
+//<![CDATA[	
+  PartFinder.Config = {
+    categorySelect  : ' <select class="partfinder-select" name="<?php echo $this->getCategoryParamName(); ?>" id="partfinder_category_select_{{select_id}}" onchange="partFinder.checkSubCategories({{select_id}}, this.value)">' +
+                      '   <option value=""><?php echo $this->__('-- Select Category --') ?><\/option>' +
+                      ' <\/select>',
+                      
+    url                    : '<?php echo $this->getRequestUrl(); ?>',
+    submitUrl              : '<?php echo $this->getSubmitUrl(); ?>',    
+    checkResultUrl         : '<?php echo $this->getCheckResultUrl(); ?>',   
+    searchQueryParamName   : '<?php echo $this->getSearchQueryParamName(); ?>', 
+    categoryParamName      : '<?php echo $this->getCategoryParamName(); ?>',          
+    levelCount             : <?php echo $this->getLevelCount(); ?>,
+    levelParameterNames    : <?php echo $this->getLevelParameterNames(); ?>,  
+      
+    categorySearchEnabled  : <?php echo $this->getCategorySearchEnabledStr(); ?>,
+    wordSearchEnabled      : <?php echo $this->getWordSearchEnabledStr(); ?>,
+    categorySelectCount    : <?php echo $this->getCategorySelectCount(); ?>    
+  };
+
+  var partFinder = new PartFinder.Main();
+//]]>
+</script>

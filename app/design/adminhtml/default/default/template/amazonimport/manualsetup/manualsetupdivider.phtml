@@ -1,0 +1,119 @@
+<br />
+<?php if($this->getData('divtype') == "first"){
+?>
+	<style type="text/css">
+		.filter-actions {
+			display:none;
+		}
+		
+		#categoryeditor .filter-actions {
+			display:block;
+		}
+	</style>
+<div class="content-header">
+    <table cellspacing="0">
+        <tbody><tr>
+            <td><h3>Review Products</h3></td><td class="form-buttons"></td>
+         </tr>
+    </tbody></table>
+</div>
+<ul id="category_info_tabs" class="tabs-horiz" style="margin-bottom:5px;">
+    <?php
+		foreach($this->getData('tab_names') as $key=>$name){
+	
+			if ($name == "CamOption") {
+            	$displayname = "[Missing Product Data Type]"; 
+            }
+            else {
+            	$displayname = Mage::getModel('amazonimport/amazonimport')->FormatCamelCase($name); 
+            }
+	?>
+	<li>
+	    <a href="#" id="tab-<?php echo $name; ?>" title="<?php echo $displayname; ?>" onclick="setActiveTab('<?php echo $name; ?>');" class="tab-item-link">
+            <span><?php echo $displayname; ?></span>
+        </a>
+    </li>
+	<?php
+		}
+	?>
+</ul>
+<?php
+
+}else if($this->getData('divtype') == "normal"){
+?>
+	</div>
+	<div id="box-<?php echo $this->getData('productdatatype'); ?>" style="display:none;">
+<?php
+
+}else if($this->getData('divtype') == "last"){
+?>
+	</div>
+	<script type="text/javascript">
+	  <?php
+		
+		// establish our tab array
+		echo 'var tabnames = Array(';
+		foreach($this->getData('tab_names') as $key=>$name){
+			echo "'".$name."',";
+		}
+		echo '"null");';
+		
+		foreach($this->getData('tab_names') as $key=>$name){
+			echo "var firsttab = '".$name."';";
+			break;
+		}
+		
+		// we can now use the above at any point in the below as necessary.
+		echo 'function setActiveTab(tabid){
+			
+			// first hide all. prevents issues with multiple tabs visible.
+			for(var i in tabnames){
+				if(document.getElementById(\'box-\'+tabnames[i])){
+					document.getElementById(\'box-\'+tabnames[i]).style.display = "none";
+					document.getElementById(\'tab-\'+tabnames[i]).className = "tab-item-link";
+				}
+			}
+			
+			// and now make the main thing visible.
+			document.getElementById(\'box-\'+tabid).style.display = "block";
+			document.getElementById(\'tab-\'+tabid).className = "tab-item-link active";
+			setCookie("activetab_manualsetup",tabid,1);			
+		}	
+		
+		function setCookie(c_name,value,exdays)
+		{
+			var exdate=new Date();
+			exdate.setDate(exdate.getDate() + exdays);
+			var c_value=escape(value) + ((exdays==null) ? "" : "; expires="+exdate.toUTCString());
+			document.cookie=c_name + "=" + c_value;
+		}
+		
+		function getCookie(c_name)
+		{
+			var i,x,y,ARRcookies=document.cookie.split(";");
+			for (i=0;i<ARRcookies.length;i++)
+			{
+			  x=ARRcookies[i].substr(0,ARRcookies[i].indexOf("="));
+			  y=ARRcookies[i].substr(ARRcookies[i].indexOf("=")+1);
+			  x=x.replace(/^\s+|\s+$/g,"");
+			  if (x==c_name)
+				{
+				return unescape(y);
+				}
+			  }
+		}
+				
+		if(getCookie("activetab_manualsetup")){
+			setTimeout("setActiveTab(\'"+getCookie("activetab_manualsetup")+"\');",500);
+		}else{
+			setCookie("activetab_manualsetup",firsttab,1);		
+			setTimeout("setActiveTab(\'"+getCookie("activetab_manualsetup")+"\');",500);
+		}';
+	
+	?>
+	</script>
+
+
+<?php
+}
+?>

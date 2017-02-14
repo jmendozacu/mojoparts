@@ -1,0 +1,235 @@
+
+<div class="entry-edit">
+        <fieldset id="my-fieldset">		
+		<p class="grand-total"><b>Help Tip: Review Products </b></p>Below, please find grids containing 
+				each product which has been selected to list and categorised.<br /><br />
+				If a product has been found on Amazon using the Find Products on Amazon Wizard, we will automatically mark this products setup as complete on your behalf, as Amazon already has all of the information it could need about the product. If however you could not find a product using the Find Products on Amazon Wizard or you chose the Advanced Setup method, you must now confirm that your products are ready to list onto Amazon.<br /><br />
+								</fieldset>
+							
+</div>
+
+
+<div id="masking" style="top:0px;left:0px;position:absolute;display:none;background:#F1F1F1;cursor: pointer;" onclick="hidePopover();">
+</div>
+<div class="entry-edit" id="categoryeditor" style="border:1px solid #F0F0F0;background:#FAFAFA;display:none;overflow:auto;padding:10px;position:absolute;top:20%;left:20%;bottom:20%;right:20%;z-index:9999;">
+	<p class="grand-total"><br /><br /><br /><br /><center><b>Please Wait - Loading Wizard - Click outside to cancel</b></center></p>
+</div>
+
+<script type="text/javascript">
+	
+	var idvalues = "";
+	var browsenode1 = "";
+	var browsenode2 = "";
+	var itemtype = "";
+	var vtheme = "";
+	var affectedelement = "";
+	var condition = "";
+	var conditionnote = "";
+	
+	function loadPopover(idvalue){
+		idvalues = idvalue;
+		updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getchangecategory'); ?>');
+		$('masking').style.width = document.width + "px";
+		$('masking').style.height = document.height + "px";
+		$('masking').appear({ from: 0.0, to: 0.5, duration: 1.0 });
+		$('categoryeditor').appear({ from: 0.0, to: 1.0, duration: 1.0 });
+    }
+	function hidePopover(){
+		browsenode1 = "";
+		browsenode2 = "";
+		itemtype = "";
+		vtheme = "";
+		affectedelement = "";
+		condition = "";
+		conditionnote = "";
+		$('masking').hide();
+		$('categoryeditor').hide();
+    }
+	window.onresize = function() {     $('masking').style.width = document.width + "px"; $('masking').style.height = document.width + "px";  };
+
+	function passToCategoriseFromMassAction(element){
+		if(element == ""){
+			// BUGFIX [internal discovery] - Blank tab in review products but cannot recategorise.
+			element = "novalue";
+		}
+		affectedelement = element;
+		var classNameString = element+"_massactionJsObject";
+		loadPopover(this[classNameString].getCheckedValues());
+	}
+	
+	function loadPopoverCondition(idvalue){
+		idvalues = idvalue;
+		updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getchangecondition'); ?>');
+	    $('masking').style.width = document.width + "px";
+        $('masking').style.height = document.height + "px";
+		$('masking').appear({ from: 0.0, to: 0.5, duration: 1.0 });
+		$('categoryeditor').appear({ from: 0.0, to: 1.0, duration: 1.0 });
+    }
+	function hidePopoverCondition(){
+		browsenode1 = "";
+		browsenode2 = "";
+		itemtype = "";
+		vtheme = "";
+		affectedelement = "";
+		condition = "";
+		conditionnote = "";
+		$('masking').hide();
+		$('categoryeditor').hide();
+    }
+	window.onresize = function() {     $('masking').style.width = document.width + "px"; $('masking').style.height = document.width + "px";  };
+
+	function passToConditionFromMassAction(element){
+		affectedelement = element;
+		var classNameString = element+"_massactionJsObject";
+		loadPopoverCondition(this[classNameString].getCheckedValues());
+	}
+	
+	
+	
+	
+	function updateContent(url) {
+        
+		var params = {};
+	    if (!params.form_key) {
+            params.form_key = FORM_KEY;
+        }
+
+        //toolbarToggle.stop();
+
+        var categoryContainer = $('categoryeditor');
+        var messagesContainer = $('messages');
+		
+        var thisObj = this;
+        new Ajax.Request(url + (url.match(new RegExp('\\?')) ? '&isAjax=true' : '?isAjax=true' ), {
+            parameters:  params,
+            evalScripts: true,
+            onSuccess: function(transport) {
+                try {
+                    if (transport.responseText.isJSON()) {
+                        var response = transport.responseText.evalJSON();
+                        var needUpdate = true;
+                        if (response.error) {
+                            alert(response.message);
+                            needUpdate = false;
+                        }
+                        if(response.ajaxExpired && response.ajaxRedirect) {
+                            setLocation(response.ajaxRedirect);
+                            needUpdate = false;
+                        }
+                        if (needUpdate){
+                            if (response.content){
+                                $(categoryContainer).update(response.content);
+                            }
+                            if (response.messages){
+                                $(messagesContainer).update(response.messages);
+                            }
+                        }
+                    } else {
+                        $(categoryContainer).update(transport.responseText);
+                    }
+                }
+                catch (e) {
+                    $(categoryContainer).update(transport.responseText);
+                }
+            }
+        });
+    }
+	
+	function selectedBrowseNode(input){
+	
+		// we call this function twice. first time neither browsenode will be set, second time only '1' will be set.
+		if((browsenode1 == "")&&(browsenode2 == "")){
+			browsenode1 = input;
+			updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getchangecategory2'); ?>');
+		}else if(browsenode2 == ""){
+			browsenode2 = input;
+			updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getcatcondition'); ?>');
+		}
+	
+	}
+	
+	function selectedItemtype(input){
+		itemtype = input;
+		updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getchangecategory4'); ?>itype/'+input );
+	}
+	
+	function selectedItemCondition(input){
+			condition = input;
+			updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getcatconditionnote'); ?>');
+	}
+	
+	function selectedItemConditionNote(input){
+			conditionnote = input;
+			updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getchangecategory3'); ?>bn1/'+browsenode1);
+	}
+	
+	
+	function selectedItemConditionChangeCond(input){
+			condition = input;
+			updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getchangeconditionnote'); ?>');
+	}
+	
+	function selectedItemConditionNoteChangeCond(input){
+			conditionnote = input;
+			document.getElementById('sendform-condition').value = condition;
+			document.getElementById('sendform-conditionnote').value = conditionnote;
+			document.getElementById('sendform-idvalues').value = idvalues;
+			document.getElementById('sendform').submit();	
+	}
+	
+	function conditionupdatecomplete(){
+			var elementToUpdate = affectedelement+"JsObject";
+			this[elementToUpdate].reload();
+			updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getchangeconditionthanks'); ?>');
+	}
+	
+	function selectedVariationTheme(input){
+		vtheme = input;
+		document.getElementById('sendform-bn1').value = browsenode1;
+		document.getElementById('sendform-bn2').value = browsenode2;
+		document.getElementById('sendform-itemtype').value = itemtype;
+		document.getElementById('sendform-variationtheme').value = input;
+		document.getElementById('sendform-condition').value = condition;
+		document.getElementById('sendform-conditionnote').value = conditionnote;
+		document.getElementById('sendform-idvalues').value = idvalues;
+		document.getElementById('sendform').submit();	
+	}
+	
+	function missioncomplete(input){
+		// we have just saved our update via ajax. lets now reload any affected grids.
+		// this is given to us by the function calling, we simply iterate through.
+		var elementToUpdate = affectedelement+"JsObject";
+		if(this[elementToUpdate] === undefined){
+			alert('Settings saved. This page will now be reloaded to reflect your changes');
+			window.location.reload();
+		}else{
+			this[elementToUpdate].reload();
+		}
+		var elementToUpdate = input+"JsObject";
+		if(this[elementToUpdate] === undefined){
+			alert('Settings saved. This page will now be reloaded to reflect your changes');
+			window.location.reload();
+		}else{
+			this[elementToUpdate].reload();
+		}
+
+	
+		// if we're still active here, we've not been redirected and therefore the user can continue.
+		updateContent('<?php echo $this->getUrl('amazonimport/manualsetup/getchangecategory4'); ?>isprocesscomplete/yes/');
+	}
+	
+</script>
+
+
+	<form action="<?php echo $this->getUrl('*/*/finalsavechange'); ?>" method="POST" id="sendform" name="sendform" target="sendformtarget">
+		<input type="hidden" name="form_key" id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>"/>
+		<input type="hidden" name="sendform-bn1" id="sendform-bn1" value="">		
+		<input type="hidden" name="sendform-bn2" id="sendform-bn2" value="">
+		<input type="hidden" name="sendform-itemtype" id="sendform-itemtype" value="">
+		<input type="hidden" name="sendform-variationtheme" id="sendform-variationtheme" value="">	
+		<input type="hidden" name="sendform-condition" id="sendform-condition" value="">
+		<input type="hidden" name="sendform-conditionnote" id="sendform-conditionnote" value="">	
+		<input type="hidden" name="sendform-idvalues" id="sendform-idvalues" value="">	
+	</form>
+        
+<iframe src="about:blank" id="sendformtarget" name="sendformtarget" style="width:1px;height:1px;" frameborder="0"></iframe>

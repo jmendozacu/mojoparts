@@ -1,0 +1,164 @@
+<div id="block_notice_synchronization_template_general" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('General'); ?>">
+    <?php echo Mage::helper('M2ePro')->__('Synchronization Template includes rules and conditions which determine Listing behavior on eBay.<br/>
+    Activation / Deactivation Actions, Revise, Relist and Stop Rules should be specified in this template.<br/><br/>
+	<b>Note:</b> Templates Synchronization setting should be enabled in Synchronization (Configuration > Synchronization). 
+	Otherwise, Synchronization Template Rules will not take effect.
+    <ul class="list">
+        <li><b>Activation Actions</b> - actions to be executed only once for each Listing when the Synchronization Template is activated.</li>
+        <li><b>Deactivation Actions</b> - actions to be executed only once for each Listing when the Synchronization Template is deactivated.</li>
+    </ul>'); ?>
+</div>
+
+<?php
+    $formData = Mage::registry('M2ePro_data') ? Mage::registry('M2ePro_data')->toArray() : array();
+    $defaults = array(
+        'title' => '',
+        'start_auto_list' => Ess_M2ePro_Model_SynchronizationsTemplates::START_AUTO_LIST_YES,
+        'end_auto_stop' => Ess_M2ePro_Model_SynchronizationsTemplates::END_AUTO_STOP_YES
+    );
+    $formData = array_merge($defaults, $formData);
+
+    $isEdit = !!$this->getRequest()->getParam('id');
+?>
+
+<script type="text/javascript">
+
+    // General for all tabs
+    //-----------------------------
+    if (typeof M2ePro == 'undefined') {
+        M2ePro = {};
+        M2ePro.url = {};
+        M2ePro.formData = {};
+        M2ePro.customData = {};
+        M2ePro.text = {};
+    }
+
+    M2ePro.url.formSubmitNew = '<?php echo $this->getUrl('*/*/save'); ?>';
+    M2ePro.url.formSubmit    = '<?php echo $this->getUrl('*/*/save', array('id' => $this->getRequest()->getParam('id'))); ?>';
+    M2ePro.url.deleteAction  = '<?php echo $this->getUrl('*/*/delete', array('id' => $this->getRequest()->getParam('id'))); ?>';
+    
+    M2ePro.formData.id = '<?php echo $this->getRequest()->getParam('id'); ?>';
+
+    M2ePro.text.chapter_when_duplicate = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Add Synchronization Template')); ?>';
+    M2ePro.text.wrong_time_format_error = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Wrong time format string.')); ?>';
+
+    Event.observe(window, 'load', function() {
+        SynchronizationTemplatesHandlersObj = new SynchronizationTemplatesHandlers();
+        editForm = new varienForm('edit_form', '<?php echo $this->getValidationUrl(); ?>');
+    });
+    //-----------------------------
+
+</script>
+
+<script type="text/javascript">
+
+    // Data for current tab
+    //-----------------------------
+    M2ePro.formData.title = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->escapeHtml($formData['title'])); ?>';
+    M2ePro.formData.start_auto_list = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['start_auto_list']); ?>';
+    M2ePro.formData.end_auto_stop = '<?php echo Mage::helper('M2ePro')->escapeJs($formData['end_auto_stop']); ?>';
+
+    M2ePro.text.title_not_unique_error = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('The specified title is already used for other template. Template title must be unique.')); ?>';
+
+    Event.observe(window, 'load', function() {
+
+    });
+    //-----------------------------
+    
+</script>
+
+<div class="entry-edit" id="magento_block_synchronization_template_general_general">
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('General'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label for="title"><?php echo Mage::helper('M2ePro')->__('Title'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <input id="title" name="title" value="<?php echo $this->escapeHtml($formData['title']); ?>" type="text" class="input-text required-entry M2ePro-synchronization-tpl-title" />
+                        <p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Short meaningful template title for your internal use.'); ?></span>
+                        </p>
+					</td>
+                </tr>
+
+            </table>
+            
+        </div>
+    </div>
+
+</div>
+
+<div class="entry-edit" id="magento_block_synchronization_template_general_start">
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Activation Actions'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label><?php echo Mage::helper('M2ePro')->__('List All Items Automatically'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="start_auto_list" name="start_auto_list" class="required-entry">
+                            <option value="<?php echo Ess_M2ePro_Model_SynchronizationsTemplates::START_AUTO_LIST_NONE; ?>" <?php if ($formData['start_auto_list'] == Ess_M2ePro_Model_SynchronizationsTemplates::START_AUTO_LIST_NONE): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_SynchronizationsTemplates::START_AUTO_LIST_YES; ?>" <?php if ($formData['start_auto_list'] == Ess_M2ePro_Model_SynchronizationsTemplates::START_AUTO_LIST_YES ): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Choose <i>No</i> only if you intend to list items manually.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+            
+        </div>
+    </div>
+
+</div>
+
+<div class="entry-edit" id="magento_block_synchronization_template_general_end">
+
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Deactivation Actions'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <tr>
+                    <td class="label">
+                        <label><?php echo Mage::helper('M2ePro')->__('Stop Listed Items Automatically'); ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value" style="width: auto;">
+                        <select id="end_auto_stop" name="end_auto_stop" class="required-entry">
+                            <option value="<?php echo Ess_M2ePro_Model_SynchronizationsTemplates::END_AUTO_STOP_NONE; ?>" <?php if ($formData['end_auto_stop'] == Ess_M2ePro_Model_SynchronizationsTemplates::END_AUTO_STOP_NONE): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_SynchronizationsTemplates::END_AUTO_STOP_YES; ?>" <?php if ($formData['end_auto_stop'] == Ess_M2ePro_Model_SynchronizationsTemplates::END_AUTO_STOP_YES): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                        </select>
+						<p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Choose <i>No</i> only if you intend to keep items listed after Synchronization is deactivated.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </div>
+    </div>
+
+</div>

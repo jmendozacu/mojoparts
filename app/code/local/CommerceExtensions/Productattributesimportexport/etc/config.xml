@@ -1,0 +1,39 @@
+<config>
+    <modules>
+        <CommerceExtensions_Productattributesimportexport>
+            <version>0.1.0</version>
+        </CommerceExtensions_Productattributesimportexport>
+    </modules>   
+    <global>
+        <!--<blocks>
+            <commerceextensions_productattributesimportexport>
+                <class>CommerceExtensions_Productattributesimportexport_Block</class>
+            </commerceextensions_productattributesimportexport>
+        </blocks>-->
+        <models>
+            <commerceextensions_productattributesimportexport>
+                <class>CommerceExtensions_Productattributesimportexport_Model</class>
+            </commerceextensions_productattributesimportexport>
+        </models>
+        <resources><!--
+            <productattributesimportexport_setup>
+                <setup>
+                    <module>CommerceExtensions_Productattributesimportexport</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </productattributesimportexport_setup> -->
+            <productattributesimportexport_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </productattributesimportexport_write>
+            <productattributesimportexport_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </productattributesimportexport_read>
+        </resources>
+    </global>
+</config>

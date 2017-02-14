@@ -1,0 +1,287 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Xtento_TrackingImport>
+            <version>2.1.0</version>
+        </Xtento_TrackingImport>
+    </modules>
+    <global>
+        <helpers>
+            <xtento_trackingimport>
+                <class>Xtento_TrackingImport_Helper</class>
+            </xtento_trackingimport>
+        </helpers>
+        <blocks>
+            <xtento_trackingimport>
+                <class>Xtento_TrackingImport_Block</class>
+            </xtento_trackingimport>
+        </blocks>
+        <models>
+            <xtento_trackingimport>
+                <class>Xtento_TrackingImport_Model</class>
+                <resourceModel>xtento_trackingimport_mysql4</resourceModel>
+            </xtento_trackingimport>
+            <xtento_trackingimport_mysql4>
+                <class>Xtento_TrackingImport_Model_Mysql4</class>
+                <entities>
+                    <profile>
+                        <table>xtento_trackingimport_profile</table>
+                    </profile>
+                    <source>
+                        <table>xtento_trackingimport_source</table>
+                    </source>
+                    <log>
+                        <table>xtento_trackingimport_log</table>
+                    </log>
+                </entities>
+            </xtento_trackingimport_mysql4>
+        </models>
+        <resources>
+            <xtento_trackingimport_setup>
+                <setup>
+                    <module>Xtento_TrackingImport</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </xtento_trackingimport_setup>
+            <xtento_trackingimport_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </xtento_trackingimport_write>
+            <xtento_trackingimport_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </xtento_trackingimport_read>
+        </resources>
+        <events>
+            <!-- This event is only dispatched for cron.php based executions. We can use it to add our own "dynamic" cronjobs to the config before the cron runs. Must be added in global area and not crontab area as only then it gets executed before "crontab default" event. -->
+            <default>
+                <observers>
+                    <cron_observer_tracking_import>
+                        <type>model</type>
+                        <class>xtento_trackingimport/observer_cron_config</class>
+                        <method>addCronjobsToConfig</method>
+                    </cron_observer_tracking_import>
+                </observers>
+            </default>
+            <xtento_cronjob_dispatch_before>
+                <observers>
+                    <xtento_trackingimport_xtento_cronjob_dispatch_before>
+                        <type>model</type>
+                        <class>xtento_trackingimport/observer_cron_config</class>
+                        <method>xtentoCronjobDispatchBefore</method>
+                    </xtento_trackingimport_xtento_cronjob_dispatch_before>
+                </observers>
+            </xtento_cronjob_dispatch_before>
+            <adminhtml_controller_action_predispatch_start>
+                <observers>
+                    <add_cronjobs_to_config_for_aoe_scheduler_tracking_import>
+                        <type>model</type>
+                        <class>xtento_trackingimport/observer_cron_config</class>
+                        <method>addCronjobsToConfigAoeScheduler</method>
+                    </add_cronjobs_to_config_for_aoe_scheduler_tracking_import>
+                </observers>
+            </adminhtml_controller_action_predispatch_start>
+        </events>
+    </global>
+    <crontab>
+        <events>
+            <default>
+                <observers>
+                    <cron_observer_tracking_import>
+                        <type>model</type>
+                        <class>xtento_trackingimport/observer_cron_config</class>
+                        <method>addCronjobsToConfig</method>
+                    </cron_observer_tracking_import>
+                </observers>
+            </default>
+            <xtento_cronjob_dispatch_before>
+                <observers>
+                    <xtento_trackingimport_xtento_cronjob_dispatch_before>
+                        <type>model</type>
+                        <class>xtento_trackingimport/observer_cron_config</class>
+                        <method>xtentoCronjobDispatchBefore</method>
+                    </xtento_trackingimport_xtento_cronjob_dispatch_before>
+                </observers>
+            </xtento_cronjob_dispatch_before>
+        </events>
+    </crontab>
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <Xtento_TrackingImport before="Mage_Adminhtml">Xtento_TrackingImport_Adminhtml</Xtento_TrackingImport>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
+    <default>
+        <trackingimport>
+            <general>
+                <default_page>trackingimport_profile</default_page>
+            </general>
+        </trackingimport>
+    </default>
+    <adminhtml>
+        <layout>
+            <updates>
+                <xtento_trackingimport>
+                    <file>xtento/trackingimport.xml</file>
+                </xtento_trackingimport>
+            </updates>
+        </layout>
+        <events>
+            <core_config_data_save_after>
+                <observers>
+                    <has_value_for_xtento_trackingimport_configuration_changed>
+                        <type>model</type>
+                        <class>Xtento_TrackingImport_Model_System_Config_Backend_Import_Enabled</class>
+                        <method>has_value_for_configuration_changed</method>
+                    </has_value_for_xtento_trackingimport_configuration_changed>
+                </observers>
+            </core_config_data_save_after>
+        </events>
+        <translate>
+            <modules>
+                <Xtento_TrackingImport>
+                    <files>
+                        <default>Xtento_TrackingImport.csv</default>
+                    </files>
+                </Xtento_TrackingImport>
+            </modules>
+        </translate>
+        <!-- Following: Compatibility fix for Magento version 1.3 -->
+        <menu>
+            <system>
+                <children>
+                    <xtento_extensions translate="title">
+                        <title>XTENTO Extensions</title>
+                        <sort_order>1</sort_order>
+                        <children>
+                            <trackingimport translate="title">
+                                <title>Tracking Import Configuration</title>
+                                <sort_order>95</sort_order>
+                                <action>adminhtml/system_config/edit/section/trackingimport</action>
+                            </trackingimport>
+                        </children>
+                    </xtento_extensions>
+                </children>
+            </system>
+            <sales>
+                <children>
+                    <trackingimport translate="title">
+                        <title>Tracking Import</title>
+                        <sort_order>1100</sort_order>
+                        <action>adminhtml/trackingimport_index/redirect</action>
+                        <children>
+                            <manual translate="title">
+                                <title>Manual Import</title>
+                                <sort_order>5</sort_order>
+                                <action>adminhtml/trackingimport_manual</action>
+                            </manual>
+                            <log translate="title">
+                                <title>Execution Log</title>
+                                <sort_order>10</sort_order>
+                                <action>adminhtml/trackingimport_log</action>
+                            </log>
+                            <profile translate="title">
+                                <title>Import Profiles</title>
+                                <sort_order>20</sort_order>
+                                <action>adminhtml/trackingimport_profile</action>
+                            </profile>
+                            <source>
+                                <title>Import Sources</title>
+                                <sort_order>30</sort_order>
+                                <action>adminhtml/trackingimport_source</action>
+                            </source>
+                            <tools>
+                                <title>Tools</title>
+                                <sort_order>40</sort_order>
+                                <action>adminhtml/trackingimport_tools</action>
+                            </tools>
+                        </children>
+                    </trackingimport>
+                </children>
+            </sales>
+        </menu>
+        <acl>
+            <resources>
+                <all>
+                    <title>Allow Everything</title>
+                </all>
+                <admin>
+                    <children>
+                        <sales>
+                            <children>
+                                <trackingimport>
+                                    <title>XTENTO Tracking Import</title>
+                                    <sort_order>1100</sort_order>
+                                    <children>
+                                        <manual translate="title">
+                                            <title>Manual Import</title>
+                                            <sort_order>5</sort_order>
+                                        </manual>
+                                        <log translate="title">
+                                            <title>Execution Log</title>
+                                            <sort_order>10</sort_order>
+                                        </log>
+                                        <profile translate="title">
+                                            <title>Import Profiles</title>
+                                            <sort_order>20</sort_order>
+                                        </profile>
+                                        <source>
+                                            <title>Import Sources</title>
+                                            <sort_order>30</sort_order>
+                                        </source>
+                                        <tools>
+                                            <title>Tools</title>
+                                            <sort_order>40</sort_order>
+                                        </tools>
+                                    </children>
+                                </trackingimport>
+                            </children>
+                        </sales>
+                        <system>
+                            <children>
+                                <config>
+                                    <children>
+                                        <trackingimport translate="title">
+                                            <title>XTENTO Tracking Import Configuration</title>
+                                            <sort_order>1</sort_order>
+                                        </trackingimport>
+                                    </children>
+                                </config>
+                                <xtento_extensions translate="title">
+                                    <title>XTENTO Extensions</title>
+                                    <sort_order>1</sort_order>
+                                    <children>
+                                        <trackingimport_config translate="title">
+                                            <title>Tracking Import Configuration</title>
+                                            <sort_order>495</sort_order>
+                                            <action>adminhtml/system_config/edit/section/trackingimport</action>
+                                        </trackingimport_config>
+                                    </children>
+                                </xtento_extensions>
+                            </children>
+                        </system>
+                    </children>
+                </admin>
+            </resources>
+        </acl>
+    </adminhtml>
+</config>
+<!--
+/**
+ * Product:       Xtento_TrackingImport (2.1.0)
+ * ID:            0CE91KDAymk40+soa+YSqrvRuUQaAJq7YPuI3zFkClU=
+ * Packaged:      2015-10-07T21:36:35+00:00
+ * Last Modified: 2015-08-14T17:40:34+02:00
+ * File:          app/code/local/Xtento/TrackingImport/etc/config.xml
+ * Copyright:     Copyright (c) 2015 XTENTO GmbH & Co. KG <info@xtento.com> / All rights reserved.
+ */
+-->

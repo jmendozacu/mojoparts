@@ -1,0 +1,151 @@
+<div class="content-header">
+    <table cellspacing="0">
+        <tr>
+            <td><h3><?php echo $this->__('Tracking Import - Manual Import') ?></h3></td>
+        </tr>
+    </table>
+</div>
+<div class="entry-edit">
+    <form id="import_form" name="import_form" method="post" enctype="multipart/form-data" action="<?php echo Mage::helper('adminhtml')->getUrl('*/*/manualPost')?>">
+        <input name="form_key" type="hidden" value="<?php echo $this->getFormKey() ?>"/>
+        <!--<input name="XDEBUG_PROFILE" type="hidden" value="1"/>-->
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__('Manual Import')?></h4>
+        </div>
+        <fieldset id="my-fieldset">
+            <table cellspacing="0" class="form-list">
+                <tr>
+                    <td class="label"><?php echo $this->__('Profile')?> <span class="required">*</span></td>
+                    <td class="input-ele">
+                        <?php echo $this->getProfileSelectorHtml() ?>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label" style="width: 240px"><?php echo $this->__('Upload file manually')?></td>
+                    <td class="input-ele">
+                        <input type="file" id="manual_file_upload" name="manual_file_upload" value="" class="" style=""/><!-- <strong>(Note: Files will not be downloaded from configured sources for manual file uploads)</strong>-->
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label" style="width: 240px"><?php echo $this->__('Test mode (no updates will be imported)')?></td>
+                    <td class="input-ele">
+                        <input type="checkbox" name="test_mode" id="test_mode" style="margin-top:7px;"<?php if ($this->getRequest()->getParam('test') !== NULL): ?> checked="checked"<?php endif; ?>/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label" style="width: 240px"><?php echo $this->__('Show debug messages')?></td>
+                    <td class="input-ele">
+                        <input type="checkbox" name="debug_mode" id="debug_mode" style="margin-top:5px;"<?php if ($this->getRequest()->getParam('debug') !== NULL): ?> checked="checked"<?php endif; ?>/>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="label">&nbsp;</td>
+                    <td class="input-ele">
+                        <button class="scalable save" type="submit" id="import_button">
+                            <span><?php echo $this->__('Run Import')?></span></button>
+                    </td>
+                </tr>
+            </table>
+        </fieldset>
+    </form>
+</div>
+<div class="entry-edit" id="import_result" style="<?php echo $this->getImportResult() ? '' : 'display:none;'?>">
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__('Import Debug Results') ?></h4>
+        <div class="form-buttons"></div>
+    </div>
+    <div class="fieldset fieldset-wide" id="base_fieldset2">
+        <div class="hor-scroll">
+            <textarea id="import_result_content" style="width:99%; height: 450px;" wrap="off"><?php echo $this->getImportResult() ?></textarea>
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript">
+    var inputFields = ['test_mode', 'debug_mode', 'import_button'];
+    Event.observe(window, 'load', function () {
+    <?php
+    if ($this->getRequest()->getParam('profile_id', false)) {
+        ?>
+        $('profile_id').value = '<?php echo htmlspecialchars($this->getRequest()->getParam('profile_id')) ?>';
+        $$('select#profile_id option').each(function (o) {
+            if (o.readAttribute('value') == $('profile_id').value) {
+                o.selected = true;
+                throw $break;
+            }
+        });
+        <?php
+    } else {
+        ?>
+        // If there is just one profile, select it by default
+        if ($$('select#profile_id option').length <= 2) {
+            $$('select#profile_id option').each(function (o) {
+                if (o.readAttribute('value') !== '') {
+                    o.selected = true;
+                    throw $break;
+                }
+            });
+        }
+        <?php
+    }
+    ?>
+        if ($('profile_id').value == '') {
+            disableFields();
+        }
+        $('profile_id').onchange = function () {
+            if (this.options[this.selectedIndex].value !== '') {
+                enableFields();
+            } else {
+                disableFields();
+            }
+        }
+    });
+    function disableFields() {
+        inputFields.forEach(function (element, index, array) {
+            if ($(element)) {
+                if (element != 'import_button') {
+                    $(element).disable();
+                }
+            }
+        });
+    }
+    function enableFields() {
+        inputFields.forEach(function (element, index, array) {
+            if ($(element)) {
+                if (element != 'import_button') {
+                    $(element).enable();
+                }
+            }
+        });
+    }
+</script>
+<!-- We are more important than other jquery versions/plugins on this page, so we load ours here. -->
+<script src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS); ?>xtento/trackingimport/jquery/jquery-1.8.3.min.js" type="text/javascript"></script>
+<script src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS); ?>xtento/trackingimport/jquery/jquery.fileDownload.js" type="text/javascript"></script>
+<script src="<?php echo Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_JS); ?>xtento/trackingimport/jquery/jquery.blockUI.js" type="text/javascript"></script>
+<script type="text/javascript">
+    Event.observe('import_form', 'submit', function (event) {
+        $('success-msg').hide();
+        $('warning-msg').hide();
+        jQuery.blockUI({
+            message:jQuery('#import_dialog'),
+            css:{
+                border:'none',
+                padding:'15px',
+                backgroundColor:'#000',
+                '-webkit-border-radius':'10px',
+                '-moz-border-radius':'10px',
+                opacity:.6,
+                color:'#fff'
+            }
+        });
+        jQuery('#close').click(function () {
+            jQuery.unblockUI();
+            return false;
+        });
+    });
+</script>
+<div id="import_dialog" style="display:none; cursor: default">
+    <h2><?php echo Mage::helper('xtento_trackingimport')->__('Running import... Please wait...')?></h2>
+    <input type="button" id="close" value="Close Progress Window" style="padding:5px;"/>
+</div>

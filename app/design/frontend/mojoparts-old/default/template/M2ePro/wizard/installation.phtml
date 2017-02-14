@@ -1,0 +1,233 @@
+<style type="text/css">
+    /* Blocks */
+    .step_container_description {
+        float: left;
+    }
+    .step_container_completed {
+        float: right;
+    }
+    .step_container_incomplete {
+        float: right;
+    }
+    .step_container_buttons {
+        clear:both;
+        padding-top: 10px;
+    }
+    /* Text */
+    .step_completed {
+        font-size: 14px;
+        font-weight: bold;
+        color: green;
+    }
+    .step_incomplete {
+        font-size: 14px;
+        font-weight: bold;
+        color: red;
+    }
+    .step_skip {}
+    .step_process {}
+</style>
+
+<script type="text/javascript">
+    if (typeof M2ePro == 'undefined') {
+        M2ePro = {};
+        M2ePro.url = {};
+        M2ePro.formData = {};
+        M2ePro.customData = {};
+        M2ePro.text = {};
+	}
+
+    M2ePro.url.setStatus = '<?php echo $this->getUrl('*/adminhtml_wizard/setStatus'); ?>';
+    M2ePro.url.startMigration = '<?php echo $this->getUrl('*/adminhtml_wizard/startMigration'); ?>';
+
+    WizardHandlersObj = new WizardHandlers();
+    WizardHandlersObj.setConstants('<?php echo Mage::helper('M2ePro')->getClassConstantAsJson('Model_Wizard'); ?>');
+    WizardHandlersObj.skip_confirm_text = '<?php echo Mage::helper('M2ePro')->__('Note: If you close the wizard, it never starts again. All settings you will be required to set manually. Press Cancel to continue working with wizard.'); ?>';
+    WizardHandlersObj.current_status = <?php echo $this->status; ?>;
+    WizardHandlersObj.migration_available = <?php echo Mage::getModel('M2ePro/Migration_Dispatcher')->isMigrateAvailable() ? 'true' : 'false'; ?>;
+</script>
+
+<!-- AUTO SETTINGS -->
+<div id="block_notice_wizard_installation_step_auto_settings" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Cron Job Set Up'); ?>" subtitle="[<?php echo Mage::helper('M2ePro')->__('Step'); ?> 1]" collapseable="no" hideblock="no" always_show="yes" style="display:none;">
+	<div>	
+		<div class="step_container_description">
+			<?php echo Mage::helper('M2ePro')->__('Set up a cron job to run every 5 minutes to enable automatic working of extension.<br/>
+			Otherwise, some processes will not work (i.e. synchronization tasks, logs cleaning).'); ?>
+			<div style="padding-top:5px;">
+				<strong><?php echo Mage::helper('M2ePro')->__('Set up Cron Job using PHP'); ?>:</strong> <br/>
+				<input type="text" style="width:400px;" readonly="readonly" value="php -q <?php echo $this->basePath; ?>/cron.php" onclick="this.select();" />
+			</div>
+			<div style="padding-top:5px; color: brown;">
+				<strong><?php echo Mage::helper('M2ePro')->__('OR'); ?></strong>
+			</div>
+            <div style="padding-top:5px;">
+                <strong><?php echo Mage::helper('M2ePro')->__('Set up Cron Job using GET'); ?>:</strong> <br/>
+                <input type="text" style="width:400px;" readonly="readonly" value="<?php echo $this->baseUrl; ?>cron.php" onclick="this.select();" />
+            </div>
+        </div>
+        <div class="step_container_completed">
+            <span class="step_completed" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Completed'); ?></span>
+        </div>
+        <div class="step_container_incomplete">
+            <span class="step_incomplete" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Incomplete'); ?></span>
+        </div>
+        <div style="clear:both;"></div>
+    </div>
+    <div class="step_container_buttons">
+        <span class="step_skip" style="display:none;"><?php echo $this->getChildHtml('skip_auto_settings'); ?></span>
+        <span class="step_process" style="display:none;"></span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    WizardHandlersObj.renderStep('block_notice_wizard_installation_step_auto_settings',<?php echo Ess_M2ePro_Model_Wizard::STATUS_AUTO_SETTINGS; ?>);
+</script>
+<!-- END AUTO SETTINGS -->
+
+<!-- LICENSE -->
+<div id="block_notice_wizard_installation_step_license" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('License Set Up'); ?>" subtitle="[<?php echo Mage::helper('M2ePro')->__('Step'); ?> 2]" collapseable="no" hideblock="no" always_show="yes" style="display:none;">
+    <div>
+        <div class="step_container_description">
+            <?php echo Mage::helper('M2ePro')->__('You need to specify license Key. <br/>
+            <strong>Note:</strong> The M2E Pro does not work without activation.'); ?>
+        </div>
+        <div class="step_container_completed">
+            <span class="step_completed" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Completed'); ?></span>
+        </div>
+        <div class="step_container_incomplete">
+            <span class="step_incomplete" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Incomplete'); ?></span>
+        </div>
+        <div style="clear:both;"></div>
+    </div>
+    <div class="step_container_buttons">
+        <span class="step_skip" style="display:none;"></span>
+        <span class="step_process" style="display:none;"><?php echo $this->getChildHtml('process_license'); ?></span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    WizardHandlersObj.renderStep('block_notice_wizard_installation_step_license',<?php echo Ess_M2ePro_Model_Wizard::STATUS_LICENSE; ?>);
+</script>
+<!-- END LICENSE -->
+
+<!-- MARKETPLACES -->
+<div id="block_notice_wizard_installation_step_marketplaces" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Marketplaces Set Up'); ?>" subtitle="[<?php echo Mage::helper('M2ePro')->__('Step'); ?> 3]" collapseable="no" hideblock="no" always_show="yes" style="display:none;">
+    <div>
+        <div class="step_container_description">
+            <?php echo Mage::helper('M2ePro')->__('You need to choose the marketplaces you are going to sell on. <br/>
+            <strong>Note:</strong> If you want to migrate from previous M2E version you must choose all marketplaces which were used previously.'); ?>
+        </div>
+        <div class="step_container_completed">
+            <span class="step_completed" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Completed'); ?></span>
+        </div>
+        <div class="step_container_incomplete">
+            <span class="step_incomplete" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Incomplete'); ?></span>
+        </div>
+        <div style="clear:both;"></div>
+    </div>
+    <div class="step_container_buttons">
+        <span class="step_skip" style="display:none;"></span>
+        <span class="step_process" style="display:none;"><?php echo $this->getChildHtml('process_marketplaces'); ?></span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    WizardHandlersObj.renderStep('block_notice_wizard_installation_step_marketplaces',<?php echo Ess_M2ePro_Model_Wizard::STATUS_MARKETPLACES; ?>);
+</script>
+<!-- END MARKETPLACES -->
+
+<?php if (!Mage::helper('M2ePro/Magento')->isMagentoGoMode()) { ?>
+
+    <!-- MIGRATION -->
+    <div id="block_notice_wizard_installation_step_migration" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Migration From Last M2E Version'); ?>" subtitle="[<?php echo Mage::helper('M2ePro')->__('Step'); ?> 4]" collapseable="no" hideblock="no" always_show="yes" style="display:none;">
+        <?php if (Mage::getModel('M2ePro/Migration_Dispatcher')->isMigrateAvailable()) { ?>
+            <div>
+                <div class="step_container_description">
+                    <?php echo Mage::helper('M2ePro')->__('The last version of M2E extension was detected. Migration option is available.<br/>
+                    If you skip the migration, you will be able to perform it later in <u>eBay > Configuration > Settings</u>.<br/>
+                    <strong>Note:</strong> Cron job of previous version of M2E will be stopped to avoid synchronization conflicts. <br/>
+                    <strong>Note:</strong> There might be some problems with eBay Listings of products with variations after migration. To resolve it you should stop and list / relist them again.'); ?>
+                </div>
+                <div class="step_container_completed">
+                    <span class="step_completed" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Completed'); ?></span>
+                </div>
+                <div class="step_container_incomplete">
+                    <span class="step_incomplete" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Incomplete'); ?></span>
+                </div>
+                <div style="clear:both;"></div>
+            </div>
+            <div class="step_container_buttons">
+                <span class="step_skip" style="display:none;"><?php echo $this->getChildHtml('skip_migration'); ?></span>
+                <span class="step_process" style="display:none;"><?php echo $this->getChildHtml('process_migration'); ?></span>
+            </div>
+        <?php } else { ?>
+            <?php echo Mage::helper('M2ePro')->__('The last version of M2E extension was not detected. Migration was skipped. <br/>
+            <strong>Note:</strong> If you have M2E installed, but it is not the last version, you may upgrade it and the migration option will be available in <u>eBay > Configuration > Settings</u>.'); ?>
+        <?php } ?>
+    </div>
+
+    <script type="text/javascript">
+        WizardHandlersObj.renderStep('block_notice_wizard_installation_step_migration',<?php echo Ess_M2ePro_Model_Wizard::STATUS_MIGRATION; ?>);
+    </script>
+    <!-- END MIGRATION -->
+
+<?php } ?>
+
+<!-- ACCOUNTS -->
+<?php $stepNumber = Mage::helper('M2ePro/Magento')->isMagentoGoMode() ? 4 : 5; ?>
+<div id="block_notice_wizard_installation_step_accounts" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('eBay Accounts Set Up'); ?>" subtitle="[<?php echo Mage::helper('M2ePro')->__('Step'); ?> <?php echo $stepNumber; ?>]" collapseable="no" hideblock="no" always_show="yes" style="display:none;">
+    <div>
+        <div class="step_container_description">
+            <?php echo Mage::helper('M2ePro')->__('Adding your eBay accounts to M2E Pro extension. <br/>
+            <strong>Note:</strong> If you have migrated from previous M2E version, all used eBay accounts were added.'); ?>
+        </div>
+        <div class="step_container_completed">
+            <span class="step_completed" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Completed'); ?></span>
+        </div>
+        <div class="step_container_incomplete">
+            <span class="step_incomplete" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Incomplete'); ?></span>
+        </div>
+        <div style="clear:both;"></div>
+    </div>
+    <div class="step_container_buttons">
+        <span class="step_skip" style="display:none;"><?php echo $this->getChildHtml('skip_accounts'); ?></span>
+        <span class="step_process" style="display:none;"><?php echo $this->getChildHtml('process_accounts'); ?></span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    WizardHandlersObj.renderStep('block_notice_wizard_installation_step_accounts',<?php echo Ess_M2ePro_Model_Wizard::STATUS_ACCOUNTS; ?>);
+</script>
+<!-- END ACCOUNTS -->
+
+<!-- SYNCHRONIZATION -->
+<?php $stepNumber = Mage::helper('M2ePro/Magento')->isMagentoGoMode() ? 5 : 6; ?>
+<div id="block_notice_wizard_installation_step_synchronization" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Synchronization Set Up'); ?>" subtitle="[<?php echo Mage::helper('M2ePro')->__('Step'); ?> <?php echo $stepNumber; ?>]" collapseable="no" hideblock="no" always_show="yes" style="display:none;">
+    <div>
+        <div class="step_container_description">
+            <?php echo Mage::helper('M2ePro')->__('Setting preferences of data synchronization.'); ?>
+        </div>
+        <div class="step_container_completed">
+            <span class="step_completed" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Completed'); ?></span>
+        </div>
+        <div class="step_container_incomplete">
+            <span class="step_incomplete" style="display:none;"><?php echo Mage::helper('M2ePro')->__('Incomplete'); ?></span>
+        </div>
+        <div style="clear:both;"></div>
+    </div>
+    <div class="step_container_buttons">
+        <span class="step_skip" style="display:none;"><?php echo $this->getChildHtml('skip_synchronization'); ?></span>
+        <span class="step_process" style="display:none;"><?php echo $this->getChildHtml('process_synchronization'); ?></span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    WizardHandlersObj.renderStep('block_notice_wizard_installation_step_synchronization',<?php echo Ess_M2ePro_Model_Wizard::STATUS_SYNCHRONIZATION; ?>);
+</script>
+<!-- END SYNCHRONIZATION -->
+
+<!-- COMPLETE -->
+<div id="wizard_installation_complete" style="display:none;">
+   <?php echo $this->getChildHtml('end_installation'); ?>
+</div>
+<!-- END COMPLETE -->

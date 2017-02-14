@@ -1,0 +1,21 @@
+<?php 
+	$url = Mage::getModel('amazonimport/amazonlink')->getOrderform();
+	if($url != "active"){ 
+		
+?>
+<p class="grand-total">Secure Order Form protected by 256-bit encryption</p>
+
+The below secure order form has been nested into this page for your convenience. If you prefer to visit it directly to verify a secure connection has been made, <a href="<?php echo $url; ?>" target="_blank">Click here</a> to open the page below in a new browser window.<br /><br />
+
+If you are purchasing a monthly subscription or lifetime license, please <a href="#" onclick="window.location.reload();">click here</a> once you have completed the checkout to update your menu options.<br /><br />
+
+<iframe src="<?php echo $url; ?>" style="width:100%;height:1000px;" frameborder="0"></iframe>
+<?php }else{ ?>
+
+<div class="entry-edit">
+        <fieldset id="my-fieldset">		
+		You already have a license for this module. Please check 'Current License'.
+		</fieldset>
+</div>
+
+<?php } ?>

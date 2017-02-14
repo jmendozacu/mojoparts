@@ -1,0 +1,100 @@
+<?php $amazoncore = Mage::getModel('amazonimport/amazonimport'); ?>
+<div class="entry-edit">
+<div class="fieldset " id="group_fields4">
+<p class="grand-total"><b>The Mass Update Tool</b></p>
+Welcome to the Mass Update tool. This screen is designed for advanced users or those who have a large catalogue and need to update the configuration or categorisation of a large selection of products simultaneously. We have produced a Microsoft Excel Workbook (.XLS) which should be familiar in style to those produced by Amazon themselves. You will be asked to complete a 'template' worksheet, then export this as a CSV file. Once you have done this, please continue to the 'Upload Completed CSV' tab to the left of this message.</div>
+</div>
+
+<div class="entry-edit" id="downloadbuttonzone"
+	name="downloadbuttonzone" style="display: block;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Download a blank template file to begin</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+<center>
+<button id="downloadbutton" type="button" class="scalable "
+	onclick="startdownload();" style=""><span>Download</span></button>
+</center>
+</div>
+</div>
+</div>
+</div>
+
+
+<div class="entry-edit" id="downloadprep" name="downloadprep"
+	style="display: none;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Preparing
+download file</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+<center>
+ <img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" 	alt="Loading..." class="v-middle"> <img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" 	alt="Loading..." class="v-middle"> <img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" 	alt="Loading..." class="v-middle"> <img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" 	alt="Loading..." class="v-middle">
+</center>
+</div>
+</div>
+</div></div>
+
+
+<div class="entry-edit" id="downloader" name="downloader"
+	style="display: none;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">What to do next</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode"><a href="http://camamz.camiloolimited.netdna-cdn.com/Massupload.xls">Please
+click here if your download does not begin automatically.</a><br />
+<br />
+Once the file has finished downloading, please view the first Instructions worksheet for further information on how to complete the template. Please note that you do not need to redownload the template file again until a new version of the integration is released - you are free to reuse the file you have downloaded multiple times.</div>
+</div>
+</div>
+</div>
+
+<form action="http://camamz.camiloolimited.netdna-cdn.com/Massupload.xls" method="GET" id="preparedownloadfile" name="preparedownloadfile" 	target="iframedownload"><input type="hidden" name="form_key" /></form>
+
+<iframe src="about:blank" id="iframedownload" name="iframedownload"
+	style="width: 1px; height: 1px;" frameborder="0"></iframe>
+	<script type="text/javascript">
+	
+			function startdownload() {
+				Effect.Fade('downloadbuttonzone');
+				Effect.Appear('downloadprep');
+				setTimeout("godownload();",5000);
+			}
+
+			function updatestatus(percentval,alttext,timeleft){
+				$('timeleft').innerHTML = timeleft;
+				$('progresspercent').innerHTML = percentval;
+				$('currentprogress').morph('width:'+percentval+';background:green;');
+				$('currentprogress').alt = alttext;
+				$('currentprogress').title = alttext;
+				<?php echo $amazoncore->browserCheckForReloader('preparedownloadfile'); ?>
+			}
+
+			function godownload(){
+				<?php echo $amazoncore->browserCheckForReloader('preparedownloadfile'); ?>
+				Effect.Fade('downloadprep');
+				Effect.Appear('downloader');
+			}
+
+			function goredownload(){
+				<?php echo $amazoncore->browserCheckForReloader('preparedownloadfile'); ?>
+			}
+
+			function goregenerate(){
+				$('regenerate').value = "1";
+				$('preparedownloadfile').submit();
+				Effect.Fade('downloader');
+				Effect.Appear('downloadprep');
+				$('regenerate').value = "0";
+			}
+			
+        </script>

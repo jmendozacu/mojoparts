@@ -1,0 +1,98 @@
+<div id="category-edit-container" class="category-content">
+    <?php echo $this->getChildHtml('form') ?>
+</div>
+<script type="text/javascript">
+//<![CDATA[
+
+    /**
+     * Update category content area
+     */
+    function updateContent(url, params, refreshTree) {
+        if (!params) {
+            params = {};
+        }
+        if (!params.form_key) {
+            params.form_key = FORM_KEY;
+        }
+
+        var categoryContainer = $('category-edit-container');
+        var messagesContainer = $('messages');
+		
+        var thisObj = this;
+        new Ajax.Request(url + (url.match(new RegExp('\\?')) ? '&isAjax=true' : '?isAjax=true' ), {
+            parameters:  params,
+            evalScripts: true,
+            onSuccess: function(transport) {
+                try {
+                    if (transport.responseText.isJSON()) {
+                        var response = transport.responseText.evalJSON();
+                        var needUpdate = true;
+                        if (response.error) {
+                            alert(response.message);
+                            needUpdate = false;
+                        }
+                        if(response.ajaxExpired && response.ajaxRedirect) {
+                            setLocation(response.ajaxRedirect);
+                            needUpdate = false;
+                        }
+                        if (needUpdate){
+                            if (response.content){
+                                $(categoryContainer).update(response.content);
+                            }
+                            if (response.messages){
+                                $(messagesContainer).update(response.messages);
+                            }
+                        }
+                    } else {
+                        $(categoryContainer).update(transport.responseText);
+                    }
+                }
+                catch (e) {
+                    $(categoryContainer).update(transport.responseText);
+                }
+            }
+        });
+    }
+
+    function displayLoadingMask()
+    {
+       var loaderArea = $$('#html-body .wrapper')[0]; // Blocks all page
+        Position.clone($(loaderArea), $('loading-mask'), {offsetLeft:-2});
+        toggleSelectsUnderBlock($('loading-mask'), false);
+        Element.show('loading-mask');
+    }
+	
+	
+	function setPrimaryCategory(bnid){
+		document.getElementById('browsenode').value = bnid;
+		document.getElementById('action').value = "S1";	//Set node 1
+		document.getElementById('reloadbt').submit();
+	}
+	function setSecondaryCategory(bnid){
+		document.getElementById('browsenode').value = bnid;
+		document.getElementById('action').value = "S2";	//Set node 2
+		document.getElementById('reloadbt').submit();
+	}
+	function unsetPrimaryCategory(){
+		document.getElementById('browsenode').value = '';
+		document.getElementById('action').value = "U1";	//Unset node 1
+		document.getElementById('reloadbt').submit();
+	}
+	function unsetSecondaryCategory(){
+		document.getElementById('browsenode').value = '';
+		document.getElementById('action').value = "U2";	//Unset node 2
+		document.getElementById('reloadbt').submit();
+	}
+	function updateVariationTheme(vtheme){
+		document.getElementById('vtheme').value = vtheme;
+		document.getElementById('action').value = "UpdateVT";//Update Variation Theme
+		document.getElementById('reloadbt').submit();
+	}
+	function updateItemType(itemtype){
+		document.getElementById('itemtype').value = itemtype;
+		document.getElementById('action').value = "UpdateIT";//Update Item Type
+		document.getElementById('reloadbt').submit();
+	}
+//]]>
+</script>
+<?php echo $this->getChildHtml('googleoptimizer_js') ?>

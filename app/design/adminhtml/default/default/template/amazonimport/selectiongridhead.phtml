@@ -1,0 +1,17 @@
+<?php $is_ssl = (Mage::getStoreConfig('web/secure/use_in_adminhtml') == 1)? true : false; ?>
+
+<?php if(Mage::getStoreConfig('amazonint/general/hide_help_tips') == 0){ ?>
+<div class="entry-edit">
+        <fieldset id="my-fieldset">		
+		<p class="grand-total"><b>Help Tip: How to select products to be published to Amazon.</b></p>
+		Below, please find a screen containing all products on your Magento store. If you are new to selling on Amazon, please use the grid to select which products you wish to allow Magento to publish to Amazon once setup is complete. To do this, you may either use the tickboxes provided and then choose an action from the drop down box or alternatively click into a product to edit its settings individually.<br /><br />
+		
+		Once you have selected all of the products you wish to allow Magento to publish, you should then select whether you would like this software to search for your products on Amazon for you. This is done via the interactive 'Find Products on Amazon' wizard, which has a button below on the right of the screen, and is most useful if you sell branded goods or feel another merchant may have sold the products you sell on Amazon previously. Once you have selected products to search for on Amazon, please click on 'Find Products on Amazon' to enter the wizard.<br /><br />
+		
+		If this wizard did not find some of your products, you will be given the option to 'Move setup to Manual Mode'. This means that the product will be added to the Review Products screen in an 'Incomplete' status, allowing you to review its information and ensure that all required fields have information before submitting it to Amazon. If a match for your product was found on Amazon, you will be able to mark your product setup as complete under 'Review Products'. The product will then be submitted within 5-10 minutes.<br /><br />
+		
+		Finally, if you already sell on Amazon prior to using this software, the software will 'synchronise' with your existing product listings on Amazon provided the SKU codes match between Amazon and Magento. Generally, after 2 hours of being installed and linked to an active Amazon account, the software will be linked to existing Amazon inventory and if enabled will be able to send Stock and Price updates as well as import orders into Magento containing your products. You should, however, still complete the One Time Setup tasks Category Mapping and Field Mapping, and for your reference you should select below the products which are already on your Amazon account and enable them for publishing onto Amazon. (Remember, you can hide these tips via settings!)
+						</fieldset>
+						
+</div>
+<?php } ?>

@@ -1,0 +1,7 @@
+
+.partfinder .block-content {padding:10px;}
+.partfinder select {width:100%;margin:0 0 8px 0;}
+.partfinder select.disabled { border-color:#bbb !important; background:#bbb !important; }
+.partfinder .search {margin:0 0 8px 0;}
+.partfinder .search input  {width:100%;}
+.partfinder .search button {float:right;}

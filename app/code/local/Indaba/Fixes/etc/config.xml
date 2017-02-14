@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<config>
+	<modules>
+		<Indaba_Fixes>
+			<version>1.0.0</version>
+		</Indaba_Fixes>
+	</modules>
+	<global>
+		<rewrite>
+			<indaba_fixes_contacts_rewrite>
+				<from><![CDATA[#^/contacts/index/post/#]]></from>
+				<to>/fixes/contacts_index/post/</to>
+			</indaba_fixes_contacts_rewrite>	
+		</rewrite>
+	</global>
+	<frontend>
+		<routers>
+			<indaba_fixes>
+				<use>standard</use>
+				<args>
+					<module>Indaba_Fixes</module>
+					<frontName>fixes</frontName>
+				</args>
+			</indaba_fixes>
+		</routers>
+	</frontend>
+</config>

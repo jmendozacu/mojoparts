@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<layout version="0.1.0">
+    <m2epro>
+        <reference name="head">
+            <action method="addJs"><script>M2ePro/General/PhpFunctions.js</script></action>
+            <action method="addJs"><script>M2ePro/General/PrototypeSimulate.js</script></action>
+            <action method="addJs"><script>M2ePro/General/CommonHandlers.js</script></action>
+            <action method="addJs"><script>M2ePro/Components/MagentoMessages.js</script></action>
+            <action method="addJs"><script>M2ePro/Components/MagentoBlocks.js</script></action>
+            <action method="addJs"><script>M2ePro/Components/BlockNotices.js</script></action>
+            <action method="addJs"><script>M2ePro/Components/FieldsTips.js</script></action>
+            <action method="addJs"><script>M2ePro/Initialization.js</script></action>
+            <action method="addCss"><stylesheet>M2ePro/css/main.css</stylesheet></action>
+            <action method="addCss"><stylesheet>M2ePro/css/Components/BlockNotices.css</stylesheet></action>
+        </reference>
+    </m2epro>
+</layout>

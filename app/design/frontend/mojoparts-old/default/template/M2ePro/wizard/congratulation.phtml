@@ -1,0 +1,46 @@
+<div id="block_notice_wizard_congratulation" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__(''); ?>" subtitle="" collapseable="no" hideblock="no" always_show="yes">
+    <?php
+    
+    $listingTemplatesUrl = $this->getUrl('*/adminhtml_listingTemplates/index');
+    $synchronizationTemplatesUrl = $this->getUrl('*/adminhtml_synchronizationTemplates/index');
+    $descriptionTemplatesUrl = $this->getUrl('*/adminhtml_descriptionTemplates/index');
+    $sellingFormatTemplatesUrl = $this->getUrl('*/adminhtml_sellingFormatTemplates/index');
+
+    $listingsUrl = $this->getUrl('*/adminhtml_listings/index');
+
+    $tempString = Mage::helper('M2ePro')->__('<strong>The main settings were successfully set.</strong> <br/>
+    Now you can continue working with extension. You can see below the short instructions, you may follow to start
+    listing on eBay quickly.<br/> The more detailed information can be found in the <a href="http://docs.m2epro.com/" target="_blank">Documentation</a>.<br/><br/>
+
+    <strong>The next steps you should perform are:</strong><br/><br/>
+
+    <u><strong>1)</strong> Selling Format Template creation:</u><br/>
+    Navigate to eBay > Templates > <a href="%sel%" target="_blank">Selling Format Templates</a>,
+    Press on the Add Selling Format Template button;
+    Fill all necessary data;
+    Save the template.<br/><br/>
+
+    <u><strong>2)</strong> Description Template creation:</u><br/>
+    Navigate to eBay > Templates > <a href="%descr%" target="_blank">Description Templates</a>;
+    Press on the Add Description Template button;
+    Fill all necessary data;
+    Save the template.<br/><br/>
+
+    <u><strong>3)</strong> General Template creation:</u><br/>
+    Navigate to eBay > Templates > <a href="%list_temp%" target="_blank">General Templates</a>;
+    Press on the Add General Template button;
+    Fill all necessary data;
+    Save the template.<br/><br/>
+
+    <u><strong>4)</strong> Synchronization Template creation:</u><br/>
+    Navigate to eBay > Templates > <a href="%synch%" target="_blank">Synchronization Templates</a>;
+    Press on the Add Synchronization Template button;
+    Fill all necessary data;
+    Save the template.<br/><br/>
+
+    After completing these four necessary steps, you can start to create Listings (eBay > Manage
+
+    Listings > <a href="%list%" target="_blank">Listings</a>), add Magento products to them and list on eBay.<br/><br/>
+    <em>Thank you for choosing M2E Pro.</em>');
+    echo str_replace(array('%sel%','%descr%','%list_temp%','%synch%','%list%'),array($sellingFormatTemplatesUrl,$descriptionTemplatesUrl,$listingTemplatesUrl,$synchronizationTemplatesUrl,$listingsUrl),$tempString); ?>
+</div>

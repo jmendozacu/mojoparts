@@ -1,0 +1,33 @@
+# Magento
+#####################
+app/etc/local.xml
+media/tmp
+media/catalog/product/cache
+media/catalog/category
+var/log
+var/logging
+var/cache
+var/session
+var/locks
+var/report
+var/import
+var/export
+var/importexport
+var/backups
+var/tmp
+var/resource_config.json
+var/full_page_cache
+
+# Mojo
+/media
+/blackthorne_backups
+/backup-old-temp
+/export
+
+# Microsoft
+*.phpproj
+*.user
+*.suo
+*.sln
+/var
+dev

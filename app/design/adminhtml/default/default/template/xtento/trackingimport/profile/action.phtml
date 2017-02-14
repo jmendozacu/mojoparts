@@ -1,0 +1,33 @@
+<?php
+$formHtml = $this->getFormHtml();
+$actionHtml = $this->getActionHtml();
+if (Mage::registry('tracking_import_xml_action_warning') !== null) {
+    echo '<div id="messages"><ul class="messages"><li class="error-msg"><ul><li><span>'.Mage::registry('tracking_import_xml_action_warning').'. '.$this->__('Please fix and re-save profile.').'</span></li></ul></li></ul></div>';
+}
+?>
+<div class="entry-edit">
+    <?php echo $formHtml;?>
+    <div id="row_trackingimport_general_import_mapping_comment"></div>
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__('Import Actions') ?></h4>
+
+        <div class="form-buttons"></div>
+    </div>
+    <div class="fieldset fieldset-wide" id="base_fieldset">
+        <div class="hor-scroll">
+        <?php echo $actionHtml; ?>
+        </div>
+    </div>
+</div>
+<style type="text/css">
+    #grid_action label {
+        width: 100px;
+    }
+    #grid_action .label {
+        width: 110px;
+    }
+    #grid_action .scalable {
+        width: 100%;
+    }
+</style>
+<?php echo $this->getChildHtml('form_after');?>

@@ -1,0 +1,14 @@
+<ul class="note-list">
+    <?php foreach ($this->getLogsList() as $singleLog) { ?>
+            <li>
+                <strong><?php echo $singleLog->getLogDateHtml(); ?></strong>
+                <p><?php echo $singleLog->getMessage(); ?></p>
+                <?php if (Mage::getIsDeveloperMode()) { ?>
+                    <div style="position: relative; width: 200px;"><pre><?php echo $singleLog->getMessageTrace(); ?></pre></div>
+                <?php } ?>
+
+            </li>
+
+    <?php } ?>
+</ul>
+

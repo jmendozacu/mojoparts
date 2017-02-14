@@ -1,0 +1,13 @@
+<?xml version="1.0"?>
+<layout version="1.1.0">
+    <amazonimport_listingstool_index>
+        <reference name="content">
+            <block type="amazonimport/listingstool" name="listingstool" template="amazonimport/listingstool.phtml"/>
+        </reference>
+    </amazonimport_listingstool_index>
+    <amazonimport_publisher_index>
+        <reference name="content">
+            <block type="amazonimport/publisher" name="publisher" template="amazonimport/publisher.phtml"/>
+        </reference>
+    </amazonimport_publisher_index>
+</layout>

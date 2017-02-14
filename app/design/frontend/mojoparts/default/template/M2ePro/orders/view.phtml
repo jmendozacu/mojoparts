@@ -1,0 +1,370 @@
+<div class="content-header">
+
+    <h3 class="icon-head head-newsletter-list"><?php echo $this->getHeaderText(); ?></h3>
+
+    <p class="content-buttons form-buttons">
+        <?php echo $this->getBackButtonHtml();?>
+        <?php if ($this->getHasEbayAccount() && $this->model->isReadyForShipping()) : ?>
+                <?php echo $this->getShipButtonHtml($this->model->getId()); ?>
+        <?php endif; ?>
+
+        <?php if ($this->getHasEbayAccount() && $this->model->isReadyForInvoice()) : ?>
+                <?php echo $this->getInvoiceButtonHtml($this->model->getId()); ?>
+        <?php endif; ?>
+
+        <?php if ($this->getHasEbayAccount() && $this->model->isReadyForOrder()) : ?>
+                <?php echo $this->getOrderButtonHtml($this->model->getId()); ?>
+        <?php endif; ?>
+    </p>
+</div>
+
+<div class="box-left">
+    <div class="entry-edit" id="magento_block_orders_general" collapseable="no">
+
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('eBay Order');?> #
+                  <?php echo $this->model->getEbayOrderId(); ?>
+            </h4>
+            <div class="form-buttons"></div>
+        </div>
+
+        <div class="fieldset">
+            <div class="hor-scroll">
+
+                <table cellspacing="0" class="form-list">
+                    <tbody>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Magento Order #');?></td>
+                            <td class="value"><strong><?php echo $this->model->getMagentoOrderNumber(); ?></strong></td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Sale Time');?></td>
+                            <td class="value"><strong><?php echo Mage::helper('core')->formatDate($this->model->getCreatedDate(), 'medium', true); ?></strong></td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Update Time');?></td>
+                            <td class="value"><strong><?php echo Mage::helper('core')->formatDate($this->model->getUpdateTime(), 'medium', true); ?></strong></td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Order Status');?></td>
+                            <td class="value"><strong><?php echo $this->model->getOrderStatusHtml(); ?></strong></td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Account');?></td>
+                            <td class="value"><strong><?php echo $this->model->getAccountInfo(); ?></strong></td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<div class="box-right">
+    <div class="entry-edit" id="magento_block_orders_buyer" collapseable="no">
+
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Buyer Information');?></h4>
+            <div class="form-buttons"></div>
+        </div>
+
+        <div class="fieldset">
+            <div class="hor-scroll">
+
+                <table cellspacing="0" class="form-list">
+                    <tbody>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Customer Name');?></td>
+                            <td class="value"><strong><?php echo $this->model->getBuyerInfoHtml(); ?></strong></td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Shipping Address');?></td>
+                            <td class="value"><strong><?php echo $this->model->getShippingAddressHtml(); ?></strong></td>
+                        </tr>
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<br clear="all" />
+
+<?php if ($this->model->hasTax()) { ?>
+    <div class="box-left">
+        <div class="entry-edit" id="magento_block_orders_tax" collapseable="no">
+
+            <div class="entry-edit-head">
+                <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('eBay Tax Information');?></h4>
+                <div class="form-buttons"></div>
+            </div>
+
+            <div class="fieldset">
+                <div class="hor-scroll">
+
+                    <table cellspacing="0" class="form-list">
+                        <tbody>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Tax Percent');?></td>
+                            <td class="value">
+                                <strong><?php echo $this->model->getSalesTaxPercent()."%"; ?></strong>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Tax State');?></td>
+                            <td class="value">
+                                <strong><?php echo $this->model->getSalesTaxState(); ?></strong>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Shipping Included In Tax');?></td>
+                            <td class="value">
+                                <strong><?php echo ($this->model->getSalesTaxShippingIncluded() == 1) ? Mage::helper('M2ePro')->__('Yes') : Mage::helper('M2ePro')->__('No');?></strong>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Tax Amount');?></td>
+                            <td class="value">
+                                <strong><?php echo Mage::helper('M2ePro')->convertCurrencyNameToCode($this->model->getCurrency(), $this->model->getSalesTaxAmount()); ?></strong>
+                            </td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+
+                </div>
+            </div>
+        </div>
+    </div>
+<?php } ?>
+        
+
+<br clear="all" />
+
+
+<div class="box-left">
+    <div class="entry-edit" id="magento_block_orders_payment" collapseable="no">
+
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Payment Information');?></h4>
+            <div class="form-buttons"></div>
+        </div>
+
+        <div class="fieldset">
+            <div class="hor-scroll">
+
+                <table cellspacing="0" class="form-list">
+                    <tbody>
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Order Currency');?></td>
+                            <td class="value"><strong><?php echo $this->model->getCurrency(); ?></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Payment Date');?></td>
+                            <td class="value"><strong><?php echo ($this->model->getPaymentTime())?Mage::helper('core')->formatDate($this->model->getPaymentTime(), 'medium', true):'N/A'; ?></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Payment Method');?></td>
+                            <td class="value"><strong><?php echo $this->model->getPaymentUsed(); ?></strong></td>
+                        </tr>
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('eBay Account'); ?></td>
+                            <td class="value"><strong><?php echo $this->model->getBuyerUserid(); ?></strong></td>
+                        </tr>
+
+                    </tbody>
+                </table>
+                <?php if ($this->model->hasExternalTransactions()) { ?>
+                    <table cellspacing="0" class="form-list">
+                        <tbody>
+                            <tr>
+                                <td colspan="2" class="label" style="width: 100%">
+                                    <br/>
+                                    <h4><?php echo Mage::helper('M2ePro')->__('External Transactions'); ?></h4>
+                                    <?php echo $this->getExternalTransactionsHtml(); ?>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                <?php } ?>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+<div class="box-right">
+    <div class="entry-edit" id="magento_block_orders_shipping" collapseable="no">
+
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Shipping & Handling Information');?></h4>
+            <div class="form-buttons"></div>
+        </div>
+
+        <div class="fieldset">
+            <div class="hor-scroll">
+
+                <table class="form-list" cellspacing="0">
+                    <tbody>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Shipping Selected Service');?></td>
+                            <td class="value">
+                                <strong>
+                                    <?php if (is_null($this->model->getShippingSelectedService())) { ?>
+                                        <?php echo Mage::helper('M2ePro')->__('N/A'); ?>
+                                    <?php } else { ?>
+                                        <?php echo $this->model->getShippingSelectedService(); ?>
+                                    <?php } ?>
+                                </strong>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"><?php echo Mage::helper('M2ePro')->__('Shipping Cost');?></td>
+                            <td class="value">
+                                <strong>
+                                    <?php if ($this->model->getShippingSelectedCost() == 0) { ?>
+                                        <?php echo Mage::helper('M2ePro')->__('N/A'); ?>
+                                    <?php } else { ?>
+                                        <?php echo Mage::helper('M2ePro')->convertCurrencyNameToCode($this->model->getCurrency(), $this->model->getShippingSelectedCost()); ?>
+                                    <?php } ?>
+                                </strong>
+                            </td>
+                        </tr>
+
+                        <?php if ($shippingTime = $this->model->getShippingTime()) { ?>
+                            <tr>
+                                <td class="label"><?php echo Mage::helper('M2ePro')->__('Shipping Time');?></td>
+                                <td class="value"><strong><?php echo Mage::helper('core')->formatDate($shippingTime, 'medium', true); ?></strong></td>
+                            </tr>
+                        <?php } ?>
+
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="entry-edit" id="magento_block_orders_message" collapseable="no">
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Checkout Message From Buyer');?></h4>
+            <div class="form-buttons"></div>
+        </div>
+
+        <div class="fieldset">
+            <?php if ($checkoutMessage = $this->model->getCheckoutMessage()) { ?>
+                <?php echo strip_tags($checkoutMessage, '<b><strong><br>'); ?>
+            <?php } else { ?>
+                <?php echo Mage::helper('M2ePro')->__('None') ?>
+            <?php } ?>
+        </div>
+
+    </div>
+</div>
+
+
+<br clear="all" />
+
+<div class="entry-edit" id="magento_block_orders_transaction" collapseable="no">
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-products"><?php echo Mage::helper('M2ePro')->__('Transaction Item'); ?></h4>
+    </div>
+</div>
+
+<div class="grid np">
+    <div class="hor-scroll">
+         <?php echo $this->getOrderItemsHtml(); ?>
+    </div>
+</div>
+
+<br clear="all" />
+
+<div class="box-left">
+
+    <div class="entry-edit" id="magento_block_orders_history" collapseable="no">
+
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Log History');?></h4>
+            <div class="form-buttons"></div>
+        </div>
+
+        <div class="fieldset">
+            <?php echo $this->getLogsHtml(); ?>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="box-right entry-edit" collapseable="no">
+
+    <div class="entry-edit-head">
+        <h4><?php echo Mage::helper('M2ePro')->__('Order Totals');?></h4>
+    </div>
+
+    <div class="order-totals">
+        <table cellspacing="0" width="100%">
+            <tbody>
+
+                <tr>
+                    <td class="label"><?php echo Mage::helper('M2ePro')->__('Subtotal').$this->getExcludedTaxSuffix(); ?></td>
+                    <td><span class="price"><?php echo Mage::helper('M2ePro')->convertCurrencyNameToCode($this->model->getCurrency(), $this->model->getSubtotalPrice());?></span></td>
+                </tr>
+
+                <tr>
+                    <td class="label"><?php echo Mage::helper('M2ePro')->__('Shipping & Handling').$this->getExcludedTaxSuffix(); ?></td>
+                    <td><span class="price"><?php echo Mage::helper('M2ePro')->convertCurrencyNameToCode($this->model->getCurrency(), $this->model->getShippingPrice());?></span></td>
+                </tr>
+
+            </tbody>
+
+            <tfoot>
+
+                <tr>
+                    <td class="label">
+                        <strong><big><?php echo Mage::helper('M2ePro')->__('Grand Total');?></big></strong>
+                    </td>
+                    <td class="emph"><big><strong><span class="price"><?php echo Mage::helper('M2ePro')->convertCurrencyNameToCode($this->model->getCurrency(), $this->model->getGrandTotalPrice());?></span></strong></big></td>
+                </tr>
+
+                <tr>
+                    <td class="label"><small><?php echo Mage::helper('M2ePro')->__('Amount Paid'); ?></small></td>
+                    <td><span class="price"><small><?php echo Mage::helper('M2ePro')->convertCurrencyNameToCode($this->model->getCurrency(), $this->model->getAmountPaid());?></small></span></td>
+                </tr>
+
+                <tr>
+                    <td class="label"><small><?php echo Mage::helper('M2ePro')->__('Amount Saved'); ?></small></td>
+                    <td><span class="price"><small><?php echo Mage::helper('M2ePro')->convertCurrencyNameToCode($this->model->getCurrency(), $this->model->getAmountPaid());?></small></span></td>
+                </tr>
+
+            </tfoot>
+        </table>
+
+    </div>
+</div>
+
+

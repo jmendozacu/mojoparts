@@ -1,0 +1,34 @@
+<config>
+    <modules>
+        <CommerceExtensions_Customerreviewsimportexport>
+            <version>0.1.0</version>
+        </CommerceExtensions_Customerreviewsimportexport>
+    </modules>   
+    <global>
+        <models>
+            <commerceextensions_customerreviewsimportexport>
+                <class>CommerceExtensions_Customerreviewsimportexport_Model</class>
+            </commerceextensions_customerreviewsimportexport>
+        </models>
+        <resources><!--
+            <customerreviewsimportexport_setup>
+                <setup>
+                    <module>CommerceExtensions_Customerreviewsimportexport</module>
+                </setup>
+                <connection>
+                    <use>core_setup</use>
+                </connection>
+            </customerreviewsimportexport_setup> -->
+            <customerreviewsimportexport_write>
+                <connection>
+                    <use>core_write</use>
+                </connection>
+            </customerreviewsimportexport_write>
+            <customerreviewsimportexport_read>
+                <connection>
+                    <use>core_read</use>
+                </connection>
+            </customerreviewsimportexport_read>
+        </resources>
+    </global>
+</config>

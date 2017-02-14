@@ -1,0 +1,61 @@
+<div class="entry-edit">
+<div class="fieldset " id="group_fields4">
+Next, please select the marketplace you wish to clone settings from, then continue to the 'Clone' tab.
+</div>
+</div>
+
+<div class="entry-edit" id="uploadbuttonzone"
+	name="uploadbuttonzone" style="display: block;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Select Marketplace to clone from</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+<center>
+<form id="edit_form_1" name="edit_form_1" method="post" action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/bulkuploadhelper/variations/cachebuster/<?php echo time(); ?>" target="iframeupload" enctype="multipart/form-data">
+		Clone settings from
+			
+			<?php 
+			 if(Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_variations_marketplace') == "uk"){
+			 	?>
+			<select name="clone_from" id="clone_from">
+				<option value="com">Amazon USA (Amazon.com)</option>
+				<option value="de">Amazon Germany (Amazon.de)</option>
+				<option value="fr">Amazon France (Amazon.fr)</option>
+			</select> to <?php 
+			echo "Amazon UK (Amazon.co.uk) <input type='hidden' name='clone_to' value='uk' id='clone_to' />";			 	
+			 }else if(Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_variations_marketplace') == "de"){
+			 	?>
+			<select name="clone_from" id="clone_from">
+				<option value="uk">Amazon UK (Amazon.co.uk)</option>
+				<option value="com">Amazon USA (Amazon.com)</option>
+				<option value="fr">Amazon France (Amazon.fr)</option>
+			</select> to <?php 
+			echo "Amazon DE (Amazon.de) <input type='hidden' name='clone_to' value='de' id='clone_to' />";
+			 }else if(Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_variations_marketplace') == "com"){
+			 	
+			 	?>
+			<select name="clone_from" id="clone_from">
+				<option value="uk">Amazon UK (Amazon.co.uk)</option>
+				<option value="de">Amazon Germany (Amazon.de)</option>
+				<option value="fr">Amazon France (Amazon.fr)</option>
+			</select> to <?php echo "Amazon USA (Amazon.com) <input type='hidden' name='clone_to' value='com' id='clone_to' />";
+			 }else if(Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_variations_marketplace') == "fr"){
+			 	?>
+			<select name="clone_from" id="clone_from">
+				<option value="uk">Amazon UK (Amazon.co.uk)</option>
+				<option value="com">Amazon USA (Amazon.com)</option>
+				<option value="de">Amazon Germany (Amazon.de)</option>
+			</select> to <?php echo "Amazon France (Amazon.fr) <input type='hidden' name='clone_to' value='fr' id='clone_to' />";
+			 }
+			
+			?>
+			</center>	
+		</form>
+</center>
+</div>
+</div>
+</div>
+</div>

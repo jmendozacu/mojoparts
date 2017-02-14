@@ -1,0 +1,137 @@
+Xtento_TrackingImport
+
+-------------
+  CHANGELOG
+-------------
+
+===== 1.0.0 =====
+ * Initial Release
+
+===== 1.1.6 =====
+ * Added sample HTTP Pre-run processor in Model/Connection/Prerun.php
+ * Fixed various issues regarding to shipping carrier code/name determination
+ * Fixed various bugs in the SFTP connection handler
+
+===== 1.1.7 =====
+ * Fixed a bug in the backend mapping model that prevented different default values from showing up
+
+===== 1.1.8 =====
+ * Fixed a bug that could prevent shipment emails from being sent for partial shipments
+
+===== 1.1.9 =====
+ * Fixed FTP archiving bug
+ * Improved debug mode
+
+===== 1.1.11 =====
+ * Fixed bug in SFTP connection model
+ * Fixed bug that prevents custom order status from being imported
+
+===== 1.1.12 =====
+ * Fixed bug in the SFTP connection model that would make all SFTP connections fail
+
+===== 1.1.13 =====
+ * Fixed bug that prevents the full payment from being captured even though it was partially invoiced
+
+===== 1.1.15 =====
+ * Fixed bug in the tracking method "carrier code" retrieval method
+
+===== 1.1.16 =====
+ * Important bug fix release
+
+===== 1.1.18 =====
+ * Added option to decide whether shipments should be created even if no tracking numbers have been imported
+
+===== 1.1.19 =====
+ * Added support for disabled trackers set using the XTENTO Custom Carrier Trackers extension.
+ * Fixed a bug in the debug log function
+
+===== 1.1.20 =====
+ * Added afterRun function that gets called by connections after downloading/loading files
+
+===== 1.1.21 =====
+ * Enhanced exception email notifications
+
+===== 1.1.22 =====
+ * Compatibility with Advanced Order Status
+ * Fixed order status/state modification
+
+===== 1.2.0 =====
+ * Enhanced field finding mechanism in XML processor
+
+===== 1.2.1 =====
+ * Adjusted adminhtml controller to cope with full page caches better
+
+===== 1.3.0 =====
+ + Added ability to import fixed length file formats:
+   - Field Name must be set to format "from-to", for example from position 0 to 30: 0-30
+   - Field Delimiter must be set to: FLF
+   - Field Enclosure Character remains empty
+
+===== 1.3.1 =====
+ * UTF8 files with BOM are handled properly now
+
+===== 1.3.2 =====
+ + Added ability to import multiple tracking numbers from one value, if tracking numbers are separated by semi-colon (;), comma (,), slash (/) or the pipe (|) character.
+
+===== 1.3.3 =====
+ * Improved XML processor for files which have item data nested in nodes and split data across multiple parent nodes
+
+===== 1.3.4 =====
+ * Fixed a bug that could lead to the field mapping section template not loading
+
+===== 1.3.5 =====
+ + Added ability to loop through tracking numbers in XML files
+ ! Added compatibility for Magento CE 1.9.0.0 / EE 1.14.0.0
+
+===== 1.3.6 =====
+ ! Added compatibility for Magento CE 1.9.1.0 / EE 1.14.1.0
+
+===== 1.3.7 =====
+ + Added ability to enter multiple email addresses for the "Debug Email" option in the System > XTENTO section. Separate multiple recipients using commas.
+
+===== 1.3.8 =====
+ * Fixed error message "Fatal Error: This module is disabled" even though the module is enabled
+
+===== 1.3.9 =====
+ + Switched XML processor to DOM instead of SimpleXMLElement
+ * Fixed DOM processing when "Nested tracking node" is enabled
+
+===== 1.4.0 =====
+ * Fixed a bug when importing "Nested tracking node" / "Nested item node" XML formats.
+
+===== 2.0.0 =====
+ * Initial stable release of the completely new and revamped Tracking Number Import Module!
+
+===== 2.0.1 =====
+ * Various bugfixes related to shipment/invoice creation, especially partial shipments/invoices/tracking numbers and default values. (Only relevant if you used version 2.0.0 before)
+
+===== 2.0.2 =====
+ * Various bugfixes ("0 of x" updated, XML processor, CSV Fixed-Length processor, order status changes, CSS/styling)
+
+===== 2.0.3 =====
+ * Fixed reference to order export module that broke the tracking import module if the order export module is not installed
+ * Fixed a bug that would lead to the order status not being updated
+
+===== 2.0.4 =====
+ * Fixed partial invoice/shipment support for uppercase/mixed-case SKUs
+ * Removed preg_quote from regex handler in "Additional Configuration" tab of fields/actions that would lead to regexs fail
+
+===== 2.0.5 =====
+ * Fixed partial invoicing/shipping for simple/configurable products when only the simple product was specified in the import file but not the configurable product
+ * Fixed FLF (Fixed-Length-Files/ASCII Files) import
+
+===== 2.0.6 =====
+ * XML Processor: Added ability to access attributes of nodes using @attrcode where attrcode is the attribute code of the attribute you are trying to access.
+ * Fixed a bug caused by Magento patch SUPEE-6285 that lead to "Access Denied" screens for admins that don't have full access.
+
+===== 2.0.7 =====
+ + Added ability to cancel order upon import
+
+===== 2.0.8 =====
+ + XML: Added ability to import "SKU and QTY in one field" (SKU1:QTY1;SKU2:QTY2;...) format for XML imports: Specify the following "Additional Configuration" for the "Product Identifier" field in the mapping: <configuration><sku_qty_one_field>1</sku_qty_one_field></configuration>
+
+===== 2.0.9 =====
+ + CSV: Added ability to import "SKU and QTY in one field" (SKU1:QTY1;SKU2:QTY2;...) format for CSV imports: Specify the following "Additional Configuration" for the "Product Identifier" field in the mapping: <configuration><sku_qty_one_field>1</sku_qty_one_field></configuration>
+
+===== 2.1.0 =====
+ * Fixed a bug for condition based actions ("set value to false if...") for multiple orders within one import

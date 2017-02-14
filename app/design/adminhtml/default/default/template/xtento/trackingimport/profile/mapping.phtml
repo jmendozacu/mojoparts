@@ -1,0 +1,32 @@
+<?php
+$formHtml = $this->getFormHtml();
+$mappingHtml = $this->getMappingHtml();
+if (Mage::registry('tracking_import_xml_fields_warning') !== null) {
+    echo '<div id="messages"><ul class="messages"><li class="error-msg"><ul><li><span>'.Mage::registry('tracking_import_xml_fields_warning').'. '.$this->__('Please fix and re-save profile.').'</span></li></ul></li></ul></div>';
+}
+?>
+<div class="entry-edit">
+    <?php echo $formHtml; ?>
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__('File Mapping') ?></h4>
+
+        <div class="form-buttons"></div>
+    </div>
+    <div class="fieldset fieldset-wide" id="base_fieldset">
+        <div class="hor-scroll">
+        <?php echo $mappingHtml; ?>
+        </div>
+    </div>
+</div>
+<style type="text/css">
+    #row_mapping label {
+        width: 100px;
+    }
+    #row_mapping .label {
+        width: 110px;
+    }
+    #grid_mapping .scalable {
+        width: 100%;
+    }
+</style>
+<?php echo $this->getChildHtml('form_after');?>

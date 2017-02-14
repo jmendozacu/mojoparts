@@ -1,0 +1,80 @@
+<?xml version="1.0"?>
+
+<config>   
+    <menu>
+        <catalog translate="title" module="partfinder">
+            <children>
+                <partfinder translate="title" module="partfinder">
+                    <title>Part Finder</title>
+                    <sort_order>1</sort_order>
+                    <children>
+                        <selector translate="title" module="partfinder">
+                            <title>Manage Selector</title>
+                            <action>adminhtml/pf_selector/index</action>
+                            <sort_order>1</sort_order>
+                        </selector>                    
+                        <column translate="title" module="partfinder">
+                            <title>Map Columns</title>
+                            <action>adminhtml/pf_column/index</action>
+                            <sort_order>2</sort_order>
+                        </column>
+                         <attribute_values translate="title" module="partfinder">
+                            <title>Attribute Values</title>
+                            <action>adminhtml/pf_attribute_addedvalues/index</action>
+                            <sort_order>3</sort_order>
+                        </attribute_values>
+                        <attribute_visibility translate="title" module="partfinder">
+                            <title>Attribute Visibility</title>
+                            <action>adminhtml/pf_attribute_visibility/index</action>
+                            <sort_order>4</sort_order>
+                        </attribute_visibility>                        
+                    </children>
+                </partfinder>
+            </children>
+        </catalog>
+    </menu>
+    <acl>
+      <resources>
+        <all>
+          <title>Allow Everything</title>
+        </all>
+        <admin>  
+          <children>				          
+            <catalog>
+              <children>
+                <partfinder translate="title" module="partfinder">
+                  <title>Part Finder</title>
+                  <sort_order>30</sort_order>
+                  <children>
+                    <selector translate="title" module="partfinder">
+                      <title>Manage Selector</title>
+                    </selector>
+                    <column translate="title" module="partfinder">
+                      <title>Map Columns</title>
+                    </column>                    
+                    <attribute_values translate="title" module="partfinder">
+                      <title>Attribute Values</title>
+                    </attribute_values>
+                    <attribute_visibility translate="title" module="partfinder">
+                      <title>Attribute Visibility</title>
+                    </attribute_visibility>     
+                  </children>
+                </partfinder>               
+              </children>
+            </catalog>
+            <system>
+                <children>
+                    <config>
+                        <children>
+                            <partfinder>
+                                <title>Part Finder</title>
+                            </partfinder>
+                        </children>
+                    </config>
+                </children>
+            </system>             
+          </children>                  
+        </admin>  	                  
+      </resources>
+    </acl>         
+</config>

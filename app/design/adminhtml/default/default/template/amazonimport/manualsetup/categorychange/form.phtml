@@ -1,0 +1,41 @@
+<?php $amazoncore = Mage::getModel('amazonimport/amazonimport'); ?>
+
+<?php if(Mage::getStoreConfig('amazonint/general/hide_help_tips') == 0){ ?>
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields4">
+	<b>Help Tip:</b> Below, please choose a category on Amazon which best matches the products in this category of your website. You can do this by searching and filtering the list of available options. Once you have found a category which you feel matches your products, click in the link in the 3rd column of the table. The information below will be updated and is instantly saved.<br /><br />If you do not see any categories in the space below, please <a href="<?php echo $this->getUrl('amazonimport/categorise/updatebrowsenodes'); ?>">click here</a> to download these from Amazon. You can also use the link in the previous sentence to refresh categories, as Amazon occasionally adds additional categories.<br /><br />
+	
+	Once you have selected a category, products within this category on Magento will be listed within your chosen category on Amazon by default. Should you wish to override this setting for a particular product you can do this by visiting Review Products. You may also find this useful if no category below describes <i>all</i> of the products within this category accurately.<br /><br />
+	
+	If you have chosen a category below, or if an inherited category is shown below, you may also wish to click into the Additional Information panel which enables you to give Amazon further inforamtion about all of the products in this category on Magento.
+	</div>
+</div>
+<?php } ?>
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">List products from this category on Amazon under the Category</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields4">
+		<div class="hor-scroll">
+			<div id="outputcatvalue">
+					<?php echo $this->getCurrentCategoryMapping($this->getRequest()->getParam('id')); ?>
+			</div>
+		</div>
+	</div>
+
+	<form action="<?php echo $amazoncore->getRootUrl(); ?>amazonimport/categorise/setcategorymap/cachebuster/<?php echo time(); ?>" method="POST" id="reloadbt" name="reloadbt" target="searcher">
+		<input type="hidden" name="form_key" id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>"/>
+		<input type="hidden" name="country" id="country" value="<?php echo Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_categorise_marketplace'); ?>">
+		<input type="hidden" name="category_id" id="category_id" value="<?php echo $this->getRequest()->getParam('id'); ?>">		
+		<input type="hidden" name="browsenode" id="browsenode" value="">
+		<input type="hidden" name="itemtype" id="itemtype" value="">
+		<input type="hidden" name="vtheme" id="vtheme" value="">	
+		<input type="hidden" name="action" id="action" value="">	
+	</form>
+        
+<iframe src="about:blank" id="searcher" name="searcher" style="width:1px;height:1px;" frameborder="0"></iframe>
+
+	
+</div>

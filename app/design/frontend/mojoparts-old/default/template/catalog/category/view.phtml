@@ -1,0 +1,128 @@
+<?php
+/**
+ * Magento
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Academic Free License (AFL 3.0)
+ * that is bundled with this package in the file LICENSE_AFL.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/afl-3.0.php
+ * If you did not receive a copy of the license and are unable to
+ * obtain it through the world-wide-web, please send an email
+ * to license@magentocommerce.com so we can send you a copy immediately.
+ *
+ * DISCLAIMER
+ *
+ * Do not edit or add to this file if you wish to upgrade Magento to newer
+ * versions in the future. If you wish to customize Magento for your
+ * needs please refer to http://www.magentocommerce.com for more information.
+ *
+ * @category    design
+ * @package     base_default
+ * @copyright   Copyright (c) 2010 Magento Inc. (http://www.magentocommerce.com)
+ * @license     http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
+ */
+?>
+<?php
+/**
+ * Category view template
+ *
+ * @see Mage_Catalog_Block_Category_View
+ */
+?>
+<?php
+    $_helper    = $this->helper('catalog/output');
+    $_category  = $this->getCurrentCategory();
+    $_imgHtml   = '';
+    if ($_imgUrl = $_category->getImageUrl()) {
+        $_imgHtml = '<p class="category-image"><img src="'.$_imgUrl.'" alt="'.$this->htmlEscape($_category->getName()).'" title="'.$this->htmlEscape($_category->getName()).'" /></p>';
+        $_imgHtml = $_helper->categoryAttribute($_category, $_imgHtml, 'image');
+    }
+?>
+<div class="page-title category-title">
+    <?php if($this->IsRssCatalogEnable() && $this->IsTopCategory()): ?>
+        <a href="<?php echo $this->getRssLink() ?>" class="link-rss"><?php echo $this->__('Subscribe to RSS Feed') ?></a>
+    <?php endif; ?>
+    <h1><?php echo $_helper->categoryAttribute($_category, $_category->getName(), 'name') ?></h1>
+</div>
+
+<?php echo $this->getMessagesBlock()->getGroupedHtml() ?>
+
+<?php if($_imgUrl): ?>
+    <?php echo $_imgHtml ?>
+<?php endif; ?>
+
+<?php if($_description=$this->getCurrentCategory()->getDescription()): ?>
+    <div class="category-description std">
+        <?php echo $_helper->categoryAttribute($_category, $_description, 'description') ?>
+    </div>
+<?php endif; ?>
+
+
+	<?php // Sub category code START ?>
+	<?php 
+	if ($this->getCurrentCategory()->hasChildren()){ 
+	// has children, display them as images 
+	?> 
+	<?php 
+	$currentCat = Mage::getSingleton('catalog/layer')->getCurrentCategory();
+	$_columnCount = 3; 
+	$subCatCol = $currentCat->getChildrenCategories(); 
+	$_collectionSize = count($subCatCol);
+	?> 
+		<div class="category-listing"> 
+			
+			<?php $i=0; foreach ($subCatCol as $subchild) { ?> 
+				<?php
+					//$i++;
+					$url= $currentCat->getUrlKey() . "/" . $subchild->getUrlKey();
+				?> 
+				<?php if ($i++%$_columnCount==0): ?>
+			        <ul class="subcats">
+		        <?php endif ?>
+				<li class="sub-item<?php if(($i-1)%$_columnCount==0): ?> first<?php elseif($i%$_columnCount==0): ?> last<?php endif; ?>"> 
+					<div class="subCategoryListing"> 
+						<?php 
+						$cur_category=Mage::getModel('catalog/category')->load($subchild->getId());
+						$thumbnail = '/../category/'.$cur_category->getThumbnail();
+						$resizedThumbnail = $this->helper('catalog/image')->init(Mage::getModel('catalog/product'), 'thumbnail', $thumbnail)->resize(180);		
+						if (strlen($thumbnail) == 0) {
+						 	$myThumb = "/skin/frontend/mojoparts/default/images/catalog/product/placeholder/small_image.jpg";
+						} 					
+						?> 
+						<a href="<?php echo $url; ?>" class="category-image"><img src="<?php echo $resizedThumbnail; ?>" border="0" width="180" /></a><br> 
+						<h3 class="category-name"><a href="<?php echo $url; ?>"><?php echo $subchild->getName();?></a></h3> 
+						<a href="<?php echo $url; ?>" class="view-all">View All</a>
+					</div> 
+				</li>
+				<?php if ($i%$_columnCount==0 || $i==$_collectionSize): ?>
+			        </ul>
+		        <?php endif ?> 
+			<?php } ?> 
+			
+			<script type="text/javascript">decorateGeneric($$('ul.subcats'), ['odd','even','first','last'])</script>
+		</div> 
+	<?php 
+	} // end if hasChildren 
+	?> 
+	
+    <?php // Sub category code END ?>
+    
+    
+    
+    
+    
+    
+
+
+<?php if($this->isContentMode()): ?>
+    <?php echo $this->getCmsBlockHtml() ?>
+
+<?php elseif($this->isMixedMode()): ?>
+    <?php echo $this->getCmsBlockHtml() ?>
+    <?php echo $this->getProductListHtml() ?>
+
+<?php else: ?>
+    <?php echo $this->getProductListHtml() ?>
+<?php endif; ?>

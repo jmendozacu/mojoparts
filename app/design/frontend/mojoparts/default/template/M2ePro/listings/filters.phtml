@@ -1,0 +1,60 @@
+<?php if (count($this->sellingFormatTemplates) > 1 || count($this->descriptionsTemplates) > 1 || count($this->listingsTemplates) > 1 || count($this->synchronizationsTemplates) > 1): ?>
+
+    <p class="switcher">
+
+        <?php if (count($this->sellingFormatTemplates) > 1): ?>
+            <label for="selling_format_template_switcher"><?php echo $this->__('Selling Format Template'); ?>:</label>
+            <select id="selling_format_template_switcher" name="selling_format_template_switcher" style="min-width: 100px; width: 130px;" onchange="return switchTemplate(this,'<?php echo $this->sellingFormatTemplateUrl; ?>','filter_selling_format_template');">
+                <option value="0" <?php if ($this->selectedSellingFormatTemplate == 0) echo 'selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('All Templates') ?></option>
+                <?php foreach ($this->sellingFormatTemplates as $id => $title): ?>
+                    <option value="<?php echo $id; ?>" <?php if ($this->selectedSellingFormatTemplate == $id) echo 'selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->escapeHtml($title); ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php endif; ?>
+
+        <?php if (count($this->descriptionsTemplates) > 1): ?>
+            <label for="description_template_switcher" style="margin-left: 30px;"><?php echo $this->__('Description Template'); ?>:</label>
+            <select id="description_template_switcher" name="description_template_switcher" style="min-width: 100px; width: 130px;" onchange="return switchTemplate(this,'<?php echo $this->descriptionTemplateUrl; ?>','filter_description_template');">
+                <option value="0" <?php if ($this->selectedDescriptionTemplate == 0) echo 'selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('All Templates') ?></option>
+                <?php foreach ($this->descriptionsTemplates as $id => $title): ?>
+                    <option value="<?php echo $id; ?>" <?php if ($this->selectedDescriptionTemplate == $id) echo 'selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->escapeHtml($title); ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php endif; ?>
+
+        <?php if (count($this->listingsTemplates) > 1): ?>
+            <label for="listing_template_switcher" style="margin-left: 30px;"><?php echo $this->__('General Template'); ?>:</label>
+            <select id="listing_template_switcher" name="listing_template_switcher" style="min-width: 100px; width: 130px;" onchange="return switchTemplate(this,'<?php echo $this->listingTemplateUrl; ?>','filter_listing_template');">
+                <option value="0" <?php if ($this->selectedListingTemplate == 0) echo 'selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('All Templates') ?></option>
+                <?php foreach ($this->listingsTemplates as $id => $title): ?>
+                    <option value="<?php echo $id; ?>" <?php if ($this->selectedListingTemplate == $id) echo 'selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->escapeHtml($title); ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php endif; ?>
+
+        <?php if (count($this->synchronizationsTemplates) > 1): ?>
+            <label for="synchronization_template_switcher" style="margin-left: 30px;"><?php echo $this->__('Synchronization Template') ?>:</label>
+            <select id="synchronization_template_switcher" name="synchronization_template_switcher" style="min-width: 100px; width: 130px;" onchange="return switchTemplate(this,'<?php echo $this->synchronizationTemplateUrl; ?>','filter_synchronization_template');">
+                <option value="0" <?php if ($this->selectedSynchronizationTemplate == 0) echo 'selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('All Templates') ?></option>
+                <?php foreach ($this->synchronizationsTemplates as $id => $title): ?>
+                    <option value="<?php echo $id; ?>" <?php if ($this->selectedSynchronizationTemplate == $id) echo 'selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->escapeHtml($title); ?></option>
+                <?php endforeach; ?>
+            </select>
+        <?php endif; ?>
+
+    </p>
+
+    <script type="text/javascript">
+
+        function switchTemplate(obj,url,urlParamName)
+        {
+            if (obj.value == 0) {
+                setLocation(url);
+            } else {
+                setLocation(url+urlParamName+'/'+obj.value+'/');
+            }
+        }
+
+    </script>
+
+<?php endif; ?>

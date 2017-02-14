@@ -1,0 +1,30 @@
+<?php if(Mage::getStoreConfig('amazonint/general/hide_help_tips') == 0){ ?>
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields4">
+	<b>Help Tip:</b> As your listing appears to be live on Amazon, a preview window is included below which will let you view your listing.<br/>
+	Please note that if you have disabled all of your products from appearing on Amazon in Seller Central your listing will not appear.
+	</div>
+</div>
+<?php } ?>
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Preview</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields4">
+    
+    <?php 
+    
+    	$id = $this->getRequest()->getParam('id');
+		$model = Mage::getModel('amazonimport/amazonimportlistthis'.Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_selection_marketplace'))->getCollection()->addFieldToFilter('productid',array($id));
+		if(sizeof($model) > 0){
+			foreach($model as $mdl){
+				break;
+			}	
+		} 
+    
+    ?>
+    <iframe src="<?php echo $mdl->getAmazonlink(); ?>" frameborder="0" scrollbars="true" width="100%" height="500"></iframe>
+        </div>
+</div>

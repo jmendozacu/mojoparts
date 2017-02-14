@@ -1,0 +1,7 @@
+<?php $amazoncore = Mage::getModel('amazonimport/amazonimport'); ?>
+<p class="grand-total">Step 1 of 2: Set Item Condition</p>
+What is the condition of this product? Amazon uses the value chosen below to distinguish between 'New' and 'Used' items, for example.
+<br /><br />
+<div style="width:90%;left:5%;position:absolute;padding-bottom:10px;">
+<center><?php echo $this->getCategoryCondition($amazoncore->loadSessionValue('camiloo_amazon_categorise_marketplace')); ?></center>
+</div>

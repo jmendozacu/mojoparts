@@ -1,0 +1,209 @@
+<div id="block_notice_settings" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Settings'); ?>">
+    <?php echo Mage::helper('M2ePro')->__('This section contains global settings of M2E Pro and allows you to manage them at your opinion.'); ?>
+</div>
+
+<script type="text/javascript">
+
+    // General for all tabs
+    //-----------------------------
+    if (typeof M2ePro == 'undefined') {
+        M2ePro = {};
+        M2ePro.url = {};
+        M2ePro.formData = {};
+        M2ePro.text = {};
+    }
+
+    M2ePro.url.formSubmit = '<?php echo $this->getUrl('*/*/save'); ?>';
+    M2ePro.url.startCustomUserInterface = '<?php echo $this->getUrl('*/adminhtml_settings/startCustomUserInterface'); ?>';
+    M2ePro.url.endCustomUserInterface = '<?php echo $this->getUrl('*/adminhtml_settings/endCustomUserInterface'); ?>';
+    M2ePro.url.startMigration = '<?php echo $this->getUrl('*/adminhtml_settings/startMigration'); ?>';
+
+    M2ePro.text.migration_successfully_completed_message = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Migration successfully completed.')); ?>';
+
+    Event.observe(window, 'load', function() {
+        SettingsHandlersObj = new SettingsHandlers();
+        editForm = new varienForm('edit_form', '<?php echo $this->getValidationUrl(); ?>');
+    });
+    //-----------------------------
+
+</script>
+
+<form id="<?php echo $this->getForm()->getId(); ?>" action="<?php echo $this->getForm()->getData('action'); ?>" method="post" enctype="multipart/form-data">
+
+    <input name="form_key" value="<?php echo $this->getFormKey(); ?>" type="hidden" />
+
+    <div class="entry-edit" id="magento_block_settings_general">
+
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Interface Settings'); ?></h4>
+        </div>
+
+        <div class="fieldset">
+            <div class="hor-scroll">
+
+                <table class="form-list" cellspacing="0" cellpadding="0">
+
+                    <colgroup class="label"></colgroup>
+                    <colgroup class="value"></colgroup>
+
+                    <tbody>
+
+                        <tr>
+                            <td class="label">
+                                <label><?php echo Mage::helper('M2ePro')->__('Products Thumbnails'); ?>: </label>
+                            </td>
+                            <td class="value">
+                                <select id="products_show_thumbnails" name="products_show_thumbnails" class="required-entry">
+                                    <option value="0" <?php if (!$this->products_show_thumbnails): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Hide'); ?></option>
+                                    <option value="1" <?php if ($this->products_show_thumbnails): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Show'); ?></option>
+                                </select>
+								<p class="note">
+                                    <span><?php echo Mage::helper('M2ePro')->__('Shows / Hides products thumbnails on Add Products and View Listing pages.'); ?></span>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="label">
+                                <label><?php echo Mage::helper('M2ePro')->__('Help Blocks'); ?>: </label>
+                            </td>
+                            <td class="value">
+                                <select id="block_notices_show" name="block_notices_show" class="required-entry">
+                                    <option value="0" <?php if (!$this->block_notices_show): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Hide'); ?></option>
+                                    <option value="1" <?php if ($this->block_notices_show): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Show'); ?></option>
+                                </select>
+								<p class="note">
+                                    <span><?php echo Mage::helper('M2ePro')->__('Shows / Hides all Help blocks.'); ?></span>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="label"></td>
+                            <td class="value">
+                                <?php echo $this->getChildHtml('restore_block_notices'); ?>
+								<p class="note">
+                                    <span><?php echo Mage::helper('M2ePro')->__('Restores all manually closed Help blocks.'); ?></span>
+                                </p>
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="entry-edit" id="magento_block_settings_notifications">
+
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Notifications'); ?></h4>
+        </div>
+
+        <div class="fieldset">
+            <div class="hor-scroll">
+
+                <table class="form-list" cellspacing="0" cellpadding="0">
+
+                    <tbody>
+
+                        <tr>
+                            <td class="label">
+                                <label><?php echo Mage::helper('M2ePro')->__('Negative Feedbacks'); ?>: </label>
+                            </td>
+                            <td class="value">
+                                <select name="feedbacks_notification_mode" class="required-entry">
+                                    <option value="0" <?php if (!$this->feedbacks_notification_mode): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                                    <option value="1" <?php if ($this->feedbacks_notification_mode): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                                </select>
+								<p class="note">
+                                    <span><?php echo Mage::helper('M2ePro')->__('Notifies when a new negative feedback was received.'); ?></span>
+                                </p>
+                            </td>
+                        </tr>
+
+                        <?php if ((bool)(int)Mage::helper('M2ePro/Module')->getConfig()->getGroupValue('/messages/', 'mode')): ?>
+                                
+                            <tr>
+                                <td class="label">
+                                    <label><?php echo Mage::helper('M2ePro')->__('My Messages'); ?>: </label>
+                                </td>
+                                <td class="value">
+                                    <select name="messages_notification_mode" class="required-entry">
+                                        <option value="0" <?php if (!$this->messages_notification_mode): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                                        <option value="1" <?php if ($this->messages_notification_mode): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                                    </select>
+                                    <p class="note">
+                                        <span><?php echo Mage::helper('M2ePro')->__('Notifies when new messages were received during synchronization.'); ?></span>
+                                    </p>
+                                </td>
+                            </tr>
+                            
+                        <?php endif; ?>
+
+                        <tr>
+                            <td class="label">
+                                <label><?php echo Mage::helper('M2ePro')->__('Cron'); ?>: </label>
+                            </td>
+                            <td class="value">
+                                <select name="cron_notification_mode" class="required-entry">
+                                    <option value="0" <?php if (!$this->cron_notification_mode): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                                    <option value="1" <?php if ($this->cron_notification_mode): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                                </select>
+								<p class="note">
+                                    <span><?php echo Mage::helper('M2ePro')->__('Notifies if cron is not run more than 12 hours.'); ?></span>
+                                </p>
+                            </td>
+                        </tr>
+
+                    </tbody>
+
+                </table>
+
+            </div>
+        </div>
+
+    </div>
+
+    <?php if(Mage::getModel('M2ePro/Migration_Dispatcher')->isMigrateAvailable() &&
+             !Mage::getModel('M2ePro/Migration_Dispatcher')->isAlreadyWorked() &&
+             !Mage::helper('M2ePro/Magento')->isMagentoGoMode()) { ?>
+
+        <div class="entry-edit" id="magento_block_settings_migration">
+
+            <div class="entry-edit-head">
+                <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Migration From Last M2E Version'); ?></h4>
+            </div>
+
+            <div class="fieldset">
+                <div class="hor-scroll">
+
+                    <table class="form-list" cellspacing="0" cellpadding="0">
+
+                        <tbody>
+
+                            <tr>
+                                <td class="label"><?php echo Mage::helper('M2ePro')->__('Data Migration'); ?></td>
+                                <td class="value">
+                                    <?php echo $this->getChildHtml('start_migration'); ?>
+                                    <p class="note">
+                                        <span><?php echo Mage::helper('M2ePro')->__('Last version of M2E extension was detected. Migration option is available.'); ?></span>
+                                    </p>
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+            </div>
+
+        </div>
+
+    <?php } ?>
+
+</form>

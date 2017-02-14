@@ -1,0 +1,181 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="<?php echo $this->getLang() ?>" lang="<?php echo $this->getLang() ?>">
+<head>
+<?php echo $this->getChildHtml('head') ?>
+</head>
+<body<?php echo $this->getBodyClass()?' class="'.$this->getBodyClass().'"':'' ?>>
+<?php echo $this->getChildHtml('after_body_start') ?>
+<div class="wrapper">
+    <?php echo $this->getChildHtml('global_notices') ?>
+    <div class="page">
+        <?php echo $this->getChildHtml('header') ?>
+        <div class="main-container col1-layout">
+            <div class="main">
+                <?php //echo $this->getChildHtml('breadcrumbs') ?>
+                <div class="col-main">
+                    <?php echo $this->getChildHtml('global_messages') ?>
+                    <?php
+                    	$storage = Mage::getSingleton('customer/session');
+                    	$block = $this->getMessagesBlock();
+		                $block->addMessages($storage->getMessages(true));
+		                $block->setEscapeMessageFlag($storage->getEscapeMessages(true));
+		                //$block->addStorageType('customer/session');
+	                ?>
+					<?php echo $block->getGroupedHtml(); ?>
+                    <div class="homepage">
+	                    <div class="part-finder">
+	                    	<?php echo $this->getLayout()
+	                    				->createBlock('partfinder/selector')
+	                    				->setTemplate('partfinder/selector.phtml')
+	                    				->setBlockId('partfinder-selector')->toHtml(); ?>
+	                    </div>
+	                    
+	                    <div class="featured-categories">
+	               			<ul>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>lighting/headlights">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_headlights_parking_lights.jpg')) ?>" width="200" height="65" alt="Headlights &amp; Parking Lights" />	
+	                    		<span>Headlights</span>
+	                    		</a>
+	                    	</li>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>lighting/taillights">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_taillights.jpg')) ?>" width="200" height="65" alt="Mirror - Side View" />	
+	                    		<span>Tail Lights</span>
+	                    		</a>
+	                    	</li>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>lighting/other-lamps">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_otherlamps.jpg')) ?>" width="200" height="65" alt="Weatherstripping" />	
+	                    		<span>Other Lamps</span>
+	                    		</a>
+	                    	</li>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>body-mirrors/mirrors">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_powermirror.jpg')) ?>" width="200" height="65" alt="Wheel Bearing Hub - Front" />	
+	                    		<span>Mirrors</span>
+	                    		</a>
+	                    	</li>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>engine-drivetrain/fuel-pumps">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_fuelpump.jpg')) ?>" width="200" height="65" alt="Window Regulator" />	
+	                    		<span>Fuel Pumps</span>
+	                    		</a>
+	                    	</li>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>body-mirrors/window-regulators-motors">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_windowregulator.jpg')) ?>" width="200" height="65" alt="Door Handle Interior" />	
+	                    		<span>Window Regulators</span>
+	                    		</a>
+	                    	</li>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>body-mirrors/wiper-switches">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_wiperswitches.jpg')) ?>" width="200" height="65" alt="Power Door Lock Actuator" />	
+	                    		<span>Wiper Switches</span>
+	                    		</a>
+	                    	</li>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>body-mirrors/turn-signal-levers">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_turnsignals.jpg')) ?>" width="200" height="65" alt="Wheel Bearing Hub - Rear" />	
+	                    		<span>Turn Signal Levers</span>
+	                    		</a>
+	                    	</li>
+	               			<li>
+	               				<a href="<?php echo $this->getUrl(); ?>">
+	                    		<img src="<?php echo($this->getSkinUrl('images/cat_doorhandleexterior.jpg')) ?>" width="200" height="65" alt="Power Mirror Motor" />	
+	                    		<span>Door Handle Exteriors</span>
+	                    		</a>
+	                    	</li>
+	                    	</ul>
+	                    </div>
+	                    
+	                    <div class="why-were-different">
+	                    	<p><strong>Risk Free.</strong>  If you are not 100% satisfied, return the product for a full refund.  No restocking fee.</p>
+	                    	
+	                    	<p><strong>Free Shipping.</strong> Standard Shipping to the lower 48 states.</p>
+
+	                    	<p><strong>1-Day Shipping.</strong>  Orders will ship within one business day from the time ordered.</p>
+	                    </div>
+	
+	                    <div class="how-to-videos">
+		                    <img style="float:right;margin:0 0 0 10px;" src="<?php echo($this->getSkinUrl('images/home_howto.jpg')) ?>" width="105" height="80" alt="How To Videos" />
+		                    <!-- <p>Already know how to install a part for your vehicle? We're working on creating a place where you can share your knowledge and upload helpful videos.</p> -->
+	                    	<!-- <p>Already know how to select and install a part? Share your knowledge with others by posting a how-to video on YouTube.<br/> -->
+	                    	<!-- <a href="#" class="link" >Submit Videos</a></p> -->
+	                    	<p>Already know how to select and install a part? Share your knowledge with others by posting a how-to video on the MojoParts YouTube channel.</p>
+	                    	<p><a href="/submit-video" class="link" >Submit Videos</a></p>
+	                    </div>
+	
+	                    <div class="have-a-question">
+	                    	<p>Send us your question and we'll respond as quickly as we can!</p>
+	                    	
+	                    	<form action="/contacts/index/post/" id="hpcontactForm" method="post">
+                    
+		                        <input name="name" id="name" title="<?php echo Mage::helper('contacts')->__('Name') ?>" value="Home Page Contact Submission" class="input-text required-entry" type="hidden" />
+		                		
+		                		<div class="field">
+		                		<div class="input-text">
+		                        	<input name="email" id="email" title="<?php echo Mage::helper('contacts')->__('Email') ?>" value="Email Address" class="input-text required-entry validate-email" type="text"  onclick="clickclear(this, 'Email Address')" onblur="clickrecall(this,'Email Address')" />
+		                		</div>
+		                		</div>
+		                		
+		                		<div class="input-mid">
+			                		<div class="input-top">
+				                		<div class="input-bottom input-textarea">
+						                    <textarea name="comment" id="comment" title="<?php echo Mage::helper('contacts')->__('Comment') ?>" class="required-entry input-text" cols="5" rows="3" onclick="clickclear(this, 'Comment/Question')" onblur="clickrecall(this,'Comment/Question')">Comment/Question</textarea>
+				            			</div>
+			            			</div>
+		    					</div>
+		    					
+		    					<input type="text" name="hideit" id="hideit" value="" style="display:none !important;" />
+		
+						        <button type="submit" title="<?php echo Mage::helper('contacts')->__('Submit') ?>" class="button"><img src="<?php echo($this->getSkinUrl('images/btn_submit.gif')) ?>" width="85" height="25" alt="Button Submit" /></button>
+    
+							</form>
+							<script type="text/javascript">
+							//<![CDATA[
+							    var contactForm = new VarienForm('hpcontactForm', true);
+							    function clickclear(thisfield, defaulttext) {
+									if (thisfield.value == defaulttext) {
+										thisfield.value = "";
+									}
+								}								
+								function clickrecall(thisfield, defaulttext) {
+									if (thisfield.value == "") {
+										thisfield.value = defaulttext;
+									}
+								}
+							//]]>
+							</script>
+	                    	
+	                    	
+                  		
+	                   
+	                    </div>
+					</div>
+                </div>
+            </div>
+        </div>
+        <?php echo $this->getChildHtml('footer') ?>
+        <?php echo $this->getChildHtml('before_body_end') ?>
+    </div>
+</div>
+<?php echo $this->getAbsoluteFooter() ?>
+		<script type="text/javascript">
+		//<![CDATA[
+		
+		function clickclear(thisfield, defaulttext) {
+		if (thisfield.value == defaulttext) {
+		thisfield.value = "";
+		}
+		}
+		
+		function clickrecall(thisfield, defaulttext) {
+		if (thisfield.value == "") {
+		thisfield.value = defaulttext;
+		}
+		}
+		//]]>
+		</script>
+</body>
+</html>

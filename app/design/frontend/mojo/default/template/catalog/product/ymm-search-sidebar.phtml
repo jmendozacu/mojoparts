@@ -1,0 +1,251 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+<title>Untitled Document</title>
+</head>
+
+<body>
+
+<?php
+/**
+* @category    design
+* @package     base_default
+* @copyright   Copyright (c) 2010 category based search phtml KAM Technology www.kamtechco.net
+*/
+?>
+
+<?php
+   header("Cache-Control: no-cache, must-revalidate");     // Must do cache-control headers
+   header("Expires: Mon, 26 Jul 2010 05:00:00 GMT");       // or IE will pull from cache 100% of time (which is really bad)
+?>
+<script type="text/javascript" ></script>
+
+<script>
+
+function getXMLHTTP() { //fuction to return the xml http object
+
+		var xmlhttp=false;	
+		try{
+			xmlhttp=new XMLHttpRequest();
+		}
+		catch(e)	{		
+			try{			
+				xmlhttp= new ActiveXObject("Microsoft.XMLHTTP");
+			}
+			catch(e){
+				try{
+				xmlhttp = new ActiveXObject("Msxml2.XMLHTTP");
+				}
+				catch(e1){
+					xmlhttp=false;
+				}
+			}
+		}
+		return xmlhttp;
+	}
+	
+	function showmesg(caller,mesg){
+	alert("Called from: "+caller+" \n Message : "+ mesg);
+	}
+	
+	function getResponseToDiv(actionURL,strDiv,optionid) {
+        //category based search phtml KAM Technology www.kamtechco.net
+		//showmesg(strURL,strDiv,optionid);
+		
+		var url_prefix="<?php echo $this->getBaseUrl() ?>"+"ymm/ymmsearch/";
+		var strURL=url_prefix+actionURL;
+			
+         if (optionid=="-1")
+         {
+             refreshdropdowns(strDiv);
+             return;
+         }
+		var req = getXMLHTTP();
+		if (req) {
+			req.onreadystatechange = function() {
+				if (req.readyState==2 || 4) {
+				//document.getElementById(strDiv).style.display="block";
+				var loadingdiv = document.getElementById('loading');
+                loadingdiv.style.display="block";
+
+				document.body.style.cursor = "wait";
+				}
+
+				if (req.readyState == 4) {
+				//document.getElementById(strDiv).style.display="none";
+				var loadingdiv = document.getElementById('loading');
+				loadingdiv.style.display="none";
+
+				document.body.style.cursor = "auto";
+					// Get response only if "OK"
+					if (req.status == 200) {						
+						document.getElementById(strDiv).innerHTML=req.responseText;						
+					} else {
+						alert("There was a problem while using XMLHTTP:\n" + req.statusText);
+					}
+				}				
+			}
+			
+			req.open("GET", strURL, true);
+			req.send(null);
+		}
+				
+	}
+ function refreshdropdowns(strDiv)
+ {
+     if(strDiv=="makediv"){
+     
+     document.getElementById("makediv").innerHTML = "<select id=make name=make> <option>Select Make</option> </select>";
+  }
+     if(strDiv=="makediv"){
+     document.getElementById(strDiv).innerHTML = "<select id=make name=make> <option>Select Make</option> </select>";
+  }
+
+ } 
+ function trim(s){
+    var l=0; var r=s.length -1;
+    while(l < s.length && s[l] == ' ')
+    {     l++; }
+    while(r > l && s[r] == ' ')
+    {     r-=1;     }
+    return s.substring(l, r+1);
+} 
+function GYearSelected(){
+
+	var baseURL="";		
+	
+	
+
+	var makeval="";
+	makeval=trim(document.getElementById("make").options[document.getElementById("make").selectedIndex].value);
+
+	//if(makeval==-1)
+	if(document.getElementById("make").options[document.getElementById("make").selectedIndex].id==-1)
+	{
+	//alert('Please Select Category ');
+
+	document.getElementById("error-block-div").innerHTML="<p class=error-msg>"+"Please enter search settings"+"</p>";
+	return;
+	}
+	if(document.getElementById("model").options[document.getElementById("model").selectedIndex].id==-1)
+	{
+		baseURL="<?php echo $this->getBaseUrl() ?>" + "catalogsearch/advanced/result/?name=&description=&short_description=&sku=&price%5Bfrom%5D=&price%5Bto%5D=&make="+makeval;
+		top.location.href = baseURL;
+		return
+
+	}
+	var modelval="";
+	modelval=trim(document.getElementById("model").options[document.getElementById("model").selectedIndex].value);
+
+	if(document.getElementById("year").options[document.getElementById("year").selectedIndex].id==-1)
+	{
+		baseURL="<?php echo $this->getBaseUrl() ?>" + "catalogsearch/advanced/result/?name=&description=&short_description=&sku=&price%5Bfrom%5D=&price%5Bto%5D=&make="+makeval+"&model="+modelval;
+		top.location.href = baseURL;
+		return
+	}
+
+	var yearval=trim(document.getElementById("year").options[document.getElementById("year").selectedIndex].value);
+    baseURL="<?php echo $this->getBaseUrl() ?>" + "catalogsearch/advanced/result/?name=&description=&short_description=&sku=&price%5Bfrom%5D=&price%5Bto%5D=&make="+makeval+"&model="+modelval+"&year="+yearval;
+	//submit URL
+	top.location.href = baseURL;
+	
+}
+
+</script>
+
+<?php 
+$validate = false; 
+$_SERVER_URL = $_SERVER['SERVER_NAME'];
+$encrypt = crypt($_SERVER_URL, 'd4'); 
+$path = dirname(__FILE__);
+$file1 = $path."/mageps.txt";
+if(file_exists($file1)) {
+$lines = file($file1);
+foreach($lines as $line_num => $linetxt)
+{
+$line = $linetxt;
+if($encrypt==trim($line)) {
+$validate = true;
+break;
+}
+
+}
+}
+if(!$validate) { ?>
+
+<script type="text/javascript"  src="<?php echo $this->getJsUrl('ymm/ymm.js') ?>"> </script>
+<?php } ?>
+<div class="page-title">
+    <h3><?php echo $this->__('Year Make Model Search') ?></h3>
+</div>
+<div class="box base-mini mini-poll">
+<div id="error-block-div"> </div>
+<form name="ymme" method="get" >
+
+
+<div class="fieldset advanced-search">
+<h2 class="legend"><?php echo $this->__('Search Settings') ?></h2>
+
+<div id='loading' style='display: none; position:absolute' >Loading...<img src="<?php echo $this->getSkinUrl('images/ajax-loader.gif') ?>" title="Loading" /></div>
+<div>&nbsp;</div>
+<ul class="form-list" id="advanced-search-list">
+<div class="form-list" id="advanced-search-list">
+<li><label for="Make"><?php echo $this->__('Make') ?></label>
+<div class="field"  id="makediv" class="even"><select id=make name="make" onChange="getResponseToDiv('findmodel?make='+this.options[this.selectedIndex].value,'modeldiv',this.options[this.selectedIndex].value)">
+    	<option id=-1 value="Select Make">Select Make</option>
+
+			<?php 
+			$makeattribute_code="make";
+				$resource = Mage::getSingleton ( 'core/resource' );
+		$readonce = $resource->getConnection ( 'core_read' );
+		$table1=$resource->getTableName ( 'eav_attribute' );
+		$table2=$resource->getTableName ( 'catalog_product_entity_varchar' );
+
+		$makequery = $readonce->query("select attribute_id from ".$table1." where attribute_code='".$makeattribute_code."'");
+		$row = $makequery->fetch ();
+		$make_attributeid=$row['attribute_id'];
+	
+				$genquery = $readonce->query("select distinct value from ".$table2." where  attribute_id=".$make_attributeid ." order by value ");
+		?>
+		
+		<?php
+		$allzmake='';
+		while($row4 = $genquery->fetch ())
+		{
+		$allzmake=$allzmake.$row4['value'].',';
+		}
+		$mdzinput=explode(',',$allzmake);
+		$mdzresult = array_unique($mdzinput);
+		sort($mdzresult);
+		for($nz=1;$nz<count($mdzresult); $nz++){
+		?>
+		<option value="<?php echo $mdzresult[$nz];?>"><?php echo $mdzresult[$nz];?></option>
+		 <?php
+		}
+		
+		
+		?>
+        </select></div>
+</li>
+</div><div class="form-list" id="advanced-search-list">
+<div ><li>
+<label for="Model"><?php echo $this->__('Model') ?></label>
+<div class="field"  id="modeldiv"><select id=model name="model">
+	<option id=-1 value="Select Model">Select Model</option>
+        </select></div>
+</li>
+</div>
+<div ><li>
+<label for="Year"><?php echo $this->__('Year') ?></label>
+<div class="field" id="yeardiv" ><select id=year name="year">
+	<option id=-1 value="Select Year">Select Year</option>
+        </select></div></li>
+</div>
+
+<div class="buttons-set"><button class="button" type="button" onClick="GYearSelected()" title="<?php echo $this->__('Search') ?>" class="button"><span><span><?php echo $this->__('Search') ?></span></span></button></div>
+</div></ul> <div ></div></div>
+</form>
+</div>
+</body>
+</html>

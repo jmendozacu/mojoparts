@@ -1,0 +1,142 @@
+<?php $amazoncore = Mage::getModel('amazonimport/amazonimport'); ?>
+<div class="entry-edit">
+<div class="fieldset " id="group_fields4">
+Once you have finished adding values into your CSV file, save it as a CSV once more and find the file below.
+Then click 'Upload' to begin saving these values (this make take a few minutes to complete on large catalogues).
+</div>
+</div>
+
+<div class="entry-edit" id="uploadbuttonzone"
+	name="uploadbuttonzone" style="display: block;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Find your CSV file below</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+<center>
+<form id="edit_form_1" name="edit_form_1" method="post" action="<?php echo $amazoncore->getRootUrl(); ?>amazonimport/bulkuploadhelper/selection/cachebuster/<?php echo time(); ?>" target="iframeupload" enctype="multipart/form-data">
+		<input type="hidden" name="form_key" id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>">
+		<input type="file" name="csvfile">
+		<input type="hidden" name="regenerate" id="regenerate" value="1" />
+		&nbsp;&nbsp;&nbsp;<button class="scalable save" type="submit" onclick="startupload();" name="submit" value="Upload">
+								<span>Upload</span>
+								</button>
+								</center>
+		
+		</form>
+</center>
+</div>
+</div>
+</div>
+</div>
+
+<div class="entry-edit" id="uploadingzone"
+	name="uploadingzone" style="display:none;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Uploading CSV - Please Wait</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+<center>
+ <img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" 	alt="Loading..." class="v-middle"> <img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" 	alt="Loading..." class="v-middle"> <img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" 	alt="Loading..." class="v-middle"> <img src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif" 	alt="Loading..." class="v-middle">
+</center>
+</div>
+</div>
+</div>
+</div>
+
+
+
+<div class="entry-edit" id="uploadproc" name="uploadproc"
+	style="display:none;">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Processing uploaded file</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+<table cellspacing="0" class="form-list">
+	<tbody>
+		<tr>
+			<td class="label"><label for="color">Current Progress</label></td>
+			<td class="value">
+			<div style="width: 200px; border: 1px solid #999999; float: left;">
+			<div id="currentprogressupload" style="width: 0%; background: green;">&nbsp;</div>
+			</div>
+			&nbsp; <span id="progresspercentupload">0%</span> <span
+				id="upload_indicator" class="autocomplete-indicator"> <img
+				src="<?php echo $amazoncore->getSkinUrl(); ?>skin/adminhtml/default/default/images/ajax-loader.gif"
+				alt="Loading..." class="v-middle"> </span></td>
+			<td class="scope-label"></td>
+			<td><small>&nbsp;</small></td>
+		</tr>
+
+		<tr>
+			<td class="label"><label for="color">Estimated Time
+			Remaining</label></td>
+			<td class="value"><span id="timeleftupload">Estimating time
+			required...</span></td>
+			<td class="scope-label"></td>
+			<td><small>&nbsp;</small></td>
+		</tr>
+
+	</tbody>
+</table>
+</div>
+</div>
+</div></div>
+
+
+<div class="entry-edit" id="uploadcomplete" name="uploadcomplete"
+	style="display: none">
+<div class="entry-edit-head">
+<h4 class="icon-head head-edit-form fieldset-legend">Upload processing complete</h4>
+<div class="form-buttons"></div>
+</div>
+<div class="fieldset " id="group_fields4">
+<div class="hor-scroll">
+<div id="displaynode">
+This upload has been processed fully. We recommend that you now click 'Back' above to view the changes in the grid view.
+</div>
+</div>
+</div>
+</div>
+
+<form action="<?php echo $amazoncore->getRootUrl(); ?>amazonimport/bulkuploadhelper/selection/cachebuster/<?php echo time(); ?>" method="POST" id="prepareuploadfile" name="prepareuploadfile" target="iframeupload">
+	<input type="hidden" name="form_key" id="form_key" value="<?php echo Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+	<input type="hidden" name="regenerate" id="regenerate" value="0" />
+</form>
+<iframe src="about:blank" id="iframeupload" name="iframeupload" style="width: 1px; height: 1px;" frameborder="0"></iframe>
+<script type="text/javascript">
+	
+			function startupload() {
+				Effect.Fade('uploadbuttonzone');
+				Effect.Appear('uploadingzone');
+			}
+
+			function processfileupload() {
+				Effect.Fade('uploadingzone');
+				Effect.Appear('uploadproc');
+			}
+
+			function gouploadcomplete(){
+				Effect.Fade('uploadproc');
+				Effect.Appear('uploadcomplete');
+			}
+
+			function updatestatusupload(percentval,alttext,timeleft){
+				$('timeleftupload').innerHTML = timeleft;
+				$('progresspercentupload').innerHTML = percentval;
+				$('currentprogressupload').morph('width:'+percentval+';background:green;');
+				$('currentprogressupload').alt = alttext;
+				$('currentprogressupload').title = alttext;
+				<?php echo $amazoncore->browserCheckForReloader('prepareuploadfile'); ?>
+			}
+			
+			
+        </script>

@@ -1,0 +1,1214 @@
+<?php
+/**
+ * @methods
+ * - getValue($key, $default)
+ * - getSelected($key, $value)
+ * - getChecked($key)
+ * - getAttributes()
+ * - getMappings()
+ * - getAddMapButtonHtml()
+ * - getRemoveMapButtonHtml()
+ */
+?>
+
+<script type="text/javascript">
+//<![CDATA[
+var profileImportOnly = ['profile_number_of_records', 'profile_decimal_separator'];
+function showOption(select)
+{
+    select = $(select);
+    for (var i = 0, l = select.options.length; i<l; i++) {
+        $$('.'+select.id+'_'+select.options[i].value).each(function (el) {
+            el.style.display = select.selectedIndex==i ? '' : 'none';
+        });
+    }
+
+}
+
+function addFieldMapping()
+{
+    var entityType = $('profile_entity_type').value;
+    Element.insert($('map_container_'+entityType), {bottom: $('map_template_'+entityType).innerHTML});
+}
+
+function removeFieldMapping(button)
+{
+    Element.remove(button.parentNode);
+}
+
+function setMapFileField(select)
+{
+    select.parentNode.getElementsByTagName('input')[0].value = select.value;
+}
+
+function toggleSelectOption(type, source, target, sourceValue, targetValue, targetText)
+{
+    source = $(source);
+    target = $(target);
+
+    var i, ex, option, present;
+    var selectValue = source.options[source.selectedIndex].value;
+
+    if('remove'==type && selectValue==sourceValue || 'add'==type && selectValue!=sourceValue) {
+        for(i=0;i<target.options.length;i++){
+            if(target.options[i].value==targetValue){
+                target.remove(i);
+                break;
+            }
+        }
+    } else {
+        for(i=0;i<target.options.length;i++){
+            if(target.options[i].value==targetValue){
+                present = true;
+                break;
+            } else {
+                present = false;
+            }
+        }
+        if(!present){
+            option = document.createElement("OPTION");
+            option.text = targetText;
+            option.value = targetValue;
+            try {
+                target.add(option, null); // standards compliant; doesn't work in IE
+            } catch(ex) {
+                target.add(option); // IE only
+            }
+        }
+    }
+    showOption(target);
+}
+
+function exportUrlField()
+{
+    var urlFieldEl = $('profile_add_url_field').up();
+    var entityType = $('profile_entity_type').value;
+    var direction  = $('profile_direction').value;
+    var storeId    = $('profile_store_id').value;
+
+    if (entityType == 'product' && direction == 'export' && storeId > 0) {
+        urlFieldEl.show();
+    }
+    else {
+        urlFieldEl.hide();
+    }
+}
+
+function changeEntityType()
+{
+    //toggleSelectOption('remove', 'profile_entity_type', 'profile_direction', 'customer', 'import', '<?php echo $this->__('Import') ?>');
+    //toggleSelectOption('remove', 'profile_entity_type', 'profile_store_id', 'customer', '0', '<?php echo $this->__('Default Values') ?>');
+    //showOption('profile_direction');
+    changeDirection();
+}
+
+
+function changeDirection()
+{
+    toggleSelectOption('remove', 'profile_direction', 'profile_data_transfer', 'export', 'interactive', '<?php echo $this->__('Interactive') ?>');
+    //showOption('profile_data_transfer');
+    if ($('profile_direction').value == 'import') {
+        profileImportOnly.each(function(id){if ($(id))$(id).up(1).show();});
+    }
+    else {
+        profileImportOnly.each(function(id){if ($(id))$(id).up(1).hide();});
+    }
+    exportUrlField();
+}
+
+function updateRun(select)
+{
+    if ($('file_list') != null){
+        if ($(select).value=='interactive') {
+            $('file_list').show();
+        } else {
+            $('file_list').hide();
+        }
+    }
+}
+
+Event.observe(window, 'load', function(){
+    if($('profile_data_transfer')) {
+        updateRun('profile_data_transfer');
+    }
+});
+//]]>
+</script>
+
+<div id="profile-generator" class="entry-edit profile-generator">
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__("Profile Information") ?></h4>
+    </div>
+    <fieldset>
+        <input type="hidden" id="profile_is_commerce_extensions" name="is_commerce_extensions" value="99"/>
+        <legend><?php echo $this->__("Profile Information") ?></legend>
+        <span class="field-row">
+            <label for="profile_name"><?php echo $this->__("Name:") ?> <span class="required">*</span></label>
+            <input class="required-entry required-entry input-text" id="profile_name" name="name" value="<?php echo $this->getValue('name') ?>"/>
+        </span>
+        <span class="field-row">
+            <label for="profile_direction"><?php echo $this->__("Direction:") ?></label>
+            <select id="profile_direction" name="direction" onchange="showOption(this);changeDirection();" class="option-control">
+                <option value="import" <?php echo $this->getSelected('direction', 'import') ?>><?php echo $this->__("Import") ?></option>
+                <option value="export" <?php echo $this->getSelected('direction', 'export') ?>><?php echo $this->__("Export") ?></option>
+            </select>
+        </span>    
+		<span class="field-row">
+            <label for="profile_entity_type"><?php echo $this->__("Profile type:") ?></label>
+            <select id="profile_entity_type" name="entity_type" onchange="showOption(this);changeEntityType();" class="option-control">
+                <option value="product" <?php echo $this->getSelected('entity_type', 'product') ?>><?php echo $this->__("Products") ?></option>
+                <option value="attribute" <?php echo $this->getSelected('entity_type', 'attribute') ?>><?php echo $this->__("Attributes") ?></option>
+                <option value="order" <?php echo $this->getSelected('entity_type', 'order') ?>><?php echo $this->__("Orders") ?></option>
+                <option value="category" <?php echo $this->getSelected('entity_type', 'category') ?>><?php echo $this->__("Categories") ?></option>
+                <option value="customer" <?php echo $this->getSelected('entity_type', 'customer') ?>><?php echo $this->__("Customers") ?></option>
+                <option value="customerreviews" <?php echo $this->getSelected('entity_type', 'customerreviews') ?>><?php echo $this->__("Customer Reviews") ?></option>
+				<option value="couponcode" <?php echo $this->getSelected('entity_type', 'couponcode') ?>><?php echo $this->__("Shopping Cart Price Rules") ?></option>
+            </select>
+			<small class="profile_direction_import profile_entity_type_product">
+					<?php echo $this->__("(Products Only.)") ?>
+			</small>
+        </span>
+        <span class="field-row">
+            <label for="profile_store_id"><?php echo $this->__("Store:") ?></label>
+            <span class="with-tip">
+                <select id="profile_store_id" name="store_id" onchange="exportUrlField();">
+                <option value="0"><?php echo $this->__('Default (Admin) Values') ?></option>
+                    <?php foreach ($this->getWebsiteCollection() as $_website): ?>
+                        <?php $_websiteShow=false; ?>
+                        <?php foreach ($this->getGroupCollection() as $_group): ?>
+                            <?php if ($_website->getId() != $_group->getWebsiteId()) continue; ?>
+                            <?php $_groupShow=false; ?>
+                            <?php foreach ($this->getStoreCollection() as $_store): ?>
+                                <?php if ($_group->getId() != $_store->getGroupId()) continue; ?>
+                                <?php if (!$_websiteShow): ?>
+                                    <?php $_websiteShow=true; ?>
+                                    <optgroup label="<?php echo $_website->getName() ?>"></optgroup>
+                                <?php endif; ?>
+                                <?php if (!$_groupShow): ?>
+                                    <?php $_groupShow=true; ?>
+                                    <optgroup label="&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $_group->getName() ?>">
+                                <?php endif; ?>
+                                <option value="<?php echo $_store->getId() ?>" <?php echo $this->getSelected('store_id', $_store->getId()) ?>>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo $_store->getName() ?></option>
+                            <?php endforeach; ?>
+                            <?php if ($_groupShow): ?>
+                                </optgroup>
+                            <?php endif; ?>
+                        <?php endforeach; ?>
+                    <?php endforeach; ?>
+                </select>
+                <small class="profile_direction_import profile_entity_type_product">
+                        <?php echo $this->__("(Products will be added/updated to this store if 'store' column is blank or missing in the import file.)") ?>
+                </small>
+            </span>
+        </span>
+        <span class="field-row">
+            <label for="profile_add_url_field"><?php echo $this->__("Add Field with URL:") ?></label>
+            <select id="profile_add_url_field" name="gui_data[export][add_url_field]" class="option-control">
+                <option value="0"<?php echo $this->getSelected('gui_data/export/add_url_field', 0) ?>><?php echo $this->__("No") ?></option>
+                <option value="1"<?php echo $this->getSelected('gui_data/export/add_url_field', 1) ?>><?php echo $this->__("Yes") ?></option>
+            </select>
+        </span>
+        <span class="field-row">
+            <label for="profile_number_of_records"><?php echo $this->__("Number of records:") ?></label>
+            <span class="with-tip">
+                <input class="required-entry validate-number input-text" id="profile_number_of_records" name="gui_data[import][number_of_records]" value="<?php echo (($numbers = $this->getValue('gui_data/import/number_of_records')) ? $numbers : 1) ?>"/>
+                <small><?php echo $this->__("(You have to increase php memory_limit before changing this value)") ?></small>
+            </span>
+        </span>
+        <span class="field-row">
+            <label for="profile_decimal_separator"><?php echo $this->__("Decimal separator:") ?></label>
+            <span class="with-tip">
+                <input class="required-entry input-text" id="profile_decimal_separator" name="gui_data[import][decimal_separator]" value="<?php echo (($separator = $this->getValue('gui_data/import/decimal_separator')) ? $separator : '.') ?>"/>
+            </span>
+        </span>
+		
+		
+        <span class="field-row profile_direction_import">
+			
+			<!-- PRODUCT PROFILE DATA START -->
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_root_catalog_id"><?php echo $this->__("Root Catalog ID:") ?></label>
+				<input class="required-entry input-text" id="profile_root_catalog_id" name="gui_data[parse][root_catalog_id]" value="<?php echo (($rootCatalogId = $this->getValue('gui_data/parse/root_catalog_id')) ? $rootCatalogId : 2) ?>"/>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_update_products_only"><?php echo $this->__("Update Products Only:") ?></label>
+				<select id="profile_update_products_only" name="gui_data[parse][update_products_only]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/update_products_only', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/update_products_only', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_multi_store_images"><?php echo $this->__("Multi-Store Images:") ?></label>
+				<select id="profile_multi_store_images" name="gui_data[parse][multi_store_images]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/multi_store_images', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/multi_store_images', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_import_images_by_url"><?php echo $this->__("Import Images By URL:") ?></label>
+				<select id="profile_import_images_by_url" name="gui_data[parse][import_images_by_url]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/import_images_by_url', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/import_images_by_url', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_reimport_images"><?php echo $this->__("Reimport Images:") ?></label>
+				<select id="profile_reimport_images" name="gui_data[parse][reimport_images]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/reimport_images', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/reimport_images', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_deleteall_andreimport_images"><?php echo $this->__("Delete All And Reimport Images:") ?></label>
+				<select id="profile_deleteall_andreimport_images" name="gui_data[parse][deleteall_andreimport_images]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/deleteall_andreimport_images', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/deleteall_andreimport_images', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_exclude_images"><?php echo $this->__("Exclude Images:") ?></label>
+				<select id="profile_exclude_images" name="gui_data[parse][exclude_images]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/exclude_images', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/exclude_images', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_exclude_gallery_images"><?php echo $this->__("Exclude Gallery Images:") ?></label>
+				<select id="profile_exclude_gallery_images" name="gui_data[parse][exclude_gallery_images]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/exclude_gallery_images', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/exclude_gallery_images', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_append_tier_prices"><?php echo $this->__("Append Tier Prices:") ?></label>
+				<select id="profile_append_tier_prices" name="gui_data[parse][append_tier_prices]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/append_tier_prices', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/append_tier_prices', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_append_group_prices"><?php echo $this->__("Append Group Prices:") ?></label>
+				<select id="profile_append_group_prices" name="gui_data[parse][append_group_prices]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/append_group_prices', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/append_group_prices', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_append_categories"><?php echo $this->__("Append Categories:") ?></label>
+				<select id="profile_append_categories" name="gui_data[parse][append_categories]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/append_categories', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/append_categories', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row">
+			&nbsp;
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<div id="messages">
+					<ul class="messages">
+						<li class="notice-msg">
+							<ul>
+								<li>SITE 2 SITE TRANSFER SETTINGS ONLY.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</span>
+			<span class="field-row">
+			<small class="profile_direction_import profile_entity_type_product">
+				<?php echo $this->__("(If store codes / website names / storeIDs do NOT match between installs please map them here. Leave blank if not needed)") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_product_map_store_codes"><?php echo $this->__("Map Store Codes:") ?></label>
+				<input class="input-text" id="profile_product_map_store_codes" name="gui_data[parse][product_map_store_codes]" value="<?php echo (($product_map_store_codes = $this->getValue('gui_data/parse/product_map_store_codes')) ? $product_map_store_codes : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_product">
+				<?php echo $this->__(" (e.g. 'admin=newadmin' and for multiple websites 'admin=newadmin,newadmin1=newadmin1')") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_product_map_website_codes"><?php echo $this->__("Map Website Codes:") ?></label>
+				<input class="input-text" id="profile_product_map_website_codes" name="gui_data[parse][product_map_website_codes]" value="<?php echo (($product_map_website_codes = $this->getValue('gui_data/parse/product_map_website_codes')) ? $product_map_website_codes : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_product">
+				<?php echo $this->__(" (e.g. 'base=newbase' and for multiple websites 'base=newbase,oldbase1=newbase1')") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_product_map_store_ids"><?php echo $this->__("Map Store IDs:") ?></label>
+				<input class="input-text" id="profile_product_map_store_ids" name="gui_data[parse][product_map_store_ids]" value="<?php echo (($product_map_store_ids = $this->getValue('gui_data/parse/product_map_store_ids')) ? $product_map_store_ids : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_product">
+				<?php echo $this->__(" (e.g. '1=3' and for multiple websites '1=3,2=5')") ?>
+			</small>
+			</span>
+			<!-- PRODUCT PROFILE DATA END -->
+			
+			<!-- ATTRIBUTE PROFILE DATA START -->
+			
+			<span class="field-row profile_entity_type_attribute">
+				<label for="profile_import_w_sort_order"><?php echo $this->__("Import With Sort Order:") ?></label>
+				<select id="profile_import_w_sort_order" name="gui_data[parse][import_w_sort_order]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/import_w_sort_order', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/import_w_sort_order', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_attribute">
+				<label for="profile_attribute_options_delimiter"><?php echo $this->__("Attribute Options Delimiter:") ?></label>
+				<input class="required-entry input-text" id="profile_attribute_options_delimiter" name="gui_data[parse][attribute_options_delimiter]" value="<?php echo (($attribute_options_delimiter = $this->getValue('gui_data/parse/attribute_options_delimiter')) ? $attribute_options_delimiter : '|') ?>"/>
+			</span>
+			<span class="field-row profile_entity_type_attribute">
+				<label for="profile_attribute_options_value_delimiter"><?php echo $this->__("Attribute Options Value Delimiter:") ?></label>
+				<input class="required-entry input-text" id="profile_attribute_options_value_delimiter" name="gui_data[parse][attribute_options_value_delimiter]" value="<?php echo (($attribute_options_value_delimiter = $this->getValue('gui_data/parse/attribute_options_value_delimiter')) ? $attribute_options_value_delimiter : ',') ?>"/>
+			</span>
+			<span class="field-row">
+			&nbsp;
+			</span>
+			<span class="field-row profile_entity_type_attribute">
+				<div id="messages">
+					<ul class="messages">
+						<li class="notice-msg">
+							<ul>
+								<li>SITE 2 SITE TRANSFER SETTINGS ONLY.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</span>
+			<span class="field-row">
+			<small class="profile_direction_import profile_entity_type_attribute">
+				<?php echo $this->__("(If storeIDs do NOT match between installs please map them here. Leave blank if not needed)") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_attribute">
+				<label for="profile_map_store_ids"><?php echo $this->__("Map Store IDs:") ?></label>
+				<input class="input-text" id="profile_map_store_ids" name="gui_data[parse][map_store_ids]" value="<?php echo (($map_store_ids = $this->getValue('gui_data/parse/map_store_ids')) ? $map_store_ids : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_attribute">
+				<?php echo $this->__(" (e.g. '1=3' and for multiple websites '1=3,2=5')") ?>
+			</small>
+			</span>
+			<!-- ATTRIBUTE PROFILE DATA END -->
+			
+			<!-- CATEGORY PROFILE DATA START -->
+			
+			
+			<span class="field-row profile_entity_type_category">
+				<label for="profile_categorydelimiter"><?php echo $this->__("Category Delimiter:") ?></label>
+				<input class="required-entry input-text" id="profile_categorydelimiter" name="gui_data[parse][categorydelimiter]" value="<?php echo (($categorydelimiter = $this->getValue('gui_data/parse/categorydelimiter')) ? $categorydelimiter : '/') ?>"/>
+			</span>
+			<span class="field-row">
+			&nbsp;
+			</span>
+			<span class="field-row profile_entity_type_category">
+				<div id="messages">
+					<ul class="messages">
+						<li class="notice-msg">
+							<ul>
+								<li>SITE 2 SITE TRANSFER SETTINGS ONLY.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</span>
+			<span class="field-row">
+			<small class="profile_direction_import profile_entity_type_category">
+				<?php echo $this->__("(If store codes / website names / storeIDs do NOT match between installs please map them here. Leave blank if not needed)") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_category">
+				<label for="profile_map_store_codes"><?php echo $this->__("Map Store Codes:") ?></label>
+				<input class="input-text" id="profile_map_store_codes" name="gui_data[parse][map_store_codes]" value="<?php echo (($map_store_codes = $this->getValue('gui_data/parse/map_store_codes')) ? $map_store_codes : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_category">
+				<?php echo $this->__(" (e.g. 'admin=newadmin' and for multiple websites 'admin=newadmin,newadmin1=newadmin1')") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_category">
+				<label for="profile_map_root_ids"><?php echo $this->__("Map Root IDs:") ?></label>
+				<input class="input-text" id="profile_map_root_ids" name="gui_data[parse][map_root_ids]" value="<?php echo (($map_root_ids = $this->getValue('gui_data/parse/map_root_ids')) ? $map_root_ids : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_category">
+				<?php echo $this->__(" (e.g. '2=3' and for multiple rootids '2=3,4=8')") ?>
+			</small>
+			</span>
+			
+			<!-- CATEGORY PROFILE DATA END -->
+			
+			<!-- ORDER PROFILE DATA START -->
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_update_orders"><?php echo $this->__("Update Orders:") ?></label>
+				<select id="profile_update_orders" name="gui_data[parse][update_orders]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/update_orders', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/update_orders', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_update_customer_address"><?php echo $this->__("Update Customer Address:") ?></label>
+				<select id="profile_update_customer_address" name="gui_data[parse][update_customer_address]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/update_customer_address', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/update_customer_address', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_create_invoice"><?php echo $this->__("Create Invoice:") ?></label>
+				<select id="profile_create_invoice" name="gui_data[parse][create_invoice]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/create_invoice', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/create_invoice', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_create_shipment"><?php echo $this->__("Create Shipment:") ?></label>
+				<select id="profile_create_shipment" name="gui_data[parse][create_shipment]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/create_shipment', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/create_shipment', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row">
+			&nbsp;
+			</span>
+			<span class="field-row profile_entity_type_order">
+				<div id="messages">
+					<ul class="messages">
+						<li class="notice-msg">
+							<ul>
+								<li>SITE 2 SITE TRANSFER SETTINGS ONLY.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</span>
+			<span class="field-row">
+			<small class="profile_direction_import profile_entity_type_order">
+				<?php echo $this->__("(If store codes / website names / storeIDs do NOT match between installs please map them here. Leave blank if not needed)") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_order_map_website_codes"><?php echo $this->__("Map Website Codes:") ?></label>
+				<input class="input-text" id="profile_order_map_website_codes" name="gui_data[parse][order_map_website_codes]" value="<?php echo (($order_map_website_codes = $this->getValue('gui_data/parse/order_map_website_codes')) ? $order_map_website_codes : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_order">
+				<?php echo $this->__(" (e.g. 'base=newbase' and for multiple websites 'base=newbase,oldbase1=newbase1')") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_order_map_store_ids"><?php echo $this->__("Map Store IDs:") ?></label>
+				<input class="input-text" id="profile_order_map_store_ids" name="gui_data[parse][order_map_store_ids]" value="<?php echo (($order_map_store_ids = $this->getValue('gui_data/parse/order_map_store_ids')) ? $order_map_store_ids : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_order">
+				<?php echo $this->__(" (e.g. '1=3' and for multiple store ids '1=3,2=5')") ?>
+			</small>
+			</span>
+			<!-- ORDER PROFILE DATA END -->
+			<!-- CUSTOMER PROFILE DATA START -->
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_insert_customer_id"><?php echo $this->__("Insert Customer ID:") ?></label>
+				<select id="profile_insert_customer_id" name="gui_data[parse][insert_customer_id]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/insert_customer_id', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/insert_customer_id', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_import_multiple_customer_address"><?php echo $this->__("Import Multiple Customer Addresses:") ?></label>
+				<select id="profile_import_multiple_customer_address" name="gui_data[parse][import_multiple_customer_address]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/import_multiple_customer_address', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/import_multiple_customer_address', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_update_customer_password"><?php echo $this->__("Update Customer Password:") ?></label>
+				<select id="profile_update_customer_password" name="gui_data[parse][update_customer_password]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/update_customer_password', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/update_customer_password', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_email_customer_password"><?php echo $this->__("Email Customer Password:") ?></label>
+				<select id="profile_email_customer_password" name="gui_data[parse][email_customer_password]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/parse/email_customer_password', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/parse/email_customer_password', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row">
+			&nbsp;
+			</span>
+			<span class="field-row profile_entity_type_customer">
+				<div id="messages">
+					<ul class="messages">
+						<li class="notice-msg">
+							<ul>
+								<li>SITE 2 SITE TRANSFER SETTINGS ONLY.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</span>
+			<span class="field-row">
+			<small class="profile_direction_import profile_entity_type_customer">
+				<?php echo $this->__("(If website names / storeIDs do NOT match between installs please map them here. Leave blank if not needed)") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_customer_map_website_codes"><?php echo $this->__("Map Website Codes:") ?></label>
+				<input class="input-text" id="profile_customer_map_website_codes" name="gui_data[parse][customer_map_website_codes]" value="<?php echo (($customer_map_website_codes = $this->getValue('gui_data/parse/customer_map_website_codes')) ? $customer_map_website_codes : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_customer">
+				<?php echo $this->__(" (e.g. 'base=newbase' and for multiple websites 'base=newbase,oldbase1=newbase1')") ?>
+			</small>
+			</span>
+			<!-- CUSTOMER PROFILE DATA END -->
+			<!-- CUSTOMER REVIEWS PROFILE DATA END -->
+			<span class="field-row profile_entity_type_customerreviews">
+				<div id="messages">
+					<ul class="messages">
+						<li class="notice-msg">
+							<ul>
+								<li>SITE 2 SITE TRANSFER SETTINGS ONLY.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</span>
+			<span class="field-row">
+			<small class="profile_direction_import profile_entity_type_customerreviews">
+				<?php echo $this->__("(If website names / storeIDs do NOT match between installs please map them here. Leave blank if not needed)") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_customerreviews">
+				<label for="profile_customerreviews_map_store_ids"><?php echo $this->__("Map Store IDs:") ?></label>
+				<input class="input-text" id="profile_customerreviews_map_store_ids" name="gui_data[parse][customerreviews_map_store_ids]" value="<?php echo (($customerreviews_map_store_ids = $this->getValue('gui_data/parse/customerreviews_map_store_ids')) ? $customerreviews_map_store_ids : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_customerreviews">
+				<?php echo $this->__(" (e.g. '1=3' and for multiple store ids '1=3,2=5')") ?>
+			</small>
+			</span>
+			<!-- CUSTOMER REVIEWS PROFILE DATA END -->
+			<!-- COUPON CODE PROFILE DATA END -->
+			<span class="field-row profile_entity_type_couponcode">
+				<div id="messages">
+					<ul class="messages">
+						<li class="notice-msg">
+							<ul>
+								<li>SITE 2 SITE TRANSFER SETTINGS ONLY.</li>
+							</ul>
+						</li>
+					</ul>
+				</div>
+			</span>
+			<span class="field-row">
+			<small class="profile_direction_import profile_entity_type_couponcode">
+				<?php echo $this->__("(If website names / storeIDs do NOT match between installs please map them here. Leave blank if not needed)") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_couponcode">
+				<label for="profile_couponcode_map_website_ids"><?php echo $this->__("Map Website Ids:") ?></label>
+				<input class="input-text" id="profile_couponcode_map_website_ids" name="gui_data[parse][couponcode_map_website_ids]" value="<?php echo (($couponcode_map_website_ids = $this->getValue('gui_data/parse/couponcode_map_website_ids')) ? $couponcode_map_website_ids : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_couponcode">
+				<?php echo $this->__(" (e.g. '1=3' and for multiple websites '1=3,2=5')") ?>
+			</small>
+			</span>
+			<span class="field-row profile_entity_type_couponcode">
+				<label for="profile_couponcode_customer_group_ids"><?php echo $this->__("Map Customer Group Ids:") ?></label>
+				<input class="input-text" id="profile_couponcode_customer_group_ids" name="gui_data[parse][couponcode_customer_group_ids]" value="<?php echo (($couponcode_customer_group_ids = $this->getValue('gui_data/parse/couponcode_customer_group_ids')) ? $couponcode_customer_group_ids : '') ?>"/>
+			<small class="profile_direction_import profile_entity_type_couponcode">
+				<?php echo $this->__(" (e.g. '1=3' and for multiple customer group IDs '1=3,2=5')") ?>
+			</small>
+			</span>
+			<!-- COUPON CODE PROFILE DATA END -->
+        </span>
+		
+        <span class="field-row profile_direction_export">
+			
+			<!-- PRODUCT PROFILE DATA START -->
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_productrecordlimitstart"><?php echo $this->__("Record Limit Start:") ?></label>
+				<input class="required-entry input-text" id="profile_productrecordlimitstart" name="gui_data[unparse][productrecordlimitstart]" value="<?php echo (($recordLimitStart = $this->getValue('gui_data/unparse/productrecordlimitstart')) ? $recordLimitStart : 0) ?>"/>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_productrecordlimitend"><?php echo $this->__("Record Limit End:") ?></label>
+				<input class="required-entry input-text" id="profile_productrecordlimitend" name="gui_data[unparse][productrecordlimitend]" value="<?php echo (($recordLimitEnd = $this->getValue('gui_data/unparse/productrecordlimitend')) ? $recordLimitEnd : 100) ?>"/>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_export_grouped_position"><?php echo $this->__("Export Grouped Position:") ?></label>
+				<select id="profile_export_grouped_position" name="gui_data[unparse][export_grouped_position]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_grouped_position', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_grouped_position', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_export_related_position"><?php echo $this->__("Export Related Position:") ?></label>
+				<select id="profile_export_related_position" name="gui_data[unparse][export_related_position]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_related_position', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_related_position', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_export_crossell_position"><?php echo $this->__("Export Crossell Position:") ?></label>
+				<select id="profile_export_crossell_position" name="gui_data[unparse][export_crossell_position]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_crossell_position', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_crossell_position', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_export_upsell_position"><?php echo $this->__("Export Upsell Position:") ?></label>
+				<select id="profile_export_upsell_position" name="gui_data[unparse][export_upsell_position]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_upsell_position', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_upsell_position', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_export_category_paths"><?php echo $this->__("Export Category Paths:") ?></label>
+				<select id="profile_export_category_paths" name="gui_data[unparse][export_category_paths]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_category_paths', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_category_paths', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_export_full_image_paths"><?php echo $this->__("Export Full Image URL Paths:") ?></label>
+				<select id="profile_export_full_image_paths" name="gui_data[unparse][export_full_image_paths]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_full_image_paths', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_full_image_paths', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_product">
+				<label for="profile_export_multi_store"><?php echo $this->__("Export Multi Store Views:") ?></label>
+				<select id="profile_export_multi_store" name="gui_data[unparse][export_multi_store]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_multi_store', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_multi_store', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<!-- PRODUCT PROFILE DATA END -->
+			
+			<!-- CATEGORY PROFILE DATA START -->
+				<span class="field-row profile_entity_type_category">
+					<label for="profile_export_rootids"><?php echo $this->__("Root IDs:") ?></label>
+					<input class="required-entry input-text" id="profile_rootids" name="gui_data[unparse][rootids]" value="<?php echo (($export_rootids = $this->getValue('gui_data/unparse/rootids')) ? $export_rootids : '2') ?>"/>
+				</span>
+				<span class="field-row profile_entity_type_category">
+					<label for="profile_export_categorydelimiter"><?php echo $this->__("Category Delimiter:") ?></label>
+					<input class="required-entry input-text" id="profile_categorydelimiter" name="gui_data[unparse][categorydelimiter]" value="<?php echo (($export_categorydelimiter = $this->getValue('gui_data/unparse/categorydelimiter')) ? $export_categorydelimiter : '/') ?>"/>
+				</span>
+				<span class="field-row profile_entity_type_category">
+					<label for="profile_export_categories_for_transfer"><?php echo $this->__("Export Categories For Transfer:") ?></label>
+					<select id="profile_export_categories_for_transfer" name="gui_data[unparse][export_categories_for_transfer]" class="option-control">
+						<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_categories_for_transfer', 'false') ?>><?php echo $this->__('No') ?></option>
+						<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_categories_for_transfer', 'true') ?>><?php echo $this->__('Yes') ?></option>
+					</select>
+				</span>
+				<span class="field-row profile_entity_type_category">
+					<label for="profile_export_products_for_categories"><?php echo $this->__("Export Products For Categories:") ?></label>
+					<select id="profile_export_products_for_categories" name="gui_data[unparse][export_products_for_categories]" class="option-control">
+						<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_products_for_categories', 'false') ?>><?php echo $this->__('No') ?></option>
+						<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_products_for_categories', 'true') ?>><?php echo $this->__('Yes') ?></option>
+					</select>
+				</span>
+				<span class="field-row profile_entity_type_category">
+					<label for="profile_export_product_position"><?php echo $this->__("Export Product Position:") ?></label>
+					<select id="profile_export_product_position" name="gui_data[unparse][export_product_position]" class="option-control">
+						<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_product_position', 'false') ?>><?php echo $this->__('No') ?></option>
+						<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_product_position', 'true') ?>><?php echo $this->__('Yes') ?></option>
+					</select>
+				</span>
+			
+			<!-- CATEGORY PROFILE DATA END -->
+			
+			<!-- ATTRIBUTE PROFILE DATA START -->
+		
+			<span class="field-row profile_entity_type_attribute">
+				<label for="profile_export_entitytypeid"><?php echo $this->__("Entity Type ID:") ?></label>
+				<input class="required-entry input-text" id="profile_export_entitytypeid" name="gui_data[unparse][entitytypeid]" value="<?php echo (($export_entitytypeid = $this->getValue('gui_data/unparse/entitytypeid')) ? $export_entitytypeid : '10') ?>"/>
+			</span>
+			<!--<span class="field-row profile_entity_type_attribute">
+				<label for="profile_export_recordlimit"><?php echo $this->__("Record Limit:") ?></label>
+				<input class="required-entry input-text" id="profile_export_recordlimit" name="gui_data[unparse][recordlimit]" value="<?php echo (($export_recordlimit = $this->getValue('gui_data/unparse/recordlimit')) ? $export_recordlimit : '100') ?>"/>
+			</span>-->
+			<span class="field-row profile_entity_type_attribute">
+				<label for="profile_export_w_sort_order"><?php echo $this->__("Export With Sort Order:") ?></label>
+				<select id="profile_export_w_sort_order" name="gui_data[unparse][export_w_sort_order]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_w_sort_order', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_w_sort_order', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_attribute">
+				<label for="profile_export_attribute_options_delimiter"><?php echo $this->__("Attribute Options Delimiter:") ?></label>
+				<input class="required-entry input-text" id="profile_export_attribute_options_delimiter" name="gui_data[unparse][attribute_options_delimiter]" value="<?php echo (($attribute_options_delimiter = $this->getValue('gui_data/unparse/attribute_options_delimiter')) ? $attribute_options_delimiter : '|') ?>"/>
+			</span>
+			<span class="field-row profile_entity_type_attribute">
+				<label for="profile_export_attribute_options_value_delimiter"><?php echo $this->__("Attribute Options Value Delimiter:") ?></label>
+				<input class="required-entry input-text" id="profile_export_attribute_options_value_delimiter" name="gui_data[unparse][attribute_options_value_delimiter]" value="<?php echo (($attribute_options_value_delimiter = $this->getValue('gui_data/unparse/attribute_options_value_delimiter')) ? $attribute_options_value_delimiter : ',') ?>"/>
+			</span>
+			
+			<!-- ATTRIBUTE PROFILE DATA END -->
+			
+			<!-- ORDER PROFILE DATA START -->
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_date_from"><?php echo $this->__("Date From:") ?></label>
+				<input class="input-text" id="profile_date_from" name="gui_data[unparse][date_from]" value="<?php echo (($dateFrom = $this->getValue('gui_data/unparse/date_from')) ? $dateFrom : '') ?>"/>
+				<img title="Select date" id="profile_date_from_trig" src="<?php echo $this->getSkinUrl('images/grid-cal.gif') ?>" class="v-middle"/>
+			</span>
+			<script type="text/javascript">
+			//<![CDATA[
+			 Calendar.setup({
+					inputField : 'profile_date_from',
+					ifFormat : '%Y-%m-%d',
+					button : 'profile_date_from_trig',
+					align : 'Bl',
+					singleClick : true
+				});
+			//]]>
+			</script>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_date_to"><?php echo $this->__("Date To:") ?></label>
+				<input class="input-text" id="profile_date_to" name="gui_data[unparse][date_to]" value="<?php echo (($dateTo = $this->getValue('gui_data/unparse/date_to')) ? $dateTo : '') ?>"/>
+				<img title="Select date" id="profile_date_to_trig" src="<?php echo $this->getSkinUrl('images/grid-cal.gif') ?>" class="v-middle"/>
+			</span>
+			<script type="text/javascript">
+			//<![CDATA[
+			 Calendar.setup({
+					inputField : 'profile_date_to',
+					ifFormat : '%Y-%m-%d',
+					button : 'profile_date_to_trig',
+					align : 'Bl',
+					singleClick : true
+				});
+			//]]>
+			</script>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_recordlimit"><?php echo $this->__("Record Limit:") ?></label>
+				<input class="required-entry input-text" id="profile_recordlimit" name="gui_data[unparse][recordlimit]" value="<?php echo (($recordLimit = $this->getValue('gui_data/unparse/recordlimit')) ? $recordLimit : 0) ?>"/>
+			</span>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_export_product_pricing"><?php echo $this->__("Export Product Pricing") ?></label>
+				<select id="profile_export_product_pricing" name="gui_data[unparse][export_product_pricing]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_product_pricing', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_product_pricing', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			
+			<?php $orderStatuses = Mage::getModel('sales/order_status')->getResourceCollection() ?>
+			<span class="field-row profile_entity_type_order">
+				<label for="profile_filter_by_order_status"><?php echo $this->__("Filter By Order Status:") ?></label>
+				<select id="profile_filter_by_order_status" name="gui_data[unparse][filter_by_order_status]" class="option-control">
+					<option value=""></option>
+					<?php foreach ($orderStatuses as $orderStatus): ?>
+					<option value="<?php echo $orderStatus->getStatus() ?>"<?php echo $this->getSelected('gui_data/unparse/filter_by_order_status', $orderStatus->getStatus()) ?>><?php echo $orderStatus->getLabel() ?></option>
+					<?php endforeach; ?>
+				</select>
+			</span>
+			<!-- ORDER PROFILE DATA END -->
+			<!-- CUSTOMER REVIEWS PROFILE DATA START -->
+			 <span class="field-row profile_entity_type_customerreviews">
+				<label for="profile_export_reviews_by_sku"><?php echo $this->__("Export Reviews By SKU:") ?></label>
+				<select id="profile_export_reviews_by_sku" name="gui_data[unparse][reviews_by_sku]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/reviews_by_sku', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/reviews_by_sku', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_customerreviews">
+				<label for="profile_export_customers_by_email"><?php echo $this->__("Export Reviews With Customer Email:") ?></label>
+				<select id="profile_export_customers_by_email" name="gui_data[unparse][customers_by_email]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/customers_by_email', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/customers_by_email', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<!-- CUSTOMER PROFILE DATA START -->
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_recordlimitstart"><?php echo $this->__("Record Limit Start:") ?></label>
+				<input class="required-entry input-text" id="profile_recordlimitstart" name="gui_data[unparse][recordlimitstart]" value="<?php echo (($recordLimitStart = $this->getValue('gui_data/unparse/recordlimitstart')) ? $recordLimitStart : 0) ?>"/>
+			</span>
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_recordlimitend"><?php echo $this->__("Record Limit End:") ?></label>
+				<input class="required-entry input-text" id="profile_recordlimitend" name="gui_data[unparse][recordlimitend]" value="<?php echo (($recordLimitEnd = $this->getValue('gui_data/unparse/recordlimitend')) ? $recordLimitEnd : 100) ?>"/>
+			</span>
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_export_customer_id"><?php echo $this->__("Export Customer ID:") ?></label>
+				<select id="profile_export_customer_id" name="gui_data[unparse][export_customer_id]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_customer_id', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_customer_id', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<span class="field-row profile_entity_type_customer">
+				<label for="profile_export_multiple_addresses"><?php echo $this->__("Export Multiple Addresses:") ?></label>
+				<select id="profile_export_multiple_addresses" name="gui_data[unparse][export_multiple_addresses]" class="option-control">
+					<option value="false"<?php echo $this->getSelected('gui_data/unparse/export_multiple_addresses', 'false') ?>><?php echo $this->__('No') ?></option>
+					<option value="true"<?php echo $this->getSelected('gui_data/unparse/export_multiple_addresses', 'true') ?>><?php echo $this->__('Yes') ?></option>
+				</select>
+			</span>
+			<!-- CUSTOMER PROFILE DATA END -->
+		</span>
+    </fieldset>
+
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__("File Information") ?></h4>
+    </div>
+    <fieldset>
+        <legend><?php echo $this->__("File Information") ?></legend>
+        <span class="field-row">
+            <label for="profile_data_transfer"><?php echo $this->__("Data transfer:") ?></label>
+            <select id="profile_data_transfer" name="data_transfer" onchange="showOption(this);updateRun(this)" class="option-control">
+                <option value="interactive" <?php echo $this->getSelected('data_transfer', 'interactive') ?>><?php echo $this->__("Interactive") ?></option>
+                <option value="file" <?php echo $this->getSelected('data_transfer', 'file') ?>><?php echo $this->__("Local/Remote Server") ?></option>
+            </select>
+        </span>
+        <!--
+        <div class="profile_data_transfer_interactive">
+            <span class="field-row">
+                <label for="interactive_filename"><?php echo $this->__("Archive file name:") ?></label>
+                <input class="input-text" id="interactive_filename" name="gui_data[interactive][filename]" value="<?php echo $this->getValue('gui_data/interactive/filename') ?>"/>
+                <?php echo $this->__('(If left empty will be auto-generated)') ?>
+            </span>
+        </div>
+        -->
+        <div class="profile_data_transfer_file">
+            <span class="field-row">
+                <label for="file_type"><?php echo $this->__("Type:") ?></label>
+                <select id="file_type" name="gui_data[file][type]" onchange="showOption(this)" class="option-control">
+                    <option value="file" <?php echo $this->getSelected('gui_data/file/type', 'file') ?>><?php echo $this->__("Local Server") ?></option>
+                    <option value="ftp" <?php echo $this->getSelected('gui_data/file/type', 'ftp') ?>><?php echo $this->__("Remote FTP") ?></option>
+                </select>
+            </span>
+            <span class="field-row">
+                <label for="file_filename"><?php echo $this->__("File name:") ?></label>
+                <input class="input-text" id="file_filename" name="gui_data[file][filename]" value="<?php echo $this->getValue('gui_data/file/filename') ?>"/>
+            </span>
+            <span class="field-row">
+                <label for="file_path"><?php echo $this->__("Path:") ?></label>
+                <span class="with-tip">
+                    <input class="input-text" id="file_path" name="gui_data[file][path]" value="<?php echo $this->getValue('gui_data/file/path') ?>"/>
+                    <small class="file_type_file">
+                        <?php echo $this->__('(For Type "Local Server" need to use relative path to Magento install var/export or var/import, e.g. var/export, var/import, var/export/some/dir, var/import/some/dir)') ?>
+                    </small>
+                </span>
+            </span>
+            <div class="file_type_ftp">
+                <span class="field-row">
+                    <label for="file_host"><?php echo $this->__("FTP Host[:Port]") ?></label>
+                    <input class="input-text" id="file_host" name="gui_data[file][host]" value="<?php echo $this->getValue('gui_data/file/host') ?>"/>
+                </span>
+                <span class="field-row">
+                    <label for="file_user"><?php echo $this->__("User name") ?></label>
+                    <input class="input-text" id="file_user" name="gui_data[file][user]" value="<?php echo $this->getValue('gui_data/file/user') ?>"/>
+                </span>
+                <span class="field-row">
+                    <label for="file_password"><?php echo $this->__("Password") ?></label>
+                    <input class="input-text" type="password" id="io_password" name="gui_data[file][password]" value="<?php echo $this->getValue('gui_data/file/password') ?>"/>
+                </span>
+                <span class="field-row">
+                    <label for="file_mode"><?php echo $this->__("File mode") ?></label>
+                    <select id="file_mode" name="gui_data[file][file_mode]" onchange="showOption(this)" class="option-control">
+                        <option value="<?php echo FTP_BINARY ?>" <?php echo $this->getSelected('gui_data/file/file_mode', FTP_BINARY) ?>><?php echo $this->__('BINARY') ?></option>
+                        <option value="<?php echo FTP_ASCII ?>" <?php echo $this->getSelected('gui_data/file/file_mode', FTP_ASCII) ?>><?php echo $this->__('ASCII') ?></option>
+                    </select>
+                </span>
+                <span class="field-row">
+                    <label for="file_passive"><?php echo $this->__("Passive mode") ?></label>
+                    <select id="file_passive" name="gui_data[file][passive]" onchange="showOption(this)" class="option-control">
+                        <option value="" <?php echo $this->getSelected('gui_data/file/passive', false) ?>><?php echo $this->__("No") ?></option>
+                        <option value="true" <?php echo $this->getSelected('gui_data/file/passive', true) ?>><?php echo $this->__("Yes") ?></option>
+                    </select>
+                </span>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__("Data Format") ?></h4>
+    </div>
+    <fieldset>
+        <legend><?php echo $this->__("Data Format") ?></legend>
+        <span class="field-row">
+            <label for="parse_type"><?php echo $this->__("Type:") ?></label>
+            <select id="parse_type" name="gui_data[parse][type]" onchange="showOption(this)" class="option-control">
+                <option value="excel_xml" <?php echo $this->getSelected('gui_data/parse/type', 'excel_xml') ?>><?php echo $this->__("MS Excel XML") ?></option>
+                <option value="csv" <?php echo $this->getSelected('gui_data/parse/type', 'csv') ?>><?php echo $this->__("CSV / Tab separated") ?></option>
+            </select>
+        </span>
+        <div class="parse_type_excel_xml">
+            <span class="field-row">
+                <label for="parse_single_sheet"><?php echo $this->__("Spreadsheet Name:") ?></label>
+                <span class="with-tip">
+                    <input class="input-text" id="parse_single_sheet" name="gui_data[parse][single_sheet]" value="<?php echo $this->getValue('gui_data/parse/single_sheet') ?>"/>
+                    <small><?php echo $this->__("(Leave empty for first spreadsheet)") ?></small>
+                </span>
+            </span>
+        </div>
+        <div class="parse_type_csv">
+            <span class="field-row">
+                <label for="parse_delimiter"><?php echo $this->__("Value Delimiter:") ?></label>
+                <input class="input-text" style="width:3em" id="parse_delimiter" name="gui_data[parse][delimiter]" value="<?php echo $this->getValue('gui_data/parse/delimiter', ',') ?>"/>
+                <small><?php echo $this->__("(\\t for tab)") ?></small>
+            </span>
+            <span class="field-row">
+                <label for="parse_enclose"><?php echo $this->__("Enclose Values In:") ?></label>
+                <input class="input-text" style="width:3em" id="parse_enclose" name="gui_data[parse][enclose]" value="<?php echo $this->getValue('gui_data/parse/enclose', '', '"') ?>"/>
+                <small><?php echo $this->__("Warning! Empty value can cause problems with CSV format.") ?></small>
+            </span>
+        </div>
+        <span class="field-row">
+            <label for="parse_fieldnames"><?php echo $this->__("Original Magento attribute names in first row:") ?></label>
+            <span class="with-tip">
+                <select id="parse_fieldnames" name="gui_data[parse][fieldnames]" onchange="showFeildMapping();showOption(this)" class="option-control">
+                    <option value="" <?php echo $this->getSelected('gui_data/parse/fieldnames', false) ?>><?php echo $this->__("No") ?></option>
+                    <option value="true" <?php echo $this->getSelected('gui_data/parse/fieldnames', true) ?>><?php echo $this->__("Yes") ?></option>
+                </select>
+                <small class="profile_direction_import">
+                    <span class="parse_fieldnames_">
+                        <?php echo $this->__("(When 'No', only mapped fields will be imported. When mapping, use 'column1', 'column2', etc.)") ?>
+                    </span>
+                </small>
+            </span>
+        </span>
+        <div class="profile_direction_export">
+            <span class="field-row">
+                <label for="map_only_specified"><?php echo $this->__("Export:") ?></label>
+                <select id="map_only_specified" name="gui_data[map][only_specified]" onchange="showFeildMapping();showOption(this)">
+                    <option value="" <?php echo $this->getSelected('gui_data/map/only_specified', false) ?>><?php echo $this->__("All fields") ?></option>
+                    <option value="true" <?php echo $this->getSelected('gui_data/map/only_specified', true) ?>><?php echo $this->__("Only mapped fields") ?></option>
+                </select>
+            </span>
+        </div>
+    </fieldset>
+
+    <div id="__fieldmapping">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__("Field Mapping") ?></h4>
+    </div>
+    <fieldset>
+        <legend><?php echo $this->__("Field Mapping") ?></legend>
+        <?php foreach (array('product','customer','category','attribute','order','customerreviews','couponcode') as $_entityType): ?>
+            <div class="profile_entity_type_<?php echo $_entityType ?>">
+                <div id="map_template_<?php echo $_entityType ?>" style="display:none">
+                    <span class="field-row">
+                        <?php echo $this->__("In Database:") ?> <select name="gui_data[map][<?php echo $_entityType ?>][db][]" onchange="setMapFileField(this)">
+                            <?php
+								if($_entityType == "product" || $_entityType == "customer") {
+                                $fieldMappingInDatabase = $this->getAttributes($_entityType);
+								if(is_array($fieldMappingInDatabase)) {
+                                	asort($fieldMappingInDatabase);
+                                	foreach ($fieldMappingInDatabase as $_value=>$_label) { ?>
+                                <option value="<?php echo $_value ?>"><?php echo $_label ?></option>
+                            	<?php 
+									}
+								}
+								}
+								 ?>
+                        </select>
+                        &lt;--&gt;
+                        <?php echo $this->__("In File:") ?> <input class="input-text" name="gui_data[map][<?php echo $_entityType ?>][file][]"/>
+                        <?php echo $this->getRemoveMapButtonHtml() ?>
+                    </span>
+                </div>
+                <div id="map_container_<?php echo $_entityType ?>">
+                    <?php foreach ($this->getMappings($_entityType) as $_i=>$_dbField): ?>
+                        <span class="field-row">
+                            <?php echo $this->__("In Database:") ?> <select name="gui_data[map][<?php echo $_entityType ?>][db][]">
+                            <?php foreach ($this->getAttributes($_entityType) as $_value=>$_label): ?>
+                                <option value="<?php echo $_value ?>" <?php echo $this->getSelected('gui_data/map/'.$_entityType.'/db/'.$_i, $_value) ?>><?php echo $_label ?></option>
+                            <?php endforeach ?>
+                            </select>
+                            &lt;--&gt;
+                            <?php echo $this->__("In File:") ?> <input class="input-text" name="gui_data[map][<?php echo $_entityType ?>][file][]" value="<?php echo $this->getValue('gui_data/map/'.$_entityType.'/file/'.$_i) ?>"/>
+                            <?php echo $this->getRemoveMapButtonHtml() ?>
+                        </span>
+                    <?php endforeach ?>
+                </div>
+            </div>
+        <?php endforeach ?>
+        <?php echo $this->getAddMapButtonHtml() ?>
+    </fieldset>
+    </div>
+    <div class="profile_direction_export">
+        <div class="entry-edit-head">
+            <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__("Export Filters") ?></h4>
+        </div>
+        <fieldset>
+            <div class="profile_entity_type_product">
+                <span class="field-row">
+                    <label for="product_filter_name"><?php echo $this->__("Name:") ?></label>
+                    <input class="input-text" id="product_filter_name" name="gui_data[product][filter][name]" value="<?php echo $this->getValue('gui_data/product/filter/name') ?>"/>
+                    <?php echo $this->__('(Starting with)') ?>
+                </span>
+                <span class="field-row">
+                    <label for="product_filter_sku"><?php echo $this->__("SKU:") ?></label>
+                    <input class="input-text" id="product_filter_sku" name="gui_data[product][filter][sku]" value="<?php echo $this->getValue('gui_data/product/filter/sku') ?>"/>
+                    <?php echo $this->__('(Starting with)') ?>
+                </span>
+                <span class="field-row">
+                    <label for="product_filter_type"><?php echo $this->__("Type:") ?></label>
+                    <select id="product_filter_type" name="gui_data[product][filter][type]">
+                        <?php foreach ($this->getProductTypeFilterOptions() as $_value=>$_label): ?>
+                            <option value="<?php echo $_value ?>" <?php echo $this->getSelected('gui_data/product/filter/type', $_value) ?>><?php echo htmlspecialchars($_label) ?></option>
+                        <?php endforeach ?>
+                    </select>
+                </span>
+                <span class="field-row">
+                    <label for="product_filter_attribute_set"><?php echo $this->__("Attribute Set Name:") ?></label>
+                    <select id="product_filter_attribute_set" name="gui_data[product][filter][attribute_set]">
+                        <?php foreach ($this->getProductAttributeSetFilterOptions() as $_value=>$_label): ?>
+                            <option value="<?php echo $_value ?>" <?php echo $this->getSelected('gui_data/product/filter/attribute_set', $_value) ?>><?php echo htmlspecialchars($_label) ?></option>
+                        <?php endforeach ?>
+                    </select>
+                </span>
+                <span class="field-row">
+                    <label for="product_filter_price_from"><?php echo $this->__("Price:") ?></label>
+                    <input class="input-text" style="width:5em" id="product_filter_price_from" name="gui_data[product][filter][price][from]" value="<?php echo $this->getValue('gui_data/product/filter/price/from') ?>"/> <?php echo $this->__('to') ?>
+                    <input class="input-text" style="width:5em" id="product_filter_price_to" name="gui_data[product][filter][price][to]" value="<?php echo $this->getValue('gui_data/product/filter/price/to') ?>"/>
+                </span>
+                <span class="field-row">
+                    <label for="product_filter_qty_from"><?php echo $this->__("Stock Quantity:") ?></label>
+                    <input class="input-text" style="width:5em" id="product_filter_qty_from" name="gui_data[product][filter][qty][from]" value="<?php echo $this->getValue('gui_data/product/filter/qty/from') ?>"/> <?php echo $this->__('to') ?>
+                    <input class="input-text" style="width:5em" id="product_filter_qty_to" name="gui_data[product][filter][qty][to]" value="<?php echo $this->getValue('gui_data/product/filter/qty/to') ?>"/>
+                </span>
+                <span class="field-row">
+                    <label for="product_filter_visibility"><?php echo $this->__("Visibility:") ?></label>
+                    <select id="product_filter_visibility" name="gui_data[product][filter][visibility]">
+                        <?php foreach ($this->getProductVisibilityFilterOptions() as $_value=>$_label): ?>
+                            <option value="<?php echo $_value ?>" <?php echo $this->getSelected('gui_data/product/filter/visibility', $_value) ?>><?php echo htmlspecialchars($_label) ?></option>
+                        <?php endforeach ?>
+                    </select>
+                </span>
+                <span class="field-row">
+                    <label for="product_filter_status"><?php echo $this->__("Status:") ?></label>
+                    <select id="product_filter_status" name="gui_data[product][filter][status]">
+                        <?php foreach ($this->getProductStatusFilterOptions() as $_value=>$_label): ?>
+                            <option value="<?php echo $_value ?>" <?php echo $this->getSelected('gui_data/product/filter/status', $_value) ?>><?php echo htmlspecialchars($_label) ?></option>
+                        <?php endforeach ?>
+                    </select>
+                </span>
+            </div>
+            <div class="profile_entity_type_customer">
+                <span class="field-row">
+                    <label for="customer_filter_firstname"><?php echo $this->__("First Name:") ?></label>
+                    <input class="input-text" id="customer_filter_firstname" name="gui_data[customer][filter][firstname]" value="<?php echo $this->getValue('gui_data/customer/filter/firstname') ?>"/>
+                    <?php echo $this->__('(Starting with)') ?>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_lastname"><?php echo $this->__("Last Name:") ?></label>
+                    <input class="input-text" id="customer_filter_lastname" name="gui_data[customer][filter][lastname]" value="<?php echo $this->getValue('gui_data/customer/filter/lastname') ?>"/>
+                    <?php echo $this->__('(Starting with)') ?>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_email"><?php echo $this->__("Email:") ?></label>
+                    <input class="input-text" id="customer_filter_email" name="gui_data[customer][filter][email]" value="<?php echo $this->getValue('gui_data/customer/filter/email') ?>"/>
+                    <?php echo $this->__('(Starting with)') ?>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_group"><?php echo $this->__("Group:") ?></label>
+                    <select id="customer_filter_group" name="gui_data[customer][filter][group]">
+                        <?php foreach ($this->getCustomerGroupFilterOptions() as $_value=>$_label): ?>
+                            <option value="<?php echo $_value ?>" <?php echo $this->getSelected('gui_data/customer/filter/group', $_value) ?>><?php echo htmlspecialchars($_label) ?></option>
+                        <?php endforeach ?>
+                    </select>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_adressType"><?php echo $this->__("Address Type:") ?></label>
+                    <select id="customer_filter_adressType" name="gui_data[customer][filter][adressType]" >
+                            <option value="default_billing" <?php echo $this->getSelected('gui_data/customer/filter/adressType', 'default_billing') ?>><?php echo $this->__('Billing Address') ?></option>
+                            <option value="default_shipping" <?php echo $this->getSelected('gui_data/customer/filter/adressType', 'default_shipping') ?>><?php echo $this->__('Shipping Address') ?></option>
+                    </select>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_telephone"><?php echo $this->__("Phone:") ?></label>
+                    <input class="input-text" id="customer_filter_telephone" name="gui_data[customer][filter][telephone]" value="<?php echo $this->getValue('gui_data/customer/filter/telephone') ?>"/>
+                    <?php echo $this->__('(Starting with)') ?>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_postcode"><?php echo $this->__("Zip/Postal Code:") ?></label>
+                    <input class="input-text" id="customer_filter_postcode" name="gui_data[customer][filter][postcode]" value="<?php echo $this->getValue('gui_data/customer/filter/postcode') ?>"/>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_country"><?php echo $this->__("Country:") ?></label>
+                    <select id="customer_filter_country" name="gui_data[customer][filter][country]">
+                        <?php foreach ($this->getCountryFilterOptions() as $_value): ?>
+                            <option value="<?php echo $_value['value'] ?>" <?php echo $this->getSelected('gui_data/customer/filter/country', $_value['value']) ?>><?php echo htmlspecialchars($_value['label']) ?></option>
+                        <?php endforeach ?>
+                    </select>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_region"><?php echo $this->__("State/Province:") ?></label>
+                    <input class="input-text" id="customer_filter_region" name="gui_data[customer][filter][region]" value="<?php echo $this->getValue('gui_data/customer/filter/region') ?>"/>
+                    <?php echo $this->__('(For US 2-letter state names)') ?>
+                </span>
+                <span class="field-row">
+                    <label for="customer_filter_created_at_from"><?php echo $this->__("Customer Since:") ?></label>
+                    <input class="input-text" style="width:5em" id="customer_filter_created_at_from" name="gui_data[customer][filter][created_at][from]" value="<?php echo $this->getValue('gui_data/customer/filter/created_at/from') ?>"/>
+                    <img src="<?php echo $this->getSkinUrl('images/grid-cal.gif') ?>" alt="" class="v-middle" id="customer_filter_created_at_from_trig" title="<?php echo $this->__('Date selector') ?>" />
+                     <?php echo $this->__('to') ?>
+                    <input class="input-text" style="width:5em" id="customer_filter_created_at_to" name="gui_data[customer][filter][created_at][to]" value="<?php echo $this->getValue('gui_data/customer/filter/created_at/to') ?>"/>
+                    <img src="<?php echo $this->getSkinUrl('images/grid-cal.gif') ?>" alt="" class="v-middle" id="customer_filter_created_at_to_trig" title="<?php echo $this->__('Date selector') ?>" />
+<script type="text/javascript">
+    Calendar.setup({
+        inputField : "customer_filter_created_at_from",
+        ifFormat : "<?php echo $this->getShortDateFormat() ?>",
+        button : "customer_filter_created_at_from_trig",
+        align : "Bl",
+        singleClick : true
+    });
+    Calendar.setup({
+        inputField : "customer_filter_created_at_to",
+        ifFormat : "<?php echo $this->getShortDateFormat() ?>",
+        button : "customer_filter_created_at_to_trig",
+        align : "Bl",
+        singleClick : true
+    });
+</script>
+                </span>
+            </div>
+        </fieldset>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+//<![CDATA[
+    $$('.option-control').each(showOption);
+    changeEntityType();
+
+    function showFeildMapping() {
+        var direction = $('profile_direction').options[$('profile_direction').options.selectedIndex].value;
+		var entityType = $('profile_entity_type').value;
+        var value = $('parse_fieldnames').options[$('parse_fieldnames').options.selectedIndex].value;
+        var map = $('map_only_specified').options[$('map_only_specified').options.selectedIndex].value;
+		//alert(direction);
+		//alert(entityType);
+        if (direction == 'export' && entityType != 'attribute' && entityType != 'category' && entityType != 'order' && entityType != 'customerreviews' && entityType != 'couponcode') {
+            if (map) {
+                Element.show($('__fieldmapping'));
+            } else {
+                deleteAllAddedMappingFields();
+                Element.hide($('__fieldmapping'));
+            }
+        } else {
+            if (value) {
+                Element.hide($('__fieldmapping'));
+                deleteAllAddedMappingFields();
+            } else {
+                Element.show($('__fieldmapping'));
+            }
+        }
+
+    }
+
+    function deleteAllAddedMappingFields()
+    {
+        var type = $('profile_entity_type').options[$('profile_entity_type').options.selectedIndex].value;
+		//var type = $('profile_entity_type').value;
+
+        var elems = $('map_container_'+type).childElements();
+        if (elems.length > 0) for (var idx in elems) {
+            if (elems[idx] != undefined && elems[idx].tagName != undefined) {
+                elems[idx].remove();
+            }
+        }
+    }
+    var direction = $('profile_direction').options[$('profile_direction').options.selectedIndex].value;
+		
+    if (direction == 'import') {
+        if ($('parse_fieldnames').options[$('parse_fieldnames').options.selectedIndex].value) {
+            Element.hide($('__fieldmapping'));
+            deleteAllAddedMappingFields();
+        } else {
+            //Element.show($('__fieldmapping'));
+        }
+    } else {
+        var map = $('map_only_specified').options[$('map_only_specified').options.selectedIndex].value;
+        if (map) {
+            //Element.show($('__fieldmapping'));
+        } else {
+            deleteAllAddedMappingFields();
+            Element.hide($('__fieldmapping'));
+        }
+    }
+//]]>
+</script>

@@ -1,0 +1,6 @@
+0000000000000000000000000000000000000000 b028e1ce73704980a838b070a8215fff47edb51c root <root@ip-172-31-46-139.ec2.internal> 1456884507 +0000	clone: from https://github.com/ryanhand/mojoparts.com.git
+b028e1ce73704980a838b070a8215fff47edb51c b0050ccf75e2048ac4dc7f4092fe00e1dcfbaa01 root <root@ip-172-31-46-139.ec2.internal> 1457067950 +0000	pull: Fast-forward
+b0050ccf75e2048ac4dc7f4092fe00e1dcfbaa01 5bdba8687b9fde4d38396e72686b036d75b3eca4 root <root@ip-172-31-46-139.ec2.internal> 1457387271 +0000	pull: Fast-forward
+5bdba8687b9fde4d38396e72686b036d75b3eca4 e0c892065bea76ee5df2d86357fcaef06e61419a EC2 Default User <ec2-user@ip-172-31-46-139.ec2.internal> 1458064361 +0000	pull: Fast-forward
+e0c892065bea76ee5df2d86357fcaef06e61419a da48adc301f5eff290b283a930c8cc10f827145b root <root@ip-172-31-46-139.ec2.internal> 1463630771 +0000	pull: Fast-forward
+da48adc301f5eff290b283a930c8cc10f827145b 5205b9e804ec2023f494728fbeef693623e1ff5d root <root@ip-172-31-46-139.ec2.internal> 1469501222 +0000	pull: Fast-forward

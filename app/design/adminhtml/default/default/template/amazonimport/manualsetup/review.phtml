@@ -1,0 +1,67 @@
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields4">
+	This screen gives you the chance to review your field mappings. As the product upload runs it will use these mappings to set up the product variation on the desired theme. As such, you should ensure that both of these values have been mapped to a product attribute unless you plan on manually setting up these products later in the setup process.
+	</div>
+</div>
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Variation Theme</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields4">
+    <div class="hor-scroll">
+    <div id="mappingarea">
+
+           
+            </div>
+            </div>
+        </div>
+        
+	<form action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/variations/reloadmappings/cachebuster/<?php echo time(); ?>" method="POST" id="reloadmappings" name="reloadmappings" target="searcher">
+		<input type="hidden" name="form_key" id="form_key" value="<?=Mage::getSingleton('core/session')->getFormKey() ?>"/>
+		<input type="hidden" name="country" id="country" value="<?php echo Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_variations_marketplace'); ?>">
+		<input type="hidden" name="currentvt" id="currentvt" value="">		
+	</form>
+        
+<iframe src="about:blank" id="searcher" name="searcher" style="width:1px;height:1px;" frameborder="0"></iframe>
+
+<form action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/mapping/savemapping/cachebuster/<?php echo time(); ?>" method="POST" id="saveform" name="saveform" target="saveformuploader">
+	<input type="hidden" name="form_key" id="form_key" value="<?=Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+	<input type="hidden" name="saveform-xmlkey" id="saveform-xmlkey" value="0" />
+	<input type="hidden" name="saveform-keyvalue" id="saveform-keyvalue" value="0" />
+	<input type="hidden" name="saveform-repelemindex" id="saveform-repelemindex" value="-1" />
+</form>	
+	
+<form action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/mapping/getattributes/cachebuster/<?php echo time(); ?>" method="POST" id="getattributes" name="getattributes" target="saveformuploader">
+	<input type="hidden" name="form_key" id="form_key" value="<?=Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+	<input type="hidden" name="getattributes-xmlkey" id="getattributes-xmlkey" value="0" />
+	<input type="hidden" name="getattributes-keyvalue" id="getattributes-keyvalue" value="0" />
+	<input type="hidden" name="getattributes-repelemindex" id="getattributes-repelemindex" value="-1" />
+</form>
+
+<form action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/mapping/canceledit/cachebuster/<?php echo time(); ?>" method="POST" id="canceledit" name="canceledit" target="saveformuploader">
+	<input type="hidden" name="form_key" id="form_key" value="<?=Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+	<input type="hidden" name="canceledit-xmlkey" id="canceledit-xmlkey" value="0" />
+	<input type="hidden" name="canceledit-keyvalue" id="canceledit-keyvalue" value="0" />
+	<input type="hidden" name="canceledit-repelemindex" id="canceledit-repelemindex" value="-1" />
+</form>
+
+<form action="<?php echo Mage::getModel('amazonimport/amazonimport')->getRootUrl(); ?>amazonimport/mapping/textedit/cachebuster/<?php echo time(); ?>" method="POST" id="textedit" name="textedit" target="saveformuploader">
+	<input type="hidden" name="form_key" id="form_key" value="<?=Mage::getSingleton('core/session')->getFormKey() ?>" /> 
+	<input type="hidden" name="textedit-xmlkey" id="textedit-xmlkey" value="0" />
+	<input type="hidden" name="textedit-keyvalue" id="textedit-keyvalue" value="0" />
+	<input type="hidden" name="textedit-repelemindex" id="textedit-repelemindex" value="-1" />
+</form>
+
+
+<iframe src="about:blank" id="saveformuploader" name="saveformuploader" style="width: 1px; height: 1px;" frameborder="0"></iframe>
+		
+
+		<script type="text/javascript">
+			function reloadMappings(vtheme) {
+				$('currentvt').value = vtheme;
+				$('reloadmappings').submit();
+			}
+        </script>
+</div>

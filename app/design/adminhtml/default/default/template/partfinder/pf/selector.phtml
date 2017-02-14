@@ -1,0 +1,105 @@
+<?php if ($this->getSelectorExists()): ?>
+     <div class="content-header">
+        <table cellspacing="0">
+            <tr>
+                <td>
+                  <h3 class="icon-head"><?php echo $this->__('Manage Selector') ?></h3>
+                  <div style="float:right">
+                    <form id="delete_form" action="<?php echo $this->getDeleteUrl(); ?>" method="post" onsubmit="return confirm('<?php echo $this->__('Are you sure want to delete Selector?') ?>')">
+                      <?php echo $this->getBlockHtml('formkey')?>  
+		                  <button class="button" type="submit"  ><span><span><?php echo $this->__('Delete Selector') ?></span></span></button>    
+                    </form>
+                  </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <div class="entry-edit" >
+      <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__('Selector structure:'); ?></h4>
+      </div>
+      <div class="box">               
+        <form id="save_form" action="<?php echo $this->getSaveUrl(); ?>" method="post">
+          <?php echo $this->getBlockHtml('formkey')?>       
+          <table  style="width:660px">
+            <tr>   
+              <th><?php echo $this->__('Column name in PartFinder Db.'); ?></th>      
+              <th ><?php echo $this->__('Default option in drop-down'); ?></th>
+              <th style="padding:0 0 5px 10px"><?php echo $this->__('URL Parameter'); ?></th>              
+            </tr>           
+            <?php foreach ($this->getLevelCollection() as $level): ?>
+              <tr>         
+                <td><?php echo $level->getColumnName(); ?></td>      
+                <td align="center" width="170"><input class="input-text" type="text" name="option_titles[<?php echo $level->getColumnName(); ?>]" value="<?php echo $this->htmlEscape($level->getOptionTitle()); ?>" ></td>   
+                <td align="center" width="150" style="padding:0 0 5px 10px"><input class="input-text" type="text" name="url_parameters[<?php echo $level->getColumnName(); ?>]" value="<?php echo $level->getUrlParameter(); ?>" ></td>                
+              </tr>        
+            <?php endforeach; ?>
+          </table> 
+          <br/>
+		      <button class="button" type="submit"><span><span><?php echo $this->__('Save Changes') ?></span></span></button>    
+        </form> 
+      </div>          
+    </div>  
+<?php else: ?>  
+  <?php if ($this->getPfDatabaseExists()): ?>
+    <div class="content-header">
+        <table cellspacing="0"><tr><td><h3 class="icon-head"><?php echo $this->__('Create Selector') ?></h3></td></tr></table>
+    </div>     
+    <div class="entry-edit" >
+      <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo $this->__('Check selector columns:'); ?></h4>
+      </div>
+      <div class="box">    
+        <form id="create_form" action="<?php echo $this->getSubmitUrl(); ?>" method="post" onsubmit="return checkMinCount()">
+          <?php echo $this->getBlockHtml('formkey')?>  
+          <table style="width:460px">
+            <tr>
+              <th>&nbsp;</th>        
+              <th><?php echo $this->__('Column name'); ?></th>      
+              <th ><?php echo $this->__('Order in selector'); ?></th>  
+            </tr>    
+            <?php foreach ($this->getDbColumnNames() as $columnName): ?>
+              <tr>  
+                <td width="20"><input type="checkbox" name="columns[]" value="<?php echo $columnName; ?>" onclick="checkMaxCount(this)"></td>        
+                <td><?php echo $columnName; ?></td>      
+                <td align="center" width="120"><input class="input-text" type="text" name="column_orders[<?php echo $columnName; ?>]" value="" style="width:15px"></td>    
+              </tr>        
+            <?php endforeach; ?>
+          </table> 
+          <br/>
+		      <button class="button" type="submit"  ><span><span><?php echo $this->__('Create Selector') ?></span></span></button>    
+        </form>
+      </div>          
+    </div>       
+    <script type="text/javascript">
+    //<![CDATA[
+    
+      var partFinder = {'currentCount':0};
+
+      function checkMaxCount(checkbox){
+        if (checkbox.checked){
+          if (partFinder.currentCount == 10){
+            checkbox.checked = false;
+            alert('<?php echo $this->__('Selector cannot have more than 10 levels')?>');
+          } else {
+            partFinder.currentCount++;
+          }
+        } else {
+            partFinder.currentCount--;
+        }
+      }
+        
+      function checkMinCount(){
+          if (partFinder.currentCount == 0){
+            alert('<?php echo $this->__('Please, choose columns')?>');
+            return false;      
+          }
+          return true;
+      }
+    //]]>      
+    </script>
+  <?php else: ?>
+    <center><h3><?php echo $this->__('Please, import PartFinder Database'); ?></h3></center>
+  <?php endif;?>    
+<?php endif;?>         
+

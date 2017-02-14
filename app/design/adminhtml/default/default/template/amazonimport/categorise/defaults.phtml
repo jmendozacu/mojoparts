@@ -1,0 +1,278 @@
+<?php 
+
+	$data = Mage::registry('amazonimport_categorisedata');
+	$data = $data[0];
+	if(isset($data['category'])){
+		$category = $data['category'];
+	}else{
+		$category = "";
+	}
+	
+	
+	if(isset($data['browsenode1'])){
+		$currentbn1 = $data['browsenode1'];
+	}else{
+		$currentbn1 = "";
+	}
+	
+	if(isset($data['browsenode2'])){
+		$currentbn2 = $data['browsenode2'];
+	}else{
+		$currentbn2 = "";
+	}
+	
+	
+	if(isset($data['category'])){
+		$category = $data['category'];
+		$runthis = "<script type='text/javascript'>setTimeout(\"reloadBrowseNodes('".$category."','".$currentbn1."','".$currentbn2."')\",2000);</script>";
+	}else{
+		$category = "";
+		$runthis = "";
+	}
+	
+	if(isset($data['condition_note'])){
+		$condition_note = $data['condition_note'];
+	}else{
+		$condition_note = "";
+	}
+	
+	if(isset($data['condition'])){
+		$condition = $data['condition'];
+	}else{
+		$condition = "";
+	}
+	
+	if(isset($data['productdatatype'])){
+		$currentpdt = $data['productdatatype'];
+	}else{
+		$currentpdt = "";
+	}
+	
+	if(isset($data['producttype'])){
+		$currentpt = $data['producttype'];
+		$runthis2 = "<script type='text/javascript'>setTimeout(\"reloadProductdatatype('".$currentpt."','".$currentpdt."')\",4000);</script>";
+	}else{
+		$currentpt = "";
+		$runthis2 = "";
+	}
+	
+?>
+<?php if(Mage::getStoreConfig('amazonint/general/hide_help_tips') == 0){ ?>
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields4">
+	<b>Help Tip:</b> On the form below, please set the 'Condition' of this item. This is used by Amazon to distinguish between 'New' and 'Used' products.<br />
+	 If you wish, you may also add a 'Condition Note' - for example - Factory Refurbished by Manufacturer.
+	</div>
+</div>
+<?php } ?>
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Product Condition</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields4">
+    <div class="hor-scroll">
+                <table cellspacing="0" class="form-list">
+            <tbody>
+                
+<tr>
+    <td class="label"><label for="name">Condition <span class="required">*</span></label></td>
+    <td class="value">
+    <select name="condition" id="condition">
+    	<option value="">--- Please select ---</option>
+    	<option value="New"<?php if($condition == "New"){ echo ' selected="selected"'; }?>>New</option>
+    	<option value="UsedLikeNew"<?php if($condition == "UsedLikeNew"){ echo ' selected="selected"'; }?>>Used - 'Like New' Condition</option>
+		<option value="UsedVeryGood"<?php if($condition == "UsedVeryGood"){ echo ' selected="selected"'; }?>>Used - 'Very Good' Condition</option>
+		<option value="UsedGood"<?php if($condition == "UsedGood"){ echo ' selected="selected"'; }?>>Used - 'Good' Condition</option>
+		<option value="UsedAcceptable"<?php if($condition == "UsedAcceptable"){ echo ' selected="selected"'; }?>>Used - 'Acceptable' Condition</option>
+		<option value="CollectibleLikeNew"<?php if($condition == "CollectibleLikeNew"){ echo ' selected="selected"'; }?>>Collectible - 'Like New' Condition</option>
+		<option value="CollectibleVeryGood"<?php if($condition == "CollectibleVeryGood"){ echo ' selected="selected"'; }?>>Collectible- 'Very Good' Condition</option>
+		<option value="CollectibleGood"<?php if($condition == "CollectibleGood"){ echo ' selected="selected"'; }?>>Collectible - 'Good' Condition</option>
+		<option value="CollectibleAcceptable"<?php if($condition == "CollectibleAcceptable"){ echo ' selected="selected"'; }?>>Collectible - 'Acceptable' Condition</option>
+		<option value="Refurbished"<?php if($condition == "Refurbished"){ echo ' selected="selected"'; }?>>Refurbished</option>
+		<option value="Club"<?php if($condition == "Club"){ echo ' selected="selected"'; }?>>Club</option>
+	</select>
+    	</td>
+    <td class="scope-label"></td>
+        <td><small>&nbsp;</small></td>
+</tr>            
+<tr>
+    <td class="label"><label for="name">Condition Note</label></td>
+    <td class="value">
+    	<textarea name="condition_note" id="condition_note"><?php echo $condition_note; ?></textarea>
+    </td>
+    <td class="scope-label"></td>
+        <td><small>&nbsp;</small></td>
+</tr>
+
+            </tbody>
+        </table>
+            </div>
+        </div>
+</div>
+
+<?php if(Mage::getStoreConfig('amazonint/general/hide_help_tips') == 0){ ?>
+
+<div class="entry-edit">
+    <div class="fieldset " id="group_fields4">
+	<b>Help Tip:</b> Select a category for this item below, and then select a Product Type. These are used in different stages of the communication process with Amazon, and therefore a value is necessary for both fields. Once selected, click on the 'Browse Nodes' tab in the left-hand menu.
+	</div>
+</div>
+
+<?php } ?>
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Category Selection</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields4">
+    <div class="hor-scroll">
+                <table cellspacing="0" class="form-list">
+            <tbody>
+                
+<tr>
+    <td class="label"><label for="name">Category <span class="required">*</span></label></td>
+    <td class="value">
+    
+    <?php if(Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_categorise_marketplace') == "de"){?>
+		<!--  de categories 31/08/2010 -->
+		<select name="category" id="category" onchange="reloadBrowseNodes(this.options[this.selectedIndex].value,'<?php echo $currentbn1;?>','<?php echo $currentbn2;?>')">
+    		<option value="">--- Please select ---</option>
+    		<option value="apparel" <?php if($category == "apparel"){ echo ' selected="selected"'; }?>>Apparel</option>
+    		<option value="automotive" <?php if($category == "automotive"){ echo ' selected="selected"'; }?>>Automotive</option>
+    		<option value="baby" <?php if($category == "baby"){ echo ' selected="selected"'; }?>>Baby</option>
+    		<option value="beauty" <?php if($category == "beauty"){ echo ' selected="selected"'; }?>>Beauty</option>
+    		<option value="food" <?php if($category == "food"){ echo ' selected="selected"'; }?>>Food</option>
+    		<option value="ce" <?php if($category == "ce"){ echo ' selected="selected"'; }?>>Consumer Electronics</option>
+    		<option value="drugstore" <?php if($category == "drugstore"){ echo ' selected="selected"'; }?>>Health & Personal Care</option>
+    		<option value="garden" <?php if($category == "garden"){ echo ' selected="selected"'; }?>>Garden</option>
+    		<option value="kitchen" <?php if($category == "kitchen"){ echo ' selected="selected"'; }?>>Kitchen</option>
+    		<option value="lighting" <?php if($category == "lighting"){ echo ' selected="selected"'; }?>>Lighting</option>
+    		<option value="office-products" <?php if($category == "office-products"){ echo ' selected="selected"'; }?>>Office Products</option>
+    		<option value="shoes" <?php if($category == "shoes"){ echo ' selected="selected"'; }?>>Shoes</option>
+    		<option value="software" <?php if($category == "software"){ echo ' selected="selected"'; }?>>Software</option>
+    		<option value="sports" <?php if($category == "sports"){ echo ' selected="selected"'; }?>>Sports</option>
+    		<option value="tools-sgp" <?php if($category == "tools-sgp"){ echo ' selected="selected"'; }?>>Tools</option>
+    		<option value="toys" <?php if($category == "toys"){ echo ' selected="selected"'; }?>>Toys</option>
+    		<option value="videogames" <?php if($category == "videogames"){ echo ' selected="selected"'; }?>>Video Games</option>
+    		<option value="watches" <?php if($category == "watches"){ echo ' selected="selected"'; }?>>Watches</option>
+	    </select>
+	    
+    <?php }else if(Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_categorise_marketplace') == "fr"){?>
+	    <!--  fr categories 24/05/2010 -->
+		<select name="category" id="category" onchange="reloadBrowseNodes(this.options[this.selectedIndex].value,'<?php echo $currentbn1;?>','<?php echo $currentbn2;?>')">
+    		<option value="">--- Please select ---</option>
+    		<option value="baby" <?php if($category == "baby"){ echo ' selected="selected"'; }?>>Baby</option>
+    		<option value="beauty" <?php if($category == "beauty"){ echo ' selected="selected"'; }?>>Beauty</option>
+    		<option value="electronics" <?php if($category == "electronics"){ echo ' selected="selected"'; }?>>Consumer Electronics</option>
+    		<option value="hpc" <?php if($category == "hpc"){ echo ' selected="selected"'; }?>>Health & Personal Care</option>
+    		<option value="jewelry" <?php if($category == "jewelry"){ echo ' selected="selected"'; }?>>Jewelry</option>
+    		<option value="kitchen" <?php if($category == "kitchen"){ echo ' selected="selected"'; }?>>Kitchen</option>
+    		<option value="luminaires-eclairage" <?php if($category == "luminaires-eclairage"){ echo ' selected="selected"'; }?>>Lighting</option>
+    		<option value="office-products" <?php if($category == "office-products"){ echo ' selected="selected"'; }?>>Office Products</option>
+    		<option value="shoes" <?php if($category == "shoes"){ echo ' selected="selected"'; }?>>Shoes</option>
+    		<option value="software" <?php if($category == "software"){ echo ' selected="selected"'; }?>>Software</option>
+    		<option value="sporting-goods" <?php if($category == "toys"){ echo ' selected="selected"'; }?>>Sports</option>
+    		<option value="toys" <?php if($category == "toys"){ echo ' selected="selected"'; }?>>Toys</option>
+    		<option value="videogames" <?php if($category == "videogames"){ echo ' selected="selected"'; }?>>Video Games</option>
+    		<option value="watches" <?php if($category == "watches"){ echo ' selected="selected"'; }?>>Watches</option>
+	    </select>
+	    
+	 <?php }else if(Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_categorise_marketplace') == "uk"){?>
+	    
+    	<!--  uk categories 07/07/2010 -->
+		<select name="category" id="category" onchange="reloadBrowseNodes(this.options[this.selectedIndex].value,'<?php echo $currentbn1;?>','<?php echo $currentbn2;?>')">
+    		<option value="">--- Please select ---</option>
+    		<option value="apparel" <?php if($category == "apparel"){ echo ' selected="selected"'; }?>>Apparel</option>
+    		<option value="automotive" <?php if($category == "automotive"){ echo ' selected="selected"'; }?>>Automotive</option>
+    		<option value="baby-products" <?php if($category == "baby-products"){ echo ' selected="selected"'; }?>>Baby</option>
+    		<option value="drugstore" <?php if($category == "drugstore"){ echo ' selected="selected"'; }?>>Drugstore</option>
+    		<option value="electronics" <?php if($category == "electronics"){ echo ' selected="selected"'; }?>>Consumer Electronics</option>
+    		<option value="food" <?php if($category == "food"){ echo ' selected="selected"'; }?>>Groceries</option>
+    		<option value="games" <?php if($category == "games"){ echo ' selected="selected"'; }?>>Games</option>
+    		<option value="home-garden" <?php if($category == "home-garden"){ echo ' selected="selected"'; }?>>Home & Garden</option>
+    		<option value="jewelry" <?php if($category == "jewelry"){ echo ' selected="selected"'; }?>>Jewelry</option>
+    		<option value="kids" <?php if($category == "kids"){ echo ' selected="selected"'; }?>>Kids</option>
+    		<option value="lighting" <?php if($category == "lighting"){ echo ' selected="selected"'; }?>>Lighting</option>
+    		<option value="office-products" <?php if($category == "office-products"){ echo ' selected="selected"'; }?>>Office Products</option>
+    		<option value="shoes" <?php if($category == "shoes"){ echo ' selected="selected"'; }?>>Shoes</option>
+    		<option value="software" <?php if($category == "software"){ echo ' selected="selected"'; }?>>Software & Video Games</option>
+    		<option value="sports" <?php if($category == "sports"){ echo ' selected="selected"'; }?>>Sports</option>
+    		<option value="tools" <?php if($category == "tools"){ echo ' selected="selected"'; }?>>Tools</option>
+    		<option value="watches" <?php if($category == "watches"){ echo ' selected="selected"'; }?>>Watches</option>
+	    </select>
+	    
+	 <?php }else if(Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_categorise_marketplace') == "com"){?>
+	    
+    	<!--  usa categories 24/05/2010 -->
+		<select name="category" id="category" onchange="reloadBrowseNodes(this.options[this.selectedIndex].value,'<?php echo $currentbn1;?>','<?php echo $currentbn2;?>')">
+    		<option value="">--- Please select ---</option>
+    		<option value="apparel" <?php if($category == "apparel"){ echo ' selected="selected"'; }?>>Apparel</option>
+    		<option value="automotive" <?php if($category == "automotive"){ echo ' selected="selected"'; }?>>Automotive</option>
+    		<option value="baby-products" <?php if($category == "baby-products"){ echo ' selected="selected"'; }?>>Baby</option>
+    		<option value="beauty" <?php if($category == "beauty"){ echo ' selected="selected"'; }?>>Beauty</option>
+    		<option value="camera-photo" <?php if($category == "camera-photo"){ echo ' selected="selected"'; }?>>Camera & Photo</option>
+    		<option value="cellphone-accessories" <?php if($category == "cellphone-accessories"){ echo ' selected="selected"'; }?>>Cellphone Accessories</option>
+    		<option value="electronics" <?php if($category == "electronics"){ echo ' selected="selected"'; }?>>Consumer Electronics</option>
+    		<option value="grocery" <?php if($category == "grocery"){ echo ' selected="selected"'; }?>>Grocery</option>
+    		<option value="health" <?php if($category == "health"){ echo ' selected="selected"'; }?>>Health</option>
+    		<option value="home-garden" <?php if($category == "home-garden"){ echo ' selected="selected"'; }?>>Home & Garden</option>
+    		<option value="home-improvement" <?php if($category == "home-improvement"){ echo ' selected="selected"'; }?>>Home Improvement</option>
+    		<option value="jewelry" <?php if($category == "jewelry"){ echo ' selected="selected"'; }?>>Jewelry</option>
+    		<option value="musical-instruments" <?php if($category == "musical-instruments"){ echo ' selected="selected"'; }?>>Musical Instruments</option>
+    		<option value="office-products" <?php if($category == "office-products"){ echo ' selected="selected"'; }?>>Office Products</option>
+    		<option value="pet-supplies" <?php if($category == "pet-supplies"){ echo ' selected="selected"'; }?>>Pet Supplies</option>
+    		<option value="software" <?php if($category == "software"){ echo ' selected="selected"'; }?>>Software</option>
+    		<option value="sports" <?php if($category == "sports"){ echo ' selected="selected"'; }?>>Sports</option>
+    		<option value="toys-and-games" <?php if($category == "toys-and-games"){ echo ' selected="selected"'; }?>>Toys & Games</option>
+    		<option value="videogames" <?php if($category == "videogames"){ echo ' selected="selected"'; }?>>Videogames</option>
+    		<option value="watches" <?php if($category == "watches"){ echo ' selected="selected"'; }?>>Watches</option>
+	    </select>
+	    
+     <?php  } ?>
+	
+	</td>
+    <td class="scope-label"></td>
+        <td><small>&nbsp;</small></td>
+</tr>            
+<tr>
+    <td class="label"><label for="name">Product Type<span class="required">*</span></label></td>
+    <td class="value">
+		<select name="producttype" id="producttype" onchange="reloadProductdatatype(this.options[this.selectedIndex].value,'<?php echo $currentpdt;?>')">
+    		<option value="">--- Please select ---</option>
+    		<option value="Clothing" <?php if($currentpt == "Clothing"){ echo ' selected="selected"'; }?>>Clothing</option>
+    		<option value="CameraPhoto"<?php if($currentpt == "CameraPhoto"){ echo ' selected="selected"'; }?>>Camera & Photography</option>
+    		<option value="Home"<?php if($currentpt == "Home"){ echo ' selected="selected"'; }?>>Home</option>
+    		<option value="Sports"<?php if($currentpt == "Sports"){ echo ' selected="selected"'; }?>>Sports</option>
+    		<option value="Tools"<?php if($currentpt == "Tools"){ echo ' selected="selected"'; }?>>Tools</option>
+    		<option value="FoodAndBeverages"<?php if($currentpt == "FoodAndBeverages"){ echo ' selected="selected"'; }?>>Food and Beverages</option>
+    		<option value="Gourmet"<?php if($currentpt == "Gourmet"){ echo ' selected="selected"'; }?>>Gourmet</option>
+    		<option value="Jewelry"<?php if($currentpt == "Jewelry"){ echo ' selected="selected"'; }?>>Jewelry</option>
+    		<option value="Health"<?php if($currentpt == "Health"){ echo ' selected="selected"'; }?>>Health</option>
+    		<option value="CE"<?php if($currentpt == "CE"){ echo ' selected="selected"'; }?>>Consumer Electronics</option>
+    		<option value="SoftwareVideoGames"<?php if($currentpt == "SoftwareVideoGames"){ echo ' selected="selected"'; }?>>Computer Software & Video Games</option>
+    		<option value="Wireless"<?php if($currentpt == "Wireless"){ echo ' selected="selected"'; }?>>Wireless</option>
+    		<option value="Beauty"<?php if($currentpt == "Beauty"){ echo ' selected="selected"'; }?>>Beauty</option>
+    		<option value="Office"<?php if($currentpt == "Office"){ echo ' selected="selected"'; }?>>Office</option>
+    		<option value="MusicalInstruments"<?php if($currentpt == "MusicalInstruments"){ echo ' selected="selected"'; }?>>Musical Instruments</option>
+    		<option value="AutoAccessory"<?php if($currentpt == "AutoAccessory"){ echo ' selected="selected"'; }?>>Auto Accessories</option>
+    		<option value="PetSupplies"<?php if($currentpt == "PetSupplies"){ echo ' selected="selected"'; }?>>Pet Supplies</option>
+    		<option value="ToysBaby"<?php if($currentpt == "ToysBaby"){ echo ' selected="selected"'; }?>>Toys & Baby</option>
+    		<option value="TiresAndWheels"<?php if($currentpt == "TiresAndWheels"){ echo ' selected="selected"'; }?>>Tires and Wheels</option>
+	    </select>
+	    <input type="hidden" value="<?php echo $this->getRequest()->getParam('id'); ?>" name="productid" id="productid" />
+	</td>
+    <td class="scope-label"></td>
+        <td><small>&nbsp;</small></td>
+</tr>
+
+            </tbody>
+        </table>
+            </div>
+        </div>
+</div>
+<?php 
+	echo $runthis; echo $runthis2;
+?>

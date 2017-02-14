@@ -1,0 +1,150 @@
+<?php if (Mage::getStoreConfig('amazonint/general/hide_help_tips') == 0) { ?>
+<div class="entry-edit">
+    <div class="fieldset" id="group_fields4">
+	<b>Help Tip:</b> The setting below allows you to control whether this item should be published to Amazon and updated by the module or not.<br />
+	Please note that setting this option to 'No' will not remove your listing from Amazon - you must do this manually.
+	</div>
+</div>
+<?php }
+
+		$mdl = "";
+      	$id = $this->getRequest()->getParam('id');
+      	$mkt = Mage::getModel('amazonimport/amazonimport')->loadSessionValue('camiloo_amazon_selection_marketplace');
+		$calculated = Mage::getModel('amazonimport/amazonlink')->calculatePriceLevel($id, Mage::getStoreConfig('amazonint/amazon'.$mkt.'/store'), $mkt, true);
+		$model = Mage::getModel('amazonimport/amazonimportlistthis'.$mkt)->getCollection()->addFieldToFilter('productid',array($id));
+		
+		
+		if (sizeof($model) > 0)
+		{
+			foreach ($model as $mdl)
+			{
+				break;
+			}	
+		}
+		
+		if (is_object($mdl))
+		{
+			$currentvalue = $mdl->getIsActive();
+			$reprice_enabled = $mdl->getData('reprice_enabled');
+			$minimum_price = $mdl->getData('minimum_price');
+			$calculated_price = $mdl->getData('calculated_price');
+		}
+		else
+		{
+			$currentvalue = "";
+			$reprice_enabled = "";
+			$minimum_price = "";
+			$calculated_price = "n/a";
+		}
+
+		$mdl = "";
+		$model = Mage::getModel('amazonimport/amazonimportsetup'.$mkt)->getCollection()->addFieldToFilter('productid', array($id));
+		$currentvalueST = "";
+		
+		if (sizeof($model) > 0)
+		{
+			foreach ($model as $mdl)
+			{
+				break;
+			}	
+		}
+		
+		if (is_object($mdl))
+		{
+			$currentvalueST = $mdl->getData('setup_type');
+		}
+		else
+		{
+			$currentvalueST = "";
+		}
+?>
+
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Product Information</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields5A">
+<p>
+<?php 
+	$mprod = Mage::getModel('catalog/product')->load($id);
+	
+	$prodTypeArray = Mage::getSingleton('catalog/product_type')->getOptionArray();
+	
+	echo "<table><tr><td><b>ID:</b></td><td>   ", 
+		$mprod->getId(), 
+		"</td></tr><tr><td><b>SKU:</b></td><td>   ", 
+		$mprod->getSku(), 
+		"</td></tr><tr><td><b>Name:</b></td><td>   ", 
+		$mprod->getName(), 
+		"</td></tr><tr><td><b>Current price in Magento:</b></td><td>   ", 
+		number_format($mprod->getPrice(), 2, ".", ""), 
+		"</td></tr><tr><td><b>Product type:</b></td><td>   ", 
+		$prodTypeArray[$mprod->getTypeId()], 
+		"</td></tr></table>";
+?>
+	</p>
+    
+            </div>
+        </div>
+        
+        
+
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Do you want to sell this product on Amazon?</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields4">
+    <select name="is_active" id="is_active">
+     	<option value="">--- Please Select---</option>
+    	<option value="1" <?php if(isset($currentvalue) && $currentvalue == "1"){ echo ' selected="selected"'; } ?>>Yes</option>
+     	<option value="0" <?php if(isset($currentvalue) && $currentvalue == "0"){ echo ' selected="selected"'; } ?>>No</option>
+    </select>
+    <input type="hidden" value="<?php echo $this->getRequest()->getParam('id'); ?>" name="productid" id="productid"></input>
+            </div>
+        </div>
+        
+<div class="entry-edit">
+    <div class="entry-edit-head">
+	    <h4 class="icon-head head-edit-form fieldset-legend">Search for this item on Amazon?</h4>
+	    <div class="form-buttons"></div>
+	</div>
+	<div class="fieldset " id="group_fields4ST">
+	If you wish, you can use this software to search Amazon for this product. This is useful if you feel other Amazon merchants may have sold the item previously. If you don't think this will be true, you may skip this, however please note that doing this will require you to tell Amazon more information about your products.<br /><br />
+	<div style='width:150px;float:left;'>Enable this feature?</div>
+	    <select name="setup_type" id="setup_type">
+	     	<option value="">--- Please Select---</option>
+	    	<option value="auto" <?php if(isset($currentvalueST) && $currentvalueST == "auto"){ echo ' selected="selected"'; } ?>>Try to find my product on Amazon for me.</option>
+	     	<option value="manual" <?php if(isset($currentvalueST) && $currentvalueST == "manual"){ echo ' selected="selected"'; } ?>>No, Skip this step, I will enter detailed information about this product</option>
+	    </select>
+	</div>
+</div>
+        
+<div class="entry-edit">
+    <div class="entry-edit-head">
+    <h4 class="icon-head head-edit-form fieldset-legend">Enable Competitive Repricing?</h4>
+    <div class="form-buttons"></div>
+</div>
+    <div class="fieldset " id="group_fields5">
+	<b>Competitive Repricing</b> dynamically adjusts your product pricing on Amazon to attempt to ensure you remain the cheapest retailer for your products. On Amazon, the cheapest retailer is given the most promotion, appearing as the main seller for an item when a customer visits a product page. There are a variety of controls for this feature which can be found under System &gt; Configuration &gt; Amazon Integration &gt; Competitive Repricing.<br /><br />
+	
+	<center>For this product, we have calculated that the cheapest you could sell on Amazon is <p class="grand-total"><?php echo $calculated_price == '' ? 'n/a' : $calculated_price; ?></p></center><br />
+	
+	<div style='width:150px;float:left;'>Enable this feature?</div>
+    <select name="reprice_enabled" id="reprice_enabled">
+     	<option value="">--- Please Select---</option>
+    	<option value="1" <?php if(isset($reprice_enabled) && $reprice_enabled == "1"){ echo ' selected="selected"'; } ?>>Yes</option>
+     	<option value="0" <?php if(isset($reprice_enabled) && $reprice_enabled == "0"){ echo ' selected="selected"'; } ?>>No</option>
+    </select><br /><br />
+
+	If you have set the above to Yes, what is the lowest price you wish to sell this item for on Amazon? The lowest possible value is 0.01 - for safety reasons 0.00 is not allowed.<br /><br />
+	
+	
+	<div style='width:150px;float:left;'>Enter a minimum price</div>
+
+	<input type="text" name="minimum_price" id="minimum_price" value="<?php echo $minimum_price; ?>"></input>
+    <br /><br />
+        </div>
+ </div>

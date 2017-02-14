@@ -1,0 +1,165 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Taxjar_SalesTax
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ *
+ * @category   Taxjar
+ * @package    Taxjar_SalesTax
+ * @copyright  Copyright (c) 2016 TaxJar. TaxJar is a trademark of TPS Unlimited, Inc. (http://www.taxjar.com)
+ * @license    http://opensource.org/licenses/osl-3.0.php Open Software License (OSL 3.0)
+ */
+-->
+<config>
+    <modules>
+        <Taxjar_SalesTax>
+            <version>2.2.1</version>
+        </Taxjar_SalesTax>
+    </modules>
+    <global>
+        <helpers>
+            <taxjar>
+                <class>Taxjar_SalesTax_Helper</class>
+            </taxjar>
+        </helpers>
+        <blocks>
+            <taxjar>
+                <class>Taxjar_SalesTax_Block</class>
+            </taxjar>
+            <adminhtml>
+                <rewrite>
+                    <tax_class_grid>Taxjar_SalesTax_Block_Adminhtml_Tax_Class_Grid</tax_class_grid>
+                    <tax_class_edit_form>Taxjar_SalesTax_Block_Adminhtml_Tax_Class_Edit_Form</tax_class_edit_form>
+                </rewrite>
+            </adminhtml>
+        </blocks>
+        <models>
+            <taxjar>
+                <class>Taxjar_SalesTax_Model</class>
+                <resourceModel>taxjar_resource</resourceModel>
+            </taxjar>
+            <taxjar_resource>
+                <class>Taxjar_SalesTax_Model_Resource</class>
+                <entities>
+                    <tax_nexus>
+                        <table>tax_nexus</table>
+                    </tax_nexus>
+                </entities>
+            </taxjar_resource>
+            <tax_resource>
+                <rewrite>
+                    <calculation>Taxjar_SalesTax_Model_Calculation</calculation>
+                </rewrite>
+            </tax_resource>
+        </models>
+        <resources>
+            <salestax_setup>
+                <setup>
+                    <module>Taxjar_SalesTax</module>
+                </setup>
+            </salestax_setup>
+        </resources>
+        <events>
+            <admin_system_config_changed_section_tax>
+                <observers>
+                    <taxjar>
+                        <type>singleton</type>
+                        <class>taxjar/observer_configChanged</class>
+                        <method>execute</method>
+                    </taxjar>
+                </observers>
+            </admin_system_config_changed_section_tax>
+            <controller_action_predispatch_adminhtml_system_config_edit>
+                <observers>
+                    <taxjar>
+                        <type>singleton</type>
+                        <class>taxjar/observer_configReview</class>
+                        <method>execute</method>
+                    </taxjar>
+                </observers>
+            </controller_action_predispatch_adminhtml_system_config_edit>
+            <taxjar_salestax_import_data>
+                <observers>
+                    <taxjar>
+                        <type>singleton</type>
+                        <class>taxjar/observer_importData</class>
+                        <method>execute</method>
+                    </taxjar>
+                </observers>
+            </taxjar_salestax_import_data>
+            <taxjar_salestax_import_rates>
+                <observers>
+                    <taxjar>
+                        <type>singleton</type>
+                        <class>taxjar/observer_importRates</class>
+                        <method>execute</method>
+                    </taxjar>
+                </observers>
+            </taxjar_salestax_import_rates>
+            <sales_quote_collect_totals_before>
+                <observers>
+                    <taxjar>
+                        <type>singleton</type>
+                        <class>taxjar/observer_salesQuoteCollectTotalsBefore</class>
+                        <method>execute</method>
+                    </taxjar>
+                </observers>
+            </sales_quote_collect_totals_before>
+            <controller_action_predispatch>
+                <observers>
+                    <taxjar>
+                        <type>singleton</type>
+                        <class>taxjar/observer_adminNotifications</class>
+                        <method>execute</method>
+                    </taxjar>
+                </observers>
+            </controller_action_predispatch>
+            <controller_action_layout_render_before>
+                <observers>
+                    <taxjar>
+                        <type>singleton</type>
+                        <class>taxjar/observer_adminMenuItems</class>
+                        <method>execute</method>
+                    </taxjar>
+                </observers>
+            </controller_action_layout_render_before>
+        </events>
+    </global>
+    <admin>
+        <routers>
+            <adminhtml>
+                <args>
+                    <modules>
+                        <Taxjar_SalesTax after="Mage_Adminhtml">Taxjar_SalesTax_Adminhtml</Taxjar_SalesTax>
+                    </modules>
+                </args>
+            </adminhtml>
+        </routers>
+    </admin>
+    <crontab>
+        <jobs>
+            <taxjar>
+                <schedule>
+                    <cron_expr>0 8 1 * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>taxjar/observer_importRates::execute</model>
+                </run>
+            </taxjar>
+        </jobs>
+    </crontab>
+    <default>
+		<tax>
+			<taxjar>
+				<product_tax_classes>2</product_tax_classes>
+				<customer_tax_classes>3</customer_tax_classes>
+			</taxjar>
+		</tax>
+    </default>
+</config>

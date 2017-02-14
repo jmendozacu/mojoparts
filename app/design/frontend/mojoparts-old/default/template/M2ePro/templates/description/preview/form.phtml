@@ -1,0 +1,73 @@
+<style type="text/css">
+    .mage_block_head {
+        padding: 2px 10px;
+        background: #6F8992 none repeat scroll 0 0;
+    }
+    .mage_block_head a {
+        color: #FFFFFF;
+        text-decoration: none;
+        font-size: 0.8em;
+        font-weight: bold;
+        line-height: 18px;
+        font-family: Arial,Helvetica,sans-serif;
+    }
+    .mage_block_content {
+        margin: 0px 0px 10px 0px;
+        padding: 10px 15px;
+        border: 1px solid #D6D6D6;
+        font-size: 12px;
+        font-family: Arial,Helvetica,sans-serif;
+    }
+    .mage_form {
+        margin: 0px;
+        padding: 0px;
+    }
+    .mage_button {
+        margin-bottom: 3px;
+        margin: 0 0 0 5px;
+        padding-left: 6px;
+        background: #FFAC47;
+        border-color: #ED6502 #A04300 #A04300 #ED6502;
+        border-style: solid;
+        border-width: 1px;
+        color: #FFFFFF;
+        cursor: pointer;
+        font-family: arial,helvetica,sans-serif;
+        font-size: 12px;
+        font-weight: bold;
+        line-height: normal;
+        padding: 0 7px 1px;
+        text-align: center !important;
+        white-space: nowrap;
+    }
+</style>
+
+<div>
+
+    <div class="mage_block_head">
+        <a>Select Product</a>
+    </div>
+
+    <fieldset class="mage_block_content">
+
+        <form method="post" action="<?php echo $this->getUrl('*/*/preview'); ?>" class="mage_form">
+
+            <input type="hidden" name="show" value="1" />
+            <input type="hidden" name="form_key" value="<?php echo $this->getFormKey(); ?>" />
+            
+            <?php if ($errorTxt = $this->getData('error_txt')): ?>
+                <span style="color: red;"><b><?php echo $errorTxt; ?></b></span><br/><br/>
+            <?php endif; ?>
+
+            <?php echo Mage::helper('M2ePro')->__('Enter Product Id'); ?>:
+            <input type="text" name="id" value="" />
+
+            <input type="submit" class="mage_button" value="<?php echo Mage::helper('M2ePro')->__('View'); ?>" />
+            <?php echo Mage::helper('M2ePro')->__('or'); ?>
+            <input type="submit" class="mage_button" value="<?php echo Mage::helper('M2ePro')->__('View Random Product'); ?>" />
+
+        </form>
+
+    </fieldset>
+
+</div>

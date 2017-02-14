@@ -1,0 +1,7 @@
+<?php $amazoncore = Mage::getModel('amazonimport/amazonimport'); ?>
+<p class="grand-total">Step 4 of 6: Set Item Condition Note</p>
+If you wish, you may also enter a condition note below. This is optional, but may be used to specify information such as 'Factory Refurbished with new 3 year warranty'. Please do not use this space for marketing purposes, for example 'The Best Seller on Amazon!!' - This is against Amazon's Terms of Use and may result in your listings being removed. If you wish to skip this step, please <a href='#' onclick='selectedItemConditionNote("");'>click here</a>.<br /><br />
+<div style="width:90%;left:5%;position:absolute;padding-bottom:10px;">
+<center><?php echo $this->getCategoryConditionNote($amazoncore->loadSessionValue('camiloo_amazon_categorise_marketplace')); ?></center>
+</div>
+

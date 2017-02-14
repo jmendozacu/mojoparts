@@ -1,0 +1,21 @@
+
+.partfinder .block-content {padding:10px;}
+.partfinder select {width:100%;margin:0 0 8px 0;}
+.partfinder select.disabled { border-color:#bbb !important; background:#bbb !important; }
+.partfinder .search {margin:0 0 8px 0;}
+.partfinder .search input  {width:100%;}
+.partfinder .search button {float:right;}
+.partfinder button { float: right; margin-right: 20px; }
+
+
+.homepage .partfinder select {  width: 271px; margin: 0 0 10px 20px; font-size: 13px; }
+
+.sidebar .partfinder { background: url(../../images/part_finder_bg.gif) no-repeat; width: 300px; height: 256px; margin-left:9px;}
+.sidebar .partfinder .block-title { display: none; }
+.sidebar .partfinder .block-content { padding: 65px 0 0 18px; }
+.sidebar .partfinder select {  width: 266px; margin: 0 0 10px 0; }
+
+#partfinder_not_found { clear: both; padding: 10px; font-weight: bold; }
+
+/* for productd pages only */
+.catalog-product-view .sidebar .partfinder { margin-left: 10px; }

@@ -1,0 +1,20 @@
+<h4>Help Completing CSV File</h4>
+
+<div class="entry-edit">
+<div class="fieldset " id="group_fields4">
+Now that you have downloaded the CSV file, please open it in your favourite spreadsheet software (for example OpenOffice, Numbers or Excel). Once open, navigate to row 2. Row 1 contains headers and therefore you will not need to update this row.<br/><br/>
+Columns A & B of this file are for reference only and are designed to help you to understand which product this row relates to. Column C is a separator line for reference only.</div>
+</div>
+
+<div class="entry-edit">
+<div class="fieldset " id="group_fields4">
+<b>Column D</b> should be set to one of the following variation themes.<br /><br />
+
+
+	<?php echo $this->loadvtsforproduct($this->getRequest()->getParam('id')); ?>
+
+
+
+ Think of this as the options on a configurable product in Magento. For example if you sell red, white and blue tshirts in multiple sizes, you should select 'Size Color'. This will enable the customer to select the size and color of t-shirt they wish to purchase from a single product page.
+</div>
+</div>

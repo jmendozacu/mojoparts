@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <CommerceExtensions_Orderimportexport>
+            <active>true</active>
+            <codePool>local</codePool>
+        </CommerceExtensions_Orderimportexport>
+    </modules>
+	<depends>
+		<Mage_Payment />
+	</depends>
+</config>

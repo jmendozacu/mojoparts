@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config>
+    <modules>
+        <Pektsekye_PartFinder>
+            <active>true</active>
+            <codePool>local</codePool>
+        </Pektsekye_PartFinder>
+    </modules>
+</config> 

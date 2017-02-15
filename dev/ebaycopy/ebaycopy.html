@@ -1,0 +1,151 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+	<title>eBay Listing Copier</title>
+	<link href="style/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body><form method="post">
+    <div class="content">
+        <h1>eBay Listing Copier</h1>
+        <div class="data">
+			<table>
+				<tr>
+					<td style="width:20%">&nbsp;</td>
+					<td style="width:40%"><b>Source</b></td>
+					<td style="width:40%">
+						<b>Destination</b>
+						<input type="submit" name="btnapprove" value="Copy" style="width:80px" <?php if ($multipleSkuMatches) { echo "disabled"; } ?>>
+						<input type="submit" name="btnreject" value="Skip" style="width:80px">
+					</td>
+				</tr>
+				<tr>
+					<td>Listing</td>
+					<td><?php 
+							echo "<a href=\"http://www.ebay.com/itm/".$ebay_id."\" target=\"_blank\">".$ebay_id."</a> (";
+							echo "<a href=\"http://www.ebay.com/itm/".$ebay_id."#vi-ilComp\" target=\"_blank\">Compatibility</a>) (";
+							echo "<a href=\"".$apicall."\" target=\"_blank\">API call</a>)"; 
+						?>
+					</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Sku</td>
+					<td><?php echo $vendorSku;
+							if ($isVendorSkuASet) {
+								echo " (".$vendorSku1.", ".$vendorSku2.")";
+							}
+						?>
+					</td>
+					<td><?php if ($skuNumber == "") { 
+							echo "--"; 
+						} else {
+							echo $skuNumber; 
+						}
+						?></td>
+				</tr>
+				<tr>
+					<td>Title</td>
+					<td colspan="2"><?php echo $ebayTitle; ?></td>
+				</tr>
+				<tr>
+					<td>Images</td>
+					<td>
+						<img style="max-height:70px; max-width:70px;" src="<?php echo $item->GalleryURL; ?>">
+						<?php 
+							if ($isVendorSkuASet) {
+								echo "<img style=\"max-height:70px; max-width:70px;\" src=\"http://img.ptimg.com/is/image/Autos/".strtolower($vendorSku1)."_2?scl=2\">";
+								echo "<img style=\"max-height:70px; max-width:70px;\" src=\"http://img.ptimg.com/is/image/Autos/".strtolower($vendorSku1)."_3?scl=2\">";
+								echo "<img style=\"max-height:70px; max-width:70px;\" src=\"http://img.ptimg.com/is/image/Autos/".strtolower($vendorSku1)."_4?scl=2\">";
+							} else {
+								echo "<img style=\"max-height:70px; max-width:70px;\" src=\"http://img.ptimg.com/is/image/Autos/".strtolower($vendorSku)."_2?scl=2\">";
+								echo "<img style=\"max-height:70px; max-width:70px;\" src=\"http://img.ptimg.com/is/image/Autos/".strtolower($vendorSku)."_3?scl=2\">";
+								echo "<img style=\"max-height:70px; max-width:70px;\" src=\"http://img.ptimg.com/is/image/Autos/".strtolower($vendorSku)."_4?scl=2\">";
+							}
+						?>
+					</td>
+					<td>
+						Copy Source Images? 
+						<?php 
+							if (empty($magentoImageURLArray)) {
+								echo "<input type=\"checkbox\" name=\"copyImagesInd\" checked><br/>"; 
+							} else {
+								echo "<input type=\"checkbox\" name=\"copyImagesInd\"><br/>";
+								foreach($magentoImageURLArray as $image) {
+									echo "<img width=\"70\" src=\"".$image."\">";
+								}
+							}
+						?>
+					</td>
+				</tr>
+				<tr>
+					<td>Pricing</td>
+					<td>
+						<?php echo "Vendor's eBay Listing Price: $".$listingPrice; ?><br/>
+						<?php echo "MSRP: $".$listPrice; ?><br/>
+						<?php echo "Costs: $".$totalCost." => $".$productCost." (product) + $".$sAndHCost." (s&h)"; ?><br/>
+						<?php echo "Qty: ".$stockQty; ?>
+					</td>
+					<td><?php echo "$".$ourPrice; ?>
+					</td>
+				</tr>
+				<tr>
+					<td>Item Specifics</td>
+					<td><ul>
+						<?php if ($partslink <> "") echo "<li>Partslink Number: ".$partslink; ?>
+						<?php if ($oemnumber <> "") echo "<li>OEM Number: ".$oemnumber; ?>
+						<?php if ($hollander <> "") echo "<li>Hollander: ".$hollander; ?>
+						<?php if ($surfaceFinish <> "") echo "<li>Surface Finish: ".$surfaceFinish; ?>
+						<?php if ($placementOnVehicle <> "") echo "<li>Placement on Vehicle: ".$placementOnVehicle; ?>
+						<?php if ($brand <> "") echo "<li>Part Brand: ".$brand; ?>
+						<?php if ($upc <> "") echo "<li>UPC: ".$upc; ?>
+						
+					</ul></td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td>Categories</td>
+					<td><?php echo "eBay: ".$ebayCategory."<br/>".$ebayCategoryName; ?></td>
+					<td>Magento: 
+						<select name="categorySelection">
+							<?php
+								foreach ($categoryArray as $catElement) {
+									echo "<option value=\"".$catElement[0]."\">".$catElement[2]."</option>";
+								}
+							?>
+						</select>
+					</td>
+				</tr>
+				<tr>
+					<td>Additional Item Specifics</td>
+					<td colspan=2><p style="white-space: pre-wrap;"><?php echo $additionalNotes; ?></p>
+					</td>
+				</tr>
+			</table>
+		</div>
+	</div>
+
+	<input type="hidden" name="additionalNotes" value="<?php echo $additionalNotes; ?>">
+	<input type="hidden" name="brand" value="<?php echo $brand; ?>">
+	<input type="hidden" name="compatibility" value="<?php echo $compatibility; ?>">
+	<input type="hidden" name="ebay_id" value="<?php echo $ebay_id; ?>">
+	<input type="hidden" name="ebayCategory" value="<?php echo $ebayCategory; ?>">
+	<input type="hidden" name="ebayTitle" value="<?php echo $ebayTitle; ?>">
+	<input type="hidden" name="galleryURL" value="<?php echo $item->PictureURL[0]; ?>">
+	<input type="hidden" name="hollander" value="<?php echo $hollander; ?>">
+	<input type="hidden" name="isVendorSkuASet" value="<?php echo $isVendorSkuASet; ?>">
+	<input type="hidden" name="oemnumber" value="<?php echo $oemnumber; ?>">
+	<input type="hidden" name="ourPrice" value="<?php echo $ourPrice; ?>">
+	<input type="hidden" name="partslink" value="<?php echo $partslink; ?>">
+	<input type="hidden" name="placementOnVehicle" value="<?php echo $placementOnVehicle; ?>">
+	<input type="hidden" name="productCost" value="<?php echo $productCost; ?>">
+	<input type="hidden" name="skuNumber" value="<?php echo $skuNumber; ?>">
+	<input type="hidden" name="stockQty" value="<?php echo $stockQty; ?>">
+	<input type="hidden" name="surfaceFinish" value="<?php echo $surfaceFinish; ?>">
+	<input type="hidden" name="totalCost" value="<?php echo $totalCost; ?>">
+	<input type="hidden" name="upc" value="<?php echo $upc; ?>">
+	<input type="hidden" name="vendor" value="<?php echo $vendor; ?>">
+	<input type="hidden" name="vendorSku" value="<?php echo $vendorSku; ?>">
+	<input type="hidden" name="vendorSku1" value="<?php echo $vendorSku1; ?>">
+	<input type="hidden" name="vendorSku2" value="<?php echo $vendorSku2; ?>">
+</form></body></html>

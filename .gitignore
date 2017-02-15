@@ -23,6 +23,7 @@ var/full_page_cache
 /blackthorne_backups
 /backup-old-temp
 /export
+magmi/state/progress.txt
 
 # Microsoft
 *.phpproj

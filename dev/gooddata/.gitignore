@@ -1,4 +1,4 @@
 *.csv
 *.log
 *.out
-./compat-log.txt
+compat-log.txt

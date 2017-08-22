@@ -233,7 +233,7 @@ class shipping_import {
 		curl_setopt($ch, CURLOPT_COOKIEFILE, '');
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
 		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, 'username=135253&password=C5xgAbJ3csD2');
+		curl_setopt($ch, CURLOPT_POSTFIELDS, 'username=mojoautosupply@gmail.com&password=p2Wq8SKzeq57');
 		curl_exec($ch);
 		$errno = curl_errno($ch);
 		if ($errno!=0) {

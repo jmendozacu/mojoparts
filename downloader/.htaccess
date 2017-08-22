@@ -10,5 +10,5 @@
     deny from all
 </Files>
 
-#    order allow,deny
-#    deny from all
+order allow,deny
+deny from all

@@ -1,0 +1,123 @@
+10
+
+dir
+24
+file:///C:/svn_repository/LMS%20PHP%20Sample/trunk/application
+file:///C:/svn_repository
+
+
+
+2010-04-19T21:21:38.120839Z
+24
+dpower
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+0b61ffd3-c7b5-ed43-bb53-f635dff06b10
+
+StartDownloadJob
+dir
+
+AbortJob
+dir
+
+CreateUploadJob
+dir
+
+UploadFile
+dir
+
+get-common
+dir
+
+DownloadFile
+dir
+
+README.txt
+file
+
+
+
+
+2010-04-16T02:49:43.285685Z
+0f1923361d7a16c5b92e53f1a24a7bf0
+2010-04-12T20:45:10.792936Z
+23
+dpower
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+1927
+
+GetJobs
+dir
+
+StartUploadJob
+dir
+
+index.php
+file
+
+
+
+
+2010-04-16T02:49:43.301309Z
+323805facc4f3415a5cf5e28ff685062
+2010-04-12T20:45:10.792936Z
+23
+dpower
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+604
+
+GetJobStatus
+dir
+

@@ -207,7 +207,7 @@ require_once('./get-common/eBaySession.php');
 		}
 	$fromItem->ItemCompatibilityList->addChild('ReplaceAll', 'true');
 	$requestXmlBody .= $fromItem->ItemCompatibilityList->asXML();
-	$requestXmlBody .= $fromItem->ItemSpecifics->asXML();
+//	$requestXmlBody .= $fromItem->ItemSpecifics->asXML();
     $requestXmlBody .= '</Item>';
     $requestXmlBody .= '<RequesterCredentials><eBayAuthToken>'.$userToken.'</eBayAuthToken></RequesterCredentials>';
     $requestXmlBody .= '<WarningLevel>High</WarningLevel>';

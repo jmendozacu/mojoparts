@@ -1,0 +1,4 @@
+*.csv
+*.log
+*.out
+./compat-log.txt

@@ -31,3 +31,6 @@ magmi/state/progress.txt
 *.suo
 *.sln
 /var
+
+# Miscellaneous
+usautoparts.txt

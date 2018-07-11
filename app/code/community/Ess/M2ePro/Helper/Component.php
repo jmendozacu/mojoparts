@@ -1,52 +1,34 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
 {
-    // ########################################
+    //########################################
 
     public function getComponents()
     {
         return array(
             Ess_M2ePro_Helper_Component_Ebay::NICK,
             Ess_M2ePro_Helper_Component_Amazon::NICK,
-            Ess_M2ePro_Helper_Component_Buy::NICK,
-            Ess_M2ePro_Helper_Component_Play::NICK
         );
     }
 
-    public function getRakutenComponents()
-    {
-        return array(
-            Ess_M2ePro_Helper_Component_Buy::NICK,
-            Ess_M2ePro_Helper_Component_Play::NICK
-        );
-    }
-
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getComponentsTitles()
     {
         return array(
             Ess_M2ePro_Helper_Component_Ebay::NICK   => Mage::helper('M2ePro/Component_Ebay')->getTitle(),
             Ess_M2ePro_Helper_Component_Amazon::NICK => Mage::helper('M2ePro/Component_Amazon')->getTitle(),
-            Ess_M2ePro_Helper_Component_Buy::NICK    => Mage::helper('M2ePro/Component_Buy')->getTitle(),
-            Ess_M2ePro_Helper_Component_Play::NICK   => Mage::helper('M2ePro/Component_Play')->getTitle()
         );
     }
 
-    public function getRakutenComponentsTitles()
-    {
-        return array(
-            Ess_M2ePro_Helper_Component_Buy::NICK  => Mage::helper('M2ePro/Component_Buy')->getTitle(),
-            Ess_M2ePro_Helper_Component_Play::NICK => Mage::helper('M2ePro/Component_Play')->getTitle()
-        );
-    }
-
-    // ########################################
+    //########################################
 
     public function getEnabledComponents()
     {
@@ -58,31 +40,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (Mage::helper('M2ePro/Component_Amazon')->isActive()) {
             $components[] = Ess_M2ePro_Helper_Component_Amazon::NICK;
         }
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
 
         return $components;
     }
 
-    public function getRakutenEnabledComponents()
-    {
-        $components = array();
-
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
-
-        return $components;
-    }
-
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getEnabledComponentsTitles()
     {
@@ -94,31 +56,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (Mage::helper('M2ePro/Component_Amazon')->isEnabled()) {
             $components[Ess_M2ePro_Helper_Component_Amazon::NICK] = Mage::helper('M2ePro/Component_Amazon')->getTitle();
         }
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
 
         return $components;
     }
 
-    public function getRakutenEnabledComponentsTitles()
-    {
-        $components = array();
-
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
-
-        return $components;
-    }
-
-    // ########################################
+    //########################################
 
     public function getDisabledComponents()
     {
@@ -130,31 +72,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (!Mage::helper('M2ePro/Component_Amazon')->isEnabled()) {
             $components[] = Ess_M2ePro_Helper_Component_Amazon::NICK;
         }
-        if (!Mage::helper('M2ePro/Component_Buy')->isEnabled()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isEnabled()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
 
         return $components;
     }
 
-    public function getRakutenDisabledComponents()
-    {
-        $components = array();
-
-        if (!Mage::helper('M2ePro/Component_Buy')->isEnabled()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isEnabled()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
-
-        return $components;
-    }
-
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getDisabledComponentsTitles()
     {
@@ -166,31 +88,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (!Mage::helper('M2ePro/Component_Amazon')->isEnabled()) {
             $components[Ess_M2ePro_Helper_Component_Amazon::NICK] = Mage::helper('M2ePro/Component_Amazon')->getTitle();
         }
-        if (!Mage::helper('M2ePro/Component_Buy')->isEnabled()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isEnabled()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
 
         return $components;
     }
 
-    public function getRakutenDisabledComponentsTitles()
-    {
-        $components = array();
-
-        if (!Mage::helper('M2ePro/Component_Buy')->isEnabled()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isEnabled()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
-
-        return $components;
-    }
-
-    // ########################################
+    //########################################
 
     public function getAllowedComponents()
     {
@@ -202,31 +104,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (Mage::helper('M2ePro/Component_Amazon')->isAllowed()) {
             $components[] = Ess_M2ePro_Helper_Component_Amazon::NICK;
         }
-        if (Mage::helper('M2ePro/Component_Buy')->isAllowed()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isAllowed()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
 
         return $components;
     }
 
-    public function getRakutenAllowedComponents()
-    {
-        $components = array();
-
-        if (Mage::helper('M2ePro/Component_Buy')->isAllowed()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isAllowed()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
-
-        return $components;
-    }
-
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getAllowedComponentsTitles()
     {
@@ -238,31 +120,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (Mage::helper('M2ePro/Component_Amazon')->isAllowed()) {
             $components[Ess_M2ePro_Helper_Component_Amazon::NICK] = Mage::helper('M2ePro/Component_Amazon')->getTitle();
         }
-        if (Mage::helper('M2ePro/Component_Buy')->isAllowed()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isAllowed()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
 
         return $components;
     }
 
-    public function getRakutenAllowedComponentsTitles()
-    {
-        $components = array();
-
-        if (Mage::helper('M2ePro/Component_Buy')->isAllowed()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isAllowed()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
-
-        return $components;
-    }
-
-    // ########################################
+    //########################################
 
     public function getForbiddenComponents()
     {
@@ -274,31 +136,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (!Mage::helper('M2ePro/Component_Amazon')->isAllowed()) {
             $components[] = Ess_M2ePro_Helper_Component_Amazon::NICK;
         }
-        if (!Mage::helper('M2ePro/Component_Buy')->isAllowed()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isAllowed()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
 
         return $components;
     }
 
-    public function getRakutenForbiddenComponents()
-    {
-        $components = array();
-
-        if (!Mage::helper('M2ePro/Component_Buy')->isAllowed()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isAllowed()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
-
-        return $components;
-    }
-
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getForbiddenComponentsTitles()
     {
@@ -310,31 +152,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (!Mage::helper('M2ePro/Component_Amazon')->isAllowed()) {
             $components[Ess_M2ePro_Helper_Component_Amazon::NICK] = Mage::helper('M2ePro/Component_Amazon')->getTitle();
         }
-        if (!Mage::helper('M2ePro/Component_Buy')->isAllowed()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isAllowed()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
 
         return $components;
     }
 
-    public function getRakutenForbiddenComponentsTitles()
-    {
-        $components = array();
-
-        if (!Mage::helper('M2ePro/Component_Buy')->isAllowed()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isAllowed()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
-
-        return $components;
-    }
-
-    // ########################################
+    //########################################
 
     public function getActiveComponents()
     {
@@ -346,31 +168,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (Mage::helper('M2ePro/Component_Amazon')->isActive()) {
             $components[] = Ess_M2ePro_Helper_Component_Amazon::NICK;
         }
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
 
         return $components;
     }
 
-    public function getRakutenActiveComponents()
-    {
-        $components = array();
-
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
-
-        return $components;
-    }
-
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getActiveComponentsTitles()
     {
@@ -382,31 +184,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (Mage::helper('M2ePro/Component_Amazon')->isActive()) {
             $components[Ess_M2ePro_Helper_Component_Amazon::NICK] = Mage::helper('M2ePro/Component_Amazon')->getTitle();
         }
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
 
         return $components;
     }
 
-    public function getRakutenActiveComponentsTitles()
-    {
-        $components = array();
-
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
-
-        return $components;
-    }
-
-    // ########################################
+    //########################################
 
     public function getInactiveComponents()
     {
@@ -418,31 +200,11 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (!Mage::helper('M2ePro/Component_Amazon')->isActive()) {
             $components[] = Ess_M2ePro_Helper_Component_Amazon::NICK;
         }
-        if (!Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
 
         return $components;
     }
 
-    public function getRakutenInactiveComponents()
-    {
-        $components = array();
-
-        if (!Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Buy::NICK;
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[] = Ess_M2ePro_Helper_Component_Play::NICK;
-        }
-
-        return $components;
-    }
-
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getInactiveComponentsTitles()
     {
@@ -454,55 +216,18 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         if (!Mage::helper('M2ePro/Component_Amazon')->isActive()) {
             $components[Ess_M2ePro_Helper_Component_Amazon::NICK] = Mage::helper('M2ePro/Component_Amazon')->getTitle();
         }
-        if (!Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
 
         return $components;
     }
 
-    public function getRakutenInactiveComponentsTitles()
-    {
-        $components = array();
-
-        if (!Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Buy::NICK] = Mage::helper('M2ePro/Component_Buy')->getTitle();
-        }
-        if (!Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $components[Ess_M2ePro_Helper_Component_Play::NICK] = Mage::helper('M2ePro/Component_Play')->getTitle();
-        }
-
-        return $components;
-    }
-
-    // ########################################
-
-    public function isRakutenEnabled()
-    {
-        return count($this->getRakutenEnabledComponents()) > 0;
-    }
-
-    public function isRakutenAllowed()
-    {
-        return count($this->getRakutenAllowedComponents()) > 0;
-    }
-
-    public function isRakutenActive()
-    {
-        return $this->isRakutenEnabled() && $this->isRakutenAllowed();
-    }
-
-    // ########################################
+    //########################################
 
     public function isSingleActiveComponent()
     {
         return count($this->getActiveComponents()) == 1;
     }
 
-    // ########################################
+    //########################################
 
     public function getComponentTitle($component)
     {
@@ -515,18 +240,12 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
             case Ess_M2ePro_Helper_Component_Amazon::NICK:
                 $title = Mage::helper('M2ePro/Component_Amazon')->getTitle();
                 break;
-            case Ess_M2ePro_Helper_Component_Buy::NICK:
-                $title = Mage::helper('M2ePro/Component_Buy')->getTitle();
-                break;
-            case Ess_M2ePro_Helper_Component_Play::NICK:
-                $title = Mage::helper('M2ePro/Component_Play')->getTitle();
-                break;
         }
 
         return $title;
     }
 
-    // ########################################
+    //########################################
 
     public function getComponentMode($modelName, $value, $field = NULL)
     {
@@ -569,7 +288,7 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         return $this->getComponentModel($mode, $modelName)->getCollection();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getUnknownObject($modelName, $value, $field = NULL)
     {
@@ -594,7 +313,7 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         return $model->loadInstance($value, $field);
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getCachedUnknownObject($modelName, $value, $field = NULL, array $tags = array())
     {
@@ -635,5 +354,5 @@ class Ess_M2ePro_Helper_Component extends Mage_Core_Helper_Abstract
         return $cacheData;
     }
 
-    // ########################################
+    //########################################
 }

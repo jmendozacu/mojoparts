@@ -1,7 +1,7 @@
 BlockNotice = Class.create();
 BlockNotice.prototype = {
 
-    // --------------------------------
+    // ---------------------------------------
 
     initialize: function(type)
     {
@@ -9,7 +9,7 @@ BlockNotice.prototype = {
         this.isHideToolTip = false;
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     getHashedCookie: function(id)
     {
@@ -42,7 +42,7 @@ BlockNotice.prototype = {
         deleteCookie(id, '/', '');
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     show: function(id)
     {
@@ -64,7 +64,7 @@ BlockNotice.prototype = {
         return true;
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     showContent: function(id)
     {
@@ -114,7 +114,7 @@ BlockNotice.prototype = {
         return true;
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     showBlock: function(id)
     {
@@ -142,7 +142,7 @@ BlockNotice.prototype = {
         return true;
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     remove: function(id)
     {
@@ -164,7 +164,7 @@ BlockNotice.prototype = {
         return true;
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     getPreparedId: function(object)
     {
@@ -242,7 +242,7 @@ BlockNotice.prototype = {
         return alwaysShow != 'no';
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     getHeaderHtml: function(id,title,subtitle,collapseable,hideblock)
     {
@@ -353,7 +353,7 @@ BlockNotice.prototype = {
         }
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     showNoticeToolTip: function(element)
     {
@@ -372,7 +372,7 @@ BlockNotice.prototype = {
         toolTipMessage.show();
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     onClickNoticeToolTip: function(event)
     {
@@ -413,7 +413,7 @@ BlockNotice.prototype = {
         }, 1000);
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     collapseHelpBlockIntoIcon: function(object)
     {
@@ -431,6 +431,12 @@ BlockNotice.prototype = {
                && !parentContainer.hasClassName('popup-window')) {
 
             parentContainer = parentContainer.up();
+
+            try {
+                parentContainer.hasClassName('entry-edit');
+            } catch (e) {
+                return false;
+            }
         }
 
         if ((parentContainer.id == 'page:main-container' && !$(object.getAttribute('help_icon_dest_id')))
@@ -479,7 +485,7 @@ BlockNotice.prototype = {
         return false;
     },
 
-    // --------------------------------
+    // ---------------------------------------
 
     observeModulePrepareStart: function(object)
     {
@@ -501,7 +507,7 @@ BlockNotice.prototype = {
             return;
         }
 
-        if ((IS_VIEW_EBAY || IS_VIEW_COMMON || IS_VIEW_CONFIGURATION) && !BLOCK_NOTICES_DISABLE_COLLAPSE
+        if ((IS_VIEW_EBAY || IS_VIEW_AMAZON || IS_VIEW_CONFIGURATION) && !BLOCK_NOTICES_DISABLE_COLLAPSE
             && !alwaysShow && this.collapseHelpBlockIntoIcon(object)) {
 
             object.remove();
@@ -521,5 +527,5 @@ BlockNotice.prototype = {
         }
     }
 
-    // --------------------------------
+    // ---------------------------------------
 };

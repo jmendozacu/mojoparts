@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2015 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Observer_Product_Delete extends Ess_M2ePro_Model_Observer_Product_Abstract
 {
-    //####################################
+    //########################################
 
     public function process()
     {
@@ -17,8 +19,7 @@ class Ess_M2ePro_Model_Observer_Product_Delete extends Ess_M2ePro_Model_Observer
         Mage::getModel('M2ePro/Listing')->removeDeletedProduct($this->getProduct());
         Mage::getModel('M2ePro/Listing_Other')->unmapDeletedProduct($this->getProduct());
         Mage::getModel('M2ePro/Item')->removeDeletedProduct($this->getProduct());
-        Mage::getModel('M2ePro/ProductChange')->removeDeletedProduct($this->getProduct());
     }
 
-    //####################################
+    //########################################
 }

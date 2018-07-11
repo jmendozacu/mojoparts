@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
@@ -9,14 +11,14 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
 {
     private $variationsProductsIds = array();
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
         $this->_init('M2ePro/Listing_Product_Variation', 'id');
     }
 
-    // ########################################
+    //########################################
 
     public function isAllStatusesEnabled($listingProductId, $storeId)
     {
@@ -44,9 +46,9 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
         return (int)min($statuses) == Mage_Catalog_Model_Product_Status::STATUS_DISABLED;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
-    public function isAllHaveStockAvailabilities($listingProductId)
+    public function isAllHaveStockAvailabilities($listingProductId, $storeId)
     {
         $variationsProductsIds = $this->getVariationsProductsIds($listingProductId);
 
@@ -54,12 +56,12 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
             return NULL;
         }
 
-        $stocks = $this->getVariationsStockAvailabilities($variationsProductsIds);
+        $stocks = $this->getVariationsStockAvailabilities($variationsProductsIds, $storeId);
 
         return (int)min($stocks);
     }
 
-    public function isAllDoNotHaveStockAvailabilities($listingProductId)
+    public function isAllDoNotHaveStockAvailabilities($listingProductId, $storeId)
     {
         $variationsProductsIds = $this->getVariationsProductsIds($listingProductId);
 
@@ -67,12 +69,12 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
             return NULL;
         }
 
-        $stocks = $this->getVariationsStockAvailabilities($variationsProductsIds);
+        $stocks = $this->getVariationsStockAvailabilities($variationsProductsIds, $storeId);
 
         return !(int)max($stocks);
     }
 
-    // ########################################
+    //########################################
 
     private function getVariationsProductsIds($listingProductId)
     {
@@ -98,13 +100,17 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
         $result = array();
 
         foreach ($select->query()->fetchAll() as $value) {
+            if (empty($value['product_id'])) {
+                continue;
+            }
+
             $result[$value['variation_id']][] = $value['product_id'];
         }
 
         return $this->variationsProductsIds[$listingProductId] = $result;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     private function getVariationsStatuses(array $variationsProductsIds, $storeId)
     {
@@ -134,7 +140,7 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
         return $variationsStatuses;
     }
 
-    private function getVariationsStockAvailabilities(array $variationsProductsIds)
+    private function getVariationsStockAvailabilities(array $variationsProductsIds, $storeId)
     {
         $productsIds = array();
 
@@ -145,7 +151,8 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
         }
 
         $productsIds = array_values(array_unique($productsIds));
-        $catalogInventoryTable = Mage::getSingleton('core/resource')->getTableName('cataloginventory_stock_item');
+        $catalogInventoryTable = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('cataloginventory_stock_item');
 
         $select = $this->_getReadAdapter()
                        ->select()
@@ -153,7 +160,8 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
                             array('cisi' => $catalogInventoryTable),
                             array('product_id','is_in_stock', 'manage_stock', 'use_config_manage_stock')
                        )
-                       ->where('cisi.product_id IN ('.implode(',',$productsIds).')');
+                       ->where('cisi.product_id IN ('.implode(',',$productsIds).')')
+                       ->where('cisi.stock_id = ?', Mage::helper('M2ePro/Magento_Store')->getStockId($storeId));
 
         $stocks = $select->query()->fetchAll();
 
@@ -161,8 +169,8 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
         foreach ($variationsProductsIds as $key => $variationProductsIds) {
             foreach ($variationProductsIds as $id) {
                 $count = count($stocks);
-                for($i = 0; $i < $count; $i++){
-                    if($stocks[$i]['product_id'] == $id) {
+                for ($i = 0; $i < $count; $i++) {
+                    if ($stocks[$i]['product_id'] == $id) {
                         $stockAvailability = Ess_M2ePro_Model_Magento_Product::calculateStockAvailability(
                             $stocks[$i]['is_in_stock'],
                             $stocks[$i]['manage_stock'],
@@ -183,5 +191,5 @@ class Ess_M2ePro_Model_Mysql4_Listing_Product_Variation
         return $variationsStocks;
     }
 
-    // ########################################
+    //########################################
 }

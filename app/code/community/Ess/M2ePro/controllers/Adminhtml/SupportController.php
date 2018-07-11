@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_SupportController
     extends Ess_M2ePro_Controller_Adminhtml_BaseController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
@@ -24,6 +26,12 @@ class Ess_M2ePro_Adminhtml_SupportController
         return $this;
     }
 
+    protected function _isAllowed()
+    {
+        return Mage::getSingleton('admin/session')->isAllowed('m2epro_ebay/help') ||
+               Mage::getSingleton('admin/session')->isAllowed('m2epro_amazon/help');
+    }
+
     public function loadLayout($ids=null, $generateBlocks=true, $generateXml=true)
     {
         $tempResult = parent::loadLayout($ids, $generateBlocks, $generateXml);
@@ -33,48 +41,69 @@ class Ess_M2ePro_Adminhtml_SupportController
             $tempResult->_title(Mage::helper('M2ePro/View_Ebay')->getMenuRootNodeLabel());
         }
 
-        if ($this->getRequest()->getParam('referrer') == Ess_M2ePro_Helper_View_Common::NICK) {
-            $tempResult->_setActiveMenu(Ess_M2ePro_Helper_View_Common::MENU_ROOT_NODE_NICK);
-            $tempResult->_title(Mage::helper('M2ePro/View_Common')->getMenuRootNodeLabel());
+        if ($this->getRequest()->getParam('referrer') == Ess_M2ePro_Helper_View_Amazon::NICK) {
+            $tempResult->_setActiveMenu(Ess_M2ePro_Helper_View_Amazon::MENU_ROOT_NODE_NICK);
+            $tempResult->_title(Mage::helper('M2ePro/View_Amazon')->getMenuRootNodeLabel());
         }
 
         return $tempResult;
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
-        $this->_initAction()
-             ->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_support'))
+        $this->_initAction();
+
+        $referrer = $this->getRequest()->getParam('referrer');
+
+        if ($referrer == Ess_M2ePro_Helper_Component_Ebay::NICK) {
+
+            $this->setPageHelpLink(Ess_M2ePro_Helper_View_Ebay::NICK);
+
+        } elseif ($referrer == Ess_M2ePro_Helper_View_Amazon::NICK) {
+
+            $this->setPageHelpLink(Ess_M2ePro_Helper_View_Amazon::NICK);
+        }
+
+        $this->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_support'))
              ->renderLayout();
     }
 
-    //#############################################
+    //########################################
 
     public function getResultsHtmlAction()
     {
         $query = $this->getRequest()->getParam('query');
-        $blockData = Mage::helper('M2ePro/Module_Support_Uservoice')->search($query);
+        $blockData = Mage::helper('M2ePro/Module_Support_Search')->process($query);
 
         $blockHtml = $this->loadLayout()
                           ->getLayout()
-                          ->createBlock('M2ePro/adminhtml_support_results', '', array('user_voice_data' => $blockData))
+                          ->createBlock('M2ePro/adminhtml_support_results', '', array('results_data' => $blockData))
                           ->toHtml();
 
         $this->getResponse()->setBody($blockHtml);
     }
 
-    //--------------------------------------------
+    // ---------------------------------------
 
     public function documentationAction()
     {
         $referrer = $this->getRequest()->getParam('referrer');
 
-        $url = Mage::helper('M2ePro/View_Ebay')->getDocumentationUrl();
+        $url = Mage::helper('M2ePro/Module_Support')->getDocumentationUrl();
 
-        if (isset($referrer) && $referrer == Ess_M2ePro_Helper_View_Common::NICK) {
-            $url = Mage::helper('M2ePro/View_Common')->getDocumentationUrl();
+        if ($referrer == Ess_M2ePro_Helper_View_Ebay::NICK) {
+
+            $url = Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(
+                Ess_M2ePro_Helper_Component_Ebay::NICK
+            );
+
+        } elseif ($referrer == Ess_M2ePro_Helper_View_Amazon::NICK) {
+
+            $url = Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(
+                Ess_M2ePro_Helper_Component_Amazon::NICK
+            );
         }
 
         $html = '<iframe src="' .$url . '" width="100%" height="650"></iframe>';
@@ -94,7 +123,7 @@ class Ess_M2ePro_Adminhtml_SupportController
         $this->getResponse()->setBody($html);
     }
 
-    //#############################################
+    //########################################
 
     public function saveAction()
     {
@@ -132,17 +161,10 @@ class Ess_M2ePro_Adminhtml_SupportController
                                                          $severity);
 
         $this->_getSession()->addSuccess(Mage::helper('M2ePro')->__('Your message has been successfully sent.'));
-        $this->_redirect('*/*/index');
+        $this->_redirect('*/*/index', array(
+            'referrer' => $this->getRequest()->getParam('referrer', NULl)
+        ));
     }
 
-    //#############################################
-
-    public function migrationNotesAction()
-    {
-        $this->_initAction()
-             ->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_wizard_migrationToV6_notes'))
-             ->renderLayout();
-    }
-
-    //#############################################
+    //########################################
 }

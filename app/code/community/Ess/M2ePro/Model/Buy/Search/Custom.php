@@ -1,117 +1,71 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Buy_Search_Custom
 {
-    // ########################################
-
     /** @var Ess_M2ePro_Model_Listing_Product $listingProduct */
     private $listingProduct = null;
 
     private $query = null;
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param Ess_M2ePro_Model_Listing_Product $listingProduct
+     * @return $this
+     */
     public function setListingProduct(Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
         $this->listingProduct = $listingProduct;
         return $this;
     }
 
+    /**
+     * @param string $query
+     * @return $this
+     */
     public function setQuery($query)
     {
         $this->query = $query;
         return $this;
     }
 
-    // ########################################
+    //########################################
 
     public function process()
     {
-        $searchData = Mage::getModel('M2ePro/Connector_Buy_Dispatcher')->processConnector(
-            'custom', $this->getSearchMethod(), 'requester', $this->getConnectorParams(),
-            $this->listingProduct->getAccount(), 'Ess_M2ePro_Model_Buy_Search'
-        );
+        $dispatcherObject = Mage::getModel('M2ePro/Buy_Connector_Dispatcher');
+        $connectorObj = $dispatcherObject->getCustomConnector('Buy_Search_Custom_ByQuery_Requester',
+                                                        $this->getConnectorParams(),
+                                                        $this->listingProduct->getAccount());
 
-        return $this->prepareResult($searchData);
+        $dispatcherObject->process($connectorObj);
+
+        return $this->prepareResult($connectorObj->getPreparedResponseData());
     }
 
-    // ########################################
+    //########################################
 
     private function getConnectorParams()
     {
-        $params = array(
+        return array(
             'query' => $this->query,
         );
-
-        if ($this->getSearchMethod() == 'byIdentifier') {
-            $params['search_type'] = $this->getSearchType();
-        }
-
-        return $params;
-    }
-
-    private function getSearchMethod()
-    {
-        $searchMethod = 'byQuery';
-
-        if ($this->isGeneralId($this->query) || $this->isUpc($this->query)) {
-            $searchMethod = 'byIdentifier';
-        }
-
-        return $searchMethod;
     }
 
     private function prepareResult($searchData)
     {
-        if ($this->getSearchMethod() == 'byQuery') {
-            $type = 'string';
-        } else {
-            $type = $this->isGeneralId($this->query) ? 'sku' : 'upc';
-        }
-
         return array(
-            'type'  => $type,
+            'type'  => 'string',
             'value' => $this->query,
             'data'  => $searchData,
         );
     }
 
-    private function getSearchType()
-    {
-        if (empty($this->query)) {
-            return false;
-        }
-
-        if ($this->isGeneralId($this->query)) {
-            return Ess_M2ePro_Model_Connector_Buy_Search_ByIdentifier_ItemsRequester::SEARCH_TYPE_GENERAL_ID;
-        }
-
-        if ($this->isUpc($this->query)) {
-            return Ess_M2ePro_Model_Connector_Buy_Search_ByIdentifier_ItemsRequester::SEARCH_TYPE_UPC;
-        }
-
-        return false;
-    }
-
-    // ########################################
-
-    private function isGeneralId($query)
-    {
-        if (empty($query)) {
-            return false;
-        }
-
-        return preg_match('/^\d{8,9}$/', $query);
-    }
-
-    private function isUpc($query)
-    {
-        return Mage::helper('M2ePro')->isUPC($query);
-    }
-
-    // ########################################
+    //########################################
 }

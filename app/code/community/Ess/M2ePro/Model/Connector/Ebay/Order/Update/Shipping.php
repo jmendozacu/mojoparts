@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Shipping
@@ -12,12 +14,10 @@ class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Shipping
     // Tracking number "%num%" for "%code%" has been sent to eBay.
     // Shipping Status for eBay Order was updated to Shipped.
 
-    // ########################################
-
     private $carrierCode = NULL;
     private $trackingNumber = NULL;
 
-    // ########################################
+    //########################################
 
     public function __construct(array $params = array(), Ess_M2ePro_Model_Order $order, $action)
     {
@@ -29,7 +29,7 @@ class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Shipping
         }
     }
 
-    // ########################################
+    //########################################
 
     protected function isNeedSendRequest()
     {
@@ -40,7 +40,7 @@ class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Shipping
         return parent::isNeedSendRequest();
     }
 
-    // ########################################
+    //########################################
 
     protected function getRequestData()
     {
@@ -54,7 +54,7 @@ class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Shipping
         return $requestData;
     }
 
-    // ########################################
+    //########################################
 
     protected function prepareResponseData($response)
     {
@@ -71,6 +71,22 @@ class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Shipping
         }
 
         if ($this->action == Ess_M2ePro_Model_Connector_Ebay_Order_Dispatcher::ACTION_SHIP_TRACK) {
+
+            if (!$this->order->getChildObject()->isShippingTrackingNumberExists($this->trackingNumber)) {
+                /** @var Ess_M2ePro_Model_Order_Item $orderItem */
+                $orderItem = $this->order->getItemsCollection()->getFirstItem();
+
+                /** @var Ess_M2ePro_Model_Ebay_Order_Item $ebayOrderItem */
+                $ebayOrderItem = $orderItem->getChildObject();
+
+                $trackingDetails = $ebayOrderItem->getTrackingDetails();
+                $trackingDetails[] = array(
+                    'title'  => $this->carrierCode,
+                    'number' => $this->trackingNumber,
+                );
+                $orderItem->setSettings('tracking_details', $trackingDetails)->save();
+            }
+
             $this->order->addSuccessLog(
                 'Tracking number "%num%" for "%code%" has been sent to eBay.', array(
                     '!num'  => $this->trackingNumber,
@@ -80,7 +96,6 @@ class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Shipping
         }
 
         if (!$this->order->getChildObject()->isShippingCompleted()) {
-//             $this->order->setData('shipping_status',Ess_M2ePro_Model_Ebay_Order::SHIPPING_STATUS_COMPLETED)->save();
             $this->order->addSuccessLog(
                 'Shipping Status for eBay Order was updated to Shipped.'
             );
@@ -92,5 +107,5 @@ class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Shipping
         return $response;
     }
 
-    // ########################################
+    //########################################
 }

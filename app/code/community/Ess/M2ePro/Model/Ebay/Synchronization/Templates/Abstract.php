@@ -1,32 +1,43 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Ebay_Synchronization_Templates_Abstract
     extends Ess_M2ePro_Model_Ebay_Synchronization_Abstract
 {
     /**
-     * @var Ess_M2ePro_Model_Synchronization_Templates_Runner
+     * @var Ess_M2ePro_Model_Synchronization_Templates_ProductChanges_Manager
      */
-    protected $runner = NULL;
+    protected $productChangesManager = NULL;
+
+    //########################################
+
+    public function setProductChangesManager(Ess_M2ePro_Model_Synchronization_Templates_ProductChanges_Manager $manager)
+    {
+        $this->productChangesManager = $manager;
+        return $this;
+    }
 
     /**
-     * @var Ess_M2ePro_Model_Ebay_Synchronization_Templates_Inspector
+     * @return Ess_M2ePro_Model_Synchronization_Templates_ProductChanges_Manager
      */
-    protected $inspector = NULL;
+    public function getProductChangesManager()
+    {
+        return $this->productChangesManager;
+    }
+
+    //########################################
 
     /**
-     * @var Ess_M2ePro_Model_Synchronization_Templates_Changes
+     * @return string
      */
-    protected $changesHelper = NULL;
-
-    //####################################
-
     protected function getType()
     {
-        return Ess_M2ePro_Model_Synchronization_Task_Abstract::TEMPLATES;
+        return Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::TEMPLATES;
     }
 
     protected function processTask($taskPath)
@@ -34,41 +45,27 @@ abstract class Ess_M2ePro_Model_Ebay_Synchronization_Templates_Abstract
         return parent::processTask('Templates_'.$taskPath);
     }
 
-    // -----------------------------------
+    //########################################
 
-    public function setRunner(Ess_M2ePro_Model_Synchronization_Templates_Runner $object)
+    protected function logError(Ess_M2ePro_Model_Listing_Product $listingProduct, Exception $exception)
     {
-        $this->runner = $object;
+        /** @var Ess_M2ePro_Model_Ebay_Listing_Log $logModel */
+        $logModel = Mage::getModel('M2ePro/Ebay_Listing_Log');
+
+        $logModel->addProductMessage(
+            $listingProduct->getListingId(),
+            $listingProduct->getProductId(),
+            $listingProduct->getId(),
+            Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION,
+            $logModel->getNextActionId(),
+            $this->getActionForLog(),
+            $exception->getMessage(),
+            Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR,
+            Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH
+        );
+
+        Mage::helper('M2ePro/Module_Exception')->process($exception);
     }
 
-    public function getRunner()
-    {
-        return $this->runner;
-    }
-
-    // -----------------------------------
-
-    public function setInspector(Ess_M2ePro_Model_Ebay_Synchronization_Templates_Inspector $object)
-    {
-        $this->inspector = $object;
-    }
-
-    public function getInspector()
-    {
-        return $this->inspector;
-    }
-
-    // -----------------------------------
-
-    public function setChangesHelper(Ess_M2ePro_Model_Synchronization_Templates_Changes $object)
-    {
-        $this->changesHelper = $object;
-    }
-
-    public function getChangesHelper()
-    {
-        return $this->changesHelper;
-    }
-
-    //####################################
+    //########################################
 }

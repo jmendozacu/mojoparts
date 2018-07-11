@@ -1,34 +1,61 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
 {
-    // M2ePro_TRANSLATIONS
-    // eBay
     const NICK  = 'ebay';
-    const TITLE = 'eBay';
 
     const MARKETPLACE_US     = 1;
     const MARKETPLACE_MOTORS = 9;
     const MARKETPLACE_AU = 4;
     const MARKETPLACE_UK = 3;
     const MARKETPLACE_DE = 8;
+    const MARKETPLACE_IT = 10;
 
     const LISTING_DURATION_GTC = 100;
 
-    const MAX_LENGTH_FOR_OPTION_VALUE = 50;
+    const VARIATION_OPTION_LABEL_MAX_LENGTH = 50;
+    const VARIATION_SKU_MAX_LENGTH          = 80;
+    const ITEM_SKU_MAX_LENGTH               = 50;
 
-    // ########################################
+    //########################################
 
     public function getTitle()
     {
-        return Mage::helper('M2ePro')->__(self::TITLE);
+        return Mage::helper('M2ePro')->__('eBay');
     }
 
-    // ########################################
+    public function getChannelTitle()
+    {
+        return Mage::helper('M2ePro')->__('eBay');
+    }
+
+    //########################################
+
+    public function getHumanTitleByListingProductStatus($status) {
+        $statuses = array(
+            Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED => Mage::helper('M2ePro')->__('Not Listed'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_LISTED     => Mage::helper('M2ePro')->__('Listed'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_HIDDEN     => Mage::helper('M2ePro')->__('Listed (Hidden)'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_SOLD       => Mage::helper('M2ePro')->__('Sold'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_STOPPED    => Mage::helper('M2ePro')->__('Stopped'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_FINISHED   => Mage::helper('M2ePro')->__('Finished'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_BLOCKED    => Mage::helper('M2ePro')->__('Pending')
+        );
+
+        if (!isset($statuses[$status])) {
+            return NULL;
+        }
+
+        return $statuses[$status];
+    }
+
+    //########################################
 
     public function isEnabled()
     {
@@ -51,7 +78,7 @@ class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
         return !is_null($mode) && $mode == self::NICK;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getModel($modelName)
     {
@@ -75,33 +102,7 @@ class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
         return $this->getModel($modelName)->getCollection();
     }
 
-    public function getListingProductByEbayItem($ebayItem, $accountId)
-    {
-        // Get listing product
-        //-----------------------------
-        $readConnection = Mage::getResourceModel('core/config')->getReadConnection();
-
-        $ebayItem  = $readConnection->quoteInto('?', $ebayItem);
-        $accountId = $readConnection->quoteInto('?', $accountId);
-
-        /** @var $collection Ess_M2ePro_Model_Mysql4_Listing_Product_Collection */
-        $collection = Mage::helper('M2ePro/Component_Ebay')->getCollection('Listing_Product');
-        $collection->getSelect()->join(
-            array('mei' => Mage::getResourceModel('M2ePro/Ebay_Item')->getMainTable()),
-            "(second_table.ebay_item_id = mei.id AND mei.item_id = {$ebayItem}
-                                                 AND mei.account_id = {$accountId})",
-            array()
-        );
-        //-----------------------------
-
-        if ($collection->getSize() == 0) {
-            return NULL;
-        }
-
-        return $collection->getFirstItem();
-    }
-
-    // ########################################
+    //########################################
 
     public function getItemUrl($ebayItemId,
                                $accountMode = Ess_M2ePro_Model_Ebay_Account::MODE_PRODUCTION,
@@ -112,12 +113,13 @@ class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
             $marketplaceId = self::MARKETPLACE_US;
         }
 
-        $domain = $this->getCachedObject('Marketplace',$marketplaceId)->getUrl();
-        if ($accountMode == Ess_M2ePro_Model_Ebay_Account::MODE_SANDBOX) {
-            $domain = 'sandbox.'.$domain;
-        }
+        /** @var Ess_M2ePro_Model_Marketplace $marketplace */
+        $marketplace = $this->getCachedObject('Marketplace', $marketplaceId);
+        $domain = $marketplace->getUrl();
 
-        return 'http://cgi.'.$domain.'/ws/eBayISAPI.dll?ViewItem&item='.(double)$ebayItemId;
+        return $accountMode == Ess_M2ePro_Model_Ebay_Account::MODE_SANDBOX
+            ? 'http://cgi.sandbox.' .$domain. '/ws/eBayISAPI.dll?ViewItem&item=' .(double)$ebayItemId
+            : 'http://www.' .$domain. '/itm/'.(double)$ebayItemId;
     }
 
     public function getMemberUrl($ebayMemberId, $accountMode = Ess_M2ePro_Model_Ebay_Account::MODE_PRODUCTION)
@@ -129,56 +131,7 @@ class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
         return 'http://myworld.'.$domain.'/'.(string)$ebayMemberId;
     }
 
-    // ########################################
-
-    public function getCurrencies()
-    {
-        return array(
-            'AUD' => 'Australian Dollar',
-            'GBP' => 'British Pound',
-            'CAD' => 'Canadian Dollar',
-            'CNY' => 'Chinese Renminbi',
-            'EUR' => 'Euro',
-            'HKD' => 'Hong Kong Dollar',
-            'INR' => 'Indian Rupees',
-            'MYR' => 'Malaysian Ringgit',
-            'PHP' => 'Philippines Peso',
-            'PLN' => 'Polish Zloty',
-            'SGD' => 'Singapore Dollar',
-            'SEK' => 'Sweden Krona',
-            'CHF' => 'Swiss Franc',
-            'TWD' => 'Taiwanese Dollar',
-            'USD' => 'US Dollar',
-        );
-    }
-
-    public function getCarrierTitle($carrierCode, $title = null)
-    {
-        $carriers = $this->getCarriers();
-        $carrierCode = strtolower($carrierCode);
-
-        if (isset($carriers[$carrierCode])) {
-            return $carriers[$carrierCode];
-        }
-
-        if ($title == '' || filter_var($title, FILTER_VALIDATE_URL) !== false) {
-            return 'Other';
-        }
-
-        return $title;
-    }
-
-    public function getCarriers()
-    {
-        return array(
-            'dhl'   => 'DHL',
-            'fedex' => 'FedEx',
-            'ups'   => 'UPS',
-            'usps'  => 'USPS'
-        );
-    }
-
-    // ########################################
+    //########################################
 
     public function isShowTaxCategory()
     {
@@ -202,37 +155,133 @@ class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
         );
     }
 
-    // ########################################
-
-    public function reduceOptionsForVariations(array $options)
+    public function getListingProductByEbayItem($ebayItem, $accountId)
     {
-        foreach ($options['set'] as &$optionsSet) {
-            foreach ($optionsSet as &$singleOption) {
-                $singleOption = Mage::helper('M2ePro')->reduceWordsInString(
-                    $singleOption, self::MAX_LENGTH_FOR_OPTION_VALUE
-                );
+        // Get listing product
+        // ---------------------------------------
+        $readConnection = Mage::getResourceModel('core/config')->getReadConnection();
+
+        $ebayItem  = $readConnection->quoteInto('?', $ebayItem);
+        $accountId = $readConnection->quoteInto('?', $accountId);
+
+        /** @var $collection Ess_M2ePro_Model_Mysql4_Listing_Product_Collection */
+        $collection = Mage::helper('M2ePro/Component_Ebay')->getCollection('Listing_Product');
+        $collection->getSelect()->join(
+            array('mei' => Mage::getResourceModel('M2ePro/Ebay_Item')->getMainTable()),
+            "(second_table.ebay_item_id = mei.id AND mei.item_id = {$ebayItem}
+                                                 AND mei.account_id = {$accountId})",
+            array()
+        );
+        // ---------------------------------------
+
+        if ($collection->getSize() == 0) {
+            return NULL;
+        }
+
+        return $collection->getFirstItem();
+    }
+
+    // ---------------------------------------
+
+    public function getCurrencies()
+    {
+        return array(
+            'AUD' => 'Australian Dollar',
+            'GBP' => 'British Pound',
+            'CAD' => 'Canadian Dollar',
+            'CNY' => 'Chinese Renminbi',
+            'EUR' => 'Euro',
+            'HKD' => 'Hong Kong Dollar',
+            'INR' => 'Indian Rupees',
+            'MYR' => 'Malaysian Ringgit',
+            'PHP' => 'Philippines Peso',
+            'PLN' => 'Polish Zloty',
+            'SGD' => 'Singapore Dollar',
+            'SEK' => 'Sweden Krona',
+            'CHF' => 'Swiss Franc',
+            'TWD' => 'Taiwanese Dollar',
+            'USD' => 'US Dollar',
+        );
+    }
+
+    public function getCarriers()
+    {
+        return array(
+            'dhl'   => 'DHL',
+            'fedex' => 'FedEx',
+            'ups'   => 'UPS',
+            'usps'  => 'USPS'
+        );
+    }
+
+    public function getCarrierTitle($carrierCode, $title = null)
+    {
+        $carriers = $this->getCarriers();
+        $carrierCode = strtolower($carrierCode);
+
+        if (isset($carriers[$carrierCode])) {
+            return $carriers[$carrierCode];
+        }
+
+        if ($title == '' || filter_var($title, FILTER_VALIDATE_URL) !== false) {
+            return 'Other';
+        }
+
+        return $title;
+    }
+
+    // ---------------------------------------
+
+    public function prepareOptionsForVariations(array $options)
+    {
+        $set = array();
+        foreach ($options['set'] as $optionTitle => $optionsSet) {
+            foreach ($optionsSet as $singleOptionKey => $singleOption) {
+                $set[trim($optionTitle)][$singleOptionKey] = trim(Mage::helper('M2ePro')->reduceWordsInString(
+                    $singleOption, self::VARIATION_OPTION_LABEL_MAX_LENGTH
+                ));
             }
         }
+        $options['set'] = $set;
 
         foreach ($options['variations'] as &$variation) {
             foreach ($variation as &$singleOption) {
-                $singleOption['option'] = Mage::helper('M2ePro')->reduceWordsInString(
-                    $singleOption['option'], self::MAX_LENGTH_FOR_OPTION_VALUE
-                );
+                $singleOption['option'] = trim(Mage::helper('M2ePro')->reduceWordsInString(
+                    $singleOption['option'], self::VARIATION_OPTION_LABEL_MAX_LENGTH
+                ));
+                $singleOption['attribute'] = trim($singleOption['attribute']);
             }
         }
+        unset($singleOption);
+        unset($variation);
+
+       if (isset($options['additional']['attributes'])) {
+           foreach ($options['additional']['attributes'] as $code => &$title) {
+               $title = trim($title);
+           }
+           unset($title);
+       }
 
         return $options;
     }
 
-    public function reduceOptionsForOrders(array $options)
+    public function prepareOptionsForOrders(array $options)
     {
         foreach ($options as &$singleOption) {
+            if ($singleOption instanceof Mage_Catalog_Model_Product) {
+                $reducedName = trim(Mage::helper('M2ePro')->reduceWordsInString(
+                    $singleOption->getName(), self::VARIATION_OPTION_LABEL_MAX_LENGTH
+                ));
+                $singleOption->setData('name', $reducedName);
+
+                continue;
+            }
+
             foreach ($singleOption['values'] as &$singleOptionValue) {
                 foreach ($singleOptionValue['labels'] as &$singleOptionLabel) {
-                    $singleOptionLabel = Mage::helper('M2ePro')->reduceWordsInString(
-                        $singleOptionLabel, self::MAX_LENGTH_FOR_OPTION_VALUE
-                    );
+                    $singleOptionLabel = trim(Mage::helper('M2ePro')->reduceWordsInString(
+                        $singleOptionLabel, self::VARIATION_OPTION_LABEL_MAX_LENGTH
+                    ));
                 }
             }
         }
@@ -240,14 +289,7 @@ class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
         return $options;
     }
 
-    // ----------------------------------------
-
-    public function getImagesHash(array $images)
-    {
-        return sha1(json_encode($images)).'#'.date('dmY');
-    }
-
-    // ########################################
+    //########################################
 
     public function getTranslationServices()
     {
@@ -271,7 +313,7 @@ class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
         return isset($translationServices[$service]);
     }
 
-    // ########################################
+    //########################################
 
     public function clearCache()
     {
@@ -279,4 +321,37 @@ class Ess_M2ePro_Helper_Component_Ebay extends Mage_Core_Helper_Abstract
     }
 
     // ########################################
+
+    public function timeToString($time)
+    {
+        return (string)$this->getEbayDateTimeObject($time)->format('Y-m-d H:i:s');
+    }
+
+    public function timeToTimeStamp($time)
+    {
+        return (int)$this->getEbayDateTimeObject($time)->format('U');
+    }
+
+    // -----------------------------------------
+
+    private function getEbayDateTimeObject($time)
+    {
+        $dateTime = NULL;
+
+        if ($time instanceof DateTime) {
+            $dateTime = clone $time;
+            $dateTime->setTimezone(new DateTimeZone('UTC'));
+        } else {
+            is_int($time) && $time = '@'.$time;
+            $dateTime = new DateTime($time, new DateTimeZone('UTC'));
+        }
+
+        if (is_null($dateTime)) {
+            throw new Ess_M2ePro_Model_Exception('eBay DateTime object is null');
+        }
+
+        return $dateTime;
+    }
+
+    //########################################
 }

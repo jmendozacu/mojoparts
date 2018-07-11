@@ -1,13 +1,13 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Option_Resolver
 {
-    // ##########################################################
-
     private $sourceOption = array();
 
     private $destinationOptions = array();
@@ -16,8 +16,12 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Option_Resolver
 
     private $resolvedGeneralId = null;
 
-    // ##########################################################
+    //########################################
 
+    /**
+     * @param array $options
+     * @return $this
+     */
     public function setSourceOption(array $options)
     {
         $this->sourceOption      = $options;
@@ -26,6 +30,10 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Option_Resolver
         return $this;
     }
 
+    /**
+     * @param array $options
+     * @return $this
+     */
     public function setDestinationOptions(array $options)
     {
         $this->destinationOptions = $options;
@@ -34,16 +42,23 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Option_Resolver
         return $this;
     }
 
-    // ----------------------------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @param array $matchedAttributes
+     * @return $this
+     */
     public function setMatchedAttributes(array $matchedAttributes)
     {
         $this->matchedAttributes = $matchedAttributes;
         return $this;
     }
 
-    // ##########################################################
+    //########################################
 
+    /**
+     * @return $this
+     */
     public function resolve()
     {
         foreach ($this->destinationOptions as $generalId => $destinationOption) {
@@ -57,7 +72,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Option_Resolver
                 $sourceAttribute = array_search($destinationAttribute, $this->matchedAttributes);
                 $sourceOptionNames = $this->sourceOption[$sourceAttribute];
 
-                if (count(array_intersect($sourceOptionNames, $destinationOptionNames)) > 0) {
+                if (count(array_intersect((array)$sourceOptionNames, (array)$destinationOptionNames)) > 0) {
                     $isResolved = true;
                     continue;
                 }
@@ -80,5 +95,5 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Option_Resolver
         return $this->resolvedGeneralId;
     }
 
-    // ##########################################################
+    //########################################
 }

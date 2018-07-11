@@ -1,11 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
@@ -13,17 +17,17 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
         $channel = $this->getRequest()->getParam('channel');
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId(ucfirst($channel) . 'OrderLogGrid');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('create_date');
         $this->setDefaultDir('DESC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
     }
 
     protected function _prepareCollection()
@@ -38,13 +42,13 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
         );
 
         $collection->getSelect()->joinLeft(
-            array('so' => Mage::getSingleton('core/resource')->getTableName('sales/order')),
+            array('so' => Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('sales/order')),
             '(so.entity_id = `mo`.magento_order_id)',
             array('magento_order_number' => 'increment_id')
         );
 
         $orderId = $this->getRequest()->getParam('order_id');
-        if ($orderId && !$this->getRequest()->isAjax()) {
+        if ($orderId && !$this->getRequest()->isXmlHttpRequest()) {
             $collection->addFieldToFilter('main_table.order_id', (int)$orderId);
 
             /** @var Ess_M2ePro_Model_Order $order */
@@ -57,7 +61,7 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
             ));
         }
 
-        $channel = $this->getData('channel');
+        $channel = $this->getRequest()->getParam('channel');
         if (!empty($channel)) {
             $collection->getSelect()->where('main_table.component_mode = ?', $channel);
         } else {
@@ -65,11 +69,11 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
             $collection->addFieldToFilter('main_table.component_mode', array('in'=>$components));
         }
 
-        //--------------------------------
+        // ---------------------------------------
         if ($this->getRequest()->getParam('sort', 'create_date') == 'create_date') {
             $collection->setOrder('id', $this->getRequest()->getParam('dir', 'DESC'));
         }
-        //--------------------------------
+        // ---------------------------------------
 
         $this->setCollection($collection);
 
@@ -88,6 +92,15 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
             'filter_index' => 'main_table.create_date'
         ));
 
+        $this->addColumn('magento_order_number', array(
+            'header'    => Mage::helper('M2ePro')->__('Magento Order #'),
+            'align'     => 'left',
+            'width'     => '150px',
+            'index'     => 'so.increment_id',
+            'sortable'      => false,
+            'frame_callback' => array($this, 'callbackColumnMagentoOrderNumber')
+        ));
+
         $this->addColumn('channel_order_id', array(
             'header'    => Mage::helper('M2ePro')->__('Order #'),
             'align'     => 'left',
@@ -98,21 +111,12 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
             'filter_condition_callback' => array($this, 'callbackFilterChannelOrderId')
         ));
 
-        $this->addColumn('magento_order_number', array(
-            'header'    => Mage::helper('M2ePro')->__('Magento Order #'),
-            'align'     => 'left',
-            'width'     => '150px',
-            'index'     => 'so.increment_id',
-            'sortable'      => false,
-            'frame_callback' => array($this, 'callbackColumnMagentoOrderNumber')
-        ));
-
-        $this->addColumn('message', array(
+        $this->addColumn('description', array(
             'header'    => Mage::helper('M2ePro')->__('Description'),
             'align'     => 'left',
             'width'     => '*',
-            'index'     => 'message',
-            'frame_callback' => array($this, 'callbackColumnMessage')
+            'index'     => 'description',
+            'frame_callback' => array($this, 'callbackColumnDescription')
         ));
 
         $this->addColumn('initiator', array(
@@ -149,11 +153,11 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
         return parent::_prepareColumns();
     }
 
-    //##############################################################
+    //########################################
 
-    public function callbackColumnMessage($value, $row, $column, $isExport)
+    public function callbackColumnDescription($value, $row, $column, $isExport)
     {
-        return Mage::helper('M2ePro/View')->getModifiedLogMessage($row->getData('message'));
+        return Mage::helper('M2ePro/View')->getModifiedLogMessage($row->getData('description'));
     }
 
     public function callbackColumnType($value, $row, $column, $isExport)
@@ -165,14 +169,14 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
                 $message = "<span style=\"color: green;\">{$value}</span>";
                 break;
             case Ess_M2ePro_Model_Log_Abstract::TYPE_NOTICE:
-                $message = "<span style=\"color: blue;\">{$value}</span>";
+                $message = "<span>{$value}</span>";
                 break;
             case Ess_M2ePro_Model_Log_Abstract::TYPE_WARNING:
-                $message = "<span style=\"color: orange;\">{$value}</span>";
+                $message = "<span style=\"font-weight: bold; color: orange;\">{$value}</span>";
                 break;
             case Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR:
             default:
-                $message = "<span style=\"color: red;\">{$value}</span>";
+                $message = "<span style=\"font-weight: bold; color: red;\">{$value}</span>";
                 break;
         }
 
@@ -215,15 +219,7 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
                 break;
             case Ess_M2ePro_Helper_Component_Amazon::NICK:
                 $channelOrderId = $order->getData('amazon_order_id');
-                $url = $this->getUrl('*/adminhtml_common_amazon_order/view', array('id' => $row->getData('order_id')));
-                break;
-            case Ess_M2ePro_Helper_Component_Buy::NICK:
-                $channelOrderId = $order->getData('buy_order_id');
-                $url = $this->getUrl('*/adminhtml_common_buy_order/view', array('id' => $row->getData('order_id')));
-                break;
-            case Ess_M2ePro_Helper_Component_Play::NICK:
-                $channelOrderId = $order->getData('play_order_id');
-                $url = $this->getUrl('*/adminhtml_common_play_order/view', array('id' => $row->getData('order_id')));
+                $url = $this->getUrl('*/adminhtml_amazon_order/view', array('id' => $row->getData('order_id')));
                 break;
             default:
                 $channelOrderId = Mage::helper('M2ePro')->__('N/A');
@@ -272,28 +268,12 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
             $ordersIds = array_merge($ordersIds, $tempOrdersIds);
         }
 
-        if (Mage::helper('M2ePro/Component_Buy')->isActive()) {
-            $tempOrdersIds = Mage::getModel('M2ePro/Buy_Order')
-                ->getCollection()
-                ->addFieldToFilter('buy_order_id', array('like' => '%'.$value.'%'))
-                ->getColumnValues('order_id');
-            $ordersIds = array_merge($ordersIds, $tempOrdersIds);
-        }
-
-        if (Mage::helper('M2ePro/Component_Play')->isActive()) {
-            $tempOrdersIds = Mage::getModel('M2ePro/Play_Order')
-                ->getCollection()
-                ->addFieldToFilter('play_order_id', array('like' => '%'.$value.'%'))
-                ->getColumnValues('order_id');
-            $ordersIds = array_merge($ordersIds, $tempOrdersIds);
-        }
-
         $ordersIds = array_unique($ordersIds);
 
         $collection->addFieldToFilter('main_table.order_id', array('in' => $ordersIds));
     }
 
-    //##############################################################
+    //########################################
 
     public function getRowUrl($row)
     {
@@ -304,7 +284,9 @@ class Ess_M2ePro_Block_Adminhtml_Order_Log_Grid extends Mage_Adminhtml_Block_Wid
     {
         return $this->getUrl('*/*/orderGrid', array(
             '_current' => true,
-            'channel' => $this->getData('channel')
+            'channel' => $this->getRequest()->getParam('channel')
         ));
     }
+
+    //########################################
 }

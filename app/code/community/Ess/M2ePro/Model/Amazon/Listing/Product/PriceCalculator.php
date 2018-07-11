@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2015 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -12,14 +14,26 @@
 class Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator
     extends Ess_M2ePro_Model_Listing_Product_PriceCalculator
 {
-    // ########################################
-
     /**
      * @var bool
      */
     private $isSalePrice = false;
 
-    // ########################################
+    //########################################
+
+    protected function isPriceVariationModeParent()
+    {
+        return $this->getPriceVariationMode()
+                            == Ess_M2ePro_Model_Amazon_Template_SellingFormat::PRICE_VARIATION_MODE_PARENT;
+    }
+
+    protected function isPriceVariationModeChildren()
+    {
+        return $this->getPriceVariationMode()
+                            == Ess_M2ePro_Model_Amazon_Template_SellingFormat::PRICE_VARIATION_MODE_CHILDREN;
+    }
+
+    //########################################
 
     /**
      * @param bool $value
@@ -39,20 +53,19 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator
         return $this->isSalePrice;
     }
 
-    // ########################################
+    //########################################
 
     protected function applyAdditionalOptionValuesModifications(
         Ess_M2ePro_Model_Listing_Product_Variation $variation, $value)
     {
-        if ($this->getIsSalePrice() && $value <= 0 &&
-            $this->getSource('mode') == Ess_M2ePro_Model_Template_SellingFormat::PRICE_SPECIAL) {
+        if ($this->getIsSalePrice() && $value <= 0 && $this->isSourceModeSpecial()) {
             return 0;
         }
 
         return parent::applyAdditionalOptionValuesModifications($variation, $value);
     }
 
-    // ########################################
+    //########################################
 
     protected function getExistedProductSpecialValue(Ess_M2ePro_Model_Magento_Product $product)
     {
@@ -72,5 +85,12 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator
         return parent::getBundleProductDynamicSpecialValue($product);
     }
 
-    // ########################################
+    //########################################
+
+    protected function getCurrencyForPriceConvert()
+    {
+        return $this->getComponentListing()->getAmazonMarketplace()->getDefaultCurrency();
+    }
+
+    //########################################
 }

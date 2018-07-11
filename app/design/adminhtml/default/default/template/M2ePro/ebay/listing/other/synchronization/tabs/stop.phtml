@@ -2,7 +2,10 @@
     <?php echo Mage::helper('M2ePro')->__('Define the Conditions when you want eBay Items Stopped.
     <br/><br/>
     <b>Note:</b> If all Options are set to No or No Action, then the Stop Action is disabled.<br/>
-If all Options are enabled, then an Item will be Stopped if at least one of the Stop Conditions is met.'); ?>
+        If all Options are enabled, then an Item will be Stopped if at least one of the Stop Conditions is met.<br/><br/>
+        More detailed information about ability to work with this Page you can find <a href="%url%" target="_blank">here</a>.',
+        Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/DAAJAQ')
+    ); ?>
 </div>
 
 <?php
@@ -44,7 +47,7 @@ If all Options are enabled, then an Item will be Stopped if at least one of the 
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Stop When Status Disabled'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Stop When Status Disabled'); ?>: </label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="stop_status_disabled" name="stop_status_disabled" class="required-entry">
@@ -59,7 +62,7 @@ If all Options are enabled, then an Item will be Stopped if at least one of the 
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Stop When Out Of Stock'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Stop When Out Of Stock'); ?>: </label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="stop_out_off_stock" name="stop_out_off_stock" class="required-entry">
@@ -74,7 +77,7 @@ If all Options are enabled, then an Item will be Stopped if at least one of the 
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Stop When Item Quantity Is'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Stop When Item Quantity Is'); ?>: </label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="stop_qty" name="stop_qty" class="required-entry">

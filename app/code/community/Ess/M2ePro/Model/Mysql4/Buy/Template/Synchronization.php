@@ -1,17 +1,17 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Mysql4_Buy_Template_Synchronization
     extends Ess_M2ePro_Model_Mysql4_Component_Child_Abstract
 {
-    // ########################################
-
     protected $_isPkAutoIncrement = false;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -19,7 +19,7 @@ class Ess_M2ePro_Model_Mysql4_Buy_Template_Synchronization
         $this->_isPkAutoIncrement = false;
     }
 
-    // ########################################
+    //########################################
 
     public function setSynchStatusNeed($newData, $oldData, $listingsProducts)
     {
@@ -68,7 +68,7 @@ class Ess_M2ePro_Model_Mysql4_Buy_Template_Synchronization
         );
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function getEnabledReviseSettings($newData, $oldData, $settings)
     {
@@ -89,5 +89,5 @@ class Ess_M2ePro_Model_Mysql4_Buy_Template_Synchronization
         return $settings;
     }
 
-    // ########################################
+    //########################################
 }

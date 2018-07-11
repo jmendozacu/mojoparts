@@ -1,28 +1,48 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Component_Buy extends Mage_Core_Helper_Abstract
 {
-    // M2ePro_TRANSLATIONS
-    // Rakuten.com (Beta)
     const NICK  = 'buy';
-    const TITLE = 'Rakuten.com (Beta)';
-
-    const DEFAULT_CURRENCY = 'USD';
 
     const MARKETPLACE_ID = 33;
+    const DEFAULT_CURRENCY = 'USD';
 
-    // ########################################
+    //########################################
 
     public function getTitle()
     {
-        return Mage::helper('M2ePro')->__(self::TITLE);
+        return Mage::helper('M2ePro')->__('Rakuten.com (Beta)');
     }
 
-    // ########################################
+    public function getChannelTitle()
+    {
+        return Mage::helper('M2ePro')->__('Rakuten.com');
+    }
+
+    //########################################
+
+    public function getHumanTitleByListingProductStatus($status)
+    {
+        $statuses = array(
+            Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED => Mage::helper('M2ePro')->__('Not Listed'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_LISTED => Mage::helper('M2ePro')->__('Active'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_STOPPED => Mage::helper('M2ePro')->__('Inactive'),
+        );
+
+        if (!isset($statuses[$status])) {
+            return NULL;
+        }
+
+        return $statuses[$status];
+    }
+
+    //########################################
 
     public function isEnabled()
     {
@@ -45,7 +65,7 @@ class Ess_M2ePro_Helper_Component_Buy extends Mage_Core_Helper_Abstract
         return !is_null($mode) && $mode == self::NICK;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getModel($modelName)
     {
@@ -69,7 +89,7 @@ class Ess_M2ePro_Helper_Component_Buy extends Mage_Core_Helper_Abstract
         return $this->getModel($modelName)->getCollection();
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -89,7 +109,18 @@ class Ess_M2ePro_Helper_Component_Buy extends Mage_Core_Helper_Abstract
         return 'http://'.$this->getMarketplace()->getUrl().'/prod/'.$productId.'.html';
     }
 
-    // ########################################
+    //########################################
+
+    public function isGeneralId($string)
+    {
+        if (empty($string)) {
+            return false;
+        }
+
+        return preg_match('/^\d{8,9}$/', $string);
+    }
+
+    // ----------------------------------------
 
     public function getCarrierTitle($carrierCode, $title)
     {
@@ -151,12 +182,12 @@ class Ess_M2ePro_Helper_Component_Buy extends Mage_Core_Helper_Abstract
         );
     }
 
-    // ########################################
+    //########################################
 
     public function clearCache()
     {
         Mage::helper('M2ePro/Data_Cache_Permanent')->removeTagValues(self::NICK);
     }
 
-    // ########################################
+    //########################################
 }

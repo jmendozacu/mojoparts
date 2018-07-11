@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller_Adminhtml_Ebay_MainController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
@@ -17,20 +19,23 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             ->addJs('M2ePro/Plugin/AreaWrapper.js')
             ->addCss('M2ePro/css/Plugin/AreaWrapper.css')
             ->addJs('M2ePro/Plugin/DropDown.js')
+            ->addJs('M2ePro/Plugin/ActionColumn.js')
             ->addCss('M2ePro/css/Plugin/DropDown.css')
             ->addJs('M2ePro/TemplateHandler.js')
             ->addJs('M2ePro/AttributeHandler.js')
             ->addJs('M2ePro/Ebay/Listing/Template/SwitcherHandler.js')
+            ->addJs('M2ePro/Template/EditHandler.js')
             ->addJs('M2ePro/Ebay/Template/EditHandler.js')
             ->addJs('M2ePro/Ebay/Template/PaymentHandler.js')
             ->addJs('M2ePro/Ebay/Template/ReturnHandler.js')
             ->addJs('M2ePro/Ebay/Template/ShippingHandler.js')
             ->addJs('M2ePro/Ebay/Template/SellingFormatHandler.js')
             ->addJs('M2ePro/Ebay/Template/DescriptionHandler.js')
-            ->addJs('M2ePro/Ebay/Template/SynchronizationHandler.js')
-        ;
+            ->addJs('M2ePro/Ebay/Template/SynchronizationHandler.js');
 
         $this->_initPopUp();
+
+        $this->setPageHelpLink(NULL, NULL, "x/MQAJAQ");
 
         if (Mage::helper('M2ePro/Magento')->isTinyMceAvailable()) {
             $this->getLayout()->getBlock('head')->setCanLoadTinyMce(true);
@@ -44,7 +49,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         return Mage::getSingleton('admin/session')->isAllowed('m2epro_ebay/configuration');
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
@@ -63,7 +68,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         $this->getResponse()->setBody($response);
     }
 
-    //#############################################
+    //########################################
 
     public function newAction()
     {
@@ -72,12 +77,12 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
 
     public function editAction()
     {
-        //------------------------------
+        // ---------------------------------------
         $id = $this->getRequest()->getParam('id');
         $nick = $this->getRequest()->getParam('nick');
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $manager = Mage::getSingleton('M2ePro/Ebay_Template_Manager')->setTemplate($nick);
         $template = $manager
             ->getTemplateModel()
@@ -85,20 +90,20 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
                     ->addFieldToFilter('id', $id)
                     ->addFieldToFilter('is_custom_template', 0)
                     ->getFirstItem();
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         if (!$template->getId() && $id) {
             $this->_getSession()->addError(Mage::helper('M2ePro')->__('Policy does not exist.'));
             return $this->_redirect('*/adminhtml_ebay_template/index');
         }
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         /** @var Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Template_Switcher_DataLoader $dataLoader */
         $dataLoader = Mage::getBlockSingleton('M2ePro/adminhtml_ebay_listing_template_switcher_dataLoader');
         $dataLoader->load($template);
-        //------------------------------
+        // ---------------------------------------
 
         $data = array(
             'template_nick' => $nick
@@ -106,18 +111,46 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         $content = $this->getLayout()->createBlock('M2ePro/adminhtml_ebay_template_edit', '', $data);
 
         $this->_initAction();
+
+        switch ($nick) {
+
+            case Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_RETURN:
+                $this->setPageHelpLink(NULL, NULL, "x/ZAAJAQ");
+                break;
+
+            case Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_PAYMENT:
+                $this->setPageHelpLink(NULL, NULL, "x/XgAJAQ");
+                break;
+
+            case Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SHIPPING:
+                $this->setPageHelpLink(NULL, NULL, "x/aQAJAQ");
+                break;
+
+            case Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_DESCRIPTION:
+                $this->setPageHelpLink(NULL, NULL, "x/PgAJAQ");
+                break;
+
+            case Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SELLING_FORMAT:
+                $this->setPageHelpLink(NULL, NULL, "x/PQAJAQ");
+                break;
+
+            case Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SYNCHRONIZATION:
+                $this->setPageHelpLink(NULL, NULL, "x/KQAJAQ");
+                break;
+        }
+
         $this->_addContent($content);
         $this->renderLayout();
     }
 
-    //#############################################
+    //########################################
 
     public function saveAction()
     {
         $templates = array();
         $templateNicks = Mage::getSingleton('M2ePro/Ebay_Template_Manager')->getAllTemplates();
 
-        //------------------------------
+        // ---------------------------------------
         foreach ($templateNicks as $nick) {
             if ($this->isSaveAllowed($nick)) {
                 $template = $this->saveTemplate($nick);
@@ -133,15 +166,15 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
                 }
             }
         }
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         if ($this->getRequest()->isXmlHttpRequest()) {
             $this->loadLayout();
-            $this->getResponse()->setBody(json_encode($templates));
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($templates));
             return;
         }
-        //------------------------------
+        // ---------------------------------------
 
         if (count($templates) == 0) {
             $this->_getSession()->addError(Mage::helper('M2ePro')->__('Policy was not saved.'));
@@ -166,7 +199,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         );
     }
 
-    //#############################################
+    //########################################
 
     protected function isSaveAllowed($templateNick)
     {
@@ -187,7 +220,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         return false;
     }
 
-    //#############################################
+    //########################################
 
     protected function saveTemplate($nick)
     {
@@ -207,31 +240,79 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             $templateModel->load($data['id']);
             $templateManager->isHorizontalTemplate() && $templateModel = $templateModel->getChildObject();
 
-            $oldData = $templateModel->getDataSnapshot();
+            /** @var Ess_M2ePro_Model_Template_SnapshotBuilder_Abstract $snapshotBuilder */
+            if ($templateManager->isHorizontalTemplate()) {
+                $snapshotBuilder = Mage::getModel(
+                    'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                );
+            } else {
+                $snapshotBuilder = Mage::getModel(
+                    'M2ePro/'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                );
+            }
+            $snapshotBuilder->setModel($templateModel);
+
+            $oldData = $snapshotBuilder->getSnapshot();
         }
 
         $template = $templateManager->getTemplateBuilder()->build($data);
-        $newData = $template->getDataSnapshot();
 
+        /** @var Ess_M2ePro_Model_Template_SnapshotBuilder_Abstract $snapshotBuilder */
         if ($templateManager->isHorizontalTemplate()) {
-            $template->getChildObject()->setSynchStatusNeed($newData,$oldData);
+            $snapshotBuilder = Mage::getModel(
+                'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+            );
         } else {
-            $template->setSynchStatusNeed($newData,$oldData);
+            $snapshotBuilder = Mage::getModel('M2ePro/'.$templateManager->getTemplateModelName().'_SnapshotBuilder');
         }
+        $snapshotBuilder->setModel($template);
+
+        $newData = $snapshotBuilder->getSnapshot();
+
+        /** @var Ess_M2ePro_Model_Template_Diff_Abstract $diff */
+        if ($templateManager->isHorizontalTemplate()) {
+            $diff = Mage::getModel('M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_Diff');
+        } else {
+            $diff = Mage::getModel('M2ePro/'.$templateManager->getTemplateModelName().'_Diff');
+        }
+        $diff->setNewSnapshot($newData);
+        $diff->setOldSnapshot($oldData);
+
+        /** @var Ess_M2ePro_Model_Template_AffectedListingsProducts_Abstract $affectedListingsProducts */
+        if ($templateManager->isHorizontalTemplate()) {
+            $affectedListingsProducts = Mage::getModel(
+                'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_AffectedListingsProducts'
+            );
+        } else {
+            $affectedListingsProducts = Mage::getModel(
+                'M2ePro/'.$templateManager->getTemplateModelName().'_AffectedListingsProducts'
+            );
+        }
+        $affectedListingsProducts->setModel($template);
+
+        /** @var Ess_M2ePro_Model_Template_ChangeProcessor_Abstract $changeProcessor */
+        if ($templateManager->isHorizontalTemplate()) {
+            $changeProcessor = Mage::getModel(
+                'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_ChangeProcessor'
+            );
+        } else {
+            $changeProcessor = Mage::getModel('M2ePro/'.$templateManager->getTemplateModelName().'_ChangeProcessor');
+        }
+        $changeProcessor->process($diff, $affectedListingsProducts->getData(array('id', 'status')));
 
         return $template;
     }
 
-    //#############################################
+    //########################################
 
     public function deleteAction()
     {
-        //------------------------------
+        // ---------------------------------------
         $id = $this->getRequest()->getParam('id');
         $nick = $this->getRequest()->getParam('nick');
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $manager = Mage::getSingleton('M2ePro/Ebay_Template_Manager')->setTemplate($nick);
         $template = $manager
             ->getTemplateModel()
@@ -239,7 +320,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
                     ->addFieldToFilter('id', $id)
                     ->addFieldToFilter('is_custom_template', 0)
                     ->getFirstItem();
-        //------------------------------
+        // ---------------------------------------
 
         if (!$template->getId()) {
             $this->_getSession()->addError(Mage::helper('M2ePro')->__('Policy does not exist.'));
@@ -262,7 +343,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         $this->_redirect('*/*/index');
     }
 
-    //#############################################
+    //########################################
 
     public function editListingAction()
     {
@@ -274,17 +355,20 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             return $this->_redirect('*/adminhtml_ebay_listing/index');
         }
 
-        //------------------------------
+        // ---------------------------------------
         /** @var Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Template_Switcher_DataLoader $dataLoader */
         $dataLoader = Mage::getBlockSingleton('M2ePro/adminhtml_ebay_listing_template_switcher_dataLoader');
         $dataLoader->load($model);
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         Mage::helper('M2ePro/Data_Global')->setValue('ebay_listing', $model);
-        //------------------------------
+        // ---------------------------------------
 
         $this->_initAction();
+
+        $this->setPageHelpLink(NULL, NULL, "x/UwAJAQ");
+
         $this->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_ebay_listing_template_edit'))
              ->renderLayout();
     }
@@ -304,18 +388,87 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             return $this->_redirect('*/adminhtml_ebay_listing/index');
         }
 
-        //------------------------------
-        $oldData = $model->getChildObject()->getDataSnapshot();
-        //------------------------------
+        // ---------------------------------------
+        $snapshotBuilder = Mage::getModel('M2ePro/Ebay_Listing_SnapshotBuilder');
+        $snapshotBuilder->setModel($model);
+
+        $oldData = $snapshotBuilder->getSnapshot();
+        // ---------------------------------------
         $data = $this->getPostedTemplatesData();
         $model->addData($data);
         $model->getChildObject()->setEstimatedFeesObtainAttemptCount(0);
         $model->getChildObject()->setEstimatedFeesObtainRequired(true);
         $model->save();
-        //------------------------------
-        $newData = $model->getChildObject()->getDataSnapshot();
-        $model->getChildObject()->setSynchStatusNeed($newData,$oldData);
-        //------------------------------
+        // ---------------------------------------
+        $snapshotBuilder = Mage::getModel('M2ePro/Ebay_Listing_SnapshotBuilder');
+        $snapshotBuilder->setModel($model);
+
+        $newData = $snapshotBuilder->getSnapshot();
+
+        $templateManager = Mage::getSingleton('M2ePro/Ebay_Template_Manager');
+
+        $newTemplates = $templateManager->getTemplatesFromData($newData);
+        $oldTemplates = $templateManager->getTemplatesFromData($oldData);
+
+        $affectedListingsProducts = Mage::getModel('M2ePro/Ebay_Listing_AffectedListingsProducts');
+        $affectedListingsProducts->setModel($model);
+
+        foreach ($templateManager->getAllTemplates() as $template) {
+
+            $templateManager->setTemplate($template);
+
+            /** @var Ess_M2ePro_Model_Template_SnapshotBuilder_Abstract $snapshotBuilder */
+            if ($templateManager->isHorizontalTemplate()) {
+                $snapshotBuilder = Mage::getModel(
+                    'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                );
+            } else {
+                $snapshotBuilder = Mage::getModel(
+                    'M2ePro/'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                );
+            }
+            $snapshotBuilder->setModel($newTemplates[$template]);
+
+            $newTemplateData = $snapshotBuilder->getSnapshot();
+
+            /** @var Ess_M2ePro_Model_Template_SnapshotBuilder_Abstract $snapshotBuilder */
+            if ($templateManager->isHorizontalTemplate()) {
+                $snapshotBuilder = Mage::getModel(
+                    'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                );
+            } else {
+                $snapshotBuilder = Mage::getModel(
+                    'M2ePro/'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                );
+            }
+            $snapshotBuilder->setModel($oldTemplates[$template]);
+
+            $oldTemplateData = $snapshotBuilder->getSnapshot();
+
+            /** @var Ess_M2ePro_Model_Template_Diff_Abstract $diff */
+            if ($templateManager->isHorizontalTemplate()) {
+                $diff = Mage::getModel('M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_Diff');
+            } else {
+                $diff = Mage::getModel('M2ePro/'.$templateManager->getTemplateModelName().'_Diff');
+            }
+            $diff->setNewSnapshot($newTemplateData);
+            $diff->setOldSnapshot($oldTemplateData);
+
+            /** @var Ess_M2ePro_Model_Template_ChangeProcessor_Abstract $changeProcessor */
+            if ($templateManager->isHorizontalTemplate()) {
+                $changeProcessor = Mage::getModel(
+                    'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_ChangeProcessor'
+                );
+            } else {
+                $changeProcessor = Mage::getModel(
+                    'M2ePro/'.$templateManager->getTemplateModelName().'_ChangeProcessor'
+                );
+            }
+            $changeProcessor->process(
+                $diff, $affectedListingsProducts->getData(array('id', 'status'), array('template' => $template))
+            );
+        }
+        // ---------------------------------------
 
         $this->_getSession()->addSuccess(Mage::helper('M2ePro')->__('The Listing was successfully saved.'));
 
@@ -329,7 +482,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         $this->_redirectUrl(Mage::helper('M2ePro')->getBackUrl('list', array(), $extendedParams));
     }
 
-    //#############################################
+    //########################################
 
     public function editListingProductAction()
     {
@@ -341,22 +494,22 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             return;
         }
 
-        //------------------------------
+        // ---------------------------------------
         $collection = Mage::helper('M2ePro/Component_Ebay')
                 ->getCollection('Listing_Product')
                 ->addFieldToFilter('id', array('in' => $ids));
-        //------------------------------
+        // ---------------------------------------
 
         if ($collection->getSize() == 0) {
             $this->getResponse()->setBody('');
             return;
         }
 
-        //------------------------------
+        // ---------------------------------------
         /** @var Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Template_Switcher_DataLoader $dataLoader */
         $dataLoader = Mage::getBlockSingleton('M2ePro/adminhtml_ebay_listing_template_switcher_dataLoader');
         $dataLoader->load($collection);
-        //------------------------------
+        // ---------------------------------------
 
         $data = array();
         if ($tab) {
@@ -377,28 +530,31 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             return;
         }
 
-        //------------------------------
+        // ---------------------------------------
         $collection = Mage::helper('M2ePro/Component_Ebay')->getCollection('Listing_Product');
         $collection->addFieldToFilter('id', array('in' => $ids));
-        //------------------------------
+        // ---------------------------------------
 
         if ($collection->getSize() == 0) {
             $this->getResponse()->setBody('');
             return;
         }
 
-        //------------------------------
+        // ---------------------------------------
         $data = $this->getPostedTemplatesData();
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $transaction = Mage::getModel('core/resource_transaction');
 
         $snapshots = array();
 
         try {
             foreach ($collection->getItems() as $listingProduct) {
-                $snapshots[$listingProduct->getId()] = $listingProduct->getChildObject()->getDataSnapshot();
+                $snapshotBuilder = Mage::getModel('M2ePro/Ebay_Listing_Product_SnapshotBuilder');
+                $snapshotBuilder->setModel($listingProduct);
+
+                $snapshots[$listingProduct->getId()] = $snapshotBuilder->getSnapshot();
 
                 $listingProduct->addData($data);
                 $transaction->addObject($listingProduct);
@@ -409,7 +565,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             $snapshots = false;
             $transaction->rollback();
         }
-        //------------------------------
+        // ---------------------------------------
 
         $this->getResponse()->setBody('');
 
@@ -417,15 +573,79 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             return;
         }
 
+        $templateManager = Mage::getSingleton('M2ePro/Ebay_Template_Manager');
+
         foreach ($collection->getItems() as $listingProduct) {
-            $listingProduct->getChildObject()->setSynchStatusNeed(
-                $listingProduct->getChildObject()->getDataSnapshot(),
-                $snapshots[$listingProduct->getId()]
-            );
+            $snapshotBuilder = Mage::getModel('M2ePro/Ebay_Listing_Product_SnapshotBuilder');
+            $snapshotBuilder->setModel($listingProduct);
+
+            $newData = $snapshotBuilder->getSnapshot();
+
+            $newTemplates = $templateManager->getTemplatesFromData($newData);
+            $oldTemplates = $templateManager->getTemplatesFromData($snapshots[$listingProduct->getId()]);
+
+            foreach ($templateManager->getAllTemplates() as $template) {
+
+                $templateManager->setTemplate($template);
+
+                /** @var Ess_M2ePro_Model_Template_SnapshotBuilder_Abstract $snapshotBuilder */
+                if ($templateManager->isHorizontalTemplate()) {
+                    $snapshotBuilder = Mage::getModel(
+                        'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                    );
+                } else {
+                    $snapshotBuilder = Mage::getModel(
+                        'M2ePro/'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                    );
+                }
+                $snapshotBuilder->setModel($newTemplates[$template]);
+
+                $newTemplateData = $snapshotBuilder->getSnapshot();
+
+                /** @var Ess_M2ePro_Model_Template_SnapshotBuilder_Abstract $snapshotBuilder */
+                if ($templateManager->isHorizontalTemplate()) {
+                    $snapshotBuilder = Mage::getModel(
+                        'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                    );
+                } else {
+                    $snapshotBuilder = Mage::getModel(
+                        'M2ePro/'.$templateManager->getTemplateModelName().'_SnapshotBuilder'
+                    );
+                }
+                $snapshotBuilder->setModel($oldTemplates[$template]);
+
+                $oldTemplateData = $snapshotBuilder->getSnapshot();
+
+                /** @var Ess_M2ePro_Model_Template_Diff_Abstract $diff */
+                if ($templateManager->isHorizontalTemplate()) {
+                    $diff = Mage::getModel('M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_Diff');
+                } else {
+                    $diff = Mage::getModel('M2ePro/'.$templateManager->getTemplateModelName().'_Diff');
+                }
+                $diff->setNewSnapshot($newTemplateData);
+                $diff->setOldSnapshot($oldTemplateData);
+
+                /** @var Ess_M2ePro_Model_Template_ChangeProcessor_Abstract $changeProcessor */
+                if ($templateManager->isHorizontalTemplate()) {
+                    $changeProcessor = Mage::getModel(
+                        'M2ePro/Ebay_'.$templateManager->getTemplateModelName().'_ChangeProcessor'
+                    );
+                } else {
+                    $changeProcessor = Mage::getModel(
+                        'M2ePro/'.$templateManager->getTemplateModelName().'_ChangeProcessor'
+                    );
+                }
+                $changeProcessor->process(
+                    $diff, array(array('id' => $listingProduct->getId(), 'status' => $listingProduct->getStatus()))
+                );
+            }
+
+            $this->processCategoryTemplateChange($listingProduct, $newData, $snapshots[$listingProduct->getId()]);
+            $this->processOtherCategoryTemplateChange($listingProduct, $newData, $snapshots[$listingProduct->getId()]);
         }
     }
 
-    //#############################################
+    //########################################
 
     public function getTemplateHtmlAction()
     {
@@ -433,13 +653,13 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
 
         try {
 
-            //------------------------------
+            // ---------------------------------------
             /** @var Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Template_Switcher_DataLoader $dataLoader */
             $dataLoader = Mage::getBlockSingleton('M2ePro/adminhtml_ebay_listing_template_switcher_dataLoader');
             $dataLoader->load($this->getRequest());
-            //------------------------------
+            // ---------------------------------------
 
-            //------------------------------
+            // ---------------------------------------
             $templateNick = $this->getRequest()->getParam('nick');
             $templateDataForce = (bool)$this->getRequest()->getParam('data_force', false);
 
@@ -449,16 +669,16 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             /** @var Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Template_Switcher $switcherBlock */
             $switcherBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_ebay_listing_template_switcher');
             $switcherBlock->setData($data);
-            //------------------------------
+            // ---------------------------------------
 
             $this->getResponse()->setBody($switcherBlock->getFormDataBlockHtml($templateDataForce));
 
         } catch (Exception $e) {
-            $this->getResponse()->setBody(json_encode(array('error' => $e->getMessage())));
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('error' => $e->getMessage())));
         }
     }
 
-    //#############################################
+    //########################################
 
     public function isTitleUniqueAction()
     {
@@ -467,7 +687,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         $title = $this->getRequest()->getParam('title');
 
         if ($title == '') {
-            return $this->getResponse()->setBody(json_encode(array('unique' => false)));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('unique' => false)));
         }
 
         $manager = Mage::getSingleton('M2ePro/Ebay_Template_Manager');
@@ -483,10 +703,12 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             $collection->addFieldToFilter('id', array('neq' => $id));
         }
 
-        return $this->getResponse()->setBody(json_encode(array('unique' => !(bool)$collection->getSize())));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(
+            array('unique' => !(bool)$collection->getSize())
+        ));
     }
 
-    //#############################################
+    //########################################
 
     private function getPostedTemplatesData()
     {
@@ -494,9 +716,9 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
             return array();
         }
 
-        //------------------------------
+        // ---------------------------------------
         $data = array();
-        foreach(Mage::getSingleton('M2ePro/Ebay_Template_Manager')->getAllTemplates() as $nick) {
+        foreach (Mage::getSingleton('M2ePro/Ebay_Template_Manager')->getAllTemplates() as $nick) {
             $manager = Mage::getModel('M2ePro/Ebay_Template_Manager')
                 ->setTemplate($nick);
 
@@ -504,7 +726,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
                 continue;
             }
 
-            $templateData = json_decode(base64_decode($post["template_{$nick}"]), true);
+            $templateData = Mage::helper('M2ePro')->jsonDecode(base64_decode($post["template_{$nick}"]));
 
             $templateId = $templateData['id'];
             $templateMode = $templateData['mode'];
@@ -520,7 +742,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
 
             $this->clearTemplatesFieldsNotRelatedToMode($data, $nick, $templateMode);
         }
-        //------------------------------
+        // ---------------------------------------
 
         return $data;
     }
@@ -530,8 +752,7 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         $modes = array(
             Ess_M2ePro_Model_Ebay_Template_Manager::MODE_PARENT,
             Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM,
-            Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE,
-            Ess_M2ePro_Model_Ebay_Template_Manager::MODE_POLICY
+            Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE
         );
 
         unset($modes[array_search($mode, $modes)]);
@@ -549,5 +770,87 @@ class Ess_M2ePro_Adminhtml_Ebay_TemplateController extends Ess_M2ePro_Controller
         }
     }
 
-    //#############################################
+    // ---------------------------------------
+
+    private function processCategoryTemplateChange($listingProduct, array $newData, array $oldData)
+    {
+        $newTemplateSnapshot = array();
+
+        try {
+            $snapshotBuilder = Mage::getModel('M2ePro/Ebay_Template_Category_SnapshotBuilder');
+
+            $newTemplate = Mage::helper('M2ePro')
+                ->getCachedObject('Ebay_Template_Category',
+                    $newData['template_category_id'],
+                    NULL,array('template'));
+            $snapshotBuilder->setModel($newTemplate);
+
+            $newTemplateSnapshot = $snapshotBuilder->getSnapshot();
+        } catch (Exception $exception) {}
+
+        $oldTemplateSnapshot = array();
+
+        try {
+            $snapshotBuilder = Mage::getModel('M2ePro/Ebay_Template_Category_SnapshotBuilder');
+
+            $oldTemplate = Mage::helper('M2ePro')
+                ->getCachedObject('Ebay_Template_Category',
+                    $oldData['template_category_id'],
+                    NULL,array('template'));
+            $snapshotBuilder->setModel($oldTemplate);
+
+            $oldTemplateSnapshot = $snapshotBuilder->getSnapshot();
+        } catch (Exception $exception) {}
+
+        $diff = Mage::getModel('M2ePro/Ebay_Template_Category_Diff');
+        $diff->setNewSnapshot($newTemplateSnapshot);
+        $diff->setOldSnapshot($oldTemplateSnapshot);
+
+        $changeProcessor = Mage::getModel('M2ePro/Ebay_Template_Category_ChangeProcessor');
+        $changeProcessor->process(
+            $diff, array(array('id' => $listingProduct->getId(), 'status' => $listingProduct->getStatus()))
+        );
+    }
+
+    private function processOtherCategoryTemplateChange($listingProduct, array $newData, array $oldData)
+    {
+        $newTemplateSnapshot = array();
+
+        try {
+            $snapshotBuilder = Mage::getModel('M2ePro/Ebay_Template_OtherCategory_SnapshotBuilder');
+
+            $newTemplate = Mage::helper('M2ePro')
+                ->getCachedObject('Ebay_Template_OtherCategory',
+                    $newData['template_category_other_id'],
+                    NULL,array('template'));
+            $snapshotBuilder->setModel($newTemplate);
+
+            $newTemplateSnapshot = $snapshotBuilder->getSnapshot();
+        } catch (Exception $exception) {}
+
+        $oldTemplateSnapshot = array();
+
+        try {
+            $snapshotBuilder = Mage::getModel('M2ePro/Ebay_Template_OtherCategory_SnapshotBuilder');
+
+            $oldTemplate = Mage::helper('M2ePro')
+                ->getCachedObject('Ebay_Template_OtherCategory',
+                    $oldData['template_category_other_id'],
+                    NULL,array('template'));
+            $snapshotBuilder->setModel($oldTemplate);
+
+            $oldTemplateSnapshot = $snapshotBuilder->getSnapshot();
+        } catch (Exception $exception) {}
+
+        $diff = Mage::getModel('M2ePro/Ebay_Template_OtherCategory_Diff');
+        $diff->setNewSnapshot($newTemplateSnapshot);
+        $diff->setOldSnapshot($oldTemplateSnapshot);
+
+        $changeProcessor = Mage::getModel('M2ePro/Ebay_Template_OtherCategory_ChangeProcessor');
+        $changeProcessor->process(
+            $diff, array(array('id' => $listingProduct->getId(), 'status' => $listingProduct->getStatus()))
+        );
+    }
+
+    //########################################
 }

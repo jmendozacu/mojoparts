@@ -1,13 +1,13 @@
 EbayListingOtherGridHandler = Class.create(ListingOtherGridHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     getComponent: function()
     {
         return 'ebay';
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getLogViewUrl: function(rowId)
     {
@@ -16,7 +16,7 @@ EbayListingOtherGridHandler = Class.create(ListingOtherGridHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getSelectedItemsParts: function()
     {
@@ -39,43 +39,12 @@ EbayListingOtherGridHandler = Class.create(ListingOtherGridHandler, {
         return result;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getMaxProductsInPart: function()
     {
-        var maxProductsInPart = 10;
-        var selectedProductsArray = this.getSelectedProductsArray();
-
-        if (selectedProductsArray.length <= 25) {
-            maxProductsInPart = 5;
-        }
-        if (selectedProductsArray.length <= 15) {
-            maxProductsInPart = 3;
-        }
-        if (selectedProductsArray.length <= 8) {
-            maxProductsInPart = 2;
-        }
-        if (selectedProductsArray.length <= 4) {
-            maxProductsInPart = 1;
-        }
-
-        return maxProductsInPart;
-    },
-
-    //----------------------------------
-
-    prepareActions: function($super)
-    {
-        $super();
-
-        this.actionHandler = new EbayListingOtherActionHandler(this);
-
-        this.actions = Object.extend(this.actions, {
-            relistAction: this.actionHandler.relistAction.bind(this.actionHandler),
-            reviseAction: this.actionHandler.reviseAction.bind(this.actionHandler),
-            stopAction: this.actionHandler.stopAction.bind(this.actionHandler)
-        });
+        return 10;
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

@@ -3,9 +3,16 @@ error_reporting(E_ALL);
 libxml_use_internal_errors(true);
 include('config.php'); 
 
-$input_result = mysqli_query($con, "SELECT * FROM mojo_ebaycopy_input_listings");
+$input_result = mysqli_query($con, "SELECT * FROM mojo_ebaycopy_input_listings where processed_flag=0");
+$numRows = mysqli_num_rows($input_result);
+$insertCount = 0;
+$updateCount = 0;
+$rowNum = 0;
+
 while ($input_row = mysqli_fetch_array($input_result)) { 
 
+	$rowNum++;
+	echo "processing record ".$rowNum." of ".$numRows.PHP_EOL;
 	$skuAlreadyExists = FALSE;
 	$ebay_id = $input_row['ebay_id']; 
 	$additionalNotes = "";
@@ -23,7 +30,7 @@ while ($input_row = mysqli_fetch_array($input_result)) {
 	$placementOnVehicle = NULL;
 	$processThisSku = TRUE;
 	$restricted = FALSE;
-	$reviewCode = "";
+	$reviewCode = "ebaycopy-cpw-".date("Y.m.d");
 	$side = "";
 	$surfaceFinish = ""; 
 	$upc = "Does Not Apply";
@@ -162,6 +169,7 @@ while ($input_row = mysqli_fetch_array($input_result)) {
 					$detailsLabel != "Product fit" && 
 					$detailsLabel != "Recommended use" && 
 					$detailsLabel != "Condition" && 
+					$detailsLabel != "Deals" && 
 					$detailsLabel != "Quantity sold") { 
 					switch ($detailsLabel) {
 						case "Replaces oe number":
@@ -312,21 +320,36 @@ while ($input_row = mysqli_fetch_array($input_result)) {
 			}
 			
 			if (!empty($item->ItemCompatibilityList->Compatibility)) {
+
+				$epidAr = array();
 				foreach($item->ItemCompatibilityList->Compatibility as $compat) {
-					$compatibility .= "Year=".$compat->NameValueList[1]->Value;
-					$compatibility .= "|Make=".$compat->NameValueList[2]->Value;
-					$compatibility .= "|Model=".$compat->NameValueList[3]->Value;
+					$epid_query = NULL;
+					$year = $compat->NameValueList[1]->Value;
+					$make = $compat->NameValueList[2]->Value;
+					$model = $compat->NameValueList[3]->Value;
+					$epid_query = "select e.epid from m2epro_ebay_dictionary_motor_epid e where e.year='$year' and e.make='$make' and e.model='$model'";
 					if (isset($compat->NameValueList[4]->Value)) {
-						$compatibility .= '|Trim='.str_replace('"','',$compat->NameValueList[4]->Value);
+						$epid_query .= " and e.trim='".str_replace("'","''",$compat->NameValueList[4]->Value)."'";
 					}
 					if (isset($compat->NameValueList[5]->Value)) {
-						$compatibility .= '|Engine='.str_replace('"','',$compat->NameValueList[5]->Value);
+						$epid_query .= " and e.engine='".$compat->NameValueList[5]->Value."'";
 					}
-					if (isset($compat->CompatibilityNotes) && $compat->CompatibilityNotes<>"") {
-						$compatibility .= '|Notes='.str_replace('"','',$compat->CompatibilityNotes);
+
+					$epid_query .= ";";
+//echo $epid_query.PHP_EOL;
+					$result_epid = mysqli_query($con, $epid_query);
+					if (!$result_epid) {
+						printf("Error: %s\n", mysqli_error($con));
+						exit();
 					}
-					$compatibility .= PHP_EOL;
+					while ($epid_row = mysqli_fetch_array($result_epid)) {
+						$m2e_epid = '""ITEM""|""'.$epid_row['epid'].'""';
+						if ($compat->CompatibilityNotes != null) $m2e_epid .= '|""'.$compat->CompatibilityNotes.'""';
+						array_push($epidAr, $m2e_epid);
+					}
 				}
+				if (empty($epidAr)) $compatibility = "";
+				else $compatibility = implode(",",$epidAr);
 			}
 
 			$listingPrice = $item->CurrentPrice;
@@ -367,29 +390,54 @@ while ($input_row = mysqli_fetch_array($input_result)) {
 			}
 			$result = mysqli_query($con, "select im.vendor_item_number, im.component_1, im.component_2 from mojo_vendor_item_master im where im.vendor_item_number='{$vendorSku}' limit 1");
 
-// TODO: make this like the dbp-auto - where only the updated fields get set (and add description_scrubbed) 
-
 			if (mysqli_num_rows($result) == 1) { 
 				$row = mysqli_fetch_array($result);
 				$component1 = $row['component_1']; 
 				$component2 = $row['component_2']; 
 				if ($component1 != NULL && $component1 != '') { $vendorSku1 = $component1; }
 				if ($component2 != NULL && $component2 != '') { $vendorSku2 = $component2; }
-				mysqli_query($con, "UPDATE `mojo_vendor_item_master` set component_1='{$vendorSku1}', component_2='{$vendorSku2}', interchange='{$hollander}', partslink='{$partslink}', oem='{$oemnumber}', upc='{$upc}', mpn='{$manufacturerPartNumber}', ebay_title='{$ebayTitle}', ebay_price='{$listingPrice}', ebay_category='{$ebayCategory}', ebay_store_category='{$ebayStoreCategory}', compatibility='{$compatibility}', additional_notes='{$additionalNotes}', magento_category='{$magentoCategory}', placement_on_vehicle='{$placementOnVehicle}', surface_finish='{$surfaceFinish}', main_image_url='{$mainImageURL}', other_image_urls='{$mediaGalleryURLs}', review_code='{$reviewCode}', ebay_id='{$ebay_id}', update_date=curdate() where vendor_item_number='{$vendorSku}'"); 
-				echo "success [".$vendorSku."]: updated.".PHP_EOL;
+				$updateSQL = "UPDATE `mojo_vendor_item_master` set component_1='{$vendorSku1}', component_2='{$vendorSku2}',";
+				if ($hollander != "") { $updateSQL = $updateSQL."interchange='{$hollander}',"; }
+				if ($partslink != "") { $updateSQL = $updateSQL."partslink='{$partslink}', "; }
+				if ($oemnumber != "") { $updateSQL = $updateSQL."oem='{$oemnumber}',"; } 
+				if ($upc != "") { $updateSQL = $updateSQL."upc='{$upc}', "; }
+				if ($manufacturerPartNumber != "") { $updateSQL = $updateSQL."mpn='{$manufacturerPartNumber}',"; } 
+				if ($ebayTitle != "") { $updateSQL = $updateSQL."ebay_title='{$ebayTitle}', description='{$ebayTitle}', "; }
+// TODO: add description_scrubbed
+				if ($listingPrice != "") { $updateSQL = $updateSQL."ebay_price='{$listingPrice}', "; }
+				if ($ebayCategory != "") { $updateSQL = $updateSQL."ebay_category='{$ebayCategory}', "; }
+				if ($ebayStoreCategory != "") { $updateSQL = $updateSQL."ebay_store_category='{$ebayStoreCategory}', "; }
+				if ($compatibility != "") { $updateSQL = $updateSQL."compatibility='{$compatibility}', "; }
+				if ($additionalNotes != "") { $updateSQL = $updateSQL."additional_notes='{$additionalNotes}', "; }
+				if ($magentoCategory != "") { $updateSQL = $updateSQL."magento_category='{$magentoCategory}', "; }
+				if ($placementOnVehicle != "") { $updateSQL = $updateSQL."placement_on_vehicle='{$placementOnVehicle}', "; }
+				if ($surfaceFinish != "") { $updateSQL = $updateSQL."surface_finish='{$surfaceFinish}', "; }
+				if ($mainImageURL != "") { $updateSQL = $updateSQL."main_image_url='{$mainImageURL}', "; }
+				if ($mediaGalleryURLs != "") { $updateSQL = $updateSQL."other_image_urls='{$mediaGalleryURLs}',"; }
+				$updateSQL = $updateSQL."review_code='{$reviewCode}', ebay_id='{$ebay_id}', update_date=curdate() where vendor_item_number='{$vendorSku}'";
+//				echo $updateSQL.PHP_EOL;
+				mysqli_query($con, $updateSQL); 
+				$updateCount++;
+				echo "success [".$vendorSku."]: updated: ".$updateCount.PHP_EOL;
 			} else {
-				mysqli_query($con, "INSERT INTO `mojo_vendor_item_master` (`vendor`, `vendor_item_number`, `component_1`, `component_2`, `description`,`interchange`, `partslink`, `oem`, `upc`, `mpn`, `ebay_title`, `ebay_price`, `ebay_category`, `ebay_store_category`, `compatibility`, `additional_notes`, `magento_category`, `placement_on_vehicle`, `surface_finish`, `main_image_url`, `other_image_urls`, `review_code`,`ebay_id`, `create_date`, `update_date`) 
-				VALUES ('PFG','{$vendorSku}','{$vendorSku1}','{$vendorSku2}','{$ebayTitle}','{$hollander}', '{$partslink}', '{$oemnumber}', '{$upc}', '{$manufacturerPartNumber}', '{$ebayTitle}', '{$listingPrice}', '{$ebayCategory}', '{$ebayStoreCategory}', '{$compatibility}', '{$additionalNotes}', '{$magentoCategory}', '{$placementOnVehicle}', '{$surfaceFinish}', '{$mainImageURL}', '{$mediaGalleryURLs}', '{$reviewCode}', '{$ebay_id}', curdate(), curdate())"); 
-				echo "success [".$vendorSku."]: inserted.".PHP_EOL;
+				$insertSQL = "INSERT INTO `mojo_vendor_item_master` (`vendor`, `vendor_item_number`, `component_1`, `component_2`, `description`, `interchange`, `partslink`, `oem`, `upc`, `mpn`, `ebay_title`, `ebay_price`, `ebay_category`, `ebay_store_category`, `compatibility`, `additional_notes`, `magento_category`, `placement_on_vehicle`, `surface_finish`, `main_image_url`, `other_image_urls`, `review_code`,`ebay_id`, `create_date`, `update_date`) VALUES ('PFG','{$vendorSku}','{$vendorSku1}','{$vendorSku2}','{$ebayTitle}', '{$hollander}', '{$partslink}', '{$oemnumber}', '{$upc}', '{$manufacturerPartNumber}', '{$ebayTitle}', '{$listingPrice}', '{$ebayCategory}', '{$ebayStoreCategory}', '{$compatibility}', '{$additionalNotes}', '{$magentoCategory}', '{$placementOnVehicle}', '{$surfaceFinish}', '{$mainImageURL}', '{$mediaGalleryURLs}', '{$reviewCode}', '{$ebay_id}', curdate(), curdate())";
+//				echo $insertSQL.PHP_EOL;
+				mysqli_query($con, $insertSQL); 
+				$insertCount++;
+				echo "success [".$vendorSku."]: inserted: ".$insertCount.PHP_EOL;
 			}
 		} else {
 			echo "skipped [".$vendorSku."]: not found or restricted.".PHP_EOL;
 		}
+		$update_input = mysqli_query($con, "update mojo_ebaycopy_input_listings set processed_flag=1 where ebay_id ='{$ebay_id}'");
+
 	}
 } 
 
 $result->close(); 
 $input_result->close(); 
-
+echo "--------------------------------------------------".PHP_EOL;
+echo "records inserted: ".$insertCount.PHP_EOL;
+echo "records updated: ".$updateCount.PHP_EOL;
 echo "Whew, done.".PHP_EOL;
 ?>

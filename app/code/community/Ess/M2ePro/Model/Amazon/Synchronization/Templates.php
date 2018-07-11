@@ -1,32 +1,29 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Amazon_Synchronization_Templates
     extends Ess_M2ePro_Model_Amazon_Synchronization_Abstract
 {
-    /**
-     * @var Ess_M2ePro_Model_Synchronization_Templates_Runner
-     */
-    private $runner = NULL;
+    /** @var Ess_M2ePro_Model_Synchronization_Templates_ProductChanges_Manager $productChangesManager */
+    private $productChangesManager = NULL;
 
-    /**
-     * @var Ess_M2ePro_Model_Amazon_Synchronization_Templates_Inspector
-     */
-    private $inspector = NULL;
+    //########################################
 
-    /**
-     * @var Ess_M2ePro_Model_Synchronization_Templates_Changes
-     */
-    protected $changesHelper = NULL;
+    protected function getProductChangesManager()
+    {
+        return $this->productChangesManager;
+    }
 
-    //####################################
+    //########################################
 
     protected function getType()
     {
-        return Ess_M2ePro_Model_Synchronization_Task_Abstract::TEMPLATES;
+        return Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::TEMPLATES;
     }
 
     protected function getNick()
@@ -39,7 +36,7 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Templates
         return 'Inventory';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function getPercentsStart()
     {
@@ -51,46 +48,31 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Templates
         return 100;
     }
 
-    //####################################
+    //########################################
 
     protected function beforeStart()
     {
         parent::beforeStart();
 
-        $this->runner = Mage::getModel('M2ePro/Synchronization_Templates_Runner');
-
-        $this->runner->setConnectorModel('Connector_Amazon_Product_Dispatcher');
-        $this->runner->setMaxProductsPerStep(1000);
-
-        $this->runner->setLockItem($this->getActualLockItem());
-        $this->runner->setPercentsStart($this->getPercentsStart() + $this->getPercentsInterval()/2);
-        $this->runner->setPercentsEnd($this->getPercentsEnd());
-
-        $this->inspector = Mage::getModel('M2ePro/Amazon_Synchronization_Templates_Inspector');
-
-        $this->changesHelper = Mage::getModel('M2ePro/Synchronization_Templates_Changes');
-        $this->changesHelper->setComponent($this->getComponent());
-        $this->changesHelper->init();
+        $this->productChangesManager = Mage::getModel('M2ePro/Synchronization_Templates_ProductChanges_Manager');
+        $this->productChangesManager->setComponent($this->getComponent());
+        $this->productChangesManager->init();
     }
 
     protected function afterEnd()
     {
-        $this->changesHelper->clearCache();
-        $this->executeRunner();
-
         parent::afterEnd();
+        $this->getProductChangesManager()->clearCache();
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function performActions()
     {
         $result = true;
 
-        $result = !$this->processTask('Templates_List') ? false : $result;
-        $result = !$this->processTask('Templates_Revise') ? false : $result;
-        $result = !$this->processTask('Templates_Relist') ? false : $result;
-        $result = !$this->processTask('Templates_Stop') ? false : $result;
+        $result = !$this->processTask('Templates_Repricing')       ? false : $result;
+        $result = !$this->processTask('Templates_Synchronization') ? false : $result;
 
         return $result;
     }
@@ -98,59 +80,10 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Templates
     protected function makeTask($taskPath)
     {
         $task = parent::makeTask($taskPath);
-
-        $task->setRunner($this->runner);
-        $task->setInspector($this->inspector);
-        $task->setChangesHelper($this->changesHelper);
+        $task->setProductChangesManager($this->getProductChangesManager());
 
         return $task;
     }
 
-    //####################################
-
-    private function executeRunner()
-    {
-        $this->getActualOperationHistory()->addTimePoint(__METHOD__,'Apply Products changes on Amazon');
-
-        $result = $this->runner->execute();
-        $this->affectResultRunner($result);
-
-        $this->getActualOperationHistory()->saveTimePoint(__METHOD__);
-    }
-
-    private function affectResultRunner($result)
-    {
-        if ($result == Ess_M2ePro_Helper_Data::STATUS_ERROR) {
-
-            $resultString = 'errors';
-            $resultType = Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR;
-            $resultPriority = Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH;
-
-        } else if ($result == Ess_M2ePro_Helper_Data::STATUS_WARNING) {
-
-            $resultString = 'warnings';
-            $resultType = Ess_M2ePro_Model_Log_Abstract::TYPE_WARNING;
-            $resultPriority = Ess_M2ePro_Model_Log_Abstract::PRIORITY_MEDIUM;
-
-        } else {
-            return;
-        }
-
-        $this->getLog()->addMessage(
-            Mage::getModel('M2ePro/Log_Abstract')->encodeDescription(
-                'Task "Inventory Synchronization" has completed with %result%. View %sl%Listings Log%el% for details.',
-                array(
-                    '!sl'=>'<a target="_blank" href="route:*/adminhtml_common_log/listing/;'.
-                             'back:*/adminhtml_common_log/synchronization/;'.
-                             'channel:' . Ess_M2ePro_Helper_Component_Amazon::NICK . '">',
-                    '!el'=>'</a>',
-                    '!result'=>$resultString
-                )
-            ), $resultType, $resultPriority
-        );
-
-        $this->getActualOperationHistory()->addText('Updating Products on Amazon ended with '.$resultString.'.');
-    }
-
-    //####################################
+    //########################################
 }

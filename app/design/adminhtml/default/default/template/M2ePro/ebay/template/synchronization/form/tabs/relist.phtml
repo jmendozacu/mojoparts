@@ -26,7 +26,9 @@
 
 <div id="block_notice_ebay_template_synchronization_form_data_relist" class="block_notices_module no-icon" title="<?php echo Mage::helper('M2ePro')->__('Relist Rules'); ?>">
     <?php echo Mage::helper('M2ePro')->__(
-        'If <b>Relist Action</b> is enabled, M2E Pro will Relist Items on eBay if they meet the Conditions you set.'
+        'If <b>Relist Action</b> is enabled, M2E Pro will Relist Items on eBay if they meet the Conditions you set.<br/><br/>
+        More detailed information about ability to work with this Page you can find <a href="%url%" target="_blank">here</a>.',
+        Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/QQAJAQ')
     ); ?>
 </div>
 
@@ -43,7 +45,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Relist Action'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Relist Action'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="relist_mode" name="synchronization[relist_mode]" class="required-entry">
@@ -60,7 +62,7 @@
 
                 <tr id="relist_filter_user_lock_tr_container" <?php if ($formData['relist_mode'] == Ess_M2ePro_Model_Ebay_Template_Synchronization::RELIST_MODE_NONE): echo ' style="display:none;"'; endif; ?>>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Relist When Stopped Manually'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Relist When Stopped Manually'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="relist_filter_user_lock" name="synchronization[relist_filter_user_lock]" class="required-entry">
@@ -71,26 +73,6 @@
                             <span><?php echo Mage::helper('M2ePro')->__(
                                 'Choose whether you want the Automatic Relist Rules to Relist Items even if they\'ve been Stopped manually.'
                             ); ?></span>
-                        </p>
-                    </td>
-                </tr>
-
-                <tr id="relist_send_data_tr_container" <?php if ($formData['relist_mode'] == Ess_M2ePro_Model_Ebay_Template_Synchronization::RELIST_MODE_NONE): echo ' style="display:none;"'; endif; ?>>
-                    <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Synchronize Data'); ?>: <span class="required">*</span></label>
-                    </td>
-                    <td class="value" style="width: auto;">
-                        <select id="relist_send_data" name="synchronization[relist_send_data]" class="required-entry">
-                            <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Synchronization::RELIST_SEND_DATA_NONE; ?>" <?php if ($formData['relist_send_data'] == Ess_M2ePro_Model_Ebay_Template_Synchronization::RELIST_SEND_DATA_NONE): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
-                            <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Synchronization::RELIST_SEND_DATA_YES; ?>" <?php if ($formData['relist_send_data'] == Ess_M2ePro_Model_Ebay_Template_Synchronization::RELIST_SEND_DATA_YES): echo ' selected="selected"'; endif; ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
-                        </select>
-                        <p class="note">
-                            <span>
-                                <?php echo Mage::helper('M2ePro')->__(
-                                    '<b>No:</b> Items are Relisted on eBay as per previously Listed Information and Settings, ignoring any changes that have been made on Magento.<br/>
-                                    <b>Yes:</b> Any changes that have been made in Magento to Items that are being Relisted will be Reflected on the eBay Listing.'
-                                ); ?>
-                            </span>
                         </p>
                     </td>
                 </tr>
@@ -111,11 +93,22 @@
     <div class="fieldset">
         <div class="hor-scroll">
 
+            <div id="messages">
+                <ul class="messages">
+                    <li class="notice-msg"><ul><li><span>
+                        <?php echo Mage::helper('M2ePro')->__('
+                            If <strong>Out of Stock</strong> Control option is enabled, the <strong>Good Till Cancelled</strong> Items
+                            will be <strong>Revised instead of  being Relisted</strong> based on the Relist Conditions specifed below.
+                        '); ?>
+                    </span></li></ul></li>
+                </ul>
+            </div>
+
             <table class="form-list" cellspacing="0" cellpadding="0">
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Product Status'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Product Status'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="relist_status_enabled" name="synchronization[relist_status_enabled]" class="required-entry M2ePro-validate-stop-relist-conditions-product-status">
@@ -133,7 +126,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Stock Availability'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Stock Availability'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="relist_is_in_stock" name="synchronization[relist_is_in_stock]" class="required-entry M2ePro-validate-stop-relist-conditions-stock-availability">
@@ -151,7 +144,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Magento Quantity'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Magento Quantity'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="relist_qty_magento" name="synchronization[relist_qty_magento]" class="required-entry M2ePro-validate-stop-relist-conditions-item-qty" qty_type="magento">
@@ -193,7 +186,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Calculated Quantity'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Calculated Quantity'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="relist_qty_calculated" name="synchronization[relist_qty_calculated]" class="required-entry M2ePro-validate-stop-relist-conditions-item-qty" qty_type="calculated">

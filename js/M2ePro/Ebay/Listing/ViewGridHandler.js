@@ -1,15 +1,29 @@
 EbayListingViewGridHandler = Class.create(ListingGridHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     selectedProductsIds: [],
     selectedCategoriesData: {},
 
-    //----------------------------------
+    // ---------------------------------------
 
     prepareActions: function($super)
     {
-        $super();
+        this.actionHandler = new EbayListingActionHandler(this);
+
+        this.actions = {
+            listAction: this.actionHandler.listAction.bind(this.actionHandler),
+            relistAction: this.actionHandler.relistAction.bind(this.actionHandler),
+            reviseAction: this.actionHandler.reviseAction.bind(this.actionHandler),
+            stopAction: this.actionHandler.stopAction.bind(this.actionHandler),
+            stopAndRemoveAction: this.actionHandler.stopAndRemoveAction.bind(this.actionHandler),
+            previewItemsAction: this.actionHandler.previewItemsAction.bind(this.actionHandler),
+            startTranslateAction: this.actionHandler.startTranslateAction.bind(this.actionHandler),
+            stopTranslateAction: this.actionHandler.stopTranslateAction.bind(this.actionHandler)
+        };
+
+        this.variationProductManageHandler = new EbayListingVariationProductManageHandler(this);
+        this.listingProductBidsHandler = new EbayListingProductBidsHandler(this);
 
         this.actions = Object.extend(this.actions, {
 
@@ -30,7 +44,7 @@ EbayListingViewGridHandler = Class.create(ListingGridHandler, {
         $super();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     editCategorySettings: function(id)
     {
@@ -69,7 +83,7 @@ EbayListingViewGridHandler = Class.create(ListingGridHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     editSpecificSettings: function()
     {
@@ -95,7 +109,7 @@ EbayListingViewGridHandler = Class.create(ListingGridHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     saveCategoryTemplate: function()
     {
@@ -121,14 +135,14 @@ EbayListingViewGridHandler = Class.create(ListingGridHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getComponent: function()
     {
         return 'ebay';
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     openPopUp: function(title, content, params)
     {
@@ -171,5 +185,5 @@ EbayListingViewGridHandler = Class.create(ListingGridHandler, {
         } catch (ignored) {}
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

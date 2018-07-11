@@ -1,11 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
-class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts extends Mage_Adminhtml_Block_Widget_Container
+class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts extends Ess_M2ePro_Block_Adminhtml_Widget_Container
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
@@ -15,7 +19,7 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts extends Mage_Admi
 
     protected function _beforeToHtml()
     {
-        //------------------------------
+        // ---------------------------------------
         $data = array(
             'id'    => 'failedProducts_continue_button',
             'label' => Mage::helper('M2ePro')->__('Continue'),
@@ -23,9 +27,9 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts extends Mage_Admi
         );
         $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
         $this->setChild('failedProducts_continue_button',$buttonBlock);
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $data = array(
             'id'    => 'failedProducts_back_button',
             'label' => Mage::helper('M2ePro')->__('Back'),
@@ -33,9 +37,9 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts extends Mage_Admi
         );
         $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
         $this->setChild('failedProducts_back_button',$buttonBlock);
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
 
         $this->setChild(
             'failedProducts_grid',
@@ -44,8 +48,10 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts extends Mage_Admi
                 array('grid_url' => $this->getData('grid_url'))
             )
         );
-        //------------------------------
+        // ---------------------------------------
 
         parent::_beforeToHtml();
     }
+
+    //########################################
 }

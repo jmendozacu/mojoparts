@@ -1,34 +1,34 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Order_View_ExternalTransaction extends Mage_Adminhtml_Block_Widget_Grid
 {
-    // ##########################################################
-
     /** @var $order Ess_M2ePro_Model_Order */
     protected $order = null;
 
-    // ##########################################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayOrderViewExternalTransaction');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('id');
         $this->setDefaultDir('DESC');
         $this->setPagerVisibility(false);
         $this->setFilterVisibility(false);
-        //------------------------------
+        // ---------------------------------------
 
         $this->order = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
     }
@@ -114,4 +114,6 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Order_View_ExternalTransaction extends Mag
     {
         return '';
     }
+
+    //########################################
 }

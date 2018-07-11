@@ -1,55 +1,61 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Development_Inspection_Installation
     extends Ess_M2ePro_Block_Adminhtml_Development_Inspection_Abstract
 {
     public $lastVersion;
-    public $installationVersionHistory;
+    public $installationVersionHistory = array();
 
-    // ########################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('developmentInspectionInstallation');
-        //------------------------------
+        // ---------------------------------------
 
         $this->setTemplate('M2ePro/development/inspection/installation.phtml');
 
         $this->prepareInfo();
     }
 
-    // ########################################
+    //########################################
 
     protected function prepareInfo()
     {
         $cacheConfig = Mage::helper('M2ePro/Module')->getCacheConfig();
-        $this->latestVersion = $cacheConfig->getGroupValue('/installation/version/', 'last_version');
+        $this->latestVersion = $cacheConfig->getGroupValue('/installation/', 'public_last_version');
+        $this->buildLatestVersion = $cacheConfig->getGroupValue('/installation/', 'build_last_version');
 
-        /** @var $cacheConfigCollection Mage_Core_Model_Mysql4_Collection_Abstract */
-        $cacheConfigCollection = $cacheConfig->getCollection()
-                                             ->addFieldToFilter('`group`', '/installation/version/history/')
-                                             ->setOrder('create_date','DESC');
+        $registryModel = Mage::getModel('M2ePro/Registry');
+        $structureHelper = Mage::helper('M2ePro/Module_Database_Structure');
 
-        $history = $cacheConfigCollection->toArray();
-        $this->installationVersionHistory = $history['items'];
+        if ($structureHelper->isTableExists($registryModel->getResource()->getMainTable())) {
+
+            $this->installationVersionHistory = $registryModel
+                    ->load('/installation/versions_history/', 'key')
+                    ->getValueFromJson();
+        }
 
         $this->latestUpgradeDate        = false;
         $this->latestUpgradeFromVersion = '--';
         $this->latestUpgradeToVersion   = '--';
 
-        if (isset($this->installationVersionHistory[0])) {
+        $lastVersion = array_pop($this->installationVersionHistory);
+        if (!empty($lastVersion)) {
 
-            $this->latestUpgradeDate        = $this->installationVersionHistory[0]['create_date'];
-            $this->latestUpgradeFromVersion = $this->installationVersionHistory[0]['value'];
-            $this->latestUpgradeToVersion   = $this->installationVersionHistory[0]['key'];
+            $this->latestUpgradeDate        = $lastVersion['date'];
+            $this->latestUpgradeFromVersion = $lastVersion['from'];
+            $this->latestUpgradeToVersion   = $lastVersion['to'];
         }
     }
 
@@ -74,5 +80,5 @@ class Ess_M2ePro_Block_Adminhtml_Development_Inspection_Installation
         return true;
     }
 
-    // ########################################
+    //########################################
 }

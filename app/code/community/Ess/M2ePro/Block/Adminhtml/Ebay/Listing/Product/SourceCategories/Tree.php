@@ -1,14 +1,14 @@
 <?php
 
 /*
-* @copyright  Copyright (c) 2013 by  ESS-UA.
-*/
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
+ */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Tree
     extends Mage_Adminhtml_Block_Catalog_Category_Abstract
 {
-    // #############################################
-
     protected $selectedIds = array();
 
     /* @var string */
@@ -17,7 +17,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Tree
     /* @var Varien_Data_Tree_Node */
     protected $currentNode = NULL;
 
-    // #############################################
+    //########################################
 
     public function setSelectedIds(array $ids)
     {
@@ -53,7 +53,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Tree
         return $this->currentNode ? $this->currentNode->getId() : NULL;
     }
 
-    // #############################################
+    //########################################
 
     public function setGridId($gridId)
     {
@@ -66,14 +66,14 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Tree
         return $this->gridId;
     }
 
-    // #############################################
+    //########################################
 
     public function getLoadTreeUrl()
     {
         return $this->getUrl('*/*/getCategoriesJson', array('_current'=>true));
     }
 
-    // #############################################
+    //########################################
 
     public function getCategoryCollection()
     {
@@ -93,23 +93,23 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Tree
         return $collection;
     }
 
-    // #############################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('listingCategoryTree');
-        //------------------------------
+        // ---------------------------------------
 
         $this->setTemplate('M2ePro/ebay/listing/product/source_categories/tree.phtml');
 
         $this->_isAjax = $this->getRequest()->isXmlHttpRequest();
     }
 
-    // #############################################
+    //########################################
 
     public function getTreeJson($parentNodeCategory=null)
     {
@@ -118,7 +118,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Tree
         return $json;
     }
 
-    // #############################################
+    //########################################
 
     protected function _getNodeJson($node, $level = 0)
     {
@@ -171,7 +171,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Tree
         return false;
     }
 
-    // #############################################
+    //########################################
 
     public function buildNodeName($node)
     {
@@ -182,7 +182,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Tree
 HTML;
     }
 
-    // #############################################
+    //########################################
 
     public function getCategoryChildrenJson($categoryId)
     {
@@ -190,7 +190,7 @@ HTML;
         return $this->getTreeJson(Mage::getModel('catalog/category')->load($categoryId));
     }
 
-    // #############################################
+    //########################################
 
     public function getAffectedCategoriesCount()
     {
@@ -200,8 +200,11 @@ HTML;
 
         $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
                              ->select()
-                             ->from(Mage::getSingleton('core/resource')->getTableName('catalog/category_product'),
-                                    'category_id')
+                             ->from(
+                                 Mage::helper('M2ePro/Module_Database_Structure')
+                                     ->getTableNameWithPrefix('catalog/category_product'),
+                                 'category_id'
+                             )
                              ->where('`product_id` IN(?)',$this->getSelectedIds());
 
         $affectedCategoriesCount = Mage::getModel('catalog/category')->getCollection()
@@ -215,7 +218,7 @@ HTML;
         return $this->getData('affected_categories_count');
     }
 
-    // #############################################
+    //########################################
 
     public function getProductsForEachCategory()
     {
@@ -230,7 +233,7 @@ HTML;
         /* @var $select Varien_Db_Select */
         $select = Mage::getModel('catalog/category')->getCollection()->getSelect();
         $select->joinLeft(
-            Mage::getSingleton('core/resource')->getTableName('catalog/category_product'),
+            Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('catalog/category_product'),
             "entity_id = category_id AND product_id IN ({$ids})",
             array('product_id')
         );
@@ -262,18 +265,18 @@ HTML;
         return $this->getData('products_count_for_each_category');
     }
 
-    // #############################################
+    //########################################
 
     public function getInfoJson()
     {
-        return json_encode(array(
+        return Mage::helper('M2ePro')->jsonEncode(array(
             'category_products' => $this->getProductsCountForEachCategory(),
             'total_products_count' => count($this->getSelectedIds()),
             'total_categories_count' => $this->getAffectedCategoriesCount()
         ));
     }
 
-    // #############################################
+    //########################################
 
     protected function loadProductsCount($collection)
     {
@@ -289,7 +292,7 @@ HTML;
 
         $readConnection = Mage::getSingleton('core/resource')->getConnection('core_read');
 
-        //----------------------------
+        // ---------------------------------------
         $excludeProductsSelect = $readConnection->select()->from(
                 Mage::getResourceModel('M2ePro/Listing_Product')->getMainTable(),
                 new Zend_Db_Expr('DISTINCT `product_id`')
@@ -317,5 +320,5 @@ HTML;
         }
     }
 
-    // #############################################
+    //########################################
 }

@@ -1,13 +1,13 @@
 <?php
 
 /*
-* @copyright  Copyright (c) 2013 by  ESS-UA.
-*/
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
+ */
 
 class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
 {
-    // ########################################
-
     protected $steps = array(
         'intro',
         'sellingFormatCurrencies',
@@ -16,14 +16,17 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
 
     protected static $currencyPreparedData = array();
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return string
+     */
     public function getNick()
     {
-        return Ess_M2ePro_Helper_Module::WIZARD_MIGRATION_NICK;
+        return 'migrationToV6';
     }
 
-    // ########################################
+    //########################################
 
     public function removeEmptySteps()
     {
@@ -39,8 +42,11 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
         }
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getStepTitles()
     {
         return array(
@@ -50,7 +56,7 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
         );
     }
 
-    // ########################################
+    //########################################
 
     public function getCurrencyPreparedData($componentMode)
     {
@@ -80,10 +86,10 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
             return array();
         }
 
-        return json_decode($data['data'], true);
+        return Mage::helper('M2ePro')->jsonDecode($data['data']);
     }
 
-    // ########################################
+    //########################################
 
     protected function prepareCurrencyData()
     {
@@ -130,7 +136,7 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
         }
     }
 
-    // ---------------------------------------------
+    // ---------------------------------------
 
     protected function getEbayReceivedPrices(Ess_M2ePro_Model_Ebay_Template_SellingFormat $template)
     {
@@ -155,7 +161,7 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
         foreach ($priceIds as $priceId) {
 
             if ($template->getData($priceId . '_mode') ==
-                Ess_M2ePro_Model_Template_SellingFormat::PRICE_ATTRIBUTE) {
+                Ess_M2ePro_Model_Template_SellingFormat::PRICE_MODE_ATTRIBUTE) {
                 continue;
             }
 
@@ -192,7 +198,7 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
         foreach ($priceIds as $priceId) {
 
             if ($template->getData($priceId . '_mode') ==
-                Ess_M2ePro_Model_Template_SellingFormat::PRICE_ATTRIBUTE) {
+                Ess_M2ePro_Model_Template_SellingFormat::PRICE_MODE_ATTRIBUTE) {
                 continue;
             }
 
@@ -218,34 +224,7 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
         return $receivedPrices;
     }
 
-    protected function getPlayReceivedPrices(Ess_M2ePro_Model_Play_Template_SellingFormat $template)
-    {
-        $priceIds = array(
-            'price_euro',
-            'price_gbr'
-        );
-
-        $migrationData = $this->getMigrationData('selling_format_currencies', Ess_M2ePro_Helper_Component_Play::NICK);
-
-        if (!isset($migrationData[(int)$template->getId()])) {
-            return array();
-        }
-
-        $receivedPrices = array();
-        foreach ($priceIds as $priceId) {
-
-            if ($template->getData($priceId . '_mode') ==
-                Ess_M2ePro_Model_Template_SellingFormat::PRICE_ATTRIBUTE) {
-                continue;
-            }
-
-            $receivedPrices[$priceId] = $template->getData($priceId . '_coefficient');
-        }
-
-        return $receivedPrices;
-    }
-
-    // ---------------------------------------------
+    // ---------------------------------------
 
     protected function getEbayMarketplaceCurrency($marketplaceId)
     {
@@ -262,12 +241,7 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
         return 'USD';
     }
 
-    protected function getPlayMarketplaceCurrency($marketplaceId)
-    {
-        return array('GBP', 'EUR');
-    }
-
-    // ---------------------------------------------
+    // ---------------------------------------
 
     protected function getUniqueUsedCurrencyPairs($templateId, $componentMode)
     {
@@ -318,5 +292,5 @@ class Ess_M2ePro_Model_Wizard_MigrationToV6 extends Ess_M2ePro_Model_Wizard
         return $pairs;
     }
 
-    // ########################################
+    //########################################
 }

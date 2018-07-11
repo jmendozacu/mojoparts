@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
@@ -21,11 +23,6 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
      */
     protected $logger = NULL;
 
-    /**
-     * @var Ess_M2ePro_Model_Buy_Listing_Product_Action_Configurator
-     */
-    protected $configurator = NULL;
-
     // ---------------------------------------
 
     /**
@@ -43,67 +40,84 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
      */
     protected $requestsDataObjects = array();
 
-    // ########################################
+    //########################################
 
     /**
      * @param array $params
      * @param Ess_M2ePro_Model_Listing_Product[] $listingsProducts
-     * @throws Exception
+     * @throws Ess_M2ePro_Model_Exception
      */
     public function __construct(array $params = array(), array $listingsProducts)
     {
         if (!isset($params['logs_action_id']) || !isset($params['status_changer'])) {
-            throw new Exception('Product Connector has not received some params');
+            throw new Ess_M2ePro_Model_Exception('Product Connector has not received some params');
         }
 
         if (empty($listingsProducts)) {
-            throw new Exception('Product Connector has received empty array');
+            throw new Ess_M2ePro_Model_Exception('Product Connector has received empty array');
         }
 
         /** @var Ess_M2ePro_Model_Account $account */
         $account = reset($listingsProducts)->getListing()->getAccount();
 
-        $listingProductIds = array();
+        $listingProductIds   = array();
+        $actionConfigurators = array();
 
-        foreach($listingsProducts as $listingProduct) {
+        foreach ($listingsProducts as $listingProduct) {
 
             if (!($listingProduct instanceof Ess_M2ePro_Model_Listing_Product)) {
-                throw new Exception('Product Connector has received invalid Product data type');
+                throw new Ess_M2ePro_Model_Exception('Product Connector has received invalid Product data type');
             }
 
             if ($account->getId() != $listingProduct->getListing()->getAccountId()) {
-                throw new Exception('Product Connector has received Products from different Accounts');
+                throw new Ess_M2ePro_Model_Exception('Product Connector has received Products from different Accounts');
             }
 
             $listingProductIds[] = $listingProduct->getId();
+
+            if (!is_null($listingProduct->getActionConfigurator())) {
+                $actionConfigurators[$listingProduct->getId()] = $listingProduct->getActionConfigurator();
+            } else {
+                $actionConfigurators[$listingProduct->getId()] = Mage::getModel(
+                    'M2ePro/Buy_Listing_Product_Action_Configurator'
+                );
+            }
         }
 
         /** @var Ess_M2ePro_Model_Mysql4_Listing_Product_Collection $listingProductCollection */
         $listingProductCollection = Mage::helper('M2ePro/Component_Buy')->getCollection('Listing_Product');
         $listingProductCollection->addFieldToFilter('id', array('in' => array_unique($listingProductIds)));
 
+        /** @var Ess_M2ePro_Model_Listing_Product[] $actualListingsProducts */
         $actualListingsProducts = $listingProductCollection->getItems();
 
         if (empty($actualListingsProducts)) {
-            throw new Exception('All products were removed before connector processing');
+            throw new Ess_M2ePro_Model_Exception('All products were removed before connector processing');
         }
 
-        $this->listingsProducts = $actualListingsProducts;
+        foreach ($actualListingsProducts as $actualListingProduct) {
+            $actualListingProduct->setActionConfigurator($actionConfigurators[$actualListingProduct->getId()]);
+            $this->listingsProducts[$actualListingProduct->getId()] = $actualListingProduct;
+        }
 
         parent::__construct($params,$account);
     }
 
-    // ########################################
+    //########################################
 
     abstract protected function getLogsAction();
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     protected function getLockIdentifier()
     {
         return strtolower($this->getOrmActionType());
     }
 
+    /**
+     * @param Ess_M2ePro_Model_Processing_Request $processingRequest
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function setProcessingLocks(Ess_M2ePro_Model_Processing_Request $processingRequest)
     {
         parent::setProcessingLocks($processingRequest);
@@ -129,7 +143,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         }
     }
 
-    // ########################################
+    //########################################
 
     public function process()
     {
@@ -166,8 +180,11 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         $this->unlockListingsProducts();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isProcessingItems()
     {
         return (bool)$this->isProcessingItems;
@@ -178,14 +195,17 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         $this->isProcessingItems = (bool)$isProcessingItems;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     public function getStatus()
     {
         return $this->getLogger()->getStatus();
     }
 
-    // ########################################
+    //########################################
 
     protected function validateAndFilterListingsProducts()
     {
@@ -213,7 +233,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         }
     }
 
-    // ########################################
+    //########################################
 
     protected function filterLockedListingsProducts()
     {
@@ -222,11 +242,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
             $lockItem = Mage::getModel('M2ePro/LockItem');
             $lockItem->setNick(Ess_M2ePro_Helper_Component_Buy::NICK.'_listing_product_'.$listingProduct->getId());
 
-            if ($listingProduct->isLockedObject(NULL) ||
-                $listingProduct->isLockedObject('in_action') ||
-                $listingProduct->isLockedObject($this->getLockIdentifier().'_action') ||
-                $lockItem->isExist()
-            ) {
+            if ($listingProduct->isLockedObject('in_action') || $lockItem->isExist()) {
 
                 // M2ePro_TRANSLATIONS
                 // Another Action is being processed. Try again when the Action is completed.
@@ -251,7 +267,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         unset($this->listingsProducts[$listingProduct->getId()]);
     }
 
-    // ########################################
+    //########################################
 
     protected function lockListingsProducts()
     {
@@ -277,7 +293,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         }
     }
 
-    // ########################################
+    //########################################
 
     protected function getRequestData()
     {
@@ -314,22 +330,25 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         $products = array();
 
         foreach ($this->listingsProducts as $listingProduct) {
-            $products[$listingProduct->getId()] = $this->getRequestDataObject($listingProduct)->getData();
+            $products[$listingProduct->getId()] = array(
+                'request'      => $this->getRequestDataObject($listingProduct)->getData(),
+                'configurator' => $listingProduct->getActionConfigurator()->getData(),
+            );
         }
 
         return array(
-            'account_id' => $this->account->getId(),
-            'action_type' => $this->getActionType(),
+            'account_id'      => $this->account->getId(),
+            'action_type'     => $this->getActionType(),
             'lock_identifier' => $this->getLockIdentifier(),
-            'logs_action' => $this->getLogsAction(),
-            'logs_action_id' => $this->getLogger()->getActionId(),
-            'status_changer' => $this->params['status_changer'],
-            'params' => $this->params,
-            'products' => $products
+            'logs_action'     => $this->getLogsAction(),
+            'logs_action_id'  => $this->getLogger()->getActionId(),
+            'status_changer'  => $this->params['status_changer'],
+            'params'          => $this->params,
+            'products'        => $products
         );
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Buy_Listing_Product_Action_Logger
@@ -365,25 +384,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         return $this->logger;
     }
 
-    /**
-     * @return Ess_M2ePro_Model_Buy_Listing_Product_Action_Configurator
-     */
-    protected function getConfigurator()
-    {
-        if (is_null($this->configurator)) {
-
-            /** @var Ess_M2ePro_Model_Buy_Listing_Product_Action_Configurator $configurator */
-
-            $configurator = Mage::getModel('M2ePro/Buy_Listing_Product_Action_Configurator');
-            $configurator->setParams($this->params);
-
-            $this->configurator = $configurator;
-        }
-
-        return $this->configurator;
-    }
-
-    // ########################################
+    //########################################
 
     /**
      * @param Ess_M2ePro_Model_Listing_Product $listingProduct
@@ -400,7 +401,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
 
             $validator->setParams($this->params);
             $validator->setListingProduct($listingProduct);
-            $validator->setConfigurator($this->getConfigurator());
+            $validator->setConfigurator($listingProduct->getActionConfigurator());
 
             $this->validatorsObjects[$listingProduct->getId()] = $validator;
         }
@@ -423,7 +424,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
 
             $request->setParams($this->params);
             $request->setListingProduct($listingProduct);
-            $request->setConfigurator($this->getConfigurator());
+            $request->setConfigurator($listingProduct->getActionConfigurator());
             $request->setValidatorsData($this->getValidatorObject($listingProduct)->getData());
 
             $this->requestsObjects[$listingProduct->getId()] = $request;
@@ -432,7 +433,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         return $this->requestsObjects[$listingProduct->getId()];
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @param Ess_M2ePro_Model_Listing_Product $listingProduct
@@ -464,7 +465,7 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
         return $this->requestsDataObjects[$listingProduct->getId()];
     }
 
-    // ########################################
+    //########################################
 
     private function getOrmActionType()
     {
@@ -483,10 +484,10 @@ abstract class Ess_M2ePro_Model_Connector_Buy_Product_Requester
                 return 'Delete';
         }
 
-        throw new Exception('Wrong Action type');
+        throw new Ess_M2ePro_Model_Exception('Wrong Action type');
     }
 
     abstract protected function getActionType();
 
-    // ########################################
+    //########################################
 }

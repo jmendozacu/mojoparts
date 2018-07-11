@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Order_View_Item extends Mage_Adminhtml_Block_Widget_Grid
@@ -12,24 +14,26 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Order_View_Item extends Mage_Adminhtml_Blo
     /** @var $taxCalculator Mage_Tax_Model_Calculation */
     private $taxCalculator;
 
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayOrderViewItem');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('id');
         $this->setDefaultDir('DESC');
         $this->setPagerVisibility(false);
         $this->setFilterVisibility(false);
         $this->setUseAjax(true);
         $this->_defaultLimit = 200;
-        //------------------------------
+        // ---------------------------------------
 
         $this->order = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
         $this->taxCalculator = Mage::getSingleton('tax/calculation');
@@ -41,9 +45,14 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Order_View_Item extends Mage_Adminhtml_Blo
             ->getCollection('Order_Item')
             ->addFieldToFilter('order_id', $this->order->getId());
 
+        $stockId = Mage::helper('M2ePro/Magento_Store')->getStockId($this->order->getStore());
+
         $collection->getSelect()->joinLeft(
-            array('cisi' => Mage::getSingleton('core/resource')->getTableName('cataloginventory_stock_item')),
-            '(cisi.product_id = `main_table`.product_id AND cisi.stock_id = 1)',
+            array(
+                'cisi' => Mage::helper('M2ePro/Module_Database_Structure')
+                    ->getTableNameWithPrefix('cataloginventory_stock_item')
+            ),
+            "(cisi.product_id = `main_table`.product_id AND cisi.stock_id = {$stockId})",
             array('is_in_stock')
         );
 
@@ -121,7 +130,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Order_View_Item extends Mage_Adminhtml_Blo
         return parent::_prepareColumns();
     }
 
-    //##############################################################
+    //########################################
 
     /**
      * @param $value
@@ -135,7 +144,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Order_View_Item extends Mage_Adminhtml_Blo
     {
         $html = '<b>'.Mage::helper('M2ePro')->escapeHtml($row->getTitle()).'</b><br/>';
 
-        $variation = $row->getChildObject()->getVariation();
+        $variation = $row->getChildObject()->getVariationOptions();
         if (!empty($variation)) {
             foreach ($variation as $optionName => $optionValue) {
                 $optionNameHtml = Mage::helper('M2ePro')->escapeHtml($optionName);
@@ -175,7 +184,7 @@ HTML;
         $gridId = $this->getId();
 
         $editLink = '';
-        if (!$row->getProductId() || $row->getMagentoProduct()->hasRequiredOptions()) {
+        if (!$row->getProductId() || $row->getMagentoProduct()->isProductWithVariations()) {
 
             if (!$row->getProductId()) {
                 $action = Mage::helper('M2ePro')->__('Map to Magento Product');
@@ -226,7 +235,7 @@ HTML;
 
     public function callbackColumnOriginalPrice($value, $row, $column, $isExport)
     {
-        $formattedPrice = '0';
+        $formattedPrice = Mage::helper('M2ePro')->__('N/A');
 
         $product = $row->getProduct();
 
@@ -264,7 +273,7 @@ HTML;
             return '0%';
         }
 
-        $taxDetails = json_decode($taxDetails, true);
+        $taxDetails = Mage::helper('M2ePro')->jsonDecode($taxDetails);
         if (empty($taxDetails)) {
             return '0%';
         }
@@ -278,7 +287,7 @@ HTML;
 
         $taxDetails = $row->getData('tax_details');
         if (!empty($taxDetails)) {
-            $taxDetails = json_decode($row->getData('tax_details'), true);
+            $taxDetails = Mage::helper('M2ePro')->jsonDecode($row->getData('tax_details'));
 
             if (!empty($taxDetails['amount'])) {
                 $total += $taxDetails['amount'];
@@ -299,4 +308,6 @@ HTML;
     {
         return $this->getUrl('*/*/orderItemGrid', array('_current' => true));
     }
+
+    //########################################
 }

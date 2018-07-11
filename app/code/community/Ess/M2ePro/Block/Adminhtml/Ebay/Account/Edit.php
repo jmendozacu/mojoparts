@@ -1,25 +1,29 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit extends Mage_Adminhtml_Block_Widget_Form_Container
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayAccountEdit');
         $this->_blockGroup = 'M2ePro';
         $this->_controller = 'adminhtml_ebay_account';
         $this->_mode = 'edit';
-        //------------------------------
+        // ---------------------------------------
 
         // Set header text
-        //------------------------------
+        // ---------------------------------------
         if (!Mage::helper('M2ePro/View_Ebay_Component')->isSingleActiveComponent()) {
             $componentName = Mage::helper('M2ePro/Component_Ebay')->getTitle();
             $headerTextEdit = Mage::helper('M2ePro')->__("Edit %component_name% Account", $componentName);
@@ -37,10 +41,10 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit extends Mage_Adminhtml_Block_
         } else {
             $this->_headerText = $headerTextAdd;
         }
-        //------------------------------
+        // ---------------------------------------
 
         // Set buttons actions
-        //------------------------------
+        // ---------------------------------------
         $this->removeButton('back');
         $this->removeButton('reset');
         $this->removeButton('delete');
@@ -94,4 +98,6 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit extends Mage_Adminhtml_Block_
             'class'     => 'save'
         ));
     }
+
+    //########################################
 }

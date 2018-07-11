@@ -1,36 +1,48 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Servicing_Task_Cron extends Ess_M2ePro_Model_Servicing_Task
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return string
+     */
     public function getPublicNick()
     {
         return 'cron';
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isAllowed()
     {
         $helper = Mage::helper('M2ePro/Module_Cron');
+
+        if ($this->getInitiator() === Ess_M2ePro_Helper_Data::INITIATOR_DEVELOPER) {
+            return true;
+        }
 
         if (is_null($helper->getLastRun())) {
             return true;
         }
 
-        if ($helper->isTypeService() && $helper->isLastRunMoreThan(900)) {
+        if ($helper->isRunnerService() && $helper->isLastRunMoreThan(900)) {
             return true;
         }
 
-        if ($helper->isTypeMagento()) {
+        if ($helper->isRunnerMagento()) {
 
             $currentTimeStamp = Mage::helper('M2ePro')->getCurrentGmtDate(true);
-            $lastTypeChange = $helper->getLastTypeChange();
+            $lastTypeChange = $helper->getLastRunnerChange();
             $lastRun = Mage::helper('M2ePro/Module')->getCacheConfig()
                            ->getGroupValue('/servicing/cron/', 'last_run');
 
@@ -47,8 +59,12 @@ class Ess_M2ePro_Model_Servicing_Task_Cron extends Ess_M2ePro_Model_Servicing_Ta
         return false;
     }
 
-    // -----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     * @throws Mage_Core_Exception
+     */
     public function getRequestData()
     {
         $adminStore = Mage::app()->getStore(Mage_Core_Model_App::ADMIN_STORE_ID);
@@ -76,5 +92,5 @@ class Ess_M2ePro_Model_Servicing_Task_Cron extends Ess_M2ePro_Model_Servicing_Ta
                                      ->setGroupValue('/cron/service/', 'auth_key', $data['auth_key']);
     }
 
-    // ########################################
+    //########################################
 }

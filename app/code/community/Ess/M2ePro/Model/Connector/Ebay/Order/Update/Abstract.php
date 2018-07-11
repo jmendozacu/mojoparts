@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Abstract
@@ -11,15 +13,13 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Abstract
     // eBay Order Status was not updated. Reason: %msg%
     // Status of India Site Orders cannot be updated if the Buyer uses PaisaPay payment method.
 
-    // ########################################
-
     /**
      * @var $order Ess_M2ePro_Model_Order
      */
     protected $order = NULL;
     protected $action = NULL;
 
-    // ########################################
+    //########################################
 
     public function __construct(array $params = array(), Ess_M2ePro_Model_Order $order, $action = NULL)
     {
@@ -29,14 +29,14 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Abstract
         parent::__construct($params, NULL, $order->getAccount());
     }
 
-    // ########################################
+    //########################################
 
     protected function getCommand()
     {
-        return array('sales', 'update', 'status');
+        return array('orders', 'update', 'status');
     }
 
-    // ########################################
+    //########################################
 
     protected function validateResponseData($response)
     {
@@ -64,12 +64,12 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Abstract
         return $result;
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
     protected function isNeedSendRequest()
     {
         if ($this->order->getMarketplace()->getCode() == 'India'
-            && stripos($this->order->getChildObject()->getPaymentMethod(), 'paisa')
+            && stripos($this->order->getChildObject()->getPaymentMethod(), 'paisa') !== false
         ) {
             $this->order->addErrorLog('eBay Order Status was not updated. Reason: %msg%', array(
                 'msg' => 'Status of India Site Orders cannot be updated if the Buyer uses PaisaPay payment method.'
@@ -83,7 +83,7 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Abstract
             Ess_M2ePro_Model_Connector_Ebay_Order_Dispatcher::ACTION_SHIP,
             Ess_M2ePro_Model_Connector_Ebay_Order_Dispatcher::ACTION_SHIP_TRACK
         ))) {
-            throw new LogicException('Invalid Action.');
+            throw new Ess_M2ePro_Model_Exception_Logic('Invalid Action.');
         }
 
         return true;
@@ -107,5 +107,5 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Order_Update_Abstract
         return $requestData;
     }
 
-    // ########################################
+    //########################################
 }

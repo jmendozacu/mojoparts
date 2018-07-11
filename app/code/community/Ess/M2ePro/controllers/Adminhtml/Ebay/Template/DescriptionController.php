@@ -1,43 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Ebay_Template_DescriptionController
     extends Ess_M2ePro_Controller_Adminhtml_Ebay_MainController
 {
-    //#############################################
-
-    public function saveWatermarkImageAction()
-    {
-        $templateData = $this->getRequest()->getPost('description');
-
-        if (is_null($templateData['id']) || empty($_FILES['watermark_image']['tmp_name'])) {
-            return NULL;
-        }
-
-        $varDir = new Ess_M2ePro_Model_VariablesDir(
-            array('child_folder' => 'ebay/template/description/watermarks')
-        );
-
-        $watermarkPath = $varDir->getPath().(int)$templateData['id'].'.png';
-        if (is_file($watermarkPath)) {
-            @unlink($watermarkPath);
-        }
-
-        $template = Mage::getModel('M2ePro/Ebay_Template_Description')->load((int)$templateData['id']);
-        $template->updateWatermarkHashes();
-
-        $data = array(
-            'watermark_image' => file_get_contents($_FILES['watermark_image']['tmp_name'])
-        );
-
-        $template->addData($data);
-        $template->save();
-    }
-
-    // ----------------------------------
+    //########################################
 
     public function previewAction()
     {
@@ -66,7 +38,7 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_DescriptionController
         $this->printOutput($title, $description);
     }
 
-    //#############################################
+    //########################################
 
     private function printOutput($title = NULL, $description = NULL, $errorMessage = NULL)
     {
@@ -104,9 +76,9 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_DescriptionController
 
         if ($descriptionTemplateData['description_mode'] == $descriptionModeProduct) {
             $description = $magentoProduct->getProduct()->getDescription();
-        } elseif ($descriptionTemplateData['description_mode'] == $descriptionModeShort){
+        } elseif ($descriptionTemplateData['description_mode'] == $descriptionModeShort) {
             $description = $magentoProduct->getProduct()->getShortDescription();
-        } elseif ($descriptionTemplateData['description_mode'] == $descriptionModeCustom){
+        } elseif ($descriptionTemplateData['description_mode'] == $descriptionModeCustom) {
             $description = $descriptionTemplateData['description_template'];
         } else {
             $description = '';
@@ -119,47 +91,19 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_DescriptionController
         $renderer = Mage::helper('M2ePro/Module_Renderer_Description');
         $description = $renderer->parseTemplate($description, $magentoProduct);
 
-        if (!is_null($listingProduct)){
+        if (!is_null($listingProduct)) {
 
             /** @var Ess_M2ePro_Model_Ebay_Listing_Product_Description_Renderer $renderer */
             $renderer = Mage::getSingleton('M2ePro/Ebay_Listing_Product_Description_Renderer');
+            $renderer->setRenderMode(Ess_M2ePro_Model_Ebay_Listing_Product_Description_Renderer::MODE_PREVIEW);
             $renderer->setListingProduct($listingProduct->getChildObject());
             $description = $renderer->parseTemplate($description);
         }
 
-        $this->addWatermarkInfoToDescriptionIfNeed($description);
         return $description;
     }
 
-    private function addWatermarkInfoToDescriptionIfNeed(&$description)
-    {
-        $descriptionTemplateData = $this->_getSession()->getTemplateData();
-        if (!$descriptionTemplateData['watermark_mode'] || strpos($description, 'm2e_watermark') === false) {
-            return;
-        }
-
-        preg_match_all('/<img [^>]*\bm2e_watermark[^>]*>/i', $description, $tagsArr);
-
-        $count = count($tagsArr[0]);
-        for($i = 0; $i < $count; $i++){
-
-            $dom = new DOMDocument();
-            $dom->loadHTML($tagsArr[0][$i]);
-            $tag = $dom->getElementsByTagName('img')->item(0);
-
-            $newTag = str_replace(' m2e_watermark="1"', '', $tagsArr[0][$i]);
-            $newTag = '<div class="description-preview-watermark-info">'.$newTag;
-
-            if($tag->getAttribute('width') == '' || $tag->getAttribute('width') > 100) {
-                $newTag = $newTag.'<p>Watermark will be applied to this picture.</p></div>';
-            } else {
-                $newTag = $newTag.'<p>Watermark.</p></div>';
-            }
-            $description = str_replace($tagsArr[0][$i], $newTag, $description);
-        }
-    }
-
-    //---------------------------------------------
+    // ---------------------------------------
 
     private function getProductsEntities()
     {
@@ -226,7 +170,7 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_DescriptionController
         return $magentoProduct;
     }
 
-    //---------------------------------------------
+    // ---------------------------------------
 
     private function getListingProductByMagentoProductId($productId, $storeId)
     {
@@ -261,12 +205,12 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_DescriptionController
             array('store_id')
         );
 
-        $listingProductCollection
+        $listingProducts = $listingProductCollection
             ->addFieldToFilter('store_id', $storeId)
             ->setPageSize(100)
             ->getItems();
 
-        if (count($listingProductCollection) <= 0) {
+        if (count($listingProducts) <= 0) {
             return NULL;
         }
 
@@ -274,5 +218,5 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_DescriptionController
         return array_shift($listingProducts);
     }
 
-    //#############################################
+    //########################################
 }

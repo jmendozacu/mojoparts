@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
@@ -13,14 +15,12 @@ class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
     const TYPE_POSITIVE = 'Positive';
     const TYPE_NEGATIVE = 'Negative';
 
-    // ########################################
-
     /**
      * @var Ess_M2ePro_Model_Account
      */
     private $accountModel = NULL;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -28,7 +28,7 @@ class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
         $this->_init('M2ePro/Ebay_Feedback');
     }
 
-    // ########################################
+    //########################################
 
     public function deleteInstance()
     {
@@ -37,7 +37,7 @@ class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
         return $temp;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -61,7 +61,7 @@ class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
          $this->accountModel = $instance;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Account
@@ -71,7 +71,7 @@ class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
         return $this->getAccount()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
     public function isNeutral()
     {
@@ -88,7 +88,7 @@ class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
         return $this->getData('buyer_feedback_type') == self::TYPE_POSITIVE;
     }
 
-    // ########################################
+    //########################################
 
     public function sendResponse($text, $type = self::TYPE_POSITIVE)
     {
@@ -103,11 +103,15 @@ class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
         $this->setData('last_response_attempt_date', Mage::helper('M2ePro')->getCurrentGmtDate())->save();
 
         try {
-            $response = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher')
-                                ->processVirtual('feedback', 'add', 'entity',
-                                                 $paramsConnector, NULL, NULL,
-                                                 $this->getAccount()
-            );
+
+            $dispatcherObj = Mage::getModel('M2ePro/Ebay_Connector_Dispatcher');
+            $connectorObj = $dispatcherObj->getVirtualConnector('feedback', 'add', 'entity',
+                                                                $paramsConnector, NULL, NULL,
+                                                                $this->getAccount());
+
+            $dispatcherObj->process($connectorObj);
+            $response = $connectorObj->getResponseData();
+
         } catch (Exception $e) {
             Mage::helper('M2ePro/Module_Exception')->process($e);
             return false;
@@ -157,5 +161,5 @@ class Ess_M2ePro_Model_Ebay_Feedback extends Ess_M2ePro_Model_Component_Abstract
         return !is_null($order->getId()) ? $order : NULL;
     }
 
-    // ########################################
+    //########################################
 }

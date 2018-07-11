@@ -74,7 +74,7 @@ while ($row = mysqli_fetch_array($result)) {
 		$surfaceFinish = $row["surface_finish"];
 		$otherImgURLs = $row["other_image_urls"];
 
-		mysqli_query($con, "INSERT INTO `mojo_ebaycopy_new_output` (`sku`, `category_ids`, `additional_notes`, `compatibility`, `cost`, `shipping_cost`, `handling_cost`, `description`, `ebay_category`, `ebay_store_cat_a`, `ebay_title`, `ebay_upc`, `hollander`, `is_in_stock`, `manufacturer`, `mpn`,`name`, `oemnumber`, `partslink`, `placement_on_vehicle`, `price`, `qty`, `short_description`, `surface_finish`, `vendor`, `vendor_item`, `has_compat`) 
+		mysqli_query($con, "INSERT INTO `mojo_ebaycopy_new_output` (`sku`, `category_ids`, `additional_notes`, `ebay_epids`, `cost`, `shipping_cost`, `handling_cost`, `description`, `ebay_category`, `ebay_store_cat_a`, `ebay_title`, `ebay_upc`, `hollander`, `is_in_stock`, `manufacturer`, `mpn`,`name`, `oemnumber`, `partslink`, `placement_on_vehicle`, `price`, `qty`, `short_description`, `surface_finish`, `vendor`, `vendor_item`, `has_compat`) 
 		VALUES ('{$sku}', '{$magentoCategory}', '{$additionalNotes}', '{$compatibility}', '{$cost}', '{$shippingCost}', '{$handlingCost}', '{$ebayTitle}', '{$ebayCategory}', '{$ebayStoreCategory}', '{$ebayTitle}', '{$upc}', '{$interchange}', '0', 'Aftermarket Replacement','{$mpn}', '{$ebayTitle}', '{$oem}', '{$partslink}', '{$placement}', '99999.99', '0', '{$ebayTitle}', '{$surfaceFinish}', 'PFG', '{$vendorItem}', '{$readyForEBay}')"); 
 		$p1Count++;
 		if ($mainImageURL != NULL) {
@@ -138,7 +138,7 @@ while ($row = mysqli_fetch_array($result)) {
 // removed the FULL update for now... only updating title, notes, compats
 //			mysqli_query($con, "INSERT INTO `mojo_ebaycopy_update_output` (`sku`, `category_ids`, `ebay_title`, `additional_notes`, `compatibility`,  `ebay_category`, `ebay_store_cat_a`, `ebay_upc`, `hollander`, `mpn`, `oemnumber`, `partslink`, `surface_finish`,`qty`,`is_in_stock`,`is_ready_for_ebay`, `review_code`) 
 //			VALUES ('{$sku}', '{$magentoCategory}', '{$eBayTitle}','{$additionalNotes}', '{$compats}', '{$ebayCategory}', '{$ebayStoreCategory}', '{$upc}', '{$interchange}', '{$mpn}', '{$oem}', '{$partslink}', '{$surfaceFinish}', '0', '0', '{$readyForEBay}', '{$reviewCode}')"); 
-			mysqli_query($con, "INSERT INTO `mojo_ebaycopy_update_output` (`sku`, `ebay_title`, `additional_notes`, `compatibility`, `has_compats`, `review_code`) 
+			mysqli_query($con, "INSERT INTO `mojo_ebaycopy_update_output` (`sku`, `ebay_title`, `additional_notes`, `ebay_epids`, `has_compat`, `review_code`) 
 			VALUES ('{$sku}', '{$eBayTitle}', '{$additionalNotes}', '{$compats}', '{$readyForEBay}', '{$reviewCode}')"); 
 
 			$p2Count++;

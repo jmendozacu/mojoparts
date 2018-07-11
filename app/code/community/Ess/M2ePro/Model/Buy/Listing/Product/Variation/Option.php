@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -9,7 +11,7 @@
  */
 class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_Model_Component_Child_Buy_Abstract
 {
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -17,7 +19,33 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         $this->_init('M2ePro/Buy_Listing_Product_Variation_Option');
     }
 
-    // ########################################
+    //########################################
+
+    protected function _afterSave()
+    {
+        $listingProductId = $this->getListingProduct()->getId();
+        $variationId      = $this->getListingProductVariation()->getId();
+
+        Mage::helper('M2ePro/Data_Cache_Session')->removeTagValues(
+            "listing_product_{$listingProductId}_variation_{$variationId}_options"
+        );
+
+        return parent::_afterSave();
+    }
+
+    protected function _beforeDelete()
+    {
+        $listingProductId = $this->getListingProduct()->getId();
+        $variationId      = $this->getListingProductVariation()->getId();
+
+        Mage::helper('M2ePro/Data_Cache_Session')->removeTagValues(
+            "listing_product_{$listingProductId}_variation_{$variationId}_options"
+        );
+
+        return parent::_beforeDelete();
+    }
+
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -35,7 +63,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return $this->getAccount()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -53,7 +81,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return $this->getMarketplace()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Listing
@@ -71,7 +99,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return $this->getListing()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Listing_Product
@@ -89,7 +117,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return $this->getListingProduct()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Listing_Product_Variation
@@ -107,7 +135,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return $this->getListingProductVariation()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Template_SellingFormat
@@ -125,7 +153,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return $this->getSellingFormatTemplate()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Template_Synchronization
@@ -143,7 +171,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return $this->getSynchronizationTemplate()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Magento_Product_Cache
@@ -153,8 +181,12 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return $this->getParentObject()->getMagentoProduct();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return mixed
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function getSku()
     {
         $src = $this->getBuyListing()->getSkuSource();
@@ -215,5 +247,5 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Variation_Option extends Ess_M2ePro_M
         return trim($tempSku);
     }
 
-    // ########################################
+    //########################################
 }

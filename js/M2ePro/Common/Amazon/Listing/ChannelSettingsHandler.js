@@ -1,7 +1,7 @@
-AmazonListingChannelSettingsHandler = Class.create();
-AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(), {
+CommonAmazonListingChannelSettingsHandler = Class.create();
+CommonAmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function()
     {
@@ -13,9 +13,39 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
 
             return value.length <= 2000;
         });
+
+        Validation.add('M2ePro-validate-sku-modification-custom-value', M2ePro.text.sku_modification_custom_value_error, function(value) {
+
+            var self = AmazonListingChannelSettingsHandlerObj;
+
+            if ($('sku_modification_mode').value == self.SKU_MODIFICATION_MODE_NONE) {
+                return true;
+            }
+
+            if ($('sku_modification_mode').value == self.SKU_MODIFICATION_MODE_TEMPLATE) {
+                return value.match(/%value%/g);
+            }
+
+            return true;
+        });
+
+        Validation.add('M2ePro-validate-sku-modification-custom-value-max-length', M2ePro.text.sku_modification_custom_value_max_length_error, function(value) {
+
+            var self = AmazonListingChannelSettingsHandlerObj;
+
+            if ($('sku_modification_mode').value == self.SKU_MODIFICATION_MODE_NONE) {
+                return true;
+            }
+
+            if ($('sku_modification_mode').value == self.SKU_MODIFICATION_MODE_TEMPLATE) {
+                value = value.replace('%value%', '');
+            }
+
+            return value.length < M2ePro.php.constant('Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_General::SKU_MAX_LENGTH');
+        });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getAvailableConstantsForImages: function()
     {
@@ -31,7 +61,7 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
         ];
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     sku_mode_change: function()
     {
@@ -43,7 +73,26 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
+
+    sku_modification_mode_change: function()
+    {
+        var self = AmazonListingChannelSettingsHandlerObj;
+
+        if ($('sku_modification_mode').value == self.SKU_MODIFICATION_MODE_TEMPLATE) {
+            $('sku_modification_custom_value').value = '%value%';
+        } else {
+            $('sku_modification_custom_value').value = '';
+        }
+
+        if ($('sku_modification_mode').value == self.SKU_MODIFICATION_MODE_NONE) {
+            $('sku_modification_custom_value_tr').hide();
+        } else {
+            $('sku_modification_custom_value_tr').show();
+        }
+    },
+
+    // ---------------------------------------
 
     general_id_mode_change: function()
     {
@@ -55,12 +104,7 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
         }
     },
 
-    general_id_custom_attribute_change: function()
-    {
-        AmazonListingChannelSettingsHandlerObj.hideEmptyOption($('general_id_custom_attribute'));
-    },
-
-    //----------------------------------
+    // ---------------------------------------
 
     worldwide_id_mode_change: function()
     {
@@ -72,12 +116,7 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
         }
     },
 
-    worldwide_id_custom_attribute_change: function()
-    {
-        AmazonListingChannelSettingsHandlerObj.hideEmptyOption($('worldwide_id_custom_attribute'));
-    },
-
-    //----------------------------------
+    // ---------------------------------------
 
     condition_mode_change: function()
     {
@@ -88,14 +127,21 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
             conditionCustomAttribute = $('condition_custom_attribute');
 
         $('magento_block_amazon_listing_add_images').hide();
+        $('condition_note_mode_tr').show();
+        $('condition_note_value_tr').show();
 
         conditionValue.value = '';
         conditionCustomAttribute.value = '';
 
         if (this.value == self.CONDITION_MODE_DEFAULT) {
             self.updateHiddenValue(this, conditionValue);
-            $('condition_note_mode_tr').show();
-            condition_note_mode.simulate('change');
+
+            if (attributeCode == M2ePro.php.constant('Ess_M2ePro_Model_Amazon_Listing::CONDITION_NEW')) {
+                $('condition_note_mode_tr').hide();
+                $('condition_note_value_tr').hide();
+            } else {
+                self.condition_note_mode_change();
+            }
 
             if (self.getAvailableConstantsForImages().indexOf(attributeCode) == -1) {
                 $('image_main_attribute').value = '';
@@ -107,13 +153,13 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
         } else {
             self.updateHiddenValue(this, conditionCustomAttribute);
             $('condition_note_mode_tr').show();
-            condition_note_mode.simulate('change');
+            self.condition_note_mode_change();
 
             $('magento_block_amazon_listing_add_images').show();
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     image_main_mode_change: function()
     {
@@ -151,13 +197,37 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
+
+    gift_wrap_mode_change: function()
+    {
+        var self = AmazonListingChannelSettingsHandlerObj;
+
+        $('gift_wrap_attribute').value = '';
+
+        if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Amazon_Listing::GIFT_WRAP_MODE_ATTRIBUTE')) {
+            self.updateHiddenValue(this, $('gift_wrap_attribute'));
+        }
+    },
+
+    gift_message_mode_change: function()
+    {
+        var self = AmazonListingChannelSettingsHandlerObj;
+
+        $('gift_message_attribute').value = '';
+
+        if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Amazon_Listing::GIFT_MESSAGE_MODE_ATTRIBUTE')) {
+            self.updateHiddenValue(this, $('gift_message_attribute'));
+        }
+    },
+
+    // ---------------------------------------
 
     condition_note_mode_change: function()
     {
         var self = AmazonListingChannelSettingsHandlerObj;
 
-        if (this.value == self.CONDITION_NOTE_MODE_CUSTOM_VALUE) {
+        if ($('condition_note_mode').value == self.CONDITION_NOTE_MODE_CUSTOM_VALUE) {
             $('condition_note_value_tr').show();
         } else {
             $('condition_note_value_tr').hide();
@@ -195,7 +265,7 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     appendToText: function(ddId, targetId)
     {
@@ -233,5 +303,5 @@ AmazonListingChannelSettingsHandler.prototype = Object.extend(new CommonHandler(
         }
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

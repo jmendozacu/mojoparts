@@ -4,8 +4,10 @@
     <b>List Action</b> - at first this action to be executed for each Item in M2E Pro Listings, which has <i>Not Listed</i> Status and its Settings meet the List Condition. If an Item was not Listed for some reason, autosynchronization will attempt
     to list it again only if Product Status, Stock Availability or Quantity is changed.
     <br/><br/>
-    <b>Note:</b> Inventory Synchronization Setting must be enabled in <i class="underline">Synchronization</i> (%menu_path%).
-    Otherwise, Synchronization Policy Rules will not take effect.', Mage::helper('M2ePro/View_Common')->getMenuPath('configuration/synchronization')); ?>
+    Otherwise, Synchronization Policy Rules will not take effect.<br/><br/>
+    More detailed information about ability to work with this Page you can find <a href="%url%" target="_blank">here</a>.',
+    Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/8oMVAQ')
+    ); ?>
 </div>
 
 <?php
@@ -128,7 +130,7 @@ $isEdit = !!$this->getRequest()->getParam('id');
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('List Action'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('List Action'); ?>: </label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_mode" name="list_mode" class="required-entry">
@@ -161,7 +163,7 @@ $isEdit = !!$this->getRequest()->getParam('id');
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Product Status'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Product Status'); ?>: </label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_status_enabled" name="list_status_enabled" class="required-entry">
@@ -176,7 +178,7 @@ $isEdit = !!$this->getRequest()->getParam('id');
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Stock Availability'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Stock Availability'); ?>: </label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_is_in_stock" name="list_is_in_stock" class="required-entry">
@@ -191,7 +193,7 @@ $isEdit = !!$this->getRequest()->getParam('id');
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Magento Quantity'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Magento Quantity'); ?>: </label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_qty_magento" name="list_qty_magento" class="required-entry" qty_type="magento">
@@ -229,7 +231,7 @@ $isEdit = !!$this->getRequest()->getParam('id');
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Calculated Quantity'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Calculated Quantity'); ?>: </label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_qty_calculated" name="list_qty_calculated" class="required-entry" qty_type="calculated">

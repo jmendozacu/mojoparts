@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
@@ -13,7 +15,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
 
     protected $tempObjectsCache = array();
 
-    // ########################################
+    //########################################
 
     public function initialize(Ess_M2ePro_Model_Account $account = NULL)
     {
@@ -21,8 +23,12 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
         $this->tempObjectsCache = array();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param array $otherListings
+     * @return bool
+     */
     public function autoMoveOtherListingsProducts(array $otherListings)
     {
         $otherListingsFiltered = array();
@@ -62,6 +68,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
         return $result;
     }
 
+    /**
+     * @param Ess_M2ePro_Model_Listing_Other $otherListing
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function autoMoveOtherListingProduct(Ess_M2ePro_Model_Listing_Other $otherListing)
     {
         $this->setAccountByOtherListingProduct($otherListing);
@@ -76,7 +87,8 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
             return false;
         }
 
-        $listingProduct = $listing->addProduct($otherListing->getProductId());
+        $listingProduct = $listing->addProduct($otherListing->getProductId(),
+                                               Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION);
 
         if (!($listingProduct instanceof Ess_M2ePro_Model_Listing_Product)) {
             return false;
@@ -94,20 +106,32 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
         $amazonOtherListing = $otherListing->getChildObject();
 
         $dataForUpdate = array(
-            'general_id'         => $amazonOtherListing->getGeneralId(),
-            'sku'                => $amazonOtherListing->getSku(),
-            'online_price'       => $amazonOtherListing->getOnlinePrice(),
-            'online_qty'         => $amazonOtherListing->getOnlineQty(),
-            'is_afn_channel'     => (int)$amazonOtherListing->isAfnChannel(),
-            'is_isbn_general_id' => (int)$amazonOtherListing->isIsbnGeneralId(),
-            'status'             => $otherListing->getStatus(),
-            'status_changer'     => $otherListing->getStatusChanger()
+            'general_id'            => $amazonOtherListing->getGeneralId(),
+            'sku'                   => $amazonOtherListing->getSku(),
+            'online_regular_price'  => $amazonOtherListing->getOnlinePrice(),
+            'online_qty'            => $amazonOtherListing->getOnlineQty(),
+            'is_afn_channel'        => (int)$amazonOtherListing->isAfnChannel(),
+            'is_isbn_general_id'    => (int)$amazonOtherListing->isIsbnGeneralId(),
+            'status'                => $otherListing->getStatus(),
+            'status_changer'        => $otherListing->getStatusChanger()
         );
 
         $listingProduct->addData($dataForUpdate)->save();
 
+        if ($amazonOtherListing->isRepricing()) {
+            $listingProductRepricing = Mage::getModel('M2ePro/Amazon_Listing_Product_Repricing');
+            $listingProductRepricing->setData(array(
+                'listing_product_id'    => $listingProduct->getId(),
+                'is_online_disabled'    => $amazonOtherListing->isRepricingDisabled(),
+                'is_online_inactive'    => $amazonOtherListing->isRepricingInactive(),
+                'update_date'           => Mage::helper('M2ePro')->getCurrentGmtDate(),
+                'create_date'           => Mage::helper('M2ePro')->getCurrentGmtDate(),
+            ));
+            $listingProductRepricing->save();
+        }
+
         // Set listing store id to Amazon Item
-        //---------------------------------
+        // ---------------------------------------
         $itemsCollection = Mage::getModel('M2ePro/Amazon_Item')->getCollection();
 
         $itemsCollection->addFieldToFilter('account_id', $otherListing->getAccountId());
@@ -127,7 +151,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
             );
             Mage::getModel('M2ePro/Amazon_Item')->setData($dataForAdd)->save();
         }
-        //---------------------------------
+        // ---------------------------------------
 
         $logModel = Mage::getModel('M2ePro/Listing_Other_Log');
         $logModel->setComponentMode(Ess_M2ePro_Helper_Component_Amazon::NICK);
@@ -155,18 +179,22 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
                                      Ess_M2ePro_Model_Log_Abstract::TYPE_NOTICE,
                                      Ess_M2ePro_Model_Log_Abstract::PRIORITY_MEDIUM);
 
-        if (!$this->getAmazonAccount()->isOtherListingsMoveToListingsSynchModeNone()) {
-            Mage::getModel('M2ePro/ProductChange')
-                ->addUpdateAction( $otherListing->getProductId(),
-                                   Ess_M2ePro_Model_ProductChange::INITIATOR_UNKNOWN );
-        }
-
         $otherListing->deleteInstance();
+
+        $instruction = Mage::getModel('M2ePro/Listing_Product_Instruction');
+        $instruction->setData(array(
+            'listing_product_id' => $listingProduct->getId(),
+            'component'          => Ess_M2ePro_Helper_Component_Amazon::NICK,
+            'type'               => Ess_M2ePro_Model_Listing::INSTRUCTION_TYPE_PRODUCT_MOVED_FROM_OTHER,
+            'initiator'          => Ess_M2ePro_Model_Listing::INSTRUCTION_INITIATOR_MOVING_PRODUCT_FROM_OTHER,
+            'priority'           => 20,
+        ));
+        $instruction->save();
 
         return true;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param Ess_M2ePro_Model_Listing_Other $otherListing
@@ -224,7 +252,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
         return $tempModel;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @param Ess_M2ePro_Model_Listing_Other $otherListing
@@ -257,44 +285,32 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
             'list_qty' => Ess_M2ePro_Model_Amazon_Template_Synchronization::LIST_QTY_NONE,
             'list_qty_value' => 1,
             'list_qty_value_max' => 10,
-            'relist_mode' => Ess_M2ePro_Model_Amazon_Template_Synchronization::RELIST_MODE_NONE,
+            'relist_mode' => Ess_M2ePro_Model_Amazon_Template_Synchronization::RELIST_MODE_YES,
             'relist_filter_user_lock' => Ess_M2ePro_Model_Amazon_Template_Synchronization::RELIST_FILTER_USER_LOCK_YES,
-            'relist_send_data' => Ess_M2ePro_Model_Amazon_Template_Synchronization::RELIST_SEND_DATA_NONE,
             'relist_status_enabled' => Ess_M2ePro_Model_Amazon_Template_Synchronization::RELIST_STATUS_ENABLED_YES,
             'relist_is_in_stock' => Ess_M2ePro_Model_Amazon_Template_Synchronization::RELIST_IS_IN_STOCK_YES,
             'relist_qty' => Ess_M2ePro_Model_Amazon_Template_Synchronization::RELIST_QTY_NONE,
             'relist_qty_value' => 1,
             'relist_qty_value_max' => 10,
-            'revise_update_qty' => Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_QTY_NONE,
-            'revise_update_price' => Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_PRICE_NONE,
-            'revise_change_selling_format_template' =>
-                                Ess_M2ePro_Model_Template_Synchronization::REVISE_CHANGE_SELLING_FORMAT_TEMPLATE_NONE,
-            'revise_change_listing' =>
-                                Ess_M2ePro_Model_Template_Synchronization::REVISE_CHANGE_LISTING_NONE,
-            'stop_status_disabled' => Ess_M2ePro_Model_Amazon_Template_Synchronization::STOP_STATUS_DISABLED_NONE,
-            'stop_out_off_stock' => Ess_M2ePro_Model_Amazon_Template_Synchronization::STOP_OUT_OFF_STOCK_NONE,
+            'revise_update_qty'    => Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_QTY_YES,
+            'revise_update_qty_max_applied_value_mode' =>
+                Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_MAX_AFFECTED_QTY_MODE_ON,
+            'revise_update_qty_max_applied_value' =>
+                Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_QTY_MAX_APPLIED_VALUE_DEFAULT,
+            'revise_update_price' => Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_PRICE_YES,
+            'revise_update_price_max_allowed_deviation_mode' =>
+                Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_MAX_ALLOWED_PRICE_DEVIATION_MODE_ON,
+            'revise_update_price_max_allowed_deviation'      =>
+                Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_PRICE_MAX_ALLOWED_DEVIATION_DEFAULT,
+            'revise_update_details' => Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_DETAILS_NONE,
+            'revise_update_images' => Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_IMAGES_NONE,
+            'stop_mode' => Ess_M2ePro_Model_Amazon_Template_Synchronization::STOP_MODE_YES,
+            'stop_status_disabled' => Ess_M2ePro_Model_Amazon_Template_Synchronization::STOP_STATUS_DISABLED_YES,
+            'stop_out_off_stock'   => Ess_M2ePro_Model_Amazon_Template_Synchronization::STOP_OUT_OFF_STOCK_YES,
             'stop_qty' => Ess_M2ePro_Model_Amazon_Template_Synchronization::STOP_QTY_NONE,
             'stop_qty_value' => 0,
             'stop_qty_value_max' => 10
         );
-
-        if ($this->getAmazonAccount()->isOtherListingsMoveToListingsSynchModePrice() ||
-            $this->getAmazonAccount()->isOtherListingsMoveToListingsSynchModeAll()
-        ) {
-            $dataForAdd['revise_update_price'] =
-                Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_PRICE_YES;
-        }
-
-        if ($this->getAmazonAccount()->isOtherListingsMoveToListingsSynchModeQty() ||
-            $this->getAmazonAccount()->isOtherListingsMoveToListingsSynchModeAll()
-        ) {
-            $dataForAdd['revise_update_qty'] = Ess_M2ePro_Model_Amazon_Template_Synchronization::REVISE_UPDATE_QTY_YES;
-            $dataForAdd['relist_mode'] = Ess_M2ePro_Model_Amazon_Template_Synchronization::RELIST_MODE_YES;
-            $dataForAdd['stop_status_disabled'] =
-                Ess_M2ePro_Model_Amazon_Template_Synchronization::STOP_STATUS_DISABLED_YES;
-            $dataForAdd['stop_out_off_stock'] =
-                Ess_M2ePro_Model_Amazon_Template_Synchronization::STOP_OUT_OFF_STOCK_YES;
-        }
 
         $tempModel->addData($dataForAdd)->save();
         $this->tempObjectsCache['synchronization_'.$marketplaceId] = $tempModel;
@@ -325,6 +341,8 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
 
         $tempModel = Mage::helper('M2ePro/Component_Amazon')->getModel('Template_SellingFormat');
 
+        $variationModeParent = Ess_M2ePro_Model_Amazon_Template_SellingFormat::PRICE_VARIATION_MODE_PARENT;
+
         $dataForAdd = array(
             'title' => 'Default ('.$this->getMarketplace()->getTitle().')',
 
@@ -332,16 +350,16 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
             'qty_custom_value' => 1,
 
             'currency' => $this->getMarketplace()->getChildObject()->getDefaultCurrency(),
-            'price_mode' => Ess_M2ePro_Model_Template_SellingFormat::PRICE_PRODUCT,
-            'price_variation_mode' => Ess_M2ePro_Model_Amazon_Template_SellingFormat::PRICE_VARIATION_MODE_PARENT,
+            'regular_price_mode' => Ess_M2ePro_Model_Template_SellingFormat::PRICE_MODE_PRODUCT,
+            'regular_price_variation_mode' => $variationModeParent,
 
-            'map_price_mode' => Ess_M2ePro_Model_Template_SellingFormat::PRICE_NONE,
+            'regular_map_price_mode' => Ess_M2ePro_Model_Template_SellingFormat::PRICE_MODE_NONE,
 
-            'sale_price_mode' => Ess_M2ePro_Model_Template_SellingFormat::PRICE_NONE,
-            'sale_price_start_date_mode' => Ess_M2ePro_Model_Amazon_Template_SellingFormat::DATE_VALUE,
-            'sale_price_start_date_value' => Mage::helper('M2ePro')->getCurrentGmtDate(false, 'Y-m-d'),
-            'sale_price_end_date_mode' => Ess_M2ePro_Model_Amazon_Template_SellingFormat::DATE_VALUE,
-            'sale_price_end_date_value' => Mage::helper('M2ePro')->getCurrentGmtDate(false, 'Y-m-d')
+            'regular_sale_price_mode' => Ess_M2ePro_Model_Template_SellingFormat::PRICE_MODE_NONE,
+            'regular_sale_price_start_date_mode' => Ess_M2ePro_Model_Amazon_Template_SellingFormat::DATE_VALUE,
+            'regular_sale_price_start_date_value' => Mage::helper('M2ePro')->getCurrentGmtDate(false, 'Y-m-d'),
+            'regular_sale_price_end_date_mode' => Ess_M2ePro_Model_Amazon_Template_SellingFormat::DATE_VALUE,
+            'regular_sale_price_end_date_value' => Mage::helper('M2ePro')->getCurrentGmtDate(false, 'Y-m-d')
         );
 
         $tempModel->addData($dataForAdd)->save();
@@ -350,7 +368,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
         return $tempModel;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -376,8 +394,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
         return $this->getAmazonAccount()->getMarketplace();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @param Ess_M2ePro_Model_Listing_Other $otherListing
+     */
     protected function setAccountByOtherListingProduct(Ess_M2ePro_Model_Listing_Other $otherListing)
     {
         if (!is_null($this->account) && $this->account->getId() == $otherListing->getAccountId()) {
@@ -389,5 +410,5 @@ class Ess_M2ePro_Model_Amazon_Listing_Other_Moving
         );
     }
 
-    // ########################################
+    //########################################
 }

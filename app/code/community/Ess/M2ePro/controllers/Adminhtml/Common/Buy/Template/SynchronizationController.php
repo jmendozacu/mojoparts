@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
     extends Ess_M2ePro_Controller_Adminhtml_Common_MainController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
@@ -16,24 +18,32 @@ class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
             ->_title(Mage::helper('M2ePro')->__('Synchronization Policies'));
 
         $this->getLayout()->getBlock('head')
+            ->addJs('M2ePro/Template/EditHandler.js')
+            ->addJs('M2ePro/Common/Buy/Template/EditHandler.js')
             ->addJs('M2ePro/Common/Buy/Template/SynchronizationHandler.js');
+
+        $this->_initPopUp();
+
+        $this->setPageHelpLink(Ess_M2ePro_Helper_Component_Buy::NICK, 'Synchronization+Policy');
 
         return $this;
     }
 
     protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/templates/synchronization');
+        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/configuration');
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
-        return $this->_redirect('*/adminhtml_common_template_synchronization/index');
+        return $this->_redirect('*/adminhtml_common_template/index', array(
+            'channel' => Ess_M2ePro_Helper_Component_Buy::NICK
+        ));
     }
 
-    //#############################################
+    //########################################
 
     public function newAction()
     {
@@ -47,7 +57,9 @@ class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
 
         if (!$model->getId() && $id) {
             $this->_getSession()->addError(Mage::helper('M2ePro')->__('Policy does not exist'));
-            return $this->_redirect('*/adminhtml_common_template_synchronization/index');
+            return $this->_redirect('*/adminhtml_common_template/index', array(
+                'channel' => Ess_M2ePro_Helper_Component_Buy::NICK
+            ));
         }
 
         Mage::helper('M2ePro/Data_Global')->setValue('temp_data', $model);
@@ -60,23 +72,23 @@ class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
             ->renderLayout();
     }
 
-    //#############################################
+    //########################################
 
     public function saveAction()
     {
         if (!$post = $this->getRequest()->getPost()) {
-            $this->_redirect('*/adminhtml_common_template_synchronization/index');
+            return $this->indexAction();
         }
 
         $id = $this->getRequest()->getParam('id');
 
         // Base prepare
-        //--------------------
+        // ---------------------------------------
         $data = array();
-        //--------------------
+        // ---------------------------------------
 
         // tab: list
-        //--------------------
+        // ---------------------------------------
         $keys = array(
             'title',
             'list_mode',
@@ -96,15 +108,17 @@ class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
         }
 
         $data['title'] = strip_tags($data['title']);
-        //--------------------
+        // ---------------------------------------
 
         // tab: revise
-        //--------------------
+        // ---------------------------------------
         $keys = array(
             'revise_update_qty',
             'revise_update_qty_max_applied_value_mode',
             'revise_update_qty_max_applied_value',
             'revise_update_price',
+            'revise_update_price_max_allowed_deviation_mode',
+            'revise_update_price_max_allowed_deviation',
             'revise_change_selling_format_template',
             'revise_change_listing'
         );
@@ -113,10 +127,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
                 $data[$key] = $post[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // tab: relist
-        //--------------------
+        // ---------------------------------------
         $keys = array(
             'relist_mode',
             'relist_filter_user_lock',
@@ -134,10 +148,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
                 $data[$key] = $post[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // tab: stop
-        //--------------------
+        // ---------------------------------------
         $keys = array(
             'stop_status_disabled',
             'stop_out_off_stock',
@@ -153,10 +167,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
                 $data[$key] = $post[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // Add or update model
-        //--------------------
+        // ---------------------------------------
         $model = Mage::helper('M2ePro/Component_Buy')->getModel('Template_Synchronization');
         $model->load($id);
 
@@ -167,11 +181,14 @@ class Ess_M2ePro_Adminhtml_Common_Buy_Template_SynchronizationController
         $model->getChildObject()->setSynchStatusNeed($newData,$oldData);
 
         $id = $model->getId();
-        //--------------------
+        // ---------------------------------------
 
         $this->_getSession()->addSuccess(Mage::helper('M2ePro')->__('Policy was successfully saved'));
-        $this->_redirectUrl(Mage::helper('M2ePro')->getBackUrl('list',array(),array('edit'=>array('id'=>$id))));
+        $this->_redirectUrl(Mage::helper('M2ePro')->getBackUrl('*/adminhtml_common_template/index', array(), array(
+            'edit' => array('id'=>$id),
+            'channel' => Ess_M2ePro_Helper_Component_Buy::NICK
+        )));
     }
 
-    //#############################################
+    //########################################
 }

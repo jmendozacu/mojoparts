@@ -1,27 +1,31 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayFeedbackGrid');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('buyer_feedback_date');
         $this->setDefaultDir('DESC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
     }
 
     protected function _prepareCollection()
@@ -63,7 +67,6 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback_Grid extends Mage_Adminhtml_Block
                         } else if ((int)$cond['eq'] == 1) {
                             $this->getCollection()->getSelect()->where('`main_table`.`seller_feedback_text` != \'\'');
                         }
-                        //$this->getCollection()->getSelect()->having('`have_seller_feedback` = '.(int)$cond['eq'].' ');
                     } else {
                         $this->getCollection()->addFieldToFilter($field , $cond);
                     }
@@ -151,7 +154,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback_Grid extends Mage_Adminhtml_Block
         return parent::_prepareColumns();
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnTransactionId($value, $row, $column, $isExport)
     {
@@ -258,7 +261,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback_Grid extends Mage_Adminhtml_Block
         return $feedbacksHtml;
     }
 
-    // ####################################
+    //########################################
 
     public function callbackFilterFeedbackType($collection, $column)
     {
@@ -283,7 +286,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback_Grid extends Mage_Adminhtml_Block
         }
     }
 
-    // ####################################
+    //########################################
 
     public function getGridUrl()
     {
@@ -295,5 +298,5 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback_Grid extends Mage_Adminhtml_Block
         return false;
     }
 
-    // ####################################
+    //########################################
 }

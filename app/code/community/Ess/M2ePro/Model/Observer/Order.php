@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2015 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Observer_Order extends Ess_M2ePro_Model_Observer_Abstract
 {
-    //####################################
+    //########################################
 
     public function process()
     {
@@ -24,11 +26,15 @@ class Ess_M2ePro_Model_Observer_Order extends Ess_M2ePro_Model_Observer_Abstract
             return;
         }
 
-        $order->setData('magento_order_id', $magentoOrder->getId());
-        $order->save();
+        $order->addData(array(
+            'magento_order_id'                           => $magentoOrder->getId(),
+            'magento_order_creation_failure'             => Ess_M2ePro_Model_Order::MAGENTO_ORDER_CREATION_FAILED_NO,
+            'magento_order_creation_latest_attempt_date' => Mage::helper('M2ePro')->getCurrentGmtDate()
+        ));
 
-        $order->afterCreateMagentoOrder();
+        $order->setMagentoOrder($magentoOrder);
+        $order->save();
     }
 
-    //####################################
+    //########################################
 }

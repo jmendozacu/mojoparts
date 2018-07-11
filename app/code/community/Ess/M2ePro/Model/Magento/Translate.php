@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Magento_Translate extends Mage_Core_Model_Translate
@@ -14,6 +16,9 @@ class Ess_M2ePro_Model_Magento_Translate extends Mage_Core_Model_Translate
     const MODULE_NAME = 'Ess_M2ePro';
 
     protected $mode;
+
+    //########################################
+
     /**
      * @param mixed $mode
      */
@@ -37,7 +42,7 @@ class Ess_M2ePro_Model_Magento_Translate extends Mage_Core_Model_Translate
     public function init($area = self::TRANSLATE_AREA, $forceReload = false)
     {
         // regular object returned
-        if($this->getMode() == self::TRANSLATE_MODE_NORMAL) {
+        if ($this->getMode() == self::TRANSLATE_MODE_NORMAL) {
             return Mage::app()->getTranslator()->init(self::TRANSLATE_AREA, $forceReload);
         }
 
@@ -62,7 +67,7 @@ class Ess_M2ePro_Model_Magento_Translate extends Mage_Core_Model_Translate
 
         $modulesConfig = $this->getModulesConfig();
 
-        if(isset($modulesConfig->{self::MODULE_NAME})) {
+        if (isset($modulesConfig->{self::MODULE_NAME})) {
             $info = $modulesConfig->{self::MODULE_NAME}->asArray();
             $this->_loadModuleTranslation(self::MODULE_NAME, $info['files'], $forceReload);
         }
@@ -85,4 +90,6 @@ class Ess_M2ePro_Model_Magento_Translate extends Mage_Core_Model_Translate
         $args = func_get_args();
         return parent::translate($args);
     }
+
+    //########################################
 }

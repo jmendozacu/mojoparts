@@ -1,35 +1,74 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Receive_Requester
-    extends Ess_M2ePro_Model_Connector_Amazon_Orders_Get_ItemsRequester
+    extends Ess_M2ePro_Model_Amazon_Connector_Orders_Get_ItemsRequester
 {
-    // ##########################################################
+    const TIMEOUT_ERRORS_COUNT_TO_RISE = 3;
+    const TIMEOUT_RISE_ON_ERROR        = 30;
+    const TIMEOUT_RISE_MAX_VALUE       = 1500;
 
-    public function setProcessingLocks(Ess_M2ePro_Model_Processing_Request $processingRequest)
+    //########################################
+
+    public function process()
     {
-        parent::setProcessingLocks($processingRequest);
+        $cacheConfig = Mage::helper('M2ePro/Module')->getCacheConfig();
+        $cacheConfigGroup = '/amazon/synchronization/orders/receive/timeout';
 
-        /** @var $lockItem Ess_M2ePro_Model_LockItem */
-        $lockItem = Mage::getModel('M2ePro/LockItem');
+        try {
 
-        $tempNick = Ess_M2ePro_Model_Amazon_Synchronization_Orders_Receive::LOCK_ITEM_PREFIX
-            .'_'.$this->account->getId();
+            parent::process();
 
-        $lockItem->setNick($tempNick);
-        $lockItem->setMaxInactiveTime(Ess_M2ePro_Model_Processing_Request::MAX_LIFE_TIME_INTERVAL);
-        $lockItem->create();
+        } catch (Ess_M2ePro_Model_Exception_Connection $exception) {
 
-        $this->account->addObjectLock(NULL, $processingRequest->getHash());
-        $this->account->addObjectLock('synchronization', $processingRequest->getHash());
-        $this->account->addObjectLock('synchronization_amazon', $processingRequest->getHash());
-        $this->account->addObjectLock(
-            Ess_M2ePro_Model_Amazon_Synchronization_Orders_Receive::LOCK_ITEM_PREFIX, $processingRequest->getHash()
-        );
+            $data = $exception->getAdditionalData();
+            if (!empty($data['curl_error_number']) && $data['curl_error_number'] == CURLE_OPERATION_TIMEOUTED) {
+
+                $fails = (int)$cacheConfig->getGroupValue($cacheConfigGroup, 'fails');
+                $fails++;
+
+                $rise = (int)$cacheConfig->getGroupValue($cacheConfigGroup, 'rise');
+                $rise += self::TIMEOUT_RISE_ON_ERROR;
+
+                if ($fails >= self::TIMEOUT_ERRORS_COUNT_TO_RISE && $rise <= self::TIMEOUT_RISE_MAX_VALUE) {
+
+                    $fails = 0;
+                    $cacheConfig->setGroupValue($cacheConfigGroup, 'rise', $rise);
+                }
+                $cacheConfig->setGroupValue($cacheConfigGroup, 'fails', $fails);
+            }
+
+            throw $exception;
+        }
+
+        $cacheConfig->setGroupValue($cacheConfigGroup, 'fails', 0);
     }
 
-    // ##########################################################
+    protected function buildConnectionInstance()
+    {
+        $connection = parent::buildConnectionInstance();
+        $connection->setTimeout($this->getRequestTimeOut());
+
+        return $connection;
+    }
+
+    //########################################
+
+    protected function getRequestTimeOut()
+    {
+        $cacheConfig = Mage::helper('M2ePro/Module')->getCacheConfig();
+        $cacheConfigGroup = '/amazon/synchronization/orders/receive/timeout';
+
+        $rise = (int)$cacheConfig->getGroupValue($cacheConfigGroup, 'rise');
+        $rise > self::TIMEOUT_RISE_MAX_VALUE && $rise = self::TIMEOUT_RISE_MAX_VALUE;
+
+        return 300 + $rise;
+    }
+
+    //########################################
 }

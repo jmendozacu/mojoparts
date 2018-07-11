@@ -1,21 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
-*/
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
+ */
 
 final class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Cancel
     extends Ess_M2ePro_Model_Amazon_Synchronization_Orders_Abstract
 {
-    // ##########################################################
-
-    const LOCK_ITEM_PREFIX = 'synchronization_amazon_orders_cancel';
-
-    // we have a limit on the server to retrieve only last 30 orders
-    // so if we will update 30 or more orders at a time, we will not be able to receive all updated orders next time
-    const MAX_UPDATES_PER_TIME = 25;
-
-    // ##########################################################
+    //########################################
 
     protected function getNick()
     {
@@ -27,7 +21,7 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Cancel
         return 'Cancel';
     }
 
-    // ----------------------------------------------------------
+    // ---------------------------------------
 
     protected function getPercentsStart()
     {
@@ -39,7 +33,7 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Cancel
         return 100;
     }
 
-    // ##########################################################
+    //########################################
 
     protected function performActions()
     {
@@ -57,65 +51,63 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Cancel
 
             /** @var Ess_M2ePro_Model_Account $account */
 
-            // ----------------------------------------------------------
+            // ---------------------------------------
             $this->getActualOperationHistory()->addText('Starting account "'.$account->getTitle().'"');
             // M2ePro_TRANSLATIONS
             // The "Cancel" action for Amazon account: "%account_title%" is started. Please wait...
             $status = 'The "Cancel" action for Amazon account: "%account_title%" is started. Please wait...';
             $this->getActualLockItem()->setStatus(Mage::helper('M2ePro')->__($status, $account->getTitle()));
-            // ----------------------------------------------------------
+            // ---------------------------------------
 
-            if (!$this->isLockedAccount($account->getId())) {
+            // ---------------------------------------
+            $this->getActualOperationHistory()->addTimePoint(
+                __METHOD__.'process'.$account->getId(),
+                'Process account '.$account->getTitle()
+            );
+            // ---------------------------------------
 
-                // ----------------------------------------------------------
-                $this->getActualOperationHistory()->addTimePoint(
-                    __METHOD__.'process'.$account->getId(),
-                    'Process account '.$account->getTitle()
-                );
-                // ----------------------------------------------------------
+            try {
 
                 $this->processAccount($account);
 
-                // ----------------------------------------------------------
-                $this->getActualOperationHistory()->saveTimePoint(__METHOD__.'process'.$account->getId());
-                // ----------------------------------------------------------
+            } catch (Exception $exception) {
+
+                $message = Mage::helper('M2ePro')->__(
+                    'The "Cancel" Action for Amazon Account "%account%" was completed with error.',
+                    $account->getTitle()
+                );
+
+                $this->processTaskAccountException($message, __FILE__, __LINE__);
+                $this->processTaskException($exception);
             }
 
-            // ----------------------------------------------------------
+            // ---------------------------------------
+            $this->getActualOperationHistory()->saveTimePoint(__METHOD__.'process'.$account->getId());
+            // ---------------------------------------
+
+            // ---------------------------------------
             // M2ePro_TRANSLATIONS
             // The "Cancel" action for Amazon account: "%account_title%" is finished. Please wait...
             $status = 'The "Cancel" action for Amazon account: "%account_title%" is finished. Please wait...';
             $this->getActualLockItem()->setStatus(Mage::helper('M2ePro')->__($status, $account->getTitle()));
             $this->getActualLockItem()->setPercents($this->getPercentsStart() + $iteration * $percentsForOneStep);
             $this->getActualLockItem()->activate();
-            // ----------------------------------------------------------
+            // ---------------------------------------
 
             $iteration++;
         }
     }
 
-    // ##########################################################
+    //########################################
 
     private function getPermittedAccounts()
     {
         /** @var $accountsCollection Mage_Core_Model_Mysql4_Collection_Abstract */
         $accountsCollection = Mage::helper('M2ePro/Component_Amazon')->getCollection('Account');
-        $accountsCollection->addFieldToFilter('orders_mode', Ess_M2ePro_Model_Amazon_Account::ORDERS_MODE_YES);
-
         return $accountsCollection->getItems();
     }
 
-    // ----------------------------------------------------------
-
-    private function isLockedAccount($accountId)
-    {
-        /** @var $lockItem Ess_M2ePro_Model_LockItem */
-        $lockItem = Mage::getModel('M2ePro/LockItem');
-        $lockItem->setNick(self::LOCK_ITEM_PREFIX.'_'.$accountId);
-        $lockItem->setMaxInactiveTime(Ess_M2ePro_Model_Processing_Request::MAX_LIFE_TIME_INTERVAL);
-
-        return $lockItem->isExist();
-    }
+    // ---------------------------------------
 
     private function processAccount(Ess_M2ePro_Model_Account $account)
     {
@@ -124,8 +116,12 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Cancel
             return;
         }
 
-        $items = array();
-        $changesIds = array();
+        Mage::getResourceModel('M2ePro/Order_Change')->incrementAttemptCount(array_keys($relatedChanges));
+
+        /** @var $dispatcherObject Ess_M2ePro_Model_Amazon_Connector_Dispatcher */
+        $dispatcherObject = Mage::getModel('M2ePro/Amazon_Connector_Dispatcher');
+
+        $failedChangesIds = array();
 
         foreach ($relatedChanges as $change) {
             $changeParams = $change->getParams();
@@ -137,36 +133,33 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Cancel
             $amazonOrder = $order->getChildObject();
 
             if (!$amazonOrder->canRefund()) {
+                $failedChangesIds[] = $change->getId();
                 continue;
             }
 
-            $items[] = array(
+            $connectorData = array(
                 'order_id'  => $change->getOrderId(),
                 'change_id' => $change->getId(),
                 'amazon_order_id' => $changeParams['order_id'],
             );
 
-            $changesIds[] = $change->getId();
+            $connectorObj = $dispatcherObject->getCustomConnector(
+                'Amazon_Synchronization_Orders_Cancel_Requester',
+                array('order' => $connectorData), $account
+            );
+            $dispatcherObject->process($connectorObj);
         }
 
-        if (empty($items)) {
-            return;
+        if (!empty($failedChangesIds)) {
+            Mage::getResourceModel('M2ePro/Order_Change')->deleteByIds($failedChangesIds);
         }
-
-        Mage::getResourceModel('M2ePro/Order_Change')->incrementAttemptCount($changesIds);
-
-        /** @var $dispatcherObject Ess_M2ePro_Model_Connector_Amazon_Dispatcher */
-        $dispatcherObject = Mage::getModel('M2ePro/Connector_Amazon_Dispatcher');
-        $dispatcherObject->processConnector(
-            'orders', 'cancel', 'itemsRequester', array('items' => $items), $account
-        );
     }
 
-    // ##########################################################
+    //########################################
 
     /**
      * @param Ess_M2ePro_Model_Account $account
-     * @return Ess_M2ePro_Model_Order_Change
+     * @return Ess_M2ePro_Model_Order_Change[]
      */
     private function getRelatedChanges(Ess_M2ePro_Model_Account $account)
     {
@@ -176,13 +169,12 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Cancel
         $changesCollection->addProcessingAttemptDateFilter(10);
         $changesCollection->addFieldToFilter('component', Ess_M2ePro_Helper_Component_Amazon::NICK);
         $changesCollection->addFieldToFilter('action', Ess_M2ePro_Model_Order_Change::ACTION_CANCEL);
-        $changesCollection->setPageSize(self::MAX_UPDATES_PER_TIME);
         $changesCollection->getSelect()->group(array('order_id'));
 
         return $changesCollection->getItems();
     }
 
-    // ----------------------------------------------------------
+    // ---------------------------------------
 
     private function deleteNotActualChanges()
     {
@@ -193,5 +185,5 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Orders_Cancel
             );
     }
 
-    // ##########################################################
+    //########################################
 }

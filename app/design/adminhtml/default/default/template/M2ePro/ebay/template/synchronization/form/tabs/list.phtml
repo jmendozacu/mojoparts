@@ -29,7 +29,9 @@
         'If <b>List Action</b> is enabled, M2E Pro will list Items that haven\'t been Listed yet on eBay if they meet the Conditions you set.
         (List Action will not list Items that were Listed previously but have been Stopped.)<br/><br/>
         If the automatic Listing doesn\'t work (usually because eBay has sent back errors),
-        M2E Pro will only attempt to list the Item again if the Product status, Stock availabiliy or Quantity is changed.'
+        M2E Pro will only attempt to list the Item again if the Product status, Stock availabiliy or Quantity is changed.<br/><br/>
+        More detailed information about ability to work with this Page you can find <a href="%url%" target="_blank">here</a>.',
+        Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/SwAJAQ')
     ); ?>
 </div>
 
@@ -46,7 +48,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('List Action'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('List Action'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_mode" name="synchronization[list_mode]" class="required-entry">
@@ -82,7 +84,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Product Status'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Product Status'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_status_enabled" name="synchronization[list_status_enabled]" class="required-entry">
@@ -100,7 +102,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Stock Availability'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Stock Availability'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_is_in_stock" name="synchronization[list_is_in_stock]" class="required-entry">
@@ -120,7 +122,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Magento Quantity'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Magento Quantity'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_qty_magento" name="synchronization[list_qty_magento]" class="required-entry" qty_type="magento">
@@ -164,7 +166,7 @@
 
                 <tr>
                     <td class="label">
-                        <label><?php echo Mage::helper('M2ePro')->__('Calculated Quantity'); ?>: <span class="required">*</span></label>
+                        <label><?php echo Mage::helper('M2ePro')->__('Calculated Quantity'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
                         <select id="list_qty_calculated" name="synchronization[list_qty_calculated]" class="required-entry" qty_type="calculated">

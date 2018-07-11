@@ -1,21 +1,23 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
-class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Same_Chooser extends Mage_Adminhtml_Block_Widget_Container
+class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Same_Chooser extends Ess_M2ePro_Block_Adminhtml_Widget_Container
 {
-    // ####################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayListingCategorySameChooser');
-        //------------------------------
+        // ---------------------------------------
 
         $this->_headerText = Mage::helper('M2ePro')->__('eBay Same Categories');
 
@@ -39,25 +41,20 @@ JS;
         ));
     }
 
-    // ####################################
-
-    public function getHeaderCssClass()
-    {
-        return 'icon-head ' . parent::getHeaderCssClass();
-    }
+    //########################################
 
     public function getHeaderWidth()
     {
         return 'width:50%;';
     }
 
-    // ####################################
+    //########################################
 
     protected function _beforeToHtml()
     {
         parent::_beforeToHtml();
 
-        // --------------------------------------
+        // ---------------------------------------
         $listing = Mage::helper('M2ePro/Component_Ebay')->getCachedObject(
             'Listing', $this->getRequest()->getParam('listing_id')
         );
@@ -66,9 +63,9 @@ JS;
             array('listing' => $listing)
         );
         $this->setChild('view_header', $viewHeaderBlock);
-        // --------------------------------------
+        // ---------------------------------------
 
-        // --------------------------------------
+        // ---------------------------------------
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
         $internalData = $this->getData('internal_data');
 
@@ -81,9 +78,9 @@ JS;
         }
 
         $this->setChild('category_chooser', $chooserBlock);
-        // --------------------------------------
+        // ---------------------------------------
 
-        // --------------------------------------
+        // ---------------------------------------
         $data = array(
             'label' => Mage::helper('adminhtml')->__('Yes'),
             'id'    => 'existing_templates_confirm_button'
@@ -92,7 +89,7 @@ JS;
             'existing_templates_confirm_button',
             $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data)
         );
-        // --------------------------------------
+        // ---------------------------------------
         $data = array(
             'label' => Mage::helper('adminhtml')->__('No'),
             'id'    => 'existing_templates_cancel_button'
@@ -101,16 +98,16 @@ JS;
             'existing_templates_cancel_button',
             $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data)
         );
-        // --------------------------------------
+        // ---------------------------------------
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
         $parentHtml = parent::_toHtml();
 
-        // ----------------------------------------
+        // ---------------------------------------
 
         $urls = Mage::helper('M2ePro')->getControllerActions(
             'adminhtml_ebay_listing_categorySettings',
@@ -130,9 +127,9 @@ JS;
             '_current' => true
         ));
 
-        $urls = json_encode($urls);
+        $urls = Mage::helper('M2ePro')->jsonEncode($urls);
 
-        // ----------------------------------------
+        // ---------------------------------------
 
         $js = <<<HTML
 
@@ -141,7 +138,7 @@ JS;
 </script>
 HTML;
 
-        // ----------------------------------------
+        // ---------------------------------------
 
         return <<<HTML
 {$parentHtml}
@@ -149,5 +146,5 @@ HTML;
 HTML;
     }
 
-    // ########################################
+    //########################################
 }

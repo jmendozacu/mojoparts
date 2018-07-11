@@ -1,36 +1,36 @@
 <?php
 
 /*
-* @copyright  Copyright (c) 2013 by  ESS-UA.
-*/
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
+ */
 
 class Ess_M2ePro_Block_Adminhtml_Listing_Category_Tree extends Mage_Adminhtml_Block_Catalog_Category_Abstract
 {
-    // #############################################
-
     private $_selectedCategories = array();
 
     private $_highlightedCategories = array();
 
     private $_callback = null;
 
-    // #############################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('listingCategoryTree');
-        //------------------------------
+        // ---------------------------------------
 
         $this->setTemplate('M2ePro/listing/category/tree.phtml');
 
         $this->_isAjax = $this->getRequest()->isXmlHttpRequest();
     }
 
-    // #############################################
+    //########################################
 
     public function getSelectedCategories()
     {
@@ -65,7 +65,7 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Category_Tree extends Mage_Adminhtml_Bl
         return $this;
     }
 
-    // #############################################
+    //########################################
 
     public function buildNodeName($node)
     {
@@ -111,5 +111,5 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Category_Tree extends Mage_Adminhtml_Bl
         return $item;
     }
 
-    // #############################################
+    //########################################
 }

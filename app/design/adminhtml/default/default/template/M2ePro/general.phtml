@@ -4,7 +4,7 @@
     var BLOCK_NOTICES_DISABLE_COLLAPSE = <?php echo json_encode((bool)Mage::helper('M2ePro/Module')->getConfig()->getGroupValue('/view/ebay/notice/', 'disable_collapse')); ?>;
 
     var IS_VIEW_EBAY = <?php echo json_encode(Mage::helper('M2ePro/View')->isCurrentViewEbay()); ?>;
-    var IS_VIEW_COMMON = <?php echo json_encode(Mage::helper('M2ePro/View')->isCurrentViewCommon()); ?>;
+    var IS_VIEW_AMAZON = <?php echo json_encode(Mage::helper('M2ePro/View')->isCurrentViewAmazon()); ?>;
     var IS_VIEW_CONFIGURATION = <?php echo json_encode(Mage::helper('M2ePro/View')->isCurrentViewConfiguration()); ?>;
 
     var M2ePro = {};
@@ -24,6 +24,10 @@
         'm2epro_skin_url' => $this->getSkinUrl('M2ePro')
     )); ?>);
 
+    if (typeof setPageHelpLink != 'undefined') {
+        setPageHelpLink('<?php echo $this->getPageHelpLink(); ?>');
+    }
+
     M2ePro.translator.add(<?php echo Zend_Json::encode(array(
 
         'Are you sure?' => Mage::helper('M2ePro')->__('Are you sure?'),
@@ -38,6 +42,7 @@
         'Warning'       => Mage::helper('M2ePro')->__('Warning'),
         'None'          => Mage::helper('M2ePro')->__('None'),
         'Cancel'        => Mage::helper('M2ePro')->__('Cancel'),
+        'Confirm'       => Mage::helper('M2ePro')->__('Confirm'),
         'In Progress'   => Mage::helper('M2ePro')->__('In Progress'),
         'Product(s)'    => Mage::helper('M2ePro')->__('Product(s)'),
 
@@ -46,10 +51,15 @@
         'Please select Action.' => Mage::helper('M2ePro')->__('Please select Action.'),
         'View All Product Log' => Mage::helper('M2ePro')->__('View All Product Log'),
         'This is a required field.' => Mage::helper('M2ePro')->__('This is a required field.'),
+        'Please enter valid UPC' => Mage::helper('M2ePro')->__('Please enter valid UPC'),
+        'Please enter valid EAN' => Mage::helper('M2ePro')->__('Please enter valid EAN'),
+        'Please enter valid ISBN' => Mage::helper('M2ePro')->__('Please enter valid ISBN'),
         'Invalid input data. Decimal value required. Example 12.05' => Mage::helper('M2ePro')->__('Invalid input data. Decimal value required. Example 12.05'),
 
-        'You should select Attribute Set first.' => Mage::helper('M2ePro')->__('You should select Attribute Set first.'),
+        'Create a New One...' => Mage::helper('M2ePro')->__('Create a New One...'),
+        'Creation of New Magento Attribute' => Mage::helper('M2ePro')->__('Creation of New Magento Attribute'),
 
+        'Unauthorized! Please login again.' => Mage::helper('M2ePro')->__('Unauthorized! Please login again.')
     )); ?>);
 
 </script>

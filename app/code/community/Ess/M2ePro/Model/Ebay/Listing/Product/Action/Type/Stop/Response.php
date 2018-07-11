@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Stop_Response
     extends Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Response
 {
-    // ########################################
+    //########################################
 
     public function processSuccess(array $response, array $responseParams = array())
     {
@@ -21,7 +23,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Stop_Response
         $data = $this->appendStartDateEndDateValues($data, $response);
 
         if (isset($data['additional_data'])) {
-            $data['additional_data'] = json_encode($data['additional_data']);
+            $data['additional_data'] = Mage::helper('M2ePro')->jsonEncode($data['additional_data']);
         }
 
         $this->getListingProduct()->addData($data)->save();
@@ -35,7 +37,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Stop_Response
         $this->processSuccess($response,$responseParams);
     }
 
-    // ########################################
+    //########################################
 
     protected function appendItemFeesValues($data, $response)
     {
@@ -48,7 +50,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Stop_Response
         return $data;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     protected function updateVariationsValues($saveQtySold)
     {
@@ -70,5 +72,5 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Stop_Response
         }
     }
 
-    // ########################################
+    //########################################
 }

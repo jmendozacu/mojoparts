@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_View_Development extends Mage_Core_Helper_Abstract
@@ -10,7 +12,6 @@ class Ess_M2ePro_Helper_View_Development extends Mage_Core_Helper_Abstract
     // Control Panel (M2E Pro)
 
     const NICK            = 'development';
-    const TITLE           = 'Control Panel (M2E Pro)';
 
     const TAB_SUMMARY     = 'summary';
     const TAB_ABOUT       = 'about';
@@ -18,10 +19,17 @@ class Ess_M2ePro_Helper_View_Development extends Mage_Core_Helper_Abstract
     const TAB_DATABASE    = 'database';
     const TAB_TOOLS       = 'tools';
     const TAB_MODULE      = 'module';
+    const TAB_CRON        = 'cron';
     const TAB_DEBUG       = 'debug';
-    const TAB_BUILD       = 'build';
 
-    // ########################################
+    //########################################
+
+    public function getTitle()
+    {
+        return Mage::helper('M2ePro')->__('Control Panel (M2E Pro)');
+    }
+
+    //########################################
 
     public function getPageUrl(array $params = array())
     {
@@ -33,7 +41,7 @@ class Ess_M2ePro_Helper_View_Development extends Mage_Core_Helper_Abstract
         return 'M2ePro/adminhtml_development/index';
     }
 
-    // ########################################
+    //########################################
 
     public function getPageAboutTabUrl(array $params = array())
     {
@@ -60,15 +68,15 @@ class Ess_M2ePro_Helper_View_Development extends Mage_Core_Helper_Abstract
         return $this->getPageUrl(array_merge($params,array('tab' => self::TAB_MODULE)));
     }
 
+    public function getPageCronTabUrl(array $params = array())
+    {
+        return $this->getPageUrl(array_merge($params,array('tab' => self::TAB_CRON)));
+    }
+
     public function getPageDebugTabUrl(array $params = array())
     {
         return $this->getPageUrl(array_merge($params,array('tab' => self::TAB_DEBUG)));
     }
 
-    public function getPageBuildTabUrl(array $params = array())
-    {
-        return $this->getPageUrl(array_merge($params,array('tab' => self::TAB_BUILD)));
-    }
-
-    // ########################################
+    //########################################
 }

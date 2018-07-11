@@ -1,21 +1,27 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Account_Switcher extends Ess_M2ePro_Block_Adminhtml_Component_Switcher
 {
     protected $paramName = 'account';
 
-    // ########################################
+    //########################################
 
     public function getLabel()
     {
+        if ($this->getData('component_mode') == Ess_M2ePro_Helper_Component_Ebay::NICK) {
+            return Mage::helper('M2ePro')->__('Account');
+        }
+
         return Mage::helper('M2ePro')->__($this->getComponentLabel('%component% Account'));
     }
 
-    public function getItems()
+    protected function loadItems()
     {
         $collection = Mage::getModel('M2ePro/Account')->getCollection()
                                                       ->setOrder('component_mode', 'ASC')
@@ -25,8 +31,14 @@ class Ess_M2ePro_Block_Adminhtml_Account_Switcher extends Ess_M2ePro_Block_Admin
             $collection->addFieldToFilter('component_mode', $this->getData('component_mode'));
         }
 
+        if (!$collection->getSize()) {
+            $this->items = array();
+            return;
+        }
+
         if ($collection->getSize() < 2) {
-            return array();
+            $this->hasDefaultOption = false;
+            $this->setIsDisabled(true);
         }
 
         $items = array();
@@ -49,15 +61,19 @@ class Ess_M2ePro_Block_Adminhtml_Account_Switcher extends Ess_M2ePro_Block_Admin
             );
         }
 
-        return $items;
+        $this->items = $items;
     }
 
-    // ########################################
+    //########################################
 
     public function getDefaultOptionName()
     {
+        if ($this->getData('component_mode') == Ess_M2ePro_Helper_Component_Ebay::NICK) {
+            return Mage::helper('M2ePro')->__('All Users');
+        }
+
         return Mage::helper('M2ePro')->__('All Accounts');
     }
 
-    // ########################################
+    //########################################
 }

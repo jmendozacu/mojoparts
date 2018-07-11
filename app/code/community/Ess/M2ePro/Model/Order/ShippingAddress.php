@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -17,6 +19,8 @@ abstract class Ess_M2ePro_Model_Order_ShippingAddress extends Varien_Object
 
     /** @var Mage_Directory_Model_Region */
     protected $region;
+
+    //########################################
 
     abstract public function getRawData();
 
@@ -51,7 +55,7 @@ abstract class Ess_M2ePro_Model_Order_ShippingAddress extends Varien_Object
             $this->region = $countryRegions->getFirstItem();
 
             if ($this->isRegionValidationRequired() && !$this->region->getId()) {
-                throw new Exception(
+                throw new Ess_M2ePro_Model_Exception(
                     sprintf('State/Region "%s" in the shipping address is invalid.', $this->getState())
                 );
             }
@@ -60,6 +64,9 @@ abstract class Ess_M2ePro_Model_Order_ShippingAddress extends Varien_Object
         return $this->region;
     }
 
+    /**
+     * @return bool
+     */
     public function isRegionValidationRequired()
     {
         return false;
@@ -100,4 +107,6 @@ abstract class Ess_M2ePro_Model_Order_ShippingAddress extends Varien_Object
     {
         return $this->getData('state');
     }
+
+    //########################################
 }

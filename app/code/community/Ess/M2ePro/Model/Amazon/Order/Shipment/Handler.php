@@ -1,18 +1,27 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Order_Shipment_Handler extends Ess_M2ePro_Model_Order_Shipment_Handler
 {
+    //########################################
+
+    /**
+     * @param Ess_M2ePro_Model_Order $order
+     * @param Mage_Sales_Model_Order_Shipment $shipment
+     * @return int
+     */
     public function handle(Ess_M2ePro_Model_Order $order, Mage_Sales_Model_Order_Shipment $shipment)
     {
         if (!$order->isComponentModeAmazon()) {
             throw new InvalidArgumentException('Invalid component mode.');
         }
 
-        $trackingDetails = $this->getTrackingDetails($shipment);
+        $trackingDetails = $this->getTrackingDetails($order, $shipment);
 
         if (!$order->getChildObject()->canUpdateShippingStatus($trackingDetails)) {
             return self::HANDLE_RESULT_SKIPPED;
@@ -89,4 +98,6 @@ class Ess_M2ePro_Model_Amazon_Order_Shipment_Handler extends Ess_M2ePro_Model_Or
 
         return $items;
     }
+
+    //########################################
 }

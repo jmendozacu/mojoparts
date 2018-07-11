@@ -1,14 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block_Info
 {
     private $order = NULL;
 
-    // ########################################
+    //########################################
 
     protected function _construct()
     {
@@ -16,24 +18,7 @@ class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block
         $this->setTemplate('M2ePro/magento/order/payment/info.phtml');
     }
 
-    /**
-     * Get absolute path to template
-     *
-     * @return string
-     */
-    public function getTemplateFile()
-    {
-        $params = array(
-            '_relative' => true,
-            '_area' => 'adminhtml',
-            '_package' => 'default',
-            '_theme' => 'default'
-        );
-
-        return Mage::getDesign()->getTemplateFilename($this->getTemplate(), $params);
-    }
-
-    // ########################################
+    //########################################
 
     private function getAdditionalData($key = '')
     {
@@ -44,7 +29,7 @@ class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block
         }
 
         // backward compatibility with M2E Pro 3.1.5 or lower
-        // -----------
+        // ---------------------------------------
         $backwardCompatibleKeys = array(
             'payment_method'    => 'ebay_payment_method',
             'channel_order_id'  => 'ebay_order_id',
@@ -56,11 +41,14 @@ class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block
         if (isset($additionalData[$backwardCompatibleKey])) {
             return $additionalData[$backwardCompatibleKey];
         }
-        // -----------
+        // ---------------------------------------
 
         return isset($additionalData[$key]) ? $additionalData[$key] : NULL;
     }
 
+    /**
+     * @return Mage_Sales_Model_Order
+     */
     public function getOrder()
     {
         if (is_null($this->order)) {
@@ -75,6 +63,8 @@ class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block
                 $this->order = Mage::registry('current_invoice')->getOrder();
             } elseif (Mage::registry('current_shipment')) {
                 $this->order = Mage::registry('current_shipment')->getOrder();
+            } elseif (Mage::registry('current_creditmemo')) {
+                $this->order = Mage::registry('current_creditmemo')->getOrder();
             }
         }
 
@@ -102,12 +92,10 @@ class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block
 
         switch ($this->getAdditionalData('component_mode')) {
             case Ess_M2ePro_Helper_Component_Ebay::NICK:
-            case Ess_M2ePro_Helper_Component_Buy::NICK:
-            case Ess_M2ePro_Helper_Component_Play::NICK:
                 break;
             case Ess_M2ePro_Helper_Component_Amazon::NICK:
                 if ($this->getOrder()) {
-                    $url = Mage::helper('adminhtml')->getUrl('M2ePro/adminhtml_common_amazon_order/goToAmazon', array(
+                    $url = Mage::helper('adminhtml')->getUrl('M2ePro/adminhtml_amazon_order/goToAmazon', array(
                         'magento_order_id' => $this->getOrder()->getId()
                     ));
                 }
@@ -122,30 +110,15 @@ class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block
         return !$this->getIsSecureMode() ? (float)$this->getAdditionalData('channel_final_fee') : 0;
     }
 
+    public function getCashOnDeliveryCost()
+    {
+        return !$this->getIsSecureMode() ? (float)$this->getAdditionalData('cash_on_delivery_cost') : 0;
+    }
+
     public function getChannelTitle()
     {
-        $title = '';
-
-        switch ($this->getAdditionalData('component_mode')) {
-            case Ess_M2ePro_Helper_Component_Ebay::NICK:
-                $title = Mage::helper('M2ePro/Component_Ebay')->getTitle();
-                break;
-            case Ess_M2ePro_Helper_Component_Amazon::NICK:
-                // todo uncomment when word "Beta" will be removed from the title
-//                $title = Mage::helper('M2ePro/Component_Amazon')->getTitle();
-                $title = 'Amazon';
-                break;
-            case Ess_M2ePro_Helper_Component_Buy::NICK:
-                // todo uncomment when word "Beta" will be removed from the title
-//                $title = Mage::helper('M2ePro/Component_Buy')->getTitle();
-                $title = 'Rakuten.com';
-                break;
-            case Ess_M2ePro_Helper_Component_Play::NICK:
-                $title = Mage::helper('M2ePro/Component_Play')->getTitle();
-                break;
-        }
-
-        return $title;
+        $component = $this->getAdditionalData('component_mode');
+        return Mage::helper('M2ePro/Component_' . ucfirst($component))->getChannelTitle();
     }
 
     public function getTransactions()
@@ -155,7 +128,7 @@ class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block
         return is_array($transactions) ? $transactions : array();
     }
 
-    // ########################################
+    //########################################
 
     public function toPdf()
     {
@@ -163,5 +136,21 @@ class Ess_M2ePro_Block_Adminhtml_Magento_Payment_Info extends Mage_Payment_Block
         return $this->toHtml();
     }
 
-    // ########################################
+    protected function _toHtml()
+    {
+        // Start store emulation process
+        $appEmulation = Mage::getSingleton('core/app_emulation');
+        $initialEnvironmentInfo = $appEmulation->startEnvironmentEmulation(
+            Mage_Core_Model_App::ADMIN_STORE_ID, Mage_Core_Model_App_Area::AREA_ADMINHTML
+        );
+
+        $html = parent::_toHtml();
+
+        // Stop store emulation process
+        $appEmulation->stopEnvironmentEmulation($initialEnvironmentInfo);
+
+        return $html;
+    }
+
+    //########################################
 }

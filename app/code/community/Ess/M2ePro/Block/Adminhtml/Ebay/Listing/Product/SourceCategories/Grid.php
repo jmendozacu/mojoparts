@@ -1,19 +1,19 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Grid
     extends Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_Grid
 {
-    // ####################################
-
     private $selectedIds = array();
 
     private $currentCategoryId = NULL;
 
-    // ####################################
+    //########################################
 
     private function getCollectionIds()
     {
@@ -29,7 +29,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Grid
         return $ids;
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareMassaction()
     {
@@ -51,7 +51,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Grid
         return parent::_prepareMassaction();
     }
 
-    // ####################################
+    //########################################
 
     public function setSelectedIds(array $ids)
     {
@@ -64,7 +64,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Grid
         return $this->selectedIds;
     }
 
-    // --------------------------
+    // ---------------------------------------
 
     public function setCurrentCategoryId($currentCategoryId)
     {
@@ -77,7 +77,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Grid
         return $this->currentCategoryId;
     }
 
-    // ####################################
+    //########################################
 
     public function setCollection($collection)
     {
@@ -92,7 +92,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Product_SourceCategories_Grid
         parent::setCollection($collection);
     }
 
-    // ####################################
+    //########################################
 
     protected function getSelectedProductsCallback()
     {
@@ -123,7 +123,7 @@ JS;
 
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
@@ -160,5 +160,5 @@ HTML;
 
     }
 
-    // ####################################
+    //########################################
 }

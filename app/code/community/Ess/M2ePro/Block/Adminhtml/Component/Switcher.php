@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Block_Adminhtml_Component_Switcher extends Ess_M2ePro_Block_Adminhtml_Switcher
 {
-    // ########################################
+    //########################################
 
     protected function getComponentLabel($label)
     {
@@ -30,7 +32,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Component_Switcher extends Ess_M2ePro_
         return str_replace('%component%', $component, $label);
     }
 
-    // ########################################
+    //########################################
 
     public function getParamName()
     {
@@ -41,30 +43,10 @@ abstract class Ess_M2ePro_Block_Adminhtml_Component_Switcher extends Ess_M2ePro_
         return $this->getData('component_mode') . ucfirst($this->paramName);
     }
 
-    public function getSwitchUrl()
-    {
-        $params = array(
-            '_current' => true,
-            $this->getParamName() => $this->getParamPlaceHolder()
-        );
-
-        $tabId = Ess_M2ePro_Block_Adminhtml_Common_Component_Abstract::getTabIdByComponent(
-            $this->getData('component_mode')
-        );
-
-        if (!is_null($tabId)) {
-            $params['tab'] = $tabId;
-        }
-
-        $controllerName = $this->getData('controller_name') ? $this->getData('controller_name') : '*';
-
-        return $this->getUrl("*/{$controllerName}/*", $params);
-    }
-
     public function getSwitchCallback()
     {
         return 'switch' . ucfirst($this->getParamName());
     }
 
-    // ########################################
+    //########################################
 }

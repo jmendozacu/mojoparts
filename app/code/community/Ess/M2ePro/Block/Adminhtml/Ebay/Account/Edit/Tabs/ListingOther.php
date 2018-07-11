@@ -1,50 +1,48 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_ListingOther extends Mage_Adminhtml_Block_Widget
 {
     public $marketplaces;
 
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayAccountEditTabsListingOther');
-        //------------------------------
+        // ---------------------------------------
 
         $this->setTemplate('M2ePro/ebay/account/tabs/listing_other.phtml');
     }
 
     protected function _beforeToHtml()
     {
-        //-------------------------------
-        $this->attributes = Mage::helper('M2ePro/Magento_Attribute')->getGeneralFromAllAttributeSets();
-        //-------------------------------
+        // ---------------------------------------
+        /** @var Ess_M2ePro_Helper_Magento_Attribute $magentoAttributeHelper */
+        $magentoAttributeHelper = Mage::helper('M2ePro/Magento_Attribute');
 
-        //-------------------------------
-        $back = Mage::helper('M2ePro')->makeBackUrlParam('*/adminhtml_ebay_account/edit', array(
-            'id' => $this->getRequest()->getParam('id'),
-            'tab' => 'listingOther'
-        ));
-        $url = $this->getUrl('*/adminhtml_ebay_listing_other_synchronization/edit', array('back' => $back));
-        $data = array(
-            'label'   => Mage::helper('M2ePro')->__('Synchronization Settings'),
-            'onclick' => 'window.open(\'' . $url . '\', \'_blank\')',
-            'class'   => 'button_link'
+        $generalAttributes = $magentoAttributeHelper->getGeneralFromAllAttributeSets();
+
+        $this->attributes = $magentoAttributeHelper->filterByInputTypes(
+            $generalAttributes, array(
+                'text', 'textarea', 'select'
+            )
         );
-        $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
-        $this->setChild('ebay_other_listings_synchronization_settings', $buttonBlock);
-        //-------------------------------
+        // ---------------------------------------
 
-        //-------------------------------
+        // ---------------------------------------
         $account = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
         $marketplacesData = $account->getData('marketplaces_data');
-        $marketplacesData = !empty($marketplacesData) ? json_decode($marketplacesData, true) : array();
+        $marketplacesData = !empty($marketplacesData) ? Mage::helper('M2ePro')->jsonDecode($marketplacesData) : array();
 
         $marketplaces = Mage::helper('M2ePro/Component_Ebay')
             ->getCollection('Marketplace')
@@ -62,8 +60,10 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_ListingOther extends Mag
         }
 
         $this->marketplaces = $marketplaces;
-        //-------------------------------
+        // ---------------------------------------
 
         return parent::_beforeToHtml();
     }
+
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2011 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Template_SellingFormat_Messages
@@ -9,7 +11,7 @@ class Ess_M2ePro_Block_Adminhtml_Template_SellingFormat_Messages
 {
     const TYPE_CURRENCY_CONVERSION = 'currency_conversion';
 
-    // ########################################
+    //########################################
 
     public function getCurrencyConversionMessage($marketplaceCurrency = null)
     {
@@ -93,24 +95,24 @@ class Ess_M2ePro_Block_Adminhtml_Template_SellingFormat_Messages
         return '<span style="color: #3D6611 !important;">' . $message . '</span>';
     }
 
-    // ########################################
+    //########################################
 
     public function getMessages()
     {
         $messages = array();
 
-        //------------------------------
+        // ---------------------------------------
         if (!is_null($message = $this->getCurrencyConversionMessage())) {
             $messages[self::TYPE_CURRENCY_CONVERSION] = $message;
         }
-        //------------------------------
+        // ---------------------------------------
 
         $messages = array_merge($messages, parent::getMessages());
 
         return $messages;
     }
 
-    // ########################################
+    //########################################
 
     protected function canDisplayCurrencyConversionMessage($marketplaceCurrency)
     {
@@ -125,14 +127,14 @@ class Ess_M2ePro_Block_Adminhtml_Template_SellingFormat_Messages
         $template = $this->getTemplateModel();
         $template->addData($this->getTemplateData());
 
-        if (!$template->usesProductOrSpecialPrice($marketplaceCurrency)) {
+        if (!$template->usesConvertiblePrices($marketplaceCurrency)) {
             return false;
         }
 
         return true;
     }
 
-    // ########################################
+    //########################################
 
     protected function getTemplateModel()
     {
@@ -145,20 +147,14 @@ class Ess_M2ePro_Block_Adminhtml_Template_SellingFormat_Messages
             case Ess_M2ePro_Helper_Component_Amazon::NICK:
                 $model = Mage::getModel('M2ePro/Amazon_Template_SellingFormat');
                 break;
-            case Ess_M2ePro_Helper_Component_Buy::NICK:
-                $model = Mage::getModel('M2ePro/Buy_Template_SellingFormat');
-                break;
-            case Ess_M2ePro_Helper_Component_Play::NICK:
-                $model = Mage::getModel('M2ePro/Play_Template_SellingFormat');
-                break;
         }
 
         if (is_null($model)) {
-            throw new LogicException('Policy model is unknown.');
+            throw new Ess_M2ePro_Model_Exception_Logic('Policy model is unknown.');
         }
 
         return $model;
     }
 
-    // ########################################
+    //########################################
 }

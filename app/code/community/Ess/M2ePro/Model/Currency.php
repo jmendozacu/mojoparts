@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Currency
 {
-    //####################################
+    //########################################
 
     public function isBase($currencyCode, $store)
     {
@@ -76,5 +78,5 @@ class Ess_M2ePro_Model_Currency
         return Mage::app()->getLocale()->currency($currencyName)->toCurrency($priceValue);
     }
 
-    //####################################
+    //########################################
 }

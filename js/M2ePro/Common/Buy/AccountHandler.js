@@ -1,7 +1,7 @@
 CommonBuyAccountHandler = Class.create();
 CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function()
     {
@@ -117,7 +117,7 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     completeStep: function()
     {
@@ -125,7 +125,7 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
         window.close();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     delete_click: function()
     {
@@ -135,7 +135,7 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
         setLocation(M2ePro.url.get('deleteAction'));
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     update_password: function(mode)
     {
@@ -144,7 +144,7 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
          $(mode + '_password_required').show();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     other_listings_synchronization_change: function()
     {
@@ -171,17 +171,15 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
             $('other_listings_move_mode').value = M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::OTHER_LISTINGS_MOVE_TO_LISTINGS_DISABLED');
             $('mapping_general_id_mode').value = M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::OTHER_LISTINGS_MAPPING_GENERAL_ID_MODE_NONE');
             $('mapping_sku_mode').value = M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::OTHER_LISTINGS_MAPPING_SKU_MODE_NONE');
-            $('mapping_title_mode').value = M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_NONE');
         }
 
         $('mapping_general_id_mode').simulate('change');
         $('mapping_sku_mode').simulate('change');
-        $('mapping_title_mode').simulate('change');
 
         $('other_listings_move_mode').simulate('change');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     mapping_general_id_mode_change: function()
     {
@@ -209,21 +207,7 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
         }
     },
 
-    mapping_title_mode_change: function()
-    {
-        if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_NONE')) {
-            $('mapping_title_priority_td').hide();
-        } else {
-            $('mapping_title_priority_td').show();
-
-            $('mapping_title_attribute').value = '';
-            if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_CUSTOM_ATTRIBUTE')) {
-                BuyAccountHandlerObj.updateHiddenValue(this, $('mapping_title_attribute'));
-            }
-        }
-    },
-
-    //----------------------------------
+    // ---------------------------------------
 
     move_mode_change: function()
     {
@@ -234,26 +218,7 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
         }
     },
 
-    //----------------------------------
-
-    ordersModeChange: function()
-    {
-        var self = BuyAccountHandlerObj;
-
-        if ($('orders_mode').value == M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::ORDERS_MODE_YES')) {
-            $('magento_block_buy_accounts_magento_orders_listings').show();
-            $('magento_block_buy_accounts_magento_orders_listings_other').show();
-        } else {
-            $('magento_block_buy_accounts_magento_orders_listings').hide();
-            $('magento_block_buy_accounts_magento_orders_listings_other').hide();
-        }
-
-        $('magento_orders_listings_mode').value = M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::MAGENTO_ORDERS_LISTINGS_MODE_NO');
-        $('magento_orders_listings_other_mode').value = M2ePro.php.constant('Ess_M2ePro_Model_Buy_Account::MAGENTO_ORDERS_LISTINGS_OTHER_MODE_NO');
-
-        self.magentoOrdersListingsModeChange();
-        self.magentoOrdersListingsOtherModeChange();
-    },
+    // ---------------------------------------
 
     magentoOrdersListingsModeChange: function()
     {
@@ -424,7 +389,7 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     saveAndClose: function()
     {
@@ -445,5 +410,5 @@ CommonBuyAccountHandler.prototype = Object.extend(new CommonHandler(), {
         });
     }
 
-    //---------------------------------
+    // ---------------------------------------
 });

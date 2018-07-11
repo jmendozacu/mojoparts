@@ -1,100 +1,59 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Common_Synchronization
     extends Ess_M2ePro_Block_Adminhtml_Common_Component_Tabs_Container
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('synchronization');
         $this->_blockGroup = 'M2ePro';
         $this->_controller = 'adminhtml_common_synchronization';
-        //------------------------------
+        // ---------------------------------------
 
         // Form id of marketplace_general_form
-        //------------------------------
+        // ---------------------------------------
         $this->tabsContainerId = 'edit_form';
-        //------------------------------
+        // ---------------------------------------
 
-        // Set header text
-        //------------------------------
-        $this->_headerText = Mage::helper('M2ePro')->__('Synchronization');
-        //------------------------------
+        $this->_headerText = '';
 
-        // Set buttons actions
-        //------------------------------
-        $this->removeButton('back');
-        $this->removeButton('reset');
-        $this->removeButton('delete');
-        $this->removeButton('add');
-        $this->removeButton('save');
-        $this->removeButton('edit');
-        //------------------------------
+        $this->setTemplate(NULL);
 
-        if (!(bool)$this->getRequest()->getParam('wizard',false)) {
-            //------------------------------
-            $url = $this->getUrl('*/adminhtml_common_log/synchronization');
-            $this->_addButton('view_log', array(
-                'label'     => Mage::helper('M2ePro')->__('View Log'),
-                'onclick'   => 'window.open(\'' . $url . '\')',
-                'class'     => 'button_link'
-            ));
-            //------------------------------
+        // ---------------------------------------
+        $params = Mage::helper('M2ePro')->escapeHtml(
+            Mage::helper('M2ePro')->jsonEncode(Mage::helper('M2ePro/View_Common_Component')->getActiveComponents())
+        );
+        $this->_addButton('run_all_enabled_now', array(
+            'label'     => Mage::helper('M2ePro')->__('Synchronize'),
+            'onclick'   => 'SynchronizationHandlerObj.saveSettings(\'runAllEnabledNow\', ' . $params . ');',
+            'class'     => 'save'
+        ));
+        // ---------------------------------------
 
-            //------------------------------
-            $params = Mage::helper('M2ePro')->escapeHtml(
-                json_encode(Mage::helper('M2ePro/View_Common_Component')->getActiveComponents())
-            );
-            $this->_addButton('run_all_enabled_now', array(
-                'label'     => Mage::helper('M2ePro')->__('Run Enabled Now'),
-                'onclick'   => 'SynchronizationHandlerObj.saveSettings(\'runAllEnabledNow\', ' . $params . ');',
-                'class'     => 'save'
-            ));
-            //------------------------------
-
-            //------------------------------
-            $this->_addButton('save', array(
-                'label'     => Mage::helper('M2ePro')->__('Save Settings'),
-                'onclick'   => 'SynchronizationHandlerObj.saveSettings(\'\', ' . $params . ')',
-                'class'     => 'save'
-            ));
-            //------------------------------
-        } else {
-            $activeWizardNick = Mage::helper('M2ePro/Module_Wizard')->getNick(
-                Mage::helper('M2ePro/Module_Wizard')->getActiveWizard(Ess_M2ePro_Helper_View_Common::NICK)
-            );
-
-            $this->setEnabledTab($activeWizardNick);
-
-            //------------------------------
-            $escapedWizardNick = Mage::helper('M2ePro')->escapeHtml("'" . $activeWizardNick . "'");
-            $this->_addButton('save', array(
-                'label'     => Mage::helper('M2ePro')->__('Save Settings'),
-                'onclick'   => 'SynchronizationHandlerObj.saveSettings(\'\',' . $escapedWizardNick . ')',
-                'class'     => 'save'
-            ));
-            //------------------------------
-
-            //------------------------------
-            $this->_addButton('close', array(
-                'label'     => Mage::helper('M2ePro')->__('Complete This Step'),
-                'onclick'   => 'SynchronizationHandlerObj.completeStep();',
-                'class'     => 'close'
-            ));
-            //------------------------------
-        }
+        // ---------------------------------------
+        $this->_addButton('save', array(
+            'label'     => Mage::helper('M2ePro')->__('Save'),
+            'onclick'   => 'SynchronizationHandlerObj.saveSettings(\'\', ' . $params . ')',
+            'class'     => 'save'
+        ));
+        // ---------------------------------------
     }
 
     protected function _toHtml()
     {
-        $javascriptsMain = <<<JAVASCRIPT
+        $javascriptsMain = <<<HTML
 <script type="text/javascript">
 
     Event.observe(window, 'load', function() {
@@ -103,7 +62,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Synchronization
     });
 
 </script>
-JAVASCRIPT;
+HTML;
 
         return $javascriptsMain .
                '<div id="synchronization_progress_bar"></div>' .
@@ -112,7 +71,7 @@ JAVASCRIPT;
                '</div>';
     }
 
-    // ########################################
+    //########################################
 
     protected function getAmazonTabBlock()
     {
@@ -124,7 +83,7 @@ JAVASCRIPT;
         return $this->getChild('amazon_tab');
     }
 
-    // ########################################
+    //########################################
 
     protected function getBuyTabBlock()
     {
@@ -137,53 +96,59 @@ JAVASCRIPT;
         return $this->getChild('buy_tab');
     }
 
-    // ########################################
-
-    protected function getPlayTabBlock()
-    {
-        if (!$this->getChild('play_tab')) {
-            $this->setChild(
-                'play_tab',
-                $this->getLayout()->createBlock('M2ePro/adminhtml_common_play_synchronization_form')
-            );
-        }
-        return $this->getChild('play_tab');
-    }
-
-    // ########################################
+    //########################################
 
     protected function _componentsToHtml()
     {
-        $helpBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_common_synchronization_help');
+        $tabsCount = count($this->tabs);
+
+        if ($tabsCount <= 0) {
+            return '';
+        }
+
         $formBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_common_synchronization_form');
         count($this->tabs) == 1 && $formBlock->setChildBlockId($this->getSingleBlock()->getContainerId());
 
-        return $helpBlock->toHtml()
-               . parent::_componentsToHtml()
-               . $formBlock->toHtml();
-    }
+        $tabsContainer = $this->getTabsContainerBlock();
+        $tabsContainer->setDestElementId($this->tabsContainerId);
 
-    protected function getTabsContainerDestinationHtml()
-    {
-        return '';
-    }
-
-    // ########################################
-
-    public function canShowRunNowButton($nick)
-    {
-        if (!(bool)$this->getRequest()->getParam('wizard',false)) {
-            return true;
+        foreach ($this->tabs as $tabId) {
+            $tab = $this->prepareTabById($tabId);
+            $tabsContainer->addTab($tabId, $tab);
         }
 
-        $activeWizard = Mage::helper('M2ePro/Module_Wizard')->getActiveWizard(Ess_M2ePro_Helper_View_Common::NICK);
+        $tabsContainer->setActiveTab($this->getActiveTab());
 
-        if (!$activeWizard || Mage::helper('M2ePro/Module_Wizard')->getNick($activeWizard) != $nick) {
-            return true;
+        $hideChannels = '';
+        $tabsIds = $tabsContainer->getTabsIds();
+        if (count($tabsIds) <= 1) {
+            $hideChannels = ' style="visibility: hidden"';
         }
 
-        return false;
+        return <<<HTML
+<div class="content-header skip-header">
+    <table cellspacing="0">
+        <tr>
+            <td{$hideChannels}>{$tabsContainer->toHtml()}</td>
+            <td class="form-buttons">{$this->getButtonsHtml()}</td>
+        </tr>
+    </table>
+</div>
+{$formBlock->toHtml()}
+HTML;
+
     }
 
-    // ########################################
+    //########################################
+
+    protected function getTabsContainerBlock()
+    {
+        if (is_null($this->tabsContainerBlock)) {
+            $this->tabsContainerBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_common_synchronization_tabs');
+        }
+
+        return $this->tabsContainerBlock;
+    }
+
+    //########################################
 }

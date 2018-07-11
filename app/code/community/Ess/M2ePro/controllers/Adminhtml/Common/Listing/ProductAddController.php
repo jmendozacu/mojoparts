@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
@@ -10,13 +12,15 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
     protected $component;
     protected $sessionKeyPostfix = '_listing_product_add';
 
+    //########################################
+
     protected function _initAction()
     {
-        $componentTitle = constant('Ess_M2ePro_Helper_Component_'.ucfirst($this->getComponent()).'::TITLE');
+        $componentTitle = Mage::helper('M2ePro/Component_'.ucfirst($this->getComponent()))->getTitle();
 
         $this->loadLayout()
             ->_title(Mage::helper('M2ePro')->__('Manage Listings'))
-            ->_title(Mage::helper('M2ePro')->__($componentTitle.' Listings'));
+            ->_title(Mage::helper('M2ePro')->__('%component_title% Listings', $componentTitle));
 
         $this->getLayout()->getBlock('head')
             ->setCanLoadExtJs(true)
@@ -32,7 +36,6 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
 
             ->addJs('M2ePro/Common/Listing/Category/Summary/GridHandler.js')
             ->addJs('M2ePro/Common/Listing/Category/TreeHandler.js')
-            ->addJs('M2ePro/Common/Listing/Category/Handler.js')
             ->addJs('M2ePro/Common/Listing/AddListingHandler.js');
 
         if ($this->getComponent() === Ess_M2ePro_Helper_Component_Amazon::NICK) {
@@ -40,6 +43,18 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         }
 
         $this->_initPopUp();
+
+        $component = $this->getComponent();
+        if (!$component) {
+            $components = Mage::helper('M2ePro/View_Common_Component')->getActiveComponents();
+            $component = array_shift($components);
+        }
+
+        if ($component == Ess_M2ePro_Helper_Component_Amazon::NICK) {
+            $this->setPageHelpLink(NULL, NULL, "x/MogVAQ");
+        } else {
+            $this->setPageHelpLink($component, 'Add+Magento+Products');
+        }
 
         return $this;
     }
@@ -82,7 +97,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         }
     }
 
-    // ####################################
+    //########################################
 
     public function sourceMode()
     {
@@ -104,7 +119,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
             ->renderLayout();
     }
 
-    // ####################################
+    //########################################
 
     public function addProductsFromList()
     {
@@ -141,10 +156,23 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
             return $this->getResponse()->setBody($grid->toHtml());
         }
 
-        $this->_initAction()
-            ->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_add_sourceProduct', '',
+        $this->_initAction();
+
+        $component = $this->getComponent();
+        if (!$component) {
+            $components = Mage::helper('M2ePro/View_Common_Component')->getActiveComponents();
+            $component = array_shift($components);
+        }
+
+        if ($component == Ess_M2ePro_Helper_Component_Amazon::NICK) {
+            $this->setPageHelpLink(NULL, NULL, "x/N4gVAQ");
+        } else {
+            $this->setPageHelpLink($component, 'Adding+Products+from+the+List');
+        }
+
+        $this->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_add_sourceProduct', '',
                 array(
-                    'component' => $this->getComponent()
+                    'component' => $component
                 )
             ))
             ->renderLayout();
@@ -202,6 +230,18 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
 
         $this->_initAction();
 
+        $component = $this->getComponent();
+        if (!$component) {
+            $components = Mage::helper('M2ePro/View_Common_Component')->getActiveComponents();
+            $component = array_shift($components);
+        }
+
+        if ($component == Ess_M2ePro_Helper_Component_Amazon::NICK) {
+            $this->setPageHelpLink(NULL, NULL, "x/P4gVAQ");
+        } else {
+            $this->setPageHelpLink($component, 'Adding+Products+from+Category');
+        }
+
         $gridContainer = $this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_add_sourceCategory','',array(
             'component' => $this->getComponent()
         ));
@@ -209,7 +249,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
 
         /* @var $treeBlock Ess_M2ePro_Block_Adminhtml_Common_Listing_Category_Tree */
         $treeBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_category_tree', '', array(
-            'component' => $this->getComponent(),
+            'component' => $component,
             'tree_settings' => array(
                 'show_products_amount' => true,
                 'hide_products_this_listing' => true
@@ -219,7 +259,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         if (is_null($this->getSessionValue('current_category_id'))) {
             $currentNode = $treeBlock->getRoot()->getChildren()->getIterator()->current();
             if (!$currentNode) {
-                throw new Exception('No Categories found');
+                throw new Ess_M2ePro_Model_Exception('No Categories found');
             }
             $this->setSessionValue('current_category_id', $currentNode->getId());
         }
@@ -235,7 +275,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         $this->renderLayout();
     }
 
-    // ####################################
+    //########################################
 
     public function review()
     {
@@ -263,7 +303,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
             ->renderLayout();
     }
 
-    // ####################################
+    //########################################
 
     public function viewListingAction()
     {
@@ -307,7 +347,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         ));
     }
 
-    // ####################################
+    //########################################
 
     public function addProductsAction()
     {
@@ -325,7 +365,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
                     continue;
                 }
 
-                $tempResult = $listing->addProduct($productId);
+                $tempResult = $listing->addProduct($productId, Ess_M2ePro_Helper_Data::INITIATOR_USER);
                 if ($tempResult instanceof Ess_M2ePro_Model_Listing_Product) {
                     $listingProductIds[] = $tempResult->getId();
                 }
@@ -339,8 +379,6 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         $isLastPart = $this->getRequest()->getParam('is_last_part');
         if ($isLastPart == 'yes') {
 
-            Mage::helper('M2ePro/Data_Session')->setValue('temp_listing_categories', array());
-
             $backUrl = $this->getUrl('*/*/index', array(
                 'id' => $listingId,
                 'skip_products_steps' => empty($tempProducts),
@@ -350,11 +388,11 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
 
             $this->clearSession();
 
-            return $this->getResponse()->setBody(json_encode(array('redirect' => $backUrl)));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('redirect' => $backUrl)));
         }
 
         $response = array('redirect' => '');
-        return $this->getResponse()->setBody(json_encode($response));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($response));
     }
 
     public function getSessionProductsIdsAction()
@@ -362,12 +400,12 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         $tempSession = $this->getSessionValue('source_categories');
         $selectedProductsIds = !isset($tempSession['products_ids']) ? array() : $tempSession['products_ids'];
 
-        $this->getResponse()->setBody(json_encode(array(
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'ids' => $selectedProductsIds
         )));
     }
 
-    // ####################################
+    //########################################
 
     public function getCategoriesJsonAction()
     {
@@ -412,7 +450,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         $tempSession['products_ids'] = array_values(array_filter(array_flip($all)));
         $this->setSessionValue('source_categories', $tempSession);
 
-        // ---------------------
+        // ---------------------------------------
 
         $this->_forward('getTreeInfo');
     }
@@ -435,7 +473,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         $this->getResponse()->setBody($treeBlock->getInfoJson());
     }
 
-    // ####################################
+    //########################################
 
     public function getCategoriesSummaryHtmlAction()
     {
@@ -488,7 +526,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         $this->setSessionValue('source_categories',$tempSession);
     }
 
-    // ####################################
+    //########################################
 
     protected function setRuleData($prefix)
     {
@@ -533,7 +571,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         return $prefix;
     }
 
-    // ####################################
+    //########################################
 
     protected function getComponent()
     {
@@ -545,7 +583,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         return $this->getComponent().$this->sessionKeyPostfix;
     }
 
-    // ####################################
+    //########################################
 
     protected function setSessionValue($key, $value)
     {
@@ -572,26 +610,26 @@ class Ess_M2ePro_Adminhtml_Common_Listing_ProductAddController
         return isset($sessionData[$key]) ? $sessionData[$key] : NULL;
     }
 
-    // ------------------------------------
+    // ---------------------------------------
 
     private function clearSession()
     {
         Mage::helper('M2ePro/Data_Session')->setValue($this->getSessionKey(), NULL);
     }
 
-    //#############################################
+    //########################################
 
-    /** @return Ess_M2ePro_Model_Ebay_Listing
+    /** @return Ess_M2ePro_Model_Amazon_Listing
      * @throws Exception
      */
     private function getListingFromRequest()
     {
         if (!$listingId = $this->getRequest()->getParam('id')) {
-            throw new Exception('Listing is not defined');
+            throw new Ess_M2ePro_Model_Exception('Listing is not defined');
         }
 
         return Mage::helper('M2ePro/Component')->getCachedUnknownObject('Listing',$listingId)->getChildObject();
     }
 
-    //#############################################
+    //########################################
 }

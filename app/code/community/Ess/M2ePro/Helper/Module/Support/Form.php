@@ -1,13 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
- * Shipping method with custom title and price
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Module_Support_Form extends Mage_Core_Helper_Abstract
 {
-    //#############################################
+    //########################################
 
     public function send($component, $fromEmail, $fromName, $subject, $description, $severity)
     {
@@ -61,6 +62,7 @@ class Ess_M2ePro_Helper_Module_Support_Form extends Mage_Core_Helper_Abstract
         $phpInfo = Mage::helper('M2ePro/Client')->getPhpSettings();
         $phpInfo['api'] = Mage::helper('M2ePro/Client')->getPhpApiName();
         $phpInfo['version'] = Mage::helper('M2ePro/Client')->getPhpVersion();
+        $phpInfo['ini_file_location'] = Mage::helper('M2ePro/Client')->getPhpIniFileLoaded();
 
         $mysqlInfo = Mage::Helper('M2ePro/Client')->getMysqlSettings();
         $mysqlInfo['api'] = Mage::helper('M2ePro/Client')->getMysqlApiName();
@@ -100,6 +102,7 @@ Version: {$phpInfo['version']}
 Api: {$phpInfo['api']}
 Memory Limit: {$phpInfo['memory_limit']}
 Max Execution Time: {$phpInfo['max_execution_time']}
+PHP ini file: {$phpInfo['ini_file_location']}
 
 -------------------------------- MYSQL INFO --------------------------------------
 Version: {$mysqlInfo['version']}
@@ -120,7 +123,7 @@ DATA;
         return $info;
     }
 
-    //#############################################
+    //########################################
 
     private function createBody($subject, $component, $description, $severity)
     {
@@ -163,5 +166,5 @@ DATA;
         $mail->send();
     }
 
-    //#############################################
+    //########################################
 }

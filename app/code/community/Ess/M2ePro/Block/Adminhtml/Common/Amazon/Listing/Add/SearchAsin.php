@@ -1,12 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
     extends Mage_Adminhtml_Block_Widget_Grid_Container
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
@@ -14,28 +18,28 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
         $listingId = $this->getRequest()->getParam('id');
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('searchAsinForListingProducts');
-        //------------------------------
+        // ---------------------------------------
 
         // Set header text
-        //------------------------------
+        // ---------------------------------------
         $this->_headerText = Mage::helper('M2ePro')->__("Search Existing Amazon Products (ASIN/ISBN)");
         $this->_blockGroup = 'M2ePro';
         $this->_controller = 'adminhtml_common_amazon_listing_add_searchAsin';
-        //------------------------------
+        // ---------------------------------------
 
         // Set buttons actions
-        //------------------------------
+        // ---------------------------------------
         $this->removeButton('back');
         $this->removeButton('reset');
         $this->removeButton('delete');
         $this->removeButton('add');
         $this->removeButton('save');
         $this->removeButton('edit');
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $url = $this->getUrl('*/*/removeAddedProducts', array(
             'id' => $listingId,
             '_current' => true
@@ -46,7 +50,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
             'class'     => 'back'
         ));
 
-        //------------------------------
+        // ---------------------------------------
         $this->_addButton('auto_action', array(
             'label'     => Mage::helper('M2ePro')->__('Edit Search Settings'),
             'onclick'   => 'ListingGridHandlerObj.editSearchSettings(\'' .
@@ -54,21 +58,22 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
                 $this->getListing()->getId() .
             ');'
         ));
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $this->_addButton('save_and_go_to_listing_view', array(
             'label'     => Mage::helper('M2ePro')->__('Continue'),
             'onclick'   => 'ListingGridHandlerObj.checkSearchResults('.$listingId.')',
             'class'     => 'scalable next'
         ));
-        //------------------------------
+        // ---------------------------------------
     }
 
     public function getGridHtml()
     {
-        $listing = Mage::helper('M2ePro/Component')
-            ->getCachedUnknownObject('Listing', $this->getRequest()->getParam('id'));
+        $listing = Mage::helper('M2ePro/Component')->getCachedUnknownObject(
+            'Listing', $this->getRequest()->getParam('id')
+        );
 
         $viewHeaderBlock = $this->getLayout()->createBlock(
             'M2ePro/adminhtml_listing_view_header','',
@@ -79,6 +84,16 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
 
         $productSearchBlock = $this->getLayout()
             ->createBlock('M2ePro/adminhtml_common_amazon_listing_productSearch_main');
+        // ---------------------------------------
+        $data = array(
+            'id'      => 'productSearch_cleanSuggest_button',
+            'label'   => Mage::helper('M2ePro')->__('Search ASIN/ISBN Manually'),
+            'class'   => 'productSearch_cleanSuggest_button',
+            'onclick' => 'ListingGridHandlerObj.productSearchHandler.clearSearchResultsAndManualSearch()'
+        );
+        $buttonResetBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
+        $productSearchBlock->setChild('productSearch_cleanSuggest_button', $buttonResetBlock);
+        // ---------------------------------------
 
         return $helpBlock->toHtml()
                . $viewHeaderBlock->toHtml()
@@ -90,7 +105,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
     {
         $helper = Mage::helper('M2ePro');
 
-        // --------TEXT------------------
+        // TEXT
         $createEmptyListingMessage = $helper->escapeJs($helper->__('Are you sure you want to create empty Listing?'));
 
         $taskCompletedMessage = $helper->escapeJs($helper->__('Task completed. Please wait ...'));
@@ -136,9 +151,12 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
         );
 
         $newAsinPopupTitle = $helper->escapeJs($helper->__('New ASIN/ISBN creation'));
-        // -------------------------------
+        $notCompletedPopupTitle = $helper->escapeJs(
+            $helper->__('Adding of New Products to the Listing was not competed')
+        );
+        // ---------------------------------------
 
-        // ---------URL-------------------
+        // URL
         $searchAsinManual = $this->getUrl('*/adminhtml_common_amazon_listing/searchAsinManual');
         $getSearchAsinMenu = $this->getUrl('*/adminhtml_common_amazon_listing/getSearchAsinMenu');
         $suggestedAsinGridHmtl = $this->getUrl('*/adminhtml_common_amazon_listing/getSuggestedAsinGrid');
@@ -148,6 +166,13 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
         $mapToAsin = $this->getUrl('*/adminhtml_common_amazon_listing/mapToAsin');
         $unmapFromAsin = $this->getUrl('*/adminhtml_common_amazon_listing/unmapFromAsin');
         $mapToNewAsin = $this->getUrl('*/adminhtml_common_amazon_listing/mapToNewAsin');
+
+        $addAttributesToVocabularyUrl = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_variation_product_manage/addAttributesToVocabulary'
+        );
+        $addOptionsToVocabularyUrl = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_variation_product_manage/addOptionsToVocabulary'
+        );
 
         $viewSearchSettings = $this->getUrl('*/adminhtml_common_amazon_listing_productAdd/viewSearchSettings');
         $saveSearchSettings = $this->getUrl('*/adminhtml_common_amazon_listing_productAdd/saveSearchSettings');
@@ -160,18 +185,20 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
             'id' => $this->getListing()->getId()
         ));
 
-        $getProductsUrl = $this->getUrl(
-            '*/adminhtml_common_' . $this->getData('component') . '_listing/getProductsFromCategories'
-        );
         $addProductsUrl = $this->getUrl(
             '*/adminhtml_common_listing_productAdd/addProducts', array(
                 'component' => $this->getData('component')
             )
         );
         $backUrl = $this->getUrl('*/*/index');
-        // -------------------------------
+        // ---------------------------------------
 
-        $javascript = <<<JAVASCRIPT
+        $showNotCompletedPopup = '';
+        if ($this->getRequest()->getParam('not_completed', false)) {
+            $showNotCompletedPopup = 'ListingGridHandlerObj.showNotCompletedPopup();';
+        }
+
+        $javascript = <<<HTML
 <script type="text/javascript">
     if (typeof M2ePro == 'undefined') {
         M2ePro = {};
@@ -203,8 +230,8 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
     M2ePro.text.confirm = '{$textConfirm}';
 
     M2ePro.text.new_asin_popup_title = '{$newAsinPopupTitle}';
+    M2ePro.text.not_completed_popup_title = '{$notCompletedPopupTitle}';
 
-    M2ePro.url.get_products_from_categories = '{$getProductsUrl}';
     M2ePro.url.add_products = '{$addProductsUrl}';
     M2ePro.url.back = '{$backUrl}';
 
@@ -218,6 +245,9 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
     M2ePro.url.unmapFromAsin = '{$unmapFromAsin}';
     M2ePro.url.mapToNewAsin = '{$mapToNewAsin}';
 
+    M2ePro.url.addAttributesToVocabulary = '{$addAttributesToVocabularyUrl}';
+    M2ePro.url.addOptionsToVocabulary = '{$addOptionsToVocabularyUrl}';
+
     M2ePro.url.viewSearchSettings = '{$viewSearchSettings}';
     M2ePro.url.saveSearchSettings = '{$saveSearchSettings}';
 
@@ -228,35 +258,42 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_SearchAsin
 
         CommonHandler.prototype.scroll_page_to_top = function() { return; }
 
-        ListingGridHandlerObj = new SearchAsinGridHandler(
+        ListingGridHandlerObj = new CommonAmazonListingSearchAsinGridHandler(
             '{$this->getChild('grid')->getId()}',
             {$this->getListing()->getId()}
         );
 
-        // todo next (temp solution)
         ListingGridHandlerObj.actionHandler.setOptions(M2ePro);
         ListingGridHandlerObj.productSearchHandler.setOptions(M2ePro);
 
         ListingProgressBarObj = new ProgressBar('search_asin_progress_bar');
         GridWrapperObj = new AreaWrapper('search_asin_products_container');
+
+        {$showNotCompletedPopup}
     });
 
 </script>
-JAVASCRIPT;
+HTML;
 
-        return $javascript .
+        // ---------------------------------------
+        $notCompletedPopup = $this->getLayout()->createBlock(
+            'M2ePro/adminhtml_common_amazon_listing_add_searchAsin_notCompleted');
+        // ---------------------------------------
+
+        return $notCompletedPopup->toHtml() .
+            $javascript .
             '<div id="search_asin_progress_bar"></div>' .
                 '<div id="search_asin_products_container">' .
                 parent::_toHtml() .
             '</div>';
     }
 
-    // ####################################
+    //########################################
 
     public function getListing()
     {
         if (!$listingId = $this->getRequest()->getParam('id')) {
-            throw new Exception('Listing is not defined');
+            throw new Ess_M2ePro_Model_Exception('Listing is not defined');
         }
 
         if (is_null($this->listing)) {
@@ -267,6 +304,5 @@ JAVASCRIPT;
         return $this->listing;
     }
 
-    // ####################################
-
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -9,7 +11,9 @@
  */
 class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_Child_Ebay_Abstract
 {
-    // ########################################
+    const INSTRUCTION_TYPE_CHANNEL_STATUS_CHANGED = 'channel_status_changed';
+    const INSTRUCTION_TYPE_CHANNEL_QTY_CHANGED    = 'channel_qty_changed';
+    const INSTRUCTION_TYPE_CHANNEL_PRICE_CHANGED  = 'channel_price_changed';
 
     const TRANSLATION_STATUS_NONE                     = 0;
     const TRANSLATION_STATUS_PENDING                  = 1;
@@ -17,7 +21,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
     const TRANSLATION_STATUS_IN_PROGRESS              = 3;
     const TRANSLATION_STATUS_TRANSLATED               = 4;
 
-    // ########################################
+    //########################################
 
     /**
      * @var Ess_M2ePro_Model_Ebay_Item
@@ -39,7 +43,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
      */
     private $templateManagers = array();
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @var Ess_M2ePro_Model_Template_SellingFormat
@@ -57,21 +61,21 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
     private $descriptionTemplateModel = NULL;
 
     /**
-     * @var Ess_M2ePro_Model_Ebay_Template_Payment|Ess_M2ePro_Model_Ebay_Template_Policy
+     * @var Ess_M2ePro_Model_Ebay_Template_Payment
      */
     private $paymentTemplateModel = NULL;
 
     /**
-     * @var Ess_M2ePro_Model_Ebay_Template_Return|Ess_M2ePro_Model_Ebay_Template_Policy
+     * @var Ess_M2ePro_Model_Ebay_Template_Return
      */
     private $returnTemplateModel = NULL;
 
     /**
-     * @var Ess_M2ePro_Model_Ebay_Template_Shipping|Ess_M2ePro_Model_Ebay_Template_Policy
+     * @var Ess_M2ePro_Model_Ebay_Template_Shipping
      */
     private $shippingTemplateModel = NULL;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -79,7 +83,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         $this->_init('M2ePro/Ebay_Listing_Product');
     }
 
-    // ########################################
+    //########################################
 
     public function deleteInstance()
     {
@@ -98,11 +102,21 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         $this->returnTemplateModel = NULL;
         $this->shippingTemplateModel = NULL;
 
+        if (Mage::helper('M2ePro/Component_Ebay_PickupStore')->isFeatureEnabled()) {
+            Mage::getResourceModel('M2ePro/Ebay_Listing_Product_PickupStore')->processDeletedProduct(
+                $this->getParentObject()
+            );
+        }
+
         $this->delete();
         return true;
     }
 
-    // ########################################
+    //########################################
+
+    public function afterSaveNewEntity() {}
+
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Item
@@ -124,7 +138,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->ebayItemModel = $instance;
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_Category
@@ -149,7 +163,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->categoryTemplateModel = $instance;
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_OtherCategory
@@ -174,7 +188,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->otherCategoryTemplateModel = $instance;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Magento_Product_Cache
@@ -184,7 +198,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getParentObject()->getMagentoProduct();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Listing
@@ -202,7 +216,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getListing()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -220,7 +234,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getAccount()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -238,7 +252,27 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getMarketplace()->getChildObject();
     }
 
-    // ########################################
+    //########################################
+
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function getVariationSpecificsReplacements()
+    {
+        $specificsReplacements = $this->getSetting(
+            'additional_data', 'variations_specifics_replacements', array()
+        );
+
+        $replacements = array();
+        foreach ($specificsReplacements as $findIt => $replaceBy) {
+            $replacements[trim($findIt)] = trim($replaceBy);
+        }
+
+        return $replacements;
+    }
+
+    //########################################
 
     /**
      * @param $template
@@ -255,7 +289,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->templateManagers[$template];
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Template_SellingFormat
@@ -278,7 +312,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->sellingFormatTemplateModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Template_Synchronization
@@ -301,7 +335,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->synchronizationTemplateModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Template_Description
@@ -324,7 +358,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->descriptionTemplateModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_Payment
@@ -347,7 +381,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->paymentTemplateModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_Return
@@ -370,7 +404,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->returnTemplateModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_Shipping
@@ -393,7 +427,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
          $this->shippingTemplateModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_SellingFormat
@@ -419,7 +453,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getDescriptionTemplate()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_Category_Source
@@ -461,14 +495,37 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getEbayDescriptionTemplate()->getSource($this->getMagentoProduct());
     }
 
-    // ########################################
-
-    public function getVariations($asObjects = false, array $filters = array())
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Template_Shipping_Source
+     */
+    public function getShippingTemplateSource()
     {
-        return $this->getParentObject()->getVariations($asObjects,$filters);
+        return $this->getShippingTemplate()->getSource($this->getMagentoProduct());
     }
 
-    // ########################################
+    //########################################
+
+    /**
+     * @param bool $asObjects
+     * @param array $filters
+     * @param bool $tryToGetFromStorage
+     * @return array
+     */
+    public function getVariations($asObjects = false, array $filters = array(), $tryToGetFromStorage = true)
+    {
+        return $this->getParentObject()->getVariations($asObjects,$filters,$tryToGetFromStorage);
+    }
+
+    //########################################
+
+    public function updateVariationsStatus()
+    {
+        foreach ($this->getVariations(true) as $variation) {
+            $variation->getChildObject()->setStatus($this->getParentObject()->getStatus());
+        }
+    }
+
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Listing_Product_Description_Renderer
@@ -481,21 +538,45 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $renderer;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return float
+     */
     public function getEbayItemIdReal()
     {
         return $this->getEbayItem()->getItemId();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getEbayItemId()
     {
         return (int)$this->getData('ebay_item_id');
     }
 
-    //-----------------------------------------
+    public function getItemUUID()
+    {
+        return $this->getData('item_uuid');
+    }
+
+    public function generateItemUUID()
+    {
+        $uuid  = str_pad($this->getAccount()->getId(), 2, '0', STR_PAD_LEFT);
+        $uuid .= str_pad($this->getListing()->getId(), 4, '0', STR_PAD_LEFT);
+        $uuid .= str_pad($this->getId(), 10, '0', STR_PAD_LEFT);
+
+        // max int value is 2147483647 = 0x7FFFFFFF
+        $randomPart = dechex(mt_rand(0x000000, 0x7FFFFFFF));
+        $uuid .= str_pad($randomPart, 16, '0', STR_PAD_LEFT);
+
+        return strtoupper($uuid);
+    }
+
+    // ---------------------------------------
 
     public function getTemplateCategoryId()
     {
@@ -507,17 +588,41 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getData('template_other_category_id');
     }
 
+    /**
+     * @return bool
+     */
     public function isSetCategoryTemplate()
     {
         return !is_null($this->getTemplateCategoryId());
     }
 
+    /**
+     * @return bool
+     */
     public function isSetOtherCategoryTemplate()
     {
         return !is_null($this->getTemplateOtherCategoryId());
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isOnlineVariation()
+    {
+        return (bool)$this->getData("online_is_variation");
+    }
+
+    /**
+     * @return bool
+     */
+    public function isOnlineAuctionType()
+    {
+        return (bool)$this->getData("online_is_auction_type");
+    }
+
+    // ---------------------------------------
 
     public function getOnlineSku()
     {
@@ -529,77 +634,186 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getData('online_title');
     }
 
-    //-----------------------------------------
+    public function getOnlineSubTitle()
+    {
+        return $this->getData('online_sub_title');
+    }
 
+    public function getOnlineDescription()
+    {
+        return $this->getData('online_description');
+    }
+
+    public function getOnlineImages()
+    {
+        return $this->getSettings('online_images');
+    }
+
+    public function getOnlineDuration()
+    {
+        return $this->getData('online_duration');
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return float
+     */
+    public function getOnlineCurrentPrice()
+    {
+        return (float)$this->getData('online_current_price');
+    }
+
+    /**
+     * @return float
+     */
     public function getOnlineStartPrice()
     {
         return (float)$this->getData('online_start_price');
     }
 
+    /**
+     * @return float
+     */
     public function getOnlineReservePrice()
     {
         return (float)$this->getData('online_reserve_price');
     }
 
+    /**
+     * @return float
+     */
     public function getOnlineBuyItNowPrice()
     {
         return (float)$this->getData('online_buyitnow_price');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     public function getOnlineQty()
     {
         return (int)$this->getData('online_qty');
     }
 
+    /**
+     * @return int
+     */
     public function getOnlineQtySold()
     {
         return (int)$this->getData('online_qty_sold');
     }
 
+    /**
+     * @return int
+     */
     public function getOnlineBids()
     {
         return (int)$this->getData('online_bids');
     }
 
-    public function getOnlineCategory()
+    public function getOnlineMainCategory()
     {
-        return $this->getData('online_category');
+        return $this->getData('online_main_category');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     */
+    public function getOnlineCategoriesData()
+    {
+        return $this->getSettings('online_categories_data');
+    }
+
+    /**
+     * @return array
+     */
+    public function getOnlineShippingData()
+    {
+        return $this->getSettings('online_shipping_data');
+    }
+
+    /**
+     * @return array
+     */
+    public function getOnlinePaymentData()
+    {
+        return $this->getSettings('online_payment_data');
+    }
+
+    /**
+     * @return array
+     */
+    public function getOnlineReturnData()
+    {
+        return $this->getSettings('online_return_data');
+    }
+
+    /**
+     * @return array
+     */
+    public function getOnlineOtherData()
+    {
+        return $this->getSettings('online_other_data');
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return int
+     */
     public function getTranslationStatus()
     {
         return (int)$this->getData('translation_status');
     }
 
+    /**
+     * @return bool
+     */
     public function isTranslationStatusNone()
     {
         return $this->getTranslationStatus() == self::TRANSLATION_STATUS_NONE;
     }
 
+    /**
+     * @return bool
+     */
     public function isTranslationStatusPending()
     {
         return $this->getTranslationStatus() == self::TRANSLATION_STATUS_PENDING;
     }
 
+    /**
+     * @return bool
+     */
     public function isTranslationStatusPendingPaymentRequired()
     {
         return $this->getTranslationStatus() == self::TRANSLATION_STATUS_PENDING_PAYMENT_REQUIRED;
     }
 
+    /**
+     * @return bool
+     */
     public function isTranslationStatusInProgress()
     {
         return $this->getTranslationStatus() == self::TRANSLATION_STATUS_IN_PROGRESS;
     }
 
+    /**
+     * @return bool
+     */
     public function isTranslationStatusTranslated()
     {
         return $this->getTranslationStatus() == self::TRANSLATION_STATUS_TRANSLATED;
     }
 
+    /**
+     * @return bool
+     */
     public function isTranslatable()
     {
         return $this->isTranslationStatusPending() || $this->isTranslationStatusPendingPaymentRequired();
@@ -615,7 +829,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getData('translated_date');
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
     public function getStartDate()
     {
@@ -627,49 +841,62 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->getData('end_date');
     }
 
-    // ########################################
+    //########################################
 
     public function getSku()
     {
-        $sku = $this->getMagentoProduct()->getSku();
-
-        if (strlen($sku) >= 50) {
-            $sku = 'RANDOM_'.sha1($sku);
-        }
-
-        return $sku;
+        return $this->getMagentoProduct()->getSku();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isListingTypeFixed()
     {
         return $this->getSellingFormatTemplateSource()->getListingType() ==
                Ess_M2ePro_Model_Ebay_Template_SellingFormat::LISTING_TYPE_FIXED;
     }
 
+    /**
+     * @return bool
+     */
     public function isListingTypeAuction()
     {
         return $this->getSellingFormatTemplateSource()->getListingType() ==
                Ess_M2ePro_Model_Ebay_Template_SellingFormat::LISTING_TYPE_AUCTION;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isVariationMode()
     {
         if ($this->hasData(__METHOD__)) {
             return $this->getData(__METHOD__);
         }
 
-        $result = $this->isSetCategoryTemplate() &&
-                  $this->getEbayMarketplace()->isMultivariationEnabled() &&
+        if (!$this->isSetCategoryTemplate()) {
+            $this->setData(__METHOD__,false);
+            return false;
+        }
+
+        $isVariationEnabled = Mage::helper('M2ePro/Component_Ebay_Category_Ebay')
+                                                ->isVariationEnabled(
+                                                    (int)$this->getCategoryTemplateSource()->getMainCategory(),
+                                                    $this->getMarketplace()->getId()
+                                                );
+
+        if (is_null($isVariationEnabled)) {
+            $isVariationEnabled = true;
+        }
+
+        $result = $this->getEbayMarketplace()->isMultivariationEnabled() &&
                   !$this->getEbaySellingFormatTemplate()->isIgnoreVariationsEnabled() &&
-                  Mage::helper('M2ePro/Component_Ebay_Category_Ebay')
-                                   ->isVariationEnabled(
-                                       (int)$this->getCategoryTemplateSource()->getMainCategory(),
-                                       $this->getMarketplace()->getId()
-                                   ) &&
+                  $isVariationEnabled &&
                   $this->isListingTypeFixed() &&
                   $this->getMagentoProduct()->isProductWithVariations();
 
@@ -678,6 +905,9 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $result;
     }
 
+    /**
+     * @return bool
+     */
     public function isVariationsReady()
     {
         if ($this->hasData(__METHOD__)) {
@@ -691,22 +921,50 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $result;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isPriceDiscountStp()
     {
         return $this->getEbayMarketplace()->isStpEnabled() &&
                !$this->getEbaySellingFormatTemplate()->isPriceDiscountStpModeNone();
     }
 
+    /**
+     * @return bool
+     */
     public function isPriceDiscountMap()
     {
         return $this->getEbayMarketplace()->isMapEnabled() &&
                !$this->getEbaySellingFormatTemplate()->isPriceDiscountMapModeNone();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return float|int
+     */
+    public function getFixedPrice()
+    {
+        $src = $this->getEbaySellingFormatTemplate()->getFixedPriceSource();
+
+        $vatPercent = NULL;
+        if ($this->getEbaySellingFormatTemplate()->isPriceIncreaseVatPercentEnabled()) {
+            $vatPercent = $this->getEbaySellingFormatTemplate()->getVatPercent();
+        }
+
+        return $this->getCalculatedPrice(
+            $src, $vatPercent, $this->getEbaySellingFormatTemplate()->getFixedPriceCoefficient()
+        );
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return float|int
+     */
     public function getStartPrice()
     {
         $price = 0;
@@ -716,9 +974,20 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         }
 
         $src = $this->getEbaySellingFormatTemplate()->getStartPriceSource();
-        return $this->getCalculatedPrice($src, true, true);
+
+        $vatPercent = NULL;
+        if ($this->getEbaySellingFormatTemplate()->isPriceIncreaseVatPercentEnabled()) {
+            $vatPercent = $this->getEbaySellingFormatTemplate()->getVatPercent();
+        }
+
+        return $this->getCalculatedPrice(
+            $src, $vatPercent, $this->getEbaySellingFormatTemplate()->getStartPriceCoefficient()
+        );
     }
 
+    /**
+     * @return float|int
+     */
     public function getReservePrice()
     {
         $price = 0;
@@ -728,44 +997,91 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         }
 
         $src = $this->getEbaySellingFormatTemplate()->getReservePriceSource();
-        return $this->getCalculatedPrice($src, true, true);
+
+        $vatPercent = NULL;
+        if ($this->getEbaySellingFormatTemplate()->isPriceIncreaseVatPercentEnabled()) {
+            $vatPercent = $this->getEbaySellingFormatTemplate()->getVatPercent();
+        }
+
+        return $this->getCalculatedPrice(
+            $src, $vatPercent, $this->getEbaySellingFormatTemplate()->getReservePriceCoefficient()
+        );
     }
 
+    /**
+     * @return float|int
+     */
     public function getBuyItNowPrice()
     {
+        $price = 0;
+
+        if (!$this->isListingTypeAuction()) {
+            return $price;
+        }
+
         $src = $this->getEbaySellingFormatTemplate()->getBuyItNowPriceSource();
-        return $this->getCalculatedPrice($src, true, true);
+
+        $vatPercent = NULL;
+        if ($this->getEbaySellingFormatTemplate()->isPriceIncreaseVatPercentEnabled()) {
+            $vatPercent = $this->getEbaySellingFormatTemplate()->getVatPercent();
+        }
+
+        return $this->getCalculatedPrice(
+            $src, $vatPercent, $this->getEbaySellingFormatTemplate()->getBuyItNowPriceCoefficient()
+        );
     }
 
-     //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return float|int
+     */
     public function getPriceDiscountStp()
     {
         $src = $this->getEbaySellingFormatTemplate()->getPriceDiscountStpSource();
-        return $this->getCalculatedPrice($src, true, false);
+
+        $vatPercent = NULL;
+        if ($this->getEbaySellingFormatTemplate()->isPriceIncreaseVatPercentEnabled()) {
+            $vatPercent = $this->getEbaySellingFormatTemplate()->getVatPercent();
+        }
+
+        return $this->getCalculatedPrice($src, $vatPercent);
     }
 
+    /**
+     * @return float|int
+     */
     public function getPriceDiscountMap()
     {
         $src = $this->getEbaySellingFormatTemplate()->getPriceDiscountMapSource();
-        return $this->getCalculatedPrice($src, true, false);
+
+        $vatPercent = NULL;
+        if ($this->getEbaySellingFormatTemplate()->isPriceIncreaseVatPercentEnabled()) {
+            $vatPercent = $this->getEbaySellingFormatTemplate()->getVatPercent();
+        }
+
+        return $this->getCalculatedPrice($src, $vatPercent);
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
-    private function getCalculatedPrice($src, $increaseByVatPercent = false, $modifyByCoefficient = false)
+    private function getCalculatedPrice($src, $vatPercent = NULL, $coefficient = NULL)
     {
         /** @var $calculator Ess_M2ePro_Model_Ebay_Listing_Product_PriceCalculator */
         $calculator = Mage::getModel('M2ePro/Ebay_Listing_Product_PriceCalculator');
         $calculator->setSource($src)->setProduct($this->getParentObject());
-        $calculator->setIsIncreaseByVatPercent($increaseByVatPercent);
-        $calculator->setModifyByCoefficient($modifyByCoefficient);
+        $calculator->setVatPercent($vatPercent);
+        $calculator->setCoefficient($coefficient);
 
         return $calculator->getProductValue();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return int
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getQty()
     {
         if ($this->isListingTypeAuction()) {
@@ -791,8 +1107,48 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $calculator->getProductValue();
     }
 
-    // ########################################
+    //########################################
 
+    public function getOutOfStockControl($returnRealValue = false)
+    {
+        $additionalData = $this->getParentObject()->getAdditionalData();
+
+        if (isset($additionalData['out_of_stock_control'])) {
+            return (bool)$additionalData['out_of_stock_control'];
+        }
+
+        return $returnRealValue ? NULL : false;
+    }
+
+    public function isOutOfStockControlEnabled()
+    {
+        if ($this->getOnlineDuration() && !$this->isOnlineDurationGtc()) {
+            return false;
+        }
+
+        if ($this->getOutOfStockControl()) {
+            return true;
+        }
+
+        if ($this->getEbayAccount()->getOutOfStockControl()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    //########################################
+
+    public function isOnlineDurationGtc()
+    {
+        return $this->getOnlineDuration() == Ess_M2ePro_Helper_Component_Ebay::LISTING_DURATION_GTC;
+    }
+
+    //########################################
+
+    /**
+     * @return float|int
+     */
     public function getBestOfferAcceptPrice()
     {
         if (!$this->isListingTypeFixed()) {
@@ -812,17 +1168,26 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         $price = 0;
         switch ($src['mode']) {
             case Ess_M2ePro_Model_Ebay_Template_SellingFormat::BEST_OFFER_ACCEPT_MODE_PERCENTAGE:
-                $price = $this->getBuyItNowPrice() * (float)$src['value'] / 100;
+                $price = $this->getFixedPrice() * (float)$src['value'] / 100;
                 break;
 
             case Ess_M2ePro_Model_Ebay_Template_SellingFormat::BEST_OFFER_ACCEPT_MODE_ATTRIBUTE:
-                $price = (float)$this->getMagentoProduct()->getAttributeValue($src['attribute']);
+                $price = (float)Mage::helper('M2ePro/Magento_Attribute')
+                                ->convertAttributeTypePriceFromStoreToMarketplace(
+                                    $this->getMagentoProduct(),
+                                    $src['attribute'],
+                                    $this->getEbayListing()->getEbayMarketplace()->getCurrency(),
+                                    $this->getListing()->getStoreId()
+                                );
                 break;
         }
 
         return round($price, 2);
     }
 
+    /**
+     * @return float|int
+     */
     public function getBestOfferRejectPrice()
     {
         if (!$this->isListingTypeFixed()) {
@@ -842,18 +1207,24 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         $price = 0;
         switch ($src['mode']) {
             case Ess_M2ePro_Model_Ebay_Template_SellingFormat::BEST_OFFER_REJECT_MODE_PERCENTAGE:
-                $price = $this->getBuyItNowPrice() * (float)$src['value'] / 100;
+                $price = $this->getFixedPrice() * (float)$src['value'] / 100;
                 break;
 
             case Ess_M2ePro_Model_Ebay_Template_SellingFormat::BEST_OFFER_REJECT_MODE_ATTRIBUTE:
-                $price = (float)$this->getMagentoProduct()->getAttributeValue($src['attribute']);
+                $price = (float)Mage::helper('M2ePro/Magento_Attribute')
+                                ->convertAttributeTypePriceFromStoreToMarketplace(
+                                    $this->getMagentoProduct(),
+                                    $src['attribute'],
+                                    $this->getEbayListing()->getEbayMarketplace()->getCurrency(),
+                                    $this->getListing()->getStoreId()
+                                );
                 break;
         }
 
         return round($price, 2);
     }
 
-    // ########################################
+    //########################################
 
     public function listAction(array $params = array())
     {
@@ -875,52 +1246,13 @@ class Ess_M2ePro_Model_Ebay_Listing_Product extends Ess_M2ePro_Model_Component_C
         return $this->processDispatcher(Ess_M2ePro_Model_Listing_Product::ACTION_STOP, $params);
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     protected function processDispatcher($action, array $params = array())
     {
-        return Mage::getModel('M2ePro/Connector_Ebay_Item_Dispatcher')
+        return Mage::getModel('M2ePro/Ebay_Connector_Item_Dispatcher')
             ->process($action, $this->getId(), $params);
     }
 
-    // ########################################
-
-    public function getTrackingAttributes()
-    {
-        $attributes = $this->getListing()->getTrackingAttributes();
-
-        foreach (Mage::getModel('M2ePro/Ebay_Template_Manager')->getTrackingAttributesTemplates() as $template) {
-            $templateManager = $this->getTemplateManager($template);
-            $resultObjectTemp = $templateManager->getResultObject();
-            if ($resultObjectTemp && $templateManager->isResultObjectTemplate()) {
-                $attributes = array_merge($attributes,$resultObjectTemp->getTrackingAttributes());
-            }
-        }
-
-        return array_unique($attributes);
-    }
-
-    public function setSynchStatusNeed($newData, $oldData)
-    {
-        $templateManager = Mage::getSingleton('M2ePro/Ebay_Template_Manager');
-
-        $newTemplates = $templateManager->getTemplatesFromData($newData);
-        $oldTemplates = $templateManager->getTemplatesFromData($oldData);
-
-        foreach ($templateManager->getAllTemplates() as $template) {
-
-            $templateManager->setTemplate($template);
-
-            $templateManager->getTemplateModel(true)->getResource()->setSynchStatusNeed(
-                $newTemplates[$template]->getDataSnapshot(),
-                $oldTemplates[$template]->getDataSnapshot(),
-                array($this->getData())
-            );
-        }
-
-        $this->getResource()->setSynchStatusNeedByCategoryTemplate($newData,$oldData,$this->getData());
-        $this->getResource()->setSynchStatusNeedByOtherCategoryTemplate($newData,$oldData,$this->getData());
-    }
-
-    // ########################################
+    //########################################
 }

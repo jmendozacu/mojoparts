@@ -1,7 +1,7 @@
-ListingProductVariationHandler = Class.create();
-ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
+CommonListingProductVariationHandler = Class.create();
+CommonListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function(M2ePro,gridHandler)
     {
@@ -23,10 +23,12 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         return this;
     },
 
-    //###############################################
+    //########################################
 
     showEditPopup: function(popupTitle)
     {
+        var self = this;
+
         MagentoMessageObj.clearAll();
 
         new Ajax.Request(this.M2ePro.url.get_variation_edit_popup, {
@@ -61,6 +63,8 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
 
                     $('modal_dialog_message').insert(response.text);
 
+                    self.autoHeightFix();
+
                 } catch (e) {
                     this.editPopup.close();
                     MagentoMessageObj.addError('Internal Error.');
@@ -69,7 +73,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     editPopupInit: function(currentVariation)
     {
@@ -129,7 +133,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         }).bind(this));
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     resetListingProductVariation: function()
     {
@@ -157,7 +161,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //###############################################
+    //########################################
 
     showSwitchToIndividualModePopUp: function(title)
     {
@@ -248,10 +252,12 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //###############################################
+    //########################################
 
     showManagePopup: function(popupTitle)
     {
+        var self = this;
+
         MagentoMessageObj.clearAll();
 
         new Ajax.Request(this.M2ePro.url.get_variation_manage_popup, {
@@ -286,6 +292,8 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
 
                     $('modal_dialog_message').insert(response.text);
 
+                    self.autoHeightFix();
+
                 } catch (e) {
                     this.managePopup.close();
                     MagentoMessageObj.addError('Internal Error.');
@@ -294,7 +302,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //-----------------------------------------------
+    // ---------------------------------------
 
     managePopupInit: function()
     {
@@ -324,7 +332,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         }).bind(this));
     },
 
-    //-----------------------------------------------
+    // ---------------------------------------
 
     manageAddRow: function()
     {
@@ -363,11 +371,31 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         }).bind(this));
 
         tr.appendChild(new Element('td', {style: 'vertical-align: top; padding: 2px 4px'}))
-          .appendChild(new Element('button', {type:'button',class: 'scalable delete'})).insert('<span></span>')
-          .observe('click',function() {container.select('tr').length > 1 && tr.remove()});
+            .appendChild(new Element('button', {type:'button',class: 'scalable delete'})).insert('<span></span>')
+            .observe('click', function() {
+                if (container.select('tr').length > 1) {
+                    tr.remove();
+                }
+
+                if (container.select('tr').length == 1) {
+                    container.select('button.delete').each(function(btn){
+                        btn.hide();
+                    });
+                }
+            });
+
+        container.select('button.delete').each(function(btn){
+            btn.hide();
+        });
+
+        if (container.select('tr').length > 1) {
+            container.select('button.delete').each(function(btn){
+                btn.show();
+            });
+        }
     },
 
-    //###############################################
+    //########################################
 
     eachAttributeHandler: function(select,i,getNextSelects,filters)
     {
@@ -401,7 +429,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         }).bind(this));
     },
 
-    //-----------------------------------------------
+    // ---------------------------------------
 
     renderAttributeValues: function(container,attribute,filters)
     {
@@ -427,7 +455,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getAttributeValues: function(attribute,attributesTree,filters)
     {
@@ -456,7 +484,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         }
     },
 
-    //###############################################
+    //########################################
 
     editAction: function(variationData)
     {
@@ -498,7 +526,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     manageAction: function(variationData)
     {
@@ -539,7 +567,7 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------------------
+    // ---------------------------------------
 
     manageGenerateAction: function(unique)
     {
@@ -601,5 +629,5 @@ ListingProductVariationHandler.prototype = Object.extend(new CommonHandler(), {
         });
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

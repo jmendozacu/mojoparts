@@ -1,7 +1,7 @@
 SynchProgressHandler = Class.create();
 SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function(progressBarObj, wrapperObj)
     {
@@ -17,7 +17,7 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
         this.loadingMask = $('loading-mask');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     start: function(title, status)
     {
@@ -52,7 +52,7 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
         self.loadingMask.setStyle({visibility: 'visible'});
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     initPageCheckState: function(callBackWhenEnd)
     {
@@ -88,7 +88,7 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     runTask: function(title, url, components, callBackWhenEnd)
     {
@@ -102,41 +102,21 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
         }
 
         var self = this;
-        new Ajax.Request(M2ePro.url.get('adminhtml_general/synchCheckState'), {
+
+        self.start(title, M2ePro.translator.translate('Preparing to start. Please wait ...'));
+
+        new Ajax.Request(url, {
+            parameters: {components: components},
             method: 'get',
-            asynchronous: true,
-            onSuccess: function(transport) {
-
-                if (transport.responseText == self.stateExecuting) {
-
-                    self.start(
-                        M2ePro.translator.translate('Another Synchronization Is Already Running.'),
-                        M2ePro.translator.translate('Getting information. Please wait ...')
-                    );
-
-                    setTimeout(function() {
-                        self.startGetExecutingInfo('self.runTask(\'' + title + '\',\'' + url + '\',\'' + components + '\',\'' + callBackWhenEnd + '\');');
-                    },2000);
-
-                } else {
-
-                    self.start(title, M2ePro.translator.translate('Preparing to start. Please wait ...'));
-
-                    new Ajax.Request(url, {
-                        parameters: {components: components},
-                        method: 'get',
-                        asynchronous: true
-                    });
-
-                    setTimeout(function() {
-                        self.startGetExecutingInfo(callBackWhenEnd);
-                    },2000);
-                }
-            }
+            asynchronous: true
         });
+
+        setTimeout(function() {
+            self.startGetExecutingInfo(callBackWhenEnd);
+        },2000);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     startGetExecutingInfo: function(callBackWhenEnd)
     {
@@ -149,6 +129,12 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
             onSuccess: function(transport) {
 
                 var data = transport.responseText.evalJSON(true);
+
+                if (data.ajaxExpired && response.ajaxRedirect) {
+
+                    alert(M2ePro.translator.translate('Unauthorized! Please login again.'));
+                    setLocation(response.ajaxRedirect);
+                }
 
                 if (data.mode == self.stateExecuting) {
 
@@ -173,7 +159,7 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
 
                     self.progressBarObj.setPercents(100,0);
 
-                    //-----------------
+                    // ---------------------------------------
                     setTimeout(function() {
 
                         if (callBackWhenEnd != '') {
@@ -191,13 +177,13 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
                             });
                         }
                     },1500);
-                    //-----------------
+                    // ---------------------------------------
                 }
             }
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     printFinalMessage: function(resultType)
     {
@@ -219,7 +205,7 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     addProcessingNowWarning: function()
     {
@@ -241,5 +227,5 @@ SynchProgressHandler.prototype = Object.extend(new CommonHandler(), {
         });
 }
 
-    //----------------------------------
+    // ---------------------------------------
 });

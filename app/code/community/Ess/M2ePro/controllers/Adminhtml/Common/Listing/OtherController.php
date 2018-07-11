@@ -1,41 +1,21 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Common_Listing_OtherController
     extends Ess_M2ePro_Controller_Adminhtml_Common_MainController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
         $this->loadLayout()
              ->_title(Mage::helper('M2ePro')->__('Manage Listings'))
              ->_title(Mage::helper('M2ePro')->__('3rd Party Listings'));
-
-        $this->getLayout()->getBlock('head')
-             ->addJs('M2ePro/Plugin/ProgressBar.js')
-             ->addCss('M2ePro/css/Plugin/ProgressBar.css')
-             ->addJs('M2ePro/Plugin/AreaWrapper.js')
-             ->addCss('M2ePro/css/Plugin/AreaWrapper.css')
-
-             ->addJs('M2ePro/GridHandler.js')
-             ->addJs('M2ePro/Listing/Other/GridHandler.js')
-             ->addJs('M2ePro/Common/Listing/Other/GridHandler.js')
-             ->addJs('M2ePro/Common/Buy/Listing/Other/GridHandler.js')
-             ->addJs('M2ePro/Common/Play/Listing/Other/GridHandler.js')
-             ->addJs('M2ePro/Common/Amazon/Listing/Other/GridHandler.js')
-
-             ->addJs('M2ePro/ActionHandler.js')
-             ->addJs('M2ePro/Listing/MovingHandler.js')
-             ->addJs('M2ePro/Listing/Other/AutoMappingHandler.js')
-
-             ->addJs('M2ePro/Listing/Other/MappingHandler.js')
-
-             ->addJs('M2ePro/Listing/Other/RemovingHandler.js')
-             ->addJs('M2ePro/Listing/Other/UnmappingHandler.js');
 
         $this->_initPopUp();
 
@@ -44,10 +24,10 @@ class Ess_M2ePro_Adminhtml_Common_Listing_OtherController
 
     protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/listings/listing_other');
+        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/listings');
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
@@ -56,7 +36,7 @@ class Ess_M2ePro_Adminhtml_Common_Listing_OtherController
              ->renderLayout();
     }
 
-    //#############################################
+    //########################################
 
     public function removingAction()
     {
@@ -89,5 +69,5 @@ class Ess_M2ePro_Adminhtml_Common_Listing_OtherController
         return $this->getResponse()->setBody('1');
     }
 
-    //#############################################
+    //########################################
 }

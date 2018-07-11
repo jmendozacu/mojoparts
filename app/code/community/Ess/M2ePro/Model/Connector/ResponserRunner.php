@@ -1,13 +1,13 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Connector_ResponserRunner
 {
-    // ##################################
-
     /** @var Ess_M2ePro_Model_Processing_Request $processingRequest */
     private $processingRequest = null;
 
@@ -18,20 +18,32 @@ class Ess_M2ePro_Model_Connector_ResponserRunner
 
     private $responserParams = array();
 
-    // ##################################
+    //########################################
 
+    /**
+     * @param string $modelName
+     * @return $this
+     */
     public function setResponserModelName($modelName)
     {
         $this->responserModelName = $modelName;
         return $this;
     }
 
+    /**
+     * @param array $responserParams
+     * @return $this
+     */
     public function setResponserParams(array $responserParams)
     {
         $this->responserParams = $responserParams;
         return $this;
     }
 
+    /**
+     * @param Ess_M2ePro_Model_Processing_Request $processingRequest
+     * @return $this
+     */
     public function setProcessingRequest(Ess_M2ePro_Model_Processing_Request $processingRequest)
     {
         $this->responserModelName = $processingRequest->getResponserModel();
@@ -42,7 +54,7 @@ class Ess_M2ePro_Model_Connector_ResponserRunner
         return $this;
     }
 
-    // ##################################
+    //########################################
 
     public function start(Ess_M2ePro_Model_Connector_Requester $requester)
     {
@@ -67,6 +79,9 @@ class Ess_M2ePro_Model_Connector_ResponserRunner
         return true;
     }
 
+    /**
+     * @return array
+     */
     public function getParsedResponseData()
     {
         return $this->getResponserObject()->getParsedResponseData();
@@ -97,7 +112,7 @@ class Ess_M2ePro_Model_Connector_ResponserRunner
         }
     }
 
-    // ##################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Connector_Responser
@@ -112,7 +127,7 @@ class Ess_M2ePro_Model_Connector_ResponserRunner
         return $this->responserObject = new $modelClassName($this->responserParams);
     }
 
-    // ##################################
+    //########################################
 
     private function forceRemoveLockedObjectsAndProcessingRequest()
     {
@@ -149,5 +164,5 @@ class Ess_M2ePro_Model_Connector_ResponserRunner
         register_shutdown_function($shutdownDeleteFunction);
     }
 
-    // ##################################
+    //########################################
 }

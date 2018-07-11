@@ -1,6 +1,6 @@
-ProductSourceCategoriesSummaryGridHandler = Class.create(GridHandler, {
+CommonListingSummaryGridHandler = Class.create(GridHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     prepareActions: function()
     {
@@ -9,7 +9,7 @@ ProductSourceCategoriesSummaryGridHandler = Class.create(GridHandler, {
         };
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     remove: function()
     {
@@ -26,12 +26,12 @@ ProductSourceCategoriesSummaryGridHandler = Class.create(GridHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     confirm: function()
     {
         return true;
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

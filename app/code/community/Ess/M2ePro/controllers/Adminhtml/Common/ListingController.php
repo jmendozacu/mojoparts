@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Common_ListingController
     extends Ess_M2ePro_Controller_Adminhtml_Common_MainController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
@@ -16,27 +18,49 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
              ->_title(Mage::helper('M2ePro')->__('Listings'));
 
         $this->getLayout()->getBlock('head')
-             ->addCss('M2ePro/css/Plugin/DropDown.css')
-             ->addCss('M2ePro/css/Plugin/AutoComplete.css')
+            ->addCss('M2ePro/css/Plugin/ProgressBar.css')
+            ->addCss('M2ePro/css/Plugin/AreaWrapper.css')
+            ->addCss('M2ePro/css/Plugin/DropDown.css')
+            ->addCss('M2ePro/css/Plugin/AutoComplete.css')
 
-             ->addJs('M2ePro/Plugin/DropDown.js')
-             ->addJs('M2ePro/Plugin/AutoComplete.js')
-             ->addJs('M2ePro/Plugin/ActionColumn.js')
+            ->addJs('M2ePro/ActionHandler.js')
+            ->addJs('M2ePro/GridHandler.js')
 
-             ->addJs('M2ePro/Listing/EditListingTitle.js')
-            ;
+            ->addJs('M2ePro/Plugin/ActionColumn.js')
+            ->addJs('M2ePro/Plugin/AreaWrapper.js')
+            ->addJs('M2ePro/Plugin/AutoComplete.js')
+            ->addJs('M2ePro/Plugin/DropDown.js')
+            ->addJs('M2ePro/Plugin/ProgressBar.js')
+
+            ->addJs('M2ePro/Listing/EditListingTitle.js')
+            ->addJs('M2ePro/Listing/MovingHandler.js')
+            ->addJs('M2ePro/Listing/Other/GridHandler.js')
+
+            ->addJs('M2ePro/Common/Listing.js')
+            ->addJs('M2ePro/Common/Listing/Other/GridHandler.js')
+            ->addJs('M2ePro/Common/Buy/Listing/Other/GridHandler.js')
+            ->addJs('M2ePro/Common/Amazon/Listing/AfnQtyHandler.js')
+            ->addJs('M2ePro/Common/Amazon/Listing/RepricingPriceHandler.js')
+            ->addJs('M2ePro/Common/Amazon/Listing/Other/GridHandler.js')
+
+            ->addJs('M2ePro/Listing/Other/AutoMappingHandler.js')
+            ->addJs('M2ePro/Listing/Other/MappingHandler.js')
+            ->addJs('M2ePro/Listing/Other/RemovingHandler.js')
+            ->addJs('M2ePro/Listing/Other/UnmappingHandler.js');
 
         $this->_initPopUp();
+
+        $this->setPageHelpLink(NULL, NULL, "x/b4IVAQ");
 
         return $this;
     }
 
     protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/listings/listing');
+        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/listings');
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
@@ -50,13 +74,47 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
             Mage::helper('M2ePro')->__('You must create at least one synchronization policy first.')
         );*/
 
-        $this->_initAction();
-
-        $this->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_common_listing'))
+        $this->_initAction()
+             ->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_common_manageListings'))
              ->renderLayout();
     }
 
-    //#############################################
+    //########################################
+
+    public function getListingTabAction()
+    {
+        if (!$this->getRequest()->isXmlHttpRequest()) {
+            $this->_redirect('*/adminhtml_common_listing/index');
+        }
+
+        $this->getResponse()->setBody(
+            $this->loadLayout()->getLayout()->createBlock('M2ePro/adminhtml_common_listing')->toHtml()
+        );
+    }
+
+    public function getListingOtherTabAction()
+    {
+        if (!$this->getRequest()->isXmlHttpRequest()) {
+            $this->_redirect('*/adminhtml_common_listing/index');
+        }
+
+        $this->getResponse()->setBody(
+            $this->loadLayout()->getLayout()->createBlock('M2ePro/adminhtml_common_listing_other')->toHtml()
+        );
+    }
+
+    public function getSearchTabAction()
+    {
+        if (!$this->getRequest()->isXmlHttpRequest()) {
+            $this->_redirect('*/adminhtml_common_listing/index');
+        }
+
+        $this->getResponse()->setBody(
+            $this->loadLayout()->getLayout()->createBlock('M2ePro/adminhtml_common_listing_search')->toHtml()
+        );
+    }
+
+    //########################################
 
     public function saveTitleAction()
     {
@@ -73,7 +131,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         Mage::getModel('M2ePro/Listing_Log')->updateListingTitle($listingId, $title);
     }
 
-    //#############################################
+    //########################################
 
     public function searchAction()
     {
@@ -84,11 +142,15 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
 
     public function searchGridAction()
     {
-        $block = $this->loadLayout()->getLayout()->createBlock('M2ePro/adminhtml_common_listing_search_grid');
-        $this->getResponse()->setBody($block->toHtml());
+        $listingType = $this->getRequest()->getParam('listing_type', false);
+        $gridBlock = $listingType == Ess_M2ePro_Block_Adminhtml_Listing_Search_Switcher::LISTING_TYPE_LISTING_OTHER
+            ? $this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_search_other_grid')
+            : $this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_search_m2ePro_grid');
+
+        $this->getResponse()->setBody($gridBlock->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function goToSellingFormatTemplateAction()
     {
@@ -134,7 +196,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $this->_redirectUrl($url);
     }
 
-    //#############################################
+    //########################################
 
     public function confirmTutorialAction()
     {
@@ -157,7 +219,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         );
     }
 
-    //#############################################
+    //########################################
 
     public function getVariationEditPopupAction()
     {
@@ -165,7 +227,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $listingProductId = (int)$this->getRequest()->getParam('listing_product_id');
 
         if (!$listingProductId || !$component) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'error',
                 'message' => Mage::helper('M2ePro')->__('Component and Listing Product must be specified.')
             )));
@@ -179,13 +241,13 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
             )
         );
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'type' => 'success',
             'text' => $variationEditBlock->toHtml()
         )));
     }
 
-    //---------------------------------------------
+    // ---------------------------------------
 
     public function getVariationManagePopupAction()
     {
@@ -193,7 +255,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $listingProductId = (int)$this->getRequest()->getParam('listing_product_id');
 
         if (!$listingProductId || !$component) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'error',
                 'message' => Mage::helper('M2ePro')->__('Component and Listing Product must be specified.')
             )));
@@ -207,13 +269,13 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
             )
         );
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'type' => 'success',
             'text' => $variationManageBlock->toHtml()
         )));
     }
 
-    //#############################################
+    //########################################
 
     public function variationEditAction()
     {
@@ -222,7 +284,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $variationData = $this->getRequest()->getParam('variation_data');
 
         if (!$listingProductId || !$component || !$variationData) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'error',
                 'message' => Mage::helper('M2ePro')->__(
                     'Component, Listing Product and Variation Data must be specified.'
@@ -249,7 +311,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         }
 
         if (count($magentoVariations) != 1) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'error',
                 'message' => Mage::helper('M2ePro')->__('Only 1 Variation must leave.')
             )));
@@ -262,7 +324,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         }
         $individualModel->setProductVariation(reset($magentoVariations));
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'type' => 'success',
             'message' => Mage::helper('M2ePro')->__('Variation has been successfully edited.')
         )));
@@ -275,7 +337,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $variationsData = $this->getRequest()->getParam('variation_data');
 
         if (!$listingProductId || !$component || !$variationsData) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'error',
                 'message' => Mage::helper('M2ePro')->__(
                     'Component, Listing Product and Variation Data must be specified.'
@@ -333,7 +395,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
             }
 
             if (count($tempMagentoVariations) != 1) {
-                return $this->getResponse()->setBody(json_encode(array(
+                return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                     'type' => 'error',
                     'message' => Mage::helper('M2ePro')->__('Only 1 Variation must leave.')
                 )));
@@ -353,7 +415,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
             $individualModel->setProductVariation(reset($tempMagentoVariations));
         }
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'type' => 'success',
             'message' => Mage::helper('M2ePro')->__('Variation(s) has been successfully saved.')
         )));
@@ -365,7 +427,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $listingProductId = (int)$this->getRequest()->getParam('listing_product_id');
 
         if (!$listingProductId || !$component) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'error',
                 'message' => Mage::helper('M2ePro')->__(
                     'For changing the Mode of working with Magento Variational Product
@@ -390,7 +452,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
 
         $listingProductManager->getTypeModel()->getProcessor()->process();
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'type' => 'success',
             'message' => Mage::helper('M2ePro')->__(
                 'Mode of working with Magento Variational Product has been switched to work with Parent-Child Product.'
@@ -399,7 +461,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
 
     }
 
-    //---------------------------------------------
+    // ---------------------------------------
 
     public function variationManageGenerateAction()
     {
@@ -407,7 +469,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $listingProductId = (int)$this->getRequest()->getParam('listing_product_id');
 
         if (!$listingProductId || !$component) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'error',
                 'message' => Mage::helper('M2ePro')->__(
                     'Component and Listing Product must be specified.'
@@ -424,7 +486,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $magentoVariations = $magentoVariations['variations'];
 
         if (!$this->getRequest()->getParam('unique',false)) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'success',
                 'text' => $magentoVariations
             )));
@@ -453,6 +515,13 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
             }
 
             $variations = $listingProduct->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception('There are no variations for a variation product.',
+                                                     array(
+                                                         'listing_product_id' => $listingProduct->getId()
+                                                     ));
+            }
+
             /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
             $variation = reset($variations);
 
@@ -475,14 +544,14 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
             }
         }
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'type' => 'success',
             'text' => array_values($magentoVariations)
         )));
 
     }
 
-    //#############################################
+    //########################################
 
     public function duplicateProductsAction()
     {
@@ -492,7 +561,7 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         $listingProductsIds = array_filter($listingProductsIds);
 
         if (empty($listingProductsIds) || !$component) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'type' => 'error',
                 'message' => Mage::helper('M2ePro')->__('Component and Listing Products must be specified.')
             )));
@@ -508,18 +577,18 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
             $this->duplicateListingProduct($listingProduct);
         }
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'type' => 'success',
             'message' => Mage::helper('M2ePro')->__('The Items were successfully duplicated.')
         )));
     }
 
-    //#############################################
+    //########################################
 
     private function duplicateListingProduct(Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
         $duplicatedListingProduct = $listingProduct->getListing()->addProduct(
-            $listingProduct->getProductId(),false,false
+            $listingProduct->getProductId(),Ess_M2ePro_Helper_Data::INITIATOR_USER,false,false
         );
 
         $variationManager = $listingProduct->getChildObject()->getVariationManager();
@@ -538,5 +607,5 @@ class Ess_M2ePro_Adminhtml_Common_ListingController
         return $duplicatedListingProduct;
     }
 
-    //#############################################
+    //########################################
 }

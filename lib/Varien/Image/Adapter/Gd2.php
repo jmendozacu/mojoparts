@@ -86,6 +86,8 @@ class Varien_Image_Adapter_Gd2 extends Varien_Image_Adapter_Abstract
             return (int)$memoryValue * 1024 * 1024;
         } elseif (stripos($memoryValue, 'KB') !== false) {
             return (int)$memoryValue * 1024;
+        } elseif (stripos($memoryValue, 'G') !== false) {
+            return (int)$memoryValue * 1024 * 1024 * 1024;
         }
         return (int)$memoryValue;
     }

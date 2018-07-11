@@ -1,19 +1,19 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Log_Tabs extends Mage_Adminhtml_Block_Widget_Tabs
 {
-    // ########################################
-
     const TAB_ID_LISTING            = 'listing';
     const TAB_ID_LISTING_OTHER      = 'listing_other';
     const TAB_ID_ORDER              = 'order';
     const TAB_ID_SYNCHRONIZATION    = 'synchronization';
 
-    // ########################################
+    //########################################
 
     public function __construct()
     {
@@ -23,14 +23,18 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Log_Tabs extends Mage_Adminhtml_Block_Widg
         $this->setDestElementId('tabs_container');
     }
 
-    // ########################################
+    //########################################
 
     protected function _prepareLayout()
     {
-        $isAdvancedMode = Mage::helper('M2ePro/View_Ebay')->isAdvancedMode();
-
         $this->addTab(self::TAB_ID_LISTING, $this->prepareTabListing());
-        $isAdvancedMode && $this->addTab(self::TAB_ID_LISTING_OTHER, $this->prepareTabListingOther());
+
+        if (Mage::helper('M2ePro/View_Ebay')->isAdvancedMode() &&
+            Mage::helper('M2ePro/View_Ebay')->is3rdPartyShouldBeShown()) {
+
+            $this->addTab(self::TAB_ID_LISTING_OTHER, $this->prepareTabListingOther());
+        }
+
         $this->addTab(self::TAB_ID_ORDER, $this->prepareTabOrder());
         $this->addTab(self::TAB_ID_SYNCHRONIZATION, $this->prepareTabSynchronization());
 
@@ -39,7 +43,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Log_Tabs extends Mage_Adminhtml_Block_Widg
         return parent::_prepareLayout();
     }
 
-    // ########################################
+    //########################################
 
     protected function prepareTabListing()
     {
@@ -110,5 +114,5 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Log_Tabs extends Mage_Adminhtml_Block_Widg
         return $tab;
     }
 
-    // ########################################
+    //########################################
 }

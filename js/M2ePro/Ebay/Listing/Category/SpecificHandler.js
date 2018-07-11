@@ -1,7 +1,7 @@
 EbayListingCategorySpecificHandler = Class.create();
 EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function(marketplaceId, categoryMode, categoryValue, uniqId, interfaceMode)
     {
@@ -10,20 +10,23 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         this.categoryValue = categoryValue;
         this.interfaceMode = interfaceMode;
 
+        this.maxSelectedSpecifics = 25;
+
+        this.valuesCounter = 0;
         this.counter       = 0;
         this.uniqId        = uniqId || '';
 
-        this.attributes          = [];
-        this.attributeOptions    = '';
+        this.attributes       = [];
+        this.attributeOptions = '';
 
-        this.dictionarySpecifics = [];
-        this.ebaySelectedSpecifics     = [];
-        this.customSelectedSpecifics   = [];
+        this.dictionarySpecifics     = [];
+        this.ebaySelectedSpecifics   = [];
+        this.customSelectedSpecifics = [];
 
         this.specificsJson = [];
     },
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     setAttributes: function(attributes)
     {
@@ -31,7 +34,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         return this;
     },
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     setDictionarySpecifics: function(specifics)
     {
@@ -51,7 +54,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         return this;
     },
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     getItemSpecifics: function()
     {
@@ -83,7 +86,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         return internalData;
     },
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     prepareAttributes: function()
     {
@@ -95,7 +98,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         this.attributeOptions = cachedOptions;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     prepareBeforeRenderSpecifics: function()
     {
@@ -152,6 +155,10 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
 
             self.addDictionarySpecificRow(specific);
 
+            if (typeof specific.min_values != 'undefined') {
+                for (var i = 1; i < specific.min_values; i++) {self.addSpecificCustomValueRow(counter);}
+            }
+
             for (var i = 0; i < specific.values.length; i++) {
                 var recommended = specific.values[i];
                 recommendedOptionsHtml += '<option value="%value%">%label%</option>'
@@ -163,6 +170,10 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
             $(self.uniqId+'item_specifics_value_ebay_recommended_'+counter).selectedIndex = -1;
 
             $(self.uniqId+'item_specifics_value_custom_attribute_' + counter).insert(self.attributeOptions);
+
+            var handlerObj = new AttributeCreator(self.uniqId + 'item_specifics_value_custom_attribute_' + counter);
+            handlerObj.setSelectObj($(self.uniqId+'item_specifics_value_custom_attribute_' + counter));
+            handlerObj.injectAddOption();
 
             var specificValueMode = $(self.uniqId+'item_specifics_value_mode_' + counter);
 
@@ -190,9 +201,44 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
                 $(self.uniqId+'item_specifics_value_ebay_recommended_'+counter).writeAttribute('name', tempOldName + '[]');
             }
 
+            if (specific.values.length < 1) {
+                if (specific.type == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::RENDER_TYPE_SELECT_ONE_OR_TEXT') ||
+                    specific.type == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::RENDER_TYPE_SELECT_MULTIPLE_OR_TEXT')) {
+                    specificValueMode.select('option[value="'+M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_EBAY_RECOMMENDED')+'"]')[0].remove();
+                }
+            }
+
             self.chooseEbaySelectedSpecifics(specific, counter);
 
             self.dictionarySpecificModeChange($(self.uniqId+'item_specifics_value_mode_'+counter));
+
+            var length = $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' tr').length;
+
+            if (typeof specific.min_values != 'undefined' && typeof specific.max_values != 'undefined') {
+                if (specific.max_values > length) {
+                    $(self.uniqId+'add_item_specifics_custom_value_button_'+counter).show();
+                } else {
+                    $(self.uniqId+'add_item_specifics_custom_value_button_'+counter).hide();
+                }
+
+                if (length == 1 || specific.min_values >= length) {
+                    $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' tr td.btn_value_remove').invoke('hide');
+                } else {
+                    $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' tr td.btn_value_remove').invoke('show');
+                }
+
+            } else {
+                if (specific.type == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::RENDER_TYPE_SELECT_MULTIPLE') ||
+                    specific.type == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::RENDER_TYPE_SELECT_MULTIPLE_OR_TEXT')) {
+                    $(self.uniqId+'add_item_specifics_custom_value_button_'+counter).show();
+                }
+
+                if (length == 1) {
+                    $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' tr td.btn_value_remove').invoke('hide');
+                } else {
+                    $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' tr td.btn_value_remove').invoke('show');
+                }
+            }
         });
 
     },
@@ -219,7 +265,13 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
 
             if (specific.value_mode == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_VALUE')) {
                 $(self.uniqId+'custom_item_specifics_label_custom_value_' + counter).value = specific.attribute_title;
-                $(self.uniqId+'item_specifics_value_custom_value_' + counter).value = specific.value_custom_value;
+
+                if (typeof $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' input.item-specific')[0] == 'undefined') {
+                    self.addSpecificCustomValueRow(counter);
+                }
+
+                $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' input.item-specific')[0]
+                    .setValue(specific.value_custom_value[0]);
             }
 
             if (specific.value_mode == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_ATTRIBUTE')) {
@@ -243,12 +295,12 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         });
     },
 
-    renderAttributesWithEmptyOption: function(name, insertTo, value, notRequiried)
+    renderAttributesWithEmptyOption: function(id, insertTo, value, notRequiried)
     {
         var self  = this;
 
         var className = notRequiried ? '' : ' class="M2ePro-required-when-visible"';
-        var txt = '<select name="' + name + '" id="' + name + '" ' + className + '>\n';
+        var txt = '<select name="' + id + '" id="' + id + '" ' + className + '>\n';
 
         txt += '<option class="empty"></option>\n';
         txt += self.attributeOptions;
@@ -259,10 +311,10 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
             $(insertTo).innerHTML = txt;
         }
 
-        self.checkAttributesSelect(name, value);
+        self.checkAttributesSelect(id, value);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     addDictionarySpecificRow: function(specific)
     {
@@ -273,7 +325,22 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         template = template.replace(/%required%/g, specific.required ? '&nbsp;<span class="required">*</span>' : '');
         template = template.replace(/%relation_mode%/, M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::MODE_ITEM_SPECIFICS'));
 
+        if (typeof specific.min_values != 'undefined' && typeof specific.max_values != 'undefined') {
+            template = template.replace(/%min_values%/g, specific.min_values);
+            template = template.replace(/%max_values%/g, specific.max_values);
+        } else {
+            template = template.replace(/%min_values%/g, specific.required ? 1 : 0);
+            if (specific.type == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::RENDER_TYPE_SELECT_MULTIPLE') ||
+                specific.type == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::RENDER_TYPE_SELECT_MULTIPLE_OR_TEXT')) {
+                template = template.replace(/%max_values%/g, 30);
+            } else {
+                template = template.replace(/%max_values%/g, 1);
+            }
+        }
+
         $(this.uniqId+'item_specifics_tbody').insert(template);
+
+        this.addSpecificCustomValueRow(this.counter);
 
         ++this.counter;
     },
@@ -286,20 +353,31 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         template = template.replace(/%attribute_title%%required%/g, '');
         template = template.replace(/%relation_mode%/g, M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::MODE_CUSTOM_ITEM_SPECIFICS'));
 
+        template = template.replace(/%min_values%/g, 1);
+        template = template.replace(/%max_values%/g, 1);
+
         $(this.uniqId+'item_specifics_tbody').show();
         $(this.uniqId+'item_specifics_tbody').insert(template);
 
+        this.addSpecificCustomValueRow(this.counter);
+
         if (this.interfaceMode != M2ePro.php.constant('Ess_M2ePro_Helper_View_Ebay::MODE_ADVANCED')) {
             $(this.uniqId+'custom_item_specifics_value_mode_' + this.counter).value = M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_VALUE');
-            $(this.uniqId+'item_specifics_value_custom_value_'+this.counter).show();
+            $(this.uniqId+'item_specifics_custom_value_'+this.counter).show();
             $(this.uniqId+'custom_item_specifics_label_custom_value_' +this.counter).show();
 
             var removeNodes = function(node) { node.remove() };
             $$('.custom-specific-mode-custom-attribute').each(removeNodes);
             $$('.custom-specific-mode-custom-label-attribute').each(removeNodes);
         } else {
-            $(this.uniqId+'item_specifics_value_custom_attribute_' + this.counter).insert(this.attributeOptions);
-            $(this.uniqId+'item_specifics_value_custom_attribute_' + this.counter).show();
+            var selectId = this.uniqId+'item_specifics_value_custom_attribute_' + this.counter;
+            $(selectId).insert(this.attributeOptions);
+
+            var handlerObj = new AttributeCreator(selectId);
+            handlerObj.setSelectObj($(selectId));
+            handlerObj.injectAddOption();
+
+            $(selectId).show();
         }
 
         $(this.uniqId+'item_specifics_value_mode_' + this.counter).hide();
@@ -308,10 +386,45 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         $(this.uniqId+'custom_item_specific_remove_' + this.counter).show();
         $(this.uniqId+'specific_' + this.counter + '_row').removeClassName('not-custom');
 
+        this.checkSpecificsCounter($(this.uniqId+'custom_item_specifics_value_mode_' + this.counter));
+
         ++this.counter;
     },
 
-    //----------------------------------
+    addSpecificCustomValueRow: function(generalCounter)
+    {
+        var template = $(this.uniqId+'specific_custom_value_template').innerHTML;
+        template = template.replace(/%i%/g, generalCounter);
+        template = template.replace(/%position%/g, this.valuesCounter);
+
+        $(this.uniqId+'item_specifics_custom_value_tbody_'+generalCounter).insert(template);
+
+        ++this.valuesCounter;
+    },
+
+    addItemSpecificsCustomValueRow: function(button)
+    {
+        var generalCounter = parseInt(button.getAttribute('data-counter'));
+        var tbody = $(this.uniqId+'item_specifics_custom_value_tbody_'+generalCounter);
+
+        this.addSpecificCustomValueRow(generalCounter);
+
+        var valuesCounter = tbody.childElements().length;
+
+        if (parseInt(tbody.getAttribute('data-max_values')) > valuesCounter) {
+            button.show();
+        } else {
+            button.hide();
+        }
+
+        if (parseInt(tbody.getAttribute('data-min_values')) >= valuesCounter) {
+            $$('#'+this.uniqId+'item_specifics_custom_value_tbody_'+generalCounter+' tr td.btn_value_remove').invoke('hide');
+        } else {
+            $$('#'+this.uniqId+'item_specifics_custom_value_tbody_'+generalCounter+' tr td.btn_value_remove').invoke('show');
+        }
+    },
+
+    // ---------------------------------------
 
     chooseEbaySelectedSpecifics: function(specific, counter)
     {
@@ -319,7 +432,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
 
         self.ebaySelectedSpecifics.each(function(selectedSpecific) {
 
-            if (selectedSpecific.attribute_title != specific.title) {
+            if (selectedSpecific.attribute_title != specific.title || !selectedSpecific.value_data) {
                 return;
             }
 
@@ -342,7 +455,17 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
 
             if (selectedSpecific.value_mode == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_VALUE')) {
                 $$('#'+self.uniqId+'item_specifics_value_mode_'+counter+' option[value="'+M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_VALUE')+'"]')[0].selected = true;
-                $(self.uniqId+'item_specifics_value_custom_value_'+counter).setValue(selectedSpecific.value_data);
+
+                var length = selectedSpecific.value_data.length;
+                for (var i = 0; i < length; i++) {
+
+                    if (typeof $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' input.item-specific')[i] == 'undefined') {
+                        self.addSpecificCustomValueRow(counter);
+                    }
+
+                    $$('#'+self.uniqId+'item_specifics_custom_value_tbody_'+counter+' input.item-specific')[i]
+                        .setValue(selectedSpecific.value_data[i]);
+                }
             }
 
             if (selectedSpecific.value_mode == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_ATTRIBUTE') &&
@@ -365,7 +488,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         var number = select.id.replace(self.uniqId+'item_specifics_value_mode_', '');
 
         $(self.uniqId+'item_specifics_value_ebay_recommended_' + number,
-            self.uniqId+'item_specifics_value_custom_value_' + number,
+            self.uniqId+'item_specifics_custom_value_' + number,
             self.uniqId+'item_specifics_value_custom_attribute_' + number,
             self.uniqId+'custom_item_specifics_label_custom_attribute_' + number
         ).invoke('hide');
@@ -376,7 +499,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
             $(self.uniqId+'item_specifics_value_ebay_recommended_' + number).show();
         }
         if (select.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_VALUE')) {
-            $(self.uniqId+'item_specifics_value_custom_value_' + number).show();
+            $(self.uniqId+'item_specifics_custom_value_' + number).show();
         }
         if (select.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_ATTRIBUTE')) {
             $(self.uniqId+'attribute_title_' + number).show();
@@ -384,6 +507,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
             $(self.uniqId+'item_specifics_value_custom_attribute_' + number).show();
         }
 
+        this.checkSpecificsCounter(select);
         select.up('td').next('td').select('.validation-advice').each(Element.hide);
     },
 
@@ -392,7 +516,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         var self = this;
         var number = select.id.replace(self.uniqId+'custom_item_specifics_value_mode_', '');
 
-        $(self.uniqId+'item_specifics_value_custom_value_' + number,
+        $(self.uniqId+'item_specifics_custom_value_' + number,
             self.uniqId+'item_specifics_value_custom_attribute_' + number,
             self.uniqId+'item_specifics_value_ebay_recommended_' + number).invoke('hide');
 
@@ -401,7 +525,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
             self.uniqId+'custom_item_specifics_label_custom_attribute_' + number).invoke('hide');
 
         if (select.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_VALUE')) {
-            $(self.uniqId+'item_specifics_value_custom_value_'+number).show();
+            $(self.uniqId+'item_specifics_custom_value_'+number).show();
             $(self.uniqId+'custom_item_specifics_label_custom_value_' + number).show();
         }
         if (select.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_CUSTOM_ATTRIBUTE') &&
@@ -415,15 +539,94 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
             $(self.uniqId+'item_specifics_value_custom_attribute_' + number).show();
         }
 
+        this.checkSpecificsCounter(select);
         select.up('td').next('td').select('.validation-advice').each(Element.hide);
+        this.hideValidateCustomSpecificsAdvices();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     validate: function()
     {
+        if (!this.validateMaximumSpecifics()) {
+            return false;
+        }
+
+        if (!this.validateCustomSpecificsLabels()) {
+            return false;
+        }
+
         return window['specificForm'+this.uniqId].validate();
     },
+
+    validateMaximumSpecifics: function()
+    {
+        if ($$('.'+this.uniqId+'not-none').length > this.maxSelectedSpecifics) {
+            $(this.uniqId+'maximum_specifics_error').show();
+            return false;
+        }
+
+        return true;
+    },
+
+    validateCustomSpecificsLabels: function()
+    {
+        var self = this;
+
+        self.hideValidateCustomSpecificsAdvices();
+
+        var isValid = true;
+
+        var usedSpecificsTitles = [];
+        self.dictionarySpecifics.each(function(specific, specificIndex) {
+            usedSpecificsTitles[specific.title] = [specificIndex];
+        });
+
+        $$('.M2ePro-validate-custom-specific-label-'+self.uniqId).each(function(element) {
+
+            if (!element.visible()) {
+                return;
+            }
+
+            if (!element.value) {
+                return;
+            }
+
+            var rowId = element.up('tr').getAttribute('row_id');
+
+            var elemValue = trim(element.value);
+            if (usedSpecificsTitles[elemValue] === undefined) {
+                usedSpecificsTitles[elemValue] = [rowId];
+            } else {
+                usedSpecificsTitles[elemValue].push(rowId);
+            }
+        });
+
+        for (var rowName in usedSpecificsTitles) {
+            if (usedSpecificsTitles.hasOwnProperty(rowName)) {
+                if (usedSpecificsTitles[rowName].length > 1) {
+
+                    isValid = false;
+                    usedSpecificsTitles[rowName].each(function (rowNumber) {
+                        var advice = $('advice-' + self.uniqId + 'custom_specifics_label_' + rowNumber);
+                        advice && advice.show();
+                    });
+                }
+            }
+        };
+
+        return isValid;
+    },
+
+    hideValidateCustomSpecificsAdvices: function()
+    {
+        var advices = $$('.'+this.uniqId+'advice-custom_specifics_label');
+        advices.each(function(element){
+            element.hide();
+        });
+    },
+
+    // ---------------------------------------
 
     checkAttributesSelect: function(id, value)
     {
@@ -437,7 +640,26 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         }
     },
 
-    //----------------------------------
+    checkSpecificsCounter: function(select)
+    {
+        $(this.uniqId+'maximum_specifics_error').hide();
+
+        if (select != null) {
+            if (select.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Category_Specific::VALUE_MODE_NONE')) {
+                select.removeClassName(this.uniqId+'not-none');
+            } else {
+                select.addClassName(this.uniqId+'not-none');
+            }
+        }
+
+        if ($$('.'+this.uniqId+'not-none').length >= this.maxSelectedSpecifics) {
+            $(this.uniqId+'add_custom_container').hide();
+        } else {
+            $(this.uniqId+'add_custom_container').show();
+        }
+    },
+
+    // ---------------------------------------
 
     reload: function()
     {
@@ -472,7 +694,7 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
         self.postForm(url, {specific_data: Object.toJSON(specificData)});
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     clearSpecifics: function()
     {
@@ -482,7 +704,29 @@ EbayListingCategorySpecificHandler.prototype = Object.extend(new CommonHandler()
     removeSpecific: function(button)
     {
         $(button).up('tr').remove();
+        this.checkSpecificsCounter(null);
+    },
+
+    removeItemSpecificsCustomValue: function(button)
+    {
+        var tbody  = $(button).up('tbody'),
+            addBtn = $(button).up('table').next('a');
+
+        $(button).up('tr').remove();
+
+        var length = tbody.childElements().length;
+
+        if (parseInt(tbody.getAttribute('data-max_values')) > length) {
+            addBtn.show();
+        } else {
+            addBtn.hide();
+        }
+
+        if (length == 1 || parseInt(tbody.getAttribute('data-min_values')) >= length) {
+            var btnRemove = tbody.getElementsByClassName('btn_value_remove');
+            for (var i = 0; i < btnRemove.length; i++) {btnRemove[i].hide();}
+        }
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

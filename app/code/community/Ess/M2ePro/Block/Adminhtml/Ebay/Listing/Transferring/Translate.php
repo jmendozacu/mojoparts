@@ -1,30 +1,34 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Transferring_Translate extends Mage_Adminhtml_Block_Widget
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayListingTransferringTranslate');
-        //------------------------------
+        // ---------------------------------------
 
         $this->setTemplate('M2ePro/ebay/listing/transferring/translate.phtml');
     }
 
-    // ####################################
+    //########################################
 
     protected function _beforeToHtml()
     {
         parent::_beforeToHtml();
 
-        //------------------------------
+        // ---------------------------------------
         $data = array(
             'id'      => 'confirm_button_translation',
             'class'   => 'confirm_button',
@@ -33,19 +37,18 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Transferring_Translate extends Mag
         );
         $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
         $this->setChild('confirm_button', $buttonBlock);
-        //------------------------------
+        // ---------------------------------------
 
-        //-------------------------------
+        // ---------------------------------------
         $account = $this->getAccount();
 
         if ($account) {
-            $ebayInfo = json_decode($account->getEbayInfo(), true);
-            $ebayInfo['UserID'] && $info['ebay_user_id'] = $ebayInfo['UserID'];
+            $info['ebay_user_title'] = $account->getTitle();
 
-            $translationInfo = json_decode($account->getTranslationInfo(), true);
+            $translationInfo = Mage::helper('M2ePro')->jsonDecode($account->getTranslationInfo());
             isset($translationInfo['currency']) && $info['translation_currency'] = $translationInfo['currency'];
-            isset($translationInfo['credit'])   && isset($translationInfo['credit']['prepaid']) &&
-                $info['translation_balance'] = $translationInfo['credit']['prepaid'];
+            $info['translation_balance'] = isset($translationInfo['credit']['prepaid']) ?
+                                           $translationInfo['credit']['prepaid'] : 'N/A';
             isset($translationInfo['credit']['translation']) && isset($translationInfo['credit']['used']) &&
             $info['translation_total_credits'] =
                 $translationInfo['credit']['translation']- $translationInfo['credit']['used'];
@@ -53,10 +56,10 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Transferring_Translate extends Mag
 
         $this->addData($info);
 
-        //-------------------------------
+        // ---------------------------------------
     }
 
-    // ####################################
+    //########################################
 
     public function getTranslationServices()
     {
@@ -98,25 +101,25 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Transferring_Translate extends Mag
         return Mage::helper('M2ePro/Component_Ebay')->getDefaultTranslationService();
     }
 
-    // ####################################
+    //########################################
 
     public function getAccount()
     {
         return $this->_getEbayListing()->getAccount();
     }
 
-    // ####################################
+    //########################################
 
     private function _getEbayListing()
     {
         if (!$listingId = $this->getData('listing_id')) {
-            throw new Exception('Listing is not defined');
+            throw new Ess_M2ePro_Model_Exception('Listing is not defined');
         }
 
         return Mage::helper('M2ePro/Component_Ebay')->getCachedObject('Listing',(int)$listingId)->getChildObject();
     }
 
-    // ####################################
+    //########################################
 
     private function _getMixedServices()
     {
@@ -128,7 +131,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Transferring_Translate extends Mag
             ->addFieldToFilter('id', array('in' => ($productsIds)));
 
         $mixedServices = array();
-        foreach($collection->getItems() as $listingProduct) {
+        foreach ($collection->getItems() as $listingProduct) {
             $tempService = $listingProduct->getTranslationService();
 
             if (!isset($mixedServices[$tempService])) {
@@ -146,7 +149,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Transferring_Translate extends Mag
         $totalAvgCost = 0;
         $totalProducts = 0;
 
-        foreach($mixedServices as $serviceName => $countProducts) {
+        foreach ($mixedServices as $serviceName => $countProducts) {
             if (!isset($translationServices[$serviceName])) {
                 continue;
             }
@@ -158,5 +161,5 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Transferring_Translate extends Mag
         return number_format((doubleval($totalAvgCost)/$totalProducts), 2);
     }
 
-    // ####################################
+    //########################################
 }

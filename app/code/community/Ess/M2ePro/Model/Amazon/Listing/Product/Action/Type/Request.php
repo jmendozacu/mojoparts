@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Request
@@ -10,69 +12,73 @@ abstract class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Request
     /**
      * @var array
      */
-    protected $validatorsData = array();
+    protected $cachedData = array();
 
     /**
      * @var array
      */
-    private $requestsTypes = array(
+    private $dataTypes = array(
+        'qty',
+        'price_regular',
+        'price_business',
         'details',
         'images',
-        'price',
-        'qty'
     );
 
     /**
-     * @var array[Ess_M2ePro_Model_Amazon_Listing_Product_Action_Request_Abstract]
+     * @var Ess_M2ePro_Model_Amazon_Listing_Product_Action_DataBuilder_Abstract[]
      */
-    private $requests = array();
+    private $dataBuilders = array();
 
-    // ########################################
+    //########################################
 
-    public function setValidatorsData(array $data)
+    public function setCachedData(array $data)
     {
-        $this->validatorsData = $data;
+        $this->cachedData = $data;
     }
 
     /**
      * @return array
      */
-    public function getValidatorsData()
+    public function getCachedData()
     {
-        return $this->validatorsData;
+        return $this->cachedData;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getData()
     {
         $this->beforeBuildDataEvent();
         $data = $this->getActionData();
 
         $data = $this->prepareFinalData($data);
-        $this->collectRequestsWarningMessages();
+        $this->collectDataBuildersWarningMessages();
 
         return $data;
     }
 
-    // ########################################
+    //########################################
 
     protected function beforeBuildDataEvent() {}
 
     abstract protected function getActionData();
 
-    // -----------------------------------------
+    // ---------------------------------------
 
     protected function prepareFinalData(array $data)
     {
         return $data;
     }
 
-    protected function collectRequestsWarningMessages()
+    protected function collectDataBuildersWarningMessages()
     {
-        foreach ($this->requestsTypes as $requestType) {
+        foreach ($this->dataTypes as $requestType) {
 
-            $messages = $this->getRequest($requestType)->getWarningMessages();
+            $messages = $this->getDataBuilder($requestType)->getWarningMessages();
 
             foreach ($messages as $message) {
                 $this->addWarningMessage($message);
@@ -80,65 +86,103 @@ abstract class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Request
         }
     }
 
-    // ########################################
+    //########################################
 
     /**
-     * @return Ess_M2ePro_Model_Amazon_Listing_Product_Action_Request_Details
+     * @return array
      */
-    public function getRequestDetails()
+    public function getQtyData()
     {
-        return $this->getRequest('details');
+        if (!$this->getConfigurator()->isQtyAllowed()) {
+            return array();
+        }
+
+        $dataBuilder = $this->getDataBuilder('qty');
+        return $dataBuilder->getData();
     }
 
     /**
-     * @return Ess_M2ePro_Model_Amazon_Listing_Product_Action_Request_Images
+     * @return array
      */
-    public function getRequestImages()
+    public function getRegularPriceData()
     {
-        return $this->getRequest('images');
-    }
+        if (!$this->getConfigurator()->isRegularPriceAllowed()) {
+            return array();
+        }
 
-    // -----------------------------------------
-
-    /**
-     * @return Ess_M2ePro_Model_Amazon_Listing_Product_Action_Request_Price
-     */
-    public function getRequestPrice()
-    {
-        return $this->getRequest('price');
+        $dataBuilder = $this->getDataBuilder('price_regular');
+        return $dataBuilder->getData();
     }
 
     /**
-     * @return Ess_M2ePro_Model_Amazon_Listing_Product_Action_Request_Qty
+     * @return array
      */
-    public function getRequestQty()
+    public function getBusinessPriceData()
     {
-        return $this->getRequest('qty');
+        if (!$this->getConfigurator()->isBusinessPriceAllowed()) {
+            return array();
+        }
+
+        $dataBuilder = $this->getDataBuilder('price_business');
+        return $dataBuilder->getData();
     }
 
-    // ########################################
+    /**
+     * @return array
+     */
+    public function getDetailsData()
+    {
+        if (!$this->getConfigurator()->isDetailsAllowed()) {
+            return array();
+        }
+
+        $dataBuilder = $this->getDataBuilder('details');
+        $data = $dataBuilder->getData();
+
+        $this->addMetaData('details_data', $data);
+
+        return $data;
+    }
+
+    /**
+     * @return array
+     */
+    public function getImagesData()
+    {
+        if (!$this->getConfigurator()->isImagesAllowed()) {
+            return array();
+        }
+
+        $dataBuilder = $this->getDataBuilder('images');
+        $data = $dataBuilder->getData();
+
+        $this->addMetaData('images_data', $data);
+
+        return $data;
+    }
+
+    //########################################
 
     /**
      * @param $type
-     * @return Ess_M2ePro_Model_Amazon_Listing_Product_Action_Request_Abstract
+     * @return Ess_M2ePro_Model_Amazon_Listing_Product_Action_DataBuilder_Abstract
      */
-    private function getRequest($type)
+    private function getDataBuilder($type)
     {
-        if (!isset($this->requests[$type])) {
+        if (!isset($this->dataBuilders[$type])) {
 
-            /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Action_Request_Abstract $request */
-            $request = Mage::getModel('M2ePro/Amazon_Listing_Product_Action_Request_'.ucfirst($type));
+            /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Action_DataBuilder_Abstract $dataBuilder */
+            $dataBuilder = Mage::getModel('M2ePro/Amazon_Listing_Product_Action_DataBuilder_'.ucfirst($type));
 
-            $request->setParams($this->getParams());
-            $request->setListingProduct($this->getListingProduct());
-            $request->setConfigurator($this->getConfigurator());
-            $request->setValidatorsData($this->getValidatorsData());
+            $dataBuilder->setParams($this->getParams());
+            $dataBuilder->setListingProduct($this->getListingProduct());
+            $dataBuilder->setCachedData($this->getCachedData());
 
-            $this->requests[$type] = $request;
+            $this->dataBuilders[$type] = $dataBuilder;
         }
 
-        return $this->requests[$type];
+        return $this->dataBuilders[$type];
     }
 
-    // ########################################
+    //########################################
 }

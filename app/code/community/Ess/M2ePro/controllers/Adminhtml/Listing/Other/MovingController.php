@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 // move from 3rd party to listing
@@ -9,7 +11,7 @@
 class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
     extends Ess_M2ePro_Controller_Adminhtml_BaseController
 {
-    //#############################################
+    //########################################
 
     public function moveToListingGridAction()
     {
@@ -23,7 +25,7 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
             'marketplaceId', $this->getRequest()->getParam('marketplaceId')
         );
         Mage::helper('M2ePro/Data_Global')->setValue(
-            'ignoreListings', json_decode($this->getRequest()->getParam('ignoreListings'))
+            'ignoreListings', Mage::helper('M2ePro')->jsonDecode($this->getRequest()->getParam('ignoreListings'))
         );
 
         $component = ucfirst(strtolower($this->getRequest()->getParam('componentMode')));
@@ -41,7 +43,7 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
         $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function getFailedProductsGridAction()
     {
@@ -65,12 +67,14 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
         $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function prepareMoveToListingAction()
     {
         $componentMode = $this->getRequest()->getParam('componentMode');
-        $selectedProducts = (array)json_decode($this->getRequest()->getParam('selectedProducts'));
+        $selectedProducts = (array)Mage::helper('M2ePro')->jsonDecode(
+            $this->getRequest()->getParam('selectedProducts')
+        );
 
         $selectedProductsParts = array_chunk($selectedProducts, 1000);
 
@@ -92,7 +96,10 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
             }
 
             $listingOtherCollection->getSelect()->join(
-                array('cpe'=>Mage::getSingleton('core/resource')->getTableName('catalog_product_entity')),
+                array(
+                    'cpe'=>Mage::helper('M2ePro/Module_Database_Structure')
+                        ->getTableNameWithPrefix('catalog_product_entity')
+                ),
                 '`main_table`.`product_id` = `cpe`.`entity_id`'
             );
 
@@ -115,15 +122,17 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
             'marketplaceId' => $marketplaceId,
         );
 
-        return $this->getResponse()->setBody(json_encode($response));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($response));
     }
 
-    //#############################################
+    //########################################
 
     public function tryToMoveToListingAction()
     {
         $componentMode = $this->getRequest()->getParam('componentMode');
-        $selectedProducts = (array)json_decode($this->getRequest()->getParam('selectedProducts'));
+        $selectedProducts = (array)Mage::helper('M2ePro')->jsonDecode(
+            $this->getRequest()->getParam('selectedProducts')
+        );
         $listingId = (int)$this->getRequest()->getParam('listingId');
 
         $listingInstance = Mage::helper('M2ePro/Component')->getCachedComponentObject(
@@ -136,7 +145,12 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
                 $componentMode,'Listing_Other',$selectedProduct
             );
 
-            if (!$listingInstance->getChildObject()->addProductFromOther($otherListingProductInstance,true,false)) {
+            $listingProduct = $listingInstance
+                ->getChildObject()
+                ->addProductFromOther($otherListingProductInstance,Ess_M2ePro_Helper_Data::INITIATOR_USER,
+                                      true,false);
+
+            if (!$listingProduct) {
                 $failedProducts[] = $otherListingProductInstance->getProductId();
             }
         }
@@ -144,24 +158,26 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
         $failedProducts = array_values(array_unique($failedProducts));
 
         if (count($failedProducts) == 0) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'result' => 'success'
             )));
         }
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'result' => 'fail',
             'failed_products' => $failedProducts
         )));
     }
 
-    //#############################################
+    //########################################
 
     public function moveToListingAction()
     {
         $componentMode = $this->getRequest()->getParam('componentMode');
 
-        $selectedProducts = (array)json_decode($this->getRequest()->getParam('selectedProducts'));
+        $selectedProducts = (array)Mage::helper('M2ePro')->jsonDecode(
+            $this->getRequest()->getParam('selectedProducts')
+        );
         $listingId = (int)$this->getRequest()->getParam('listingId');
 
         $listingInstance = Mage::helper('M2ePro/Component')->getCachedComponentObject(
@@ -182,7 +198,8 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
 
             $listingProductInstance = $listingInstance
                 ->getChildObject()
-                ->addProductFromOther($otherListingProductInstance,false,false);
+                ->addProductFromOther($otherListingProductInstance,Ess_M2ePro_Helper_Data::INITIATOR_USER,
+                                      false,false);
 
             if (!($listingProductInstance instanceof Ess_M2ePro_Model_Listing_Product)) {
 
@@ -232,13 +249,15 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
         };
 
         if ($errors == 0) {
-            return $this->getResponse()->setBody(json_encode(array('result'=>'success')));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('result'=>'success')));
         } else {
-            return $this->getResponse()->setBody(json_encode(array('result'=>'error', 'errors'=>$errors)));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(
+                array('result'=>'error', 'errors'=>$errors)
+            ));
         }
     }
 
-    //#############################################
+    //########################################
 
     public function createDefaultListingAction()
     {
@@ -247,7 +266,7 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
         $marketplaceId = (int)$this->getRequest()->getParam('marketplaceId');
 
         if (!$componentMode || !$accountId || !$marketplaceId) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'result' => 'error',
                 'message' => Mage::helper('M2ePro')->__('Component Mode or Account ID or Marketplace ID is empty.')
             )));
@@ -261,7 +280,7 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
         $otherListingInstance = $temp->getFirstItem();
 
         if (!$otherListingInstance->getId()) {
-            return $this->getResponse()->setBody(json_encode(array(
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'result' => 'error',
                 'message' => Mage::helper('M2ePro')->__('No Other Listings found.')
             )));
@@ -278,5 +297,5 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MovingController
         $movingModel->getDefaultListing($otherListingInstance);
     }
 
-    //#############################################
+    //########################################
 }

@@ -1,20 +1,28 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Servicing_Task_Messages extends Ess_M2ePro_Model_Servicing_Task
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return string
+     */
     public function getPublicNick()
     {
         return 'messages';
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getRequestData()
     {
         return array();
@@ -26,7 +34,7 @@ class Ess_M2ePro_Model_Servicing_Task_Messages extends Ess_M2ePro_Model_Servicin
         $this->updateModuleMessages($data);
     }
 
-    // ########################################
+    //########################################
 
     private function updateMagentoMessages(array $messages)
     {
@@ -66,7 +74,7 @@ class Ess_M2ePro_Model_Servicing_Task_Messages extends Ess_M2ePro_Model_Servicin
         return true;
     }
 
-    // ########################################
+    //########################################
 
     private function updateModuleMessages(array $messages)
     {
@@ -74,7 +82,9 @@ class Ess_M2ePro_Model_Servicing_Task_Messages extends Ess_M2ePro_Model_Servicin
         !is_array($messages) && $messages = array();
 
         Mage::helper('M2ePro/Primary')->getConfig()->setGroupValue(
-            '/'.Mage::helper('M2ePro/Module')->getName().'/server/','messages',json_encode($messages)
+            '/'.Mage::helper('M2ePro/Module')->getName().'/server/',
+            'messages',
+            Mage::helper('M2ePro')->jsonEncode($messages)
         );
     }
 
@@ -91,5 +101,5 @@ class Ess_M2ePro_Model_Servicing_Task_Messages extends Ess_M2ePro_Model_Servicin
         return true;
     }
 
-    // ########################################
+    //########################################
 }

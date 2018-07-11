@@ -1,15 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Development_Tabs_Database_Table_Grid
     extends Mage_Adminhtml_Block_Widget_Grid
 {
-    // ####################################
-
     const MERGE_MODE_COOKIE_KEY = 'database_tables_merge_mode_cookie_key';
+    const MAX_COLUMN_VALUE_LENGTH = 255;
 
     public $tableName;
     public $modelName;
@@ -17,24 +18,24 @@ class Ess_M2ePro_Block_Adminhtml_Development_Tabs_Database_Table_Grid
     public $mergeMode = 0;
     public $component;
 
-    // ####################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('developmentTable'.$this->getRequest()->getParam('table').'Grid');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('id');
         $this->setDefaultDir('ASC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
 
         $this->init();
     }
@@ -50,14 +51,14 @@ class Ess_M2ePro_Block_Adminhtml_Development_Tabs_Database_Table_Grid
             $errorMsg = str_replace(
                 '%table_name%', $this->tableName, 'Specified table "%table_name%" cannot be managed.'
             );
-            throw new Exception($errorMsg);
+            throw new Ess_M2ePro_Model_Exception($errorMsg);
         }
 
         if (!$this->ifNeedToUseMergeMode()) {
             return;
         }
 
-        preg_match('/(ebay|amazon|buy|play)_/i', $this->modelName, $matches);
+        preg_match('/(ebay|amazon)_/i', $this->modelName, $matches);
         if (!$this->component && !empty($matches[1])) {
             $this->modelName = str_replace($matches[1].'_', '', $this->modelName);
             $this->component = strtolower($matches[1]);
@@ -68,7 +69,7 @@ class Ess_M2ePro_Block_Adminhtml_Development_Tabs_Database_Table_Grid
         }
     }
 
-    // ####################################
+    //########################################
 
     private function getModel()
     {
@@ -83,7 +84,7 @@ class Ess_M2ePro_Block_Adminhtml_Development_Tabs_Database_Table_Grid
                Mage::helper('M2ePro/Module_Database_Structure')->isTableHorizontal($this->tableName);
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareCollection()
     {
@@ -98,13 +99,13 @@ class Ess_M2ePro_Block_Adminhtml_Development_Tabs_Database_Table_Grid
 
         if ($this->ifNeedToUseMergeMode()) {
 
-            array_walk($columns, function(&$el){ $el['is_parent'] = true; });
+            array_walk($columns, function(&$el) { $el['is_parent'] = true; });
 
             $modelName = 'M2ePro/'.ucfirst($this->component).'_'.$this->modelName;
             $table = Mage::getModel($modelName)->getResource()->getMainTable();
 
             $childColumns = Mage::helper('M2ePro/Module_Database_Structure')->getTableInfo($table);
-            array_walk($childColumns, function(&$el){ $el['is_parent'] = false; });
+            array_walk($childColumns, function(&$el) { $el['is_parent'] = false; });
 
             $columns = array_merge($columns, $childColumns);
         }
@@ -129,7 +130,7 @@ class Ess_M2ePro_Block_Adminhtml_Development_Tabs_Database_Table_Grid
                 'header'         => $header,
                 'align'          => 'left',
                 'type'           => $this->getColumnType($column),
-                'string_limit'   => 10000,
+                'string_limit'   => 65000,
                 'index'          => strtolower($column['name']),
                 'filter_index'   => $filterIndex,
                 'frame_callback' => array($this, 'callbackColumnData'),
@@ -175,7 +176,7 @@ class Ess_M2ePro_Block_Adminhtml_Development_Tabs_Database_Table_Grid
         );
 
         $root = 'adminhtml_development_database';
-        $urls = json_encode(array(
+        $urls = Mage::helper('M2ePro')->jsonEncode(array(
             $root.'/deleteTableRows'        => $this->getUrl('*/*/deleteTableRows', $urlParams),
             $root.'/updateTableCells'       => $this->getUrl('*/*/updateTableCells', $urlParams),
             $root.'/addTableRow'            => $this->getUrl('*/*/addTableRow', $urlParams),
@@ -195,7 +196,7 @@ HTML;
 <script type="text/javascript">
 
    M2ePro.url.add({$urls});
-   DevelopmentDatabaseGridHandlerObj = new DatabaseGridHandler('{$this->getId()}');
+   DevelopmentDatabaseGridHandlerObj = new DevelopmentDatabaseGridHandler('{$this->getId()}');
 
 </script>
 HTML;
@@ -204,51 +205,55 @@ HTML;
         return parent::_toHtml() . $additionalJs . $commonJs;
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareMassaction()
     {
         // Set massaction identifiers
-        //--------------------------------
+        // ---------------------------------------
         $this->setMassactionIdField('id');
         $this->getMassactionBlock()->setFormFieldName('ids');
-        //--------------------------------
+        // ---------------------------------------
 
-        //--------------------------------
+        // ---------------------------------------
         $this->getMassactionBlock()->addItem('deleteTableRows', array(
              'label'    => Mage::helper('M2ePro')->__('Delete'),
              'url'      => '',
         ));
-        //--------------------------------
+        // ---------------------------------------
 
-        //--------------------------------
+        // ---------------------------------------
         $this->getMassactionBlock()->addItem('updateTableCells', array(
             'label'    => Mage::helper('M2ePro')->__('Update'),
             'url'      => ''
         ));
-        //--------------------------------
+        // ---------------------------------------
 
         return parent::_prepareMassaction();
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnData($value, $row, $column, $isExport)
     {
-        $cellId = 'table_row_cell_'.$column->getId().'_'.$row->getId();
+        $rowId = $row->getId();
+        $columnId = $column->getId();
+        $cellId = 'table_row_cell_'.$columnId.'_'.$rowId;
 
         $tempValue = '<span style="color:silver;"><small>NULL</small></span>';
         if (!is_null($value)) {
-            $tempValue = strlen($value) > 255 ? substr($value,0,255).' ...' : $value;
+            $tempValue = $this->isColumnValueShouldBeCut($value) ? $this->cutColumnValue($value) : $value;
             $tempValue = Mage::helper('M2ePro')->escapeHtml($tempValue);
         }
 
         $inputValue = 'NULL';
-        !is_null($value) && $inputValue = Mage::helper('M2ePro')->escapeHtml($value);
+        if (!is_null($value)) {
+            $inputValue = Mage::helper('M2ePro')->escapeHtml($value);
+        }
 
         $divMouseActions = '';
+        if (!$column->getData('is_auto_increment') && strlen($inputValue) < $column->getData('string_limit')) {
 
-        if (!$column->getData('is_auto_increment')) {
             $divMouseActions = <<<HTML
 onmouseover="DevelopmentDatabaseGridHandlerObj.mouseOverCell('{$cellId}');"
 onmouseout="DevelopmentDatabaseGridHandlerObj.mouseOutCell('{$cellId}');"
@@ -261,7 +266,9 @@ HTML;
     <span id="{$cellId}_view_container">{$tempValue}</span>
 
     <span id="{$cellId}_edit_container" style="display: none;">
-        <textarea style="width:100%; height:100%;" id="{$cellId}_edit_input">{$inputValue}</textarea>
+        <textarea style="width:100%; height:100%;" id="{$cellId}_edit_input"
+                  onkeydown="DevelopmentDatabaseGridHandlerObj.onKeyDownEdit('{$rowId}','{$columnId}', event)"
+>{$inputValue}</textarea>
     </span>
 
     <span id="{$cellId}_edit_link" style="display: none;">&nbsp;
@@ -274,7 +281,7 @@ HTML;
     </span>
     <span id="{$cellId}_save_link" style="display: none;">&nbsp;
         <a href="javascript:void(0);"
-           onclick="DevelopmentDatabaseGridHandlerObj.saveTableCell('{$row->getId()}','{$column->getId()}');">save</a>
+           onclick="DevelopmentDatabaseGridHandlerObj.saveTableCell('{$rowId}','{$columnId}');">save</a>
     </span>
 </div>
 HTML;
@@ -287,6 +294,26 @@ HTML;
     <span>delete</span>
 </a>
 HTML;
+        if ($this->tableName == 'm2epro_operation_history') {
+
+            $urlUp = $this->getUrl(
+                '*/*/showOperationHistoryExecutionTreeUp', array('operation_history_id' => $row->getId())
+            );
+            $urlDown = $this->getUrl(
+                '*/*/showOperationHistoryExecutionTreeDown', array('operation_history_id' => $row->getId())
+            );
+            $html .= <<<HTML
+<br/>
+<a style="color: green;" href="{$urlUp}" target="_blank">
+    <span>exec.&nbsp;tree&nbsp;&uarr;</span>
+</a>
+<br/>
+<a style="color: green;" href="{$urlDown}" target="_blank">
+    <span>exec.&nbsp;tree&nbsp;&darr;</span>
+</a>
+HTML;
+        }
+
         $componentMode = $row->getData('component_mode');
         if (Mage::helper('M2ePro/Module_Database_Structure')->isTableHorizontalParent($this->tableName) &&
             $componentMode && !$this->mergeMode) {
@@ -303,7 +330,93 @@ HTML;
         return $html;
     }
 
-    // ####################################
+    //########################################
+
+    protected function isColumnValueShouldBeCut($originalValue)
+    {
+        if (is_null($originalValue)) {
+            return false;
+        }
+
+        return strlen($originalValue) > self::MAX_COLUMN_VALUE_LENGTH;
+    }
+
+    protected function cutColumnValue($originalValue)
+    {
+        if (is_null($originalValue)) {
+            return $originalValue;
+        }
+
+        return substr($originalValue, 0, self::MAX_COLUMN_VALUE_LENGTH) . ' ...';
+    }
+
+    //########################################
+
+    protected function _addColumnFilterToCollection($column)
+    {
+        if (!$this->getCollection()) {
+            return $this;
+        }
+
+        $value = $column->getFilter()->getValue();
+        $field = ( $column->getFilterIndex() ) ? $column->getFilterIndex()
+                                               : $column->getIndex();
+
+        if ($this->isNullFilter($value)) {
+            $this->getCollection()->addFieldToFilter($field, array('null' => true));
+            return $this;
+        }
+
+        if ($this->isNotIsNullFilter($value)) {
+            $this->getCollection()->addFieldToFilter($field, array('notnull' => true));
+            return $this;
+        }
+
+        if ($this->isUnEqualFilter($value)) {
+            $this->getCollection()->addFieldToFilter($field, array('neq' => preg_replace('/^!=/', '', $value)));
+            return $this;
+
+        }
+
+        return parent::_addColumnFilterToCollection($column);
+    }
+
+    private function isNullFilter($value)
+    {
+        if (is_string($value) && $value === 'isnull') {
+            return true;
+        }
+
+        if (isset($value['from'] ,$value['to']) && $value['from'] === 'isnull' && $value['to'] === 'isnull') {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function isNotIsNullFilter($value)
+    {
+        if (is_string($value) && $value === '!isnull') {
+            return true;
+        }
+
+        if (isset($value['from'] ,$value['to']) && $value['from'] === '!isnull' && $value['to'] === '!isnull') {
+            return true;
+        }
+
+        return false;
+    }
+
+    private function isUnEqualFilter($value)
+    {
+        if (is_string($value) && strpos($value, '!=') === 0) {
+            return true;
+        }
+
+        return false;
+    }
+
+    //########################################
 
     public function getGridUrl()
     {
@@ -315,7 +428,7 @@ HTML;
         //return $this->getUrl('*/*/editTableRow', array('id' => $row->getId()));
     }
 
-    // ####################################
+    //########################################
 
     private function getColumnType($columnData)
     {
@@ -330,5 +443,5 @@ HTML;
         return 'text';
     }
 
-    // ####################################
+    //########################################
 }

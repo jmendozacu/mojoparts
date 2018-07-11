@@ -1,7 +1,7 @@
 OrderEditItemHandler = Class.create();
 OrderEditItemHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function()
     {
@@ -10,7 +10,7 @@ OrderEditItemHandler.prototype = Object.extend(new CommonHandler(), {
         this.orderItemId = null;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     openPopUp: function(title, content, customConfig)
     {
@@ -143,13 +143,13 @@ OrderEditItemHandler.prototype = Object.extend(new CommonHandler(), {
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
-    assignProduct: function()
+    assignProduct: function(id, productSku)
     {
         var self = this;
-        var productId = $('product_id').value;
-        var sku = $('sku').value;
+        var productId = +id || '';
+        var sku = productSku || '';
         var orderItemId = self.orderItemId;
 
         MagentoMessageObj.clearAll();
@@ -159,24 +159,18 @@ OrderEditItemHandler.prototype = Object.extend(new CommonHandler(), {
         }
 
         if (sku == '' && productId == '') {
-            $('product_id').focus();
             alert(M2ePro.translator.translate('Please enter correct Product ID or SKU.'));
             return;
         }
 
         if (((/^\s*(\d)*\s*$/i).test(productId) == false)) {
             alert(M2ePro.translator.translate('Please enter correct Product ID.'));
-            $('product_id').focus();
-            $('product_id').value = '';
-            $('sku').value = '';
             return;
         }
 
         if (!confirm(M2ePro.translator.translate('Are you sure?'))) {
             return;
         }
-
-        $('help_grid').hide();
 
         new Ajax.Request(M2ePro.url.get('adminhtml_order/assignProduct'), {
             method: 'post',
@@ -189,7 +183,7 @@ OrderEditItemHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     assignProductDetails: function()
     {
@@ -211,7 +205,7 @@ OrderEditItemHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     unassignProduct: function(gridId, orderItemId)
     {
@@ -238,5 +232,5 @@ OrderEditItemHandler.prototype = Object.extend(new CommonHandler(), {
         });
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

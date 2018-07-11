@@ -1,16 +1,18 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Configuration_Abstract extends Mage_Adminhtml_Block_System_Config_Form
 {
-    // ########################################
+    //########################################
 
     protected function _toHtml()
     {
-        //-------------------------------
+        // ---------------------------------------
         $url = Mage::helper('M2ePro/View_Development')->getPageUrl();
         $data = array(
             'label'   => Mage::helper('M2ePro')->__('Control Panel'),
@@ -19,9 +21,10 @@ class Ess_M2ePro_Block_Adminhtml_Configuration_Abstract extends Mage_Adminhtml_B
             'style'   => 'display: none;'
         );
         $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
-        //-------------------------------
+        // ---------------------------------------
 
-        $generalBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_general');
+        $generalBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_general')
+                                          ->setData('page_help_link', $this->getPageHelpLink());
 
         return $generalBlock->toHtml().
             '<div id="development_button_container" style="text-align: right; margin: -10px 0 8px 0; display:none;">'.
@@ -55,5 +58,24 @@ class Ess_M2ePro_Block_Adminhtml_Configuration_Abstract extends Mage_Adminhtml_B
         parent::_prepareLayout();
     }
 
-    // ########################################
+    //########################################
+
+    protected function setPageHelpLink($tinyLink = NULL)
+    {
+        $this->setData('page_help_link',
+            Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, $tinyLink));
+
+        return $this;
+    }
+
+    public function getPageHelpLink()
+    {
+        if (is_null($this->getData('page_help_link'))) {
+            return Mage::helper('M2ePro/Module_Support')->getDocumentationUrl();
+        }
+
+        return $this->getData('page_help_link');
+    }
+
+    //########################################
 }

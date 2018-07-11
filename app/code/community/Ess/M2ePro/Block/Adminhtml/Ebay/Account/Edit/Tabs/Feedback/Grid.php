@@ -1,11 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_Feedback_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
@@ -13,20 +17,20 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_Feedback_Grid extends Ma
         $accountData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayAccountEditTabsFeedbackGrid'.$accountData->getId());
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('id');
         $this->setDefaultDir('DESC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareCollection()
     {
@@ -37,9 +41,6 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_Feedback_Grid extends Ma
                                     ->getCollection()
                                     ->addFieldToFilter('main_table.account_id', $accountData->getId());
 
-        //exit($collection->getSelect()->__toString());
-
-        // Set collection to grid
         $this->setCollection($collection);
 
         return parent::_prepareCollection();
@@ -59,7 +60,6 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_Feedback_Grid extends Ma
         $this->addColumn('ft_title', array(
             'header'    => Mage::helper('M2ePro')->__('Text'),
             'align'     => 'left',
-            //'width'     => '200px',
             'type'      => 'text',
             'index'     => 'body',
             'escape'    => true,
@@ -116,15 +116,15 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_Feedback_Grid extends Ma
     protected function _prepareMassaction()
     {
         // Set massaction identifiers
-        //--------------------------------
+        // ---------------------------------------
         $this->setMassactionIdField('id');
         $this->getMassactionBlock()->setFormFieldName('ids');
-        //--------------------------------
+        // ---------------------------------------
 
         return parent::_prepareMassaction();
     }
 
-    // ####################################
+    //########################################
 
     public function callbackActionEdit($value, $row, $column, $isExport)
     {
@@ -142,7 +142,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_Feedback_Grid extends Ma
         return $value;
     }
 
-    // ####################################
+    //########################################
 
     public function getGridUrl()
     {
@@ -154,5 +154,5 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Account_Edit_Tabs_Feedback_Grid extends Ma
         return false;
     }
 
-    // ####################################
+    //########################################
 }

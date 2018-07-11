@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Order_Item_Importer
@@ -9,14 +11,14 @@ class Ess_M2ePro_Model_Ebay_Order_Item_Importer
     /** @var $item Ess_M2ePro_Model_Ebay_Order_Item */
     private $item = NULL;
 
-    // ########################################
+    //########################################
 
     public function __construct(Ess_M2ePro_Model_Ebay_Order_Item $item)
     {
         $this->item = $item;
     }
 
-    // ########################################
+    //########################################
 
     public function getDataFromChannel()
     {
@@ -28,16 +30,22 @@ class Ess_M2ePro_Model_Ebay_Order_Item_Importer
             $params['variation_sku'] = $variationSku;
         }
 
-        $itemData = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher')
-            ->processVirtual('item', 'get', 'info',
-                $params, 'result',
-                NULL, $this->item->getParentObject()->getOrder()->getAccount(), NULL);
+        $dispatcherObj = Mage::getModel('M2ePro/Ebay_Connector_Dispatcher');
+        $connectorObj = $dispatcherObj->getVirtualConnector('item', 'get', 'info',
+                                                            $params, 'result', NULL,
+                                                            $this->item->getParentObject()->getOrder()->getAccount());
 
-        return $itemData;
+        $dispatcherObj->process($connectorObj);
+
+        return $connectorObj->getResponseData();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param array $rawData
+     * @return array
+     */
     public function prepareDataForProductCreation(array $rawData)
     {
         $preparedData = array();
@@ -81,6 +89,10 @@ class Ess_M2ePro_Model_Ebay_Order_Item_Importer
         return $preparedData;
     }
 
+    /**
+     * @param array $itemData
+     * @return float
+     */
     private function getNewProductPrice(array $itemData)
     {
         $allowedCurrencies = Mage::getSingleton('directory/currency')->getConfigAllowCurrencies();
@@ -109,6 +121,10 @@ class Ess_M2ePro_Model_Ebay_Order_Item_Importer
         return round($price / $convertRate, 2);
     }
 
+    /**
+     * @param array $itemData
+     * @return array
+     */
     private function getNewProductImages(array $itemData)
     {
         if (count($itemData['pictureUrl']) == 0) {
@@ -156,23 +172,19 @@ class Ess_M2ePro_Model_Ebay_Order_Item_Importer
         if (!(@is_dir($destinationFolder) || @mkdir($destinationFolder, 0777, true))) {
             // M2ePro_TRANSLATIONS
             // Unable to create directory '%directory%'.
-            throw new Exception("Unable to create directory '{$destinationFolder}'.");
+            throw new Ess_M2ePro_Model_Exception("Unable to create directory '{$destinationFolder}'.");
         }
 
         return $destinationFolder;
     }
 
-    // ########################################
+    //########################################
 
     public function downloadImage($url, $imagePath)
     {
-        // Prepare image file
-        // ---------
         $fileHandler = fopen($imagePath, 'w+');
-        // ---------
+        // ---------------------------------------
 
-        // Send request
-        // ---------
         $curlHandler = curl_init();
         curl_setopt($curlHandler, CURLOPT_URL, $url);
 
@@ -186,19 +198,16 @@ class Ess_M2ePro_Model_Ebay_Order_Item_Importer
         curl_close($curlHandler);
 
         fclose($fileHandler);
-        // ---------
+        // ---------------------------------------
 
-        // Check if download was successful
-        // ---------
         $imageInfo = is_file($imagePath) ? getimagesize($imagePath) : NULL;
 
         if (empty($imageInfo)) {
             // M2ePro_TRANSLATIONS
             // Image %url% was not downloaded.
-            throw new Exception("Image {$url} was not downloaded.");
+            throw new Ess_M2ePro_Model_Exception("Image {$url} was not downloaded.");
         }
-        // ---------
     }
 
-    // ########################################
+    //########################################
 }

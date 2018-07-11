@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -13,28 +15,23 @@ class Ess_M2ePro_Model_Order_Shipment_Handler
     const HANDLE_RESULT_SKIPPED   = 0;
     const HANDLE_RESULT_SUCCEEDED = 1;
 
+    //########################################
+
     public static function factory($component)
     {
         $handler = null;
 
         switch ($component) {
-            case Ess_M2ePro_Helper_Component_Buy::NICK:
-                $handler = Mage::getModel('M2ePro/Order_Shipment_Handler');
-                break;
             case Ess_M2ePro_Helper_Component_Amazon::NICK:
                 $handler = Mage::getModel('M2ePro/Amazon_Order_Shipment_Handler');
                 break;
             case Ess_M2ePro_Helper_Component_Ebay::NICK:
                 $handler = Mage::getModel('M2ePro/Ebay_Order_Shipment_Handler');
                 break;
-
-            case Ess_M2ePro_Helper_Component_Play::NICK:
-                $handler = Mage::getModel('M2ePro/Play_Order_Shipment_Handler');
-                break;
         }
 
         if (!$handler) {
-            throw new LogicException('Shipment handler not found.');
+            throw new Ess_M2ePro_Model_Exception_Logic('Shipment handler not found.');
         }
 
         return $handler;
@@ -42,7 +39,7 @@ class Ess_M2ePro_Model_Order_Shipment_Handler
 
     public function handle(Ess_M2ePro_Model_Order $order, Mage_Sales_Model_Order_Shipment $shipment)
     {
-        $trackingDetails = $this->getTrackingDetails($shipment);
+        $trackingDetails = $this->getTrackingDetails($order, $shipment);
 
         if (!$order->getChildObject()->canUpdateShippingStatus($trackingDetails)) {
             return self::HANDLE_RESULT_SKIPPED;
@@ -53,7 +50,7 @@ class Ess_M2ePro_Model_Order_Shipment_Handler
             : self::HANDLE_RESULT_FAILED;
     }
 
-    protected function getTrackingDetails(Mage_Sales_Model_Order_Shipment $shipment)
+    protected function getTrackingDetails(Ess_M2ePro_Model_Order $order, Mage_Sales_Model_Order_Shipment $shipment)
     {
         $track = $shipment->getTracksCollection()->getLastItem();
         $trackingDetails = array();
@@ -61,19 +58,27 @@ class Ess_M2ePro_Model_Order_Shipment_Handler
         $number = trim($track->getData('number'));
 
         if (!empty($number)) {
-            $carrierCode = trim($track->getData('carrier_code'));
 
-            if (strtolower($carrierCode) == 'dhlint') {
-                $carrierCode = 'dhl';
+            $carrierCode = $carrierTitle = trim($track->getData('carrier_code'));
+
+            $carrier = Mage::getSingleton('shipping/config')->getCarrierInstance($carrierCode, $order->getStoreId());
+
+            if ($carrier) {
+                $carrierTitle = $carrier->getConfigData('title');
+            } elseif ($track->getData('title')) {
+                $carrierTitle = $track->getData('title');
             }
 
             $trackingDetails = array(
-                'carrier_title'   => trim($track->getData('title')),
                 'carrier_code'    => $carrierCode,
+                'carrier_title'   => $carrierTitle,
+                'shipping_method' => trim($track->getData('title')),
                 'tracking_number' => (string)$number
             );
         }
 
         return $trackingDetails;
     }
+
+    //########################################
 }

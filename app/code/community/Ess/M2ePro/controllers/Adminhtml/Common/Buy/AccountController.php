@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
     extends Ess_M2ePro_Controller_Adminhtml_Common_MainController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
@@ -19,22 +21,26 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
             ->setCanLoadExtJs(true)
             ->addJs('M2ePro/Common/Buy/AccountHandler.js');
 
+        $this->_initPopUp();
+
+        $this->setPageHelpLink(Ess_M2ePro_Helper_Component_Buy::NICK, 'Accounts');
+
         return $this;
     }
 
     protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/configuration/account');
+        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/configuration');
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
         return $this->_redirect('*/adminhtml_common_account/index');
     }
 
-    //#############################################
+    //########################################
 
     public function newAction()
     {
@@ -44,14 +50,20 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
     public function editAction()
     {
         $id = $this->getRequest()->getParam('id');
-        $model = Mage::helper('M2ePro/Component_Buy')->getModel('Account')->load($id);
 
-        if ($id && !$model->getId()) {
+        /** @var Ess_M2ePro_Model_Account $account */
+        $account = Mage::helper('M2ePro/Component_Buy')->getModel('Account')->load($id);
+
+        if ($id && !$account->getId()) {
             $this->_getSession()->addError(Mage::helper('M2ePro')->__('Account does not exist.'));
             return $this->indexAction();
         }
 
-        Mage::helper('M2ePro/Data_Global')->setValue('temp_data', $model);
+        if ($id) {
+            Mage::helper('M2ePro/Data_Global')->setValue('license_message', $this->getLicenseMessage($account));
+        }
+
+        Mage::helper('M2ePro/Data_Global')->setValue('temp_data', $account);
 
         $this->_initAction()
             ->_addLeft($this->getLayout()->createBlock('M2ePro/adminhtml_common_buy_account_edit_tabs'))
@@ -59,7 +71,7 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
             ->renderLayout();
     }
 
-    //#############################################
+    //########################################
 
     public function saveAction()
     {
@@ -70,29 +82,26 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
         $id = $this->getRequest()->getParam('id');
 
         // Base prepare
-        //--------------------
+        // ---------------------------------------
         $data = array();
-        //--------------------
+        // ---------------------------------------
 
         // tab: general
-        //--------------------
+        // ---------------------------------------
         $keys = array(
             'title',
             'web_login',
-            'ftp_login',
-            'ftp_inventory_access',
-            'ftp_orders_access',
-            'ftp_new_sku_access'
+            'ftp_login'
         );
         foreach ($keys as $key) {
             if (isset($post[$key])) {
                 $data[$key] = $post[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // tab: 3rd party listings
-        //--------------------
+        // ---------------------------------------
         $keys = array(
             'related_store_id',
             'other_listings_synchronization',
@@ -104,10 +113,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                 $data[$key] = $post[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // Mapping
-        //--------------------
+        // ---------------------------------------
         $tempData = array();
         $keys = array(
             'mapping_general_id_mode',
@@ -116,11 +125,7 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
 
             'mapping_sku_mode',
             'mapping_sku_priority',
-            'mapping_sku_attribute',
-
-            'mapping_title_mode',
-            'mapping_title_priority',
-            'mapping_title_attribute'
+            'mapping_sku_attribute'
         );
         foreach ($keys as $key) {
             if (isset($post[$key])) {
@@ -154,34 +159,15 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
             }
         }
 
-        $temp1 = Ess_M2ePro_Model_Buy_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_DEFAULT;
-        $temp2 = Ess_M2ePro_Model_Buy_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_CUSTOM_ATTRIBUTE;
-        if (isset($tempData['mapping_title_mode']) &&
-            ($tempData['mapping_title_mode'] == $temp1 ||
-                $tempData['mapping_title_mode'] == $temp2)) {
-            $mappingSettings['title']['mode'] = (int)$tempData['mapping_title_mode'];
-            $mappingSettings['title']['priority'] = (int)$tempData['mapping_title_priority'];
-            $mappingSettings['title']['attribute'] = (string)$tempData['mapping_title_attribute'];
-        }
-
-        $data['other_listings_mapping_settings'] = json_encode($mappingSettings);
-        //--------------------
+        $data['other_listings_mapping_settings'] = Mage::helper('M2ePro')->jsonEncode($mappingSettings);
+        // ---------------------------------------
 
         // tab: orders
-        //--------------------
-        $keys = array(
-            'orders_mode'
-        );
-        foreach ($keys as $key) {
-            if (isset($post[$key])) {
-                $data[$key] = $post[$key];
-            }
-        }
-
+        // ---------------------------------------
         $data['magento_orders_settings'] = array();
 
         // m2e orders settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'listing';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -196,10 +182,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // 3rd party orders settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'listing_other';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -215,10 +201,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // order number settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'number';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -235,10 +221,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                 $data['magento_orders_settings'][$tempKey]['prefix'][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // tax settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'tax';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -251,10 +237,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // customer settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'customer';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -283,10 +269,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                 $data['magento_orders_settings'][$tempKey]['notifications'][$key] = true;
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // status mapping settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'status_mapping';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -302,10 +288,10 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // invoice/shipment settings
-        //--------------------
+        // ---------------------------------------
         $temp = Ess_M2ePro_Model_Buy_Account::MAGENTO_ORDERS_INVOICE_MODE_YES;
         $data['magento_orders_settings']['invoice_mode'] = $temp;
         $temp = Ess_M2ePro_Model_Buy_Account::MAGENTO_ORDERS_SHIPMENT_MODE_YES;
@@ -324,64 +310,60 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                 $data['magento_orders_settings']['shipment_mode'] = $temp;
             }
         }
-        //--------------------
+        // ---------------------------------------
 
-        //--------------------
-        $data['magento_orders_settings'] = json_encode($data['magento_orders_settings']);
-        //--------------------
+        // ---------------------------------------
+        $data['magento_orders_settings'] = Mage::helper('M2ePro')->jsonEncode($data['magento_orders_settings']);
+        // ---------------------------------------
 
         $isEdit = !is_null($id);
 
         // Add or update model
-        //--------------------
+        // ---------------------------------------
         $model = Mage::helper('M2ePro/Component_Buy')->getModel('Account');
         is_null($id) && $model->setData($data);
         !is_null($id) && $model->loadInstance($id)->addData($data);
         $oldData = $model->getOrigData();
         $id = $model->save()->getId();
 
-        //--------------------
+        // ---------------------------------------
 
         $model->getChildObject()->setSetting(
             'other_listings_move_settings', 'synch', $post['other_listings_move_synch']
         );
         $model->getChildObject()->save();
 
-        //--------------------
+        // ---------------------------------------
 
         try {
 
             // Add or update server
-            //--------------------
+            // ---------------------------------------
 
             /** @var $accountObj Ess_M2ePro_Model_Account */
             $accountObj = $model;
-            if (!$accountObj->isLockedObject('server_synchronize')) {
-                $dispatcherObject = Mage::getModel('M2ePro/Connector_Buy_Dispatcher');
+            if (!$accountObj->isSetProcessingLock('server_synchronize')) {
+                $dispatcherObject = Mage::getModel('M2ePro/Buy_Connector_Dispatcher');
 
                 if (!$isEdit) {
-
-                    Mage::helper('M2ePro/Module_License')->setTrial(Ess_M2ePro_Helper_Component_Buy::NICK);
 
                     $params = array(
                         'title' => $post['title'],
                         'web_login' => $post['web_login'],
                         'web_password' => $post['web_password'],
                         'ftp_login' => $post['ftp_login'],
-                        'ftp_password' => $post['ftp_password'],
-                        'ftp_new_sku_access' => $post['ftp_new_sku_access'],
-                        'ftp_inventory_access' => $post['ftp_inventory_access'],
-                        'ftp_orders_access' => $post['ftp_orders_access']
+                        'ftp_password' => $post['ftp_password']
                     );
-                    $dispatcherObject->processConnector('account', 'add' ,'entityRequester', $params, $id);
+
+                    $connectorObj = $dispatcherObject->getConnector('account', 'add' ,'entityRequester',
+                                                                    $params, $id);
+                    $dispatcherObject->process($connectorObj);
+
                 } else {
                     $newData = array(
                         'title' => $post['title'],
                         'web_login' => $post['web_login'],
-                        'ftp_login' => $post['ftp_login'],
-                        'ftp_new_sku_access' => $post['ftp_new_sku_access'],
-                        'ftp_inventory_access' => $post['ftp_inventory_access'],
-                        'ftp_orders_access' => $post['ftp_orders_access']
+                        'ftp_login' => $post['ftp_login']
                     );
 
                     if (!empty($post['web_password'])) {
@@ -395,12 +377,14 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
                     $params = array_diff_assoc($newData, $oldData);
 
                     if (!empty($params)) {
-                        $dispatcherObject->processConnector('account', 'update' ,'entityRequester', $params, $id);
+                        $connectorObj = $dispatcherObject->getConnector('account', 'update' ,'entityRequester',
+                                                                        $params, $id);
+                        $dispatcherObject->process($connectorObj);
                     }
                 }
             }
 
-            //--------------------
+            // ---------------------------------------
 
         } catch (Exception $exception) {
 
@@ -417,7 +401,7 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
             return $this->indexAction();
         }
 
-        //--------------------
+        // ---------------------------------------
 
         $this->_getSession()->addSuccess(Mage::helper('M2ePro')->__('Account was successfully saved'));
 
@@ -438,7 +422,7 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
         $this->_forward('delete','adminhtml_common_account');
     }
 
-    //#############################################
+    //########################################
 
     public function checkAuthAction()
     {
@@ -461,10 +445,12 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
 
             try {
 
-                $dispatcherObject = Mage::getModel('M2ePro/Connector_Buy_Dispatcher');
-                $status = $dispatcherObject->processVirtual('account','check',$commandName,$params,'status');
+                $dispatcherObject = Mage::getModel('M2ePro/Buy_Connector_Dispatcher');
+                $connectorObj = $dispatcherObject->getVirtualConnector('account','check',$commandName,
+                                                                       $params,'status');
 
-                $result['result'] = $status;
+                $dispatcherObject->process($connectorObj);
+                $result['result'] = $connectorObj->getResponseData();
 
             } catch (Exception $exception) {
                 $result['result'] = false;
@@ -472,8 +458,44 @@ class Ess_M2ePro_Adminhtml_Common_Buy_AccountController
             }
         }
 
-        return $this->getResponse()->setBody(json_encode($result));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($result));
     }
 
-    //#############################################
+    //########################################
+
+    private function getLicenseMessage(Ess_M2ePro_Model_Account $account)
+    {
+        try {
+            $dispatcherObject = Mage::getModel('M2ePro/M2ePro_Connector_Dispatcher');
+            $connectorObj = $dispatcherObject->getVirtualConnector('account','get','info', array(
+                'account' => $account->getChildObject()->getServerHash(),
+                'channel' => Ess_M2ePro_Helper_Component_Buy::NICK,
+            ));
+
+            $dispatcherObject->process($connectorObj);
+            $response = $connectorObj->getResponseData();
+        } catch (Exception $e) {
+            return '';
+        }
+
+        if (!isset($response['info']['status']) || empty($response['info']['note'])) {
+            return '';
+        }
+
+        $status = (bool)$response['info']['status'];
+        $note   = $response['info']['note'];
+
+        if ($status) {
+            return 'MagentoMessageObj.addNotice(\''.$note.'\');';
+        }
+
+        $errorMessage = Mage::helper('M2ePro')->__(
+            'Work with this Account is currently unavailable for the following reason: <br/> %error_message%',
+            array('error_message' => $note)
+        );
+
+        return 'MagentoMessageObj.addError(\''.$errorMessage.'\');';
+    }
+
+    //########################################
 }

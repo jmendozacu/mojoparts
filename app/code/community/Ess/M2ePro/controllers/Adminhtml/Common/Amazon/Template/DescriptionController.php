@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
     extends Ess_M2ePro_Controller_Adminhtml_Common_MainController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
@@ -16,6 +18,8 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
              ->_title(Mage::helper('M2ePro')->__('Description Policies'));
 
         $this->getLayout()->getBlock('head')
+                ->addJs('M2ePro/Template/EditHandler.js')
+                ->addJs('M2ePro/Common/Amazon/Template/EditHandler.js')
                 ->addJs('M2ePro/Common/Amazon/Template/Description/Handler.js')
                 ->addJs('M2ePro/Common/Amazon/Template/Description/DefinitionHandler.js')
                 ->addJs('M2ePro/Common/Amazon/Template/Description/Category/ChooserHandler.js')
@@ -32,21 +36,23 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
 
         $this->_initPopUp();
 
+        $this->setPageHelpLink(NULL, NULL, "x/HoMVAQ");
+
         return $this;
     }
 
     protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/templates/description');
+        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/configuration');
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
-        $this->_initAction()
-             ->_addContent($this->getLayout()->createBlock('M2ePro/adminhtml_common_amazon_template_description'))
-             ->renderLayout();
+        return $this->_redirect('*/adminhtml_common_template/index', array(
+            'channel' => Ess_M2ePro_Helper_Component_Amazon::NICK
+        ));
     }
 
     public function gridAction()
@@ -57,7 +63,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function newAction()
     {
@@ -99,7 +105,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         $id = $this->getRequest()->getParam('id');
 
         // Saving general data
-        //----------------------------
+        // ---------------------------------------
         $keys = array(
             'title',
             'marketplace_id',
@@ -112,15 +118,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
             'registered_parameter',
 
             'worldwide_id_mode',
-            'worldwide_id_custom_attribute',
-
-            'item_package_quantity_mode',
-            'item_package_quantity_custom_value',
-            'item_package_quantity_custom_attribute',
-
-            'number_of_items_mode',
-            'number_of_items_custom_value',
-            'number_of_items_custom_attribute'
+            'worldwide_id_custom_attribute'
         );
 
         $dataForAdd = array();
@@ -139,12 +137,12 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         }
 
         $descriptionTemplate->addData($dataForAdd)->save();
-        //----------------------------
+        // ---------------------------------------
 
         $id = $descriptionTemplate->getId();
 
         // Saving definition info
-        //----------------------------
+        // ---------------------------------------
         $keys = array(
             'title_mode',
             'title_template',
@@ -160,6 +158,14 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
             'manufacturer_part_number_mode',
             'manufacturer_part_number_custom_value',
             'manufacturer_part_number_custom_attribute',
+
+            'item_package_quantity_mode',
+            'item_package_quantity_custom_value',
+            'item_package_quantity_custom_attribute',
+
+            'number_of_items_mode',
+            'number_of_items_custom_value',
+            'number_of_items_custom_attribute',
 
             'item_dimensions_volume_mode',
             'item_dimensions_volume_length_custom_value',
@@ -213,6 +219,9 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
             'image_main_mode',
             'image_main_attribute',
 
+            'image_variation_difference_mode',
+            'image_variation_difference_attribute',
+
             'gallery_images_mode',
             'gallery_images_attribute',
             'gallery_images_limit',
@@ -231,27 +240,29 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
 
         $dataForAdd['template_description_id'] = $id;
 
-        $dataForAdd['target_audience'] = json_encode(array_filter($dataForAdd['target_audience']));
-        $dataForAdd['search_terms']    = json_encode(array_filter($dataForAdd['search_terms']));
-        $dataForAdd['bullet_points']   = json_encode(array_filter($dataForAdd['bullet_points']));
+        $helper = Mage::helper('M2ePro');
+        $dataForAdd['target_audience'] = $helper->jsonEncode(array_filter($dataForAdd['target_audience']));
+        $dataForAdd['search_terms']    = $helper->jsonEncode(array_filter($dataForAdd['search_terms']));
+        $dataForAdd['bullet_points']   = $helper->jsonEncode(array_filter($dataForAdd['bullet_points']));
 
         /* @var $descriptionDefinition Ess_M2ePro_Model_Amazon_Template_Description_Definition */
         $descriptionDefinition = Mage::getModel('M2ePro/Amazon_Template_Description_Definition');
         $descriptionDefinition->load($id);
         $descriptionDefinition->addData($dataForAdd)->save();
-        //----------------------------
+        // ---------------------------------------
 
         /** @var Ess_M2ePro_Model_Amazon_Template_Description $amazonDescriptionTemplate */
         $amazonDescriptionTemplate = $descriptionTemplate->getChildObject();
+        $amazonDescriptionTemplate->setDefinitionTemplate($descriptionDefinition);
 
         // Saving specifics info
-        //----------------------------
+        // ---------------------------------------
         foreach ($amazonDescriptionTemplate->getSpecifics(true) as $specific) {
             $specific->deleteInstance();
         }
 
         $specifics = !empty($post['specifics']['encoded_data']) ? $post['specifics']['encoded_data'] : '';
-        $specifics = (array)json_decode($specifics, true);
+        $specifics = (array)Mage::helper('M2ePro')->jsonDecode($specifics);
 
         $this->sortSpecifics($specifics, $post['general']['product_data_nick'], $post['general']['marketplace_id']);
 
@@ -264,7 +275,9 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
             $specificInstance = Mage::getModel('M2ePro/Amazon_Template_Description_Specific');
 
             $type       = isset($specificData['type']) ? $specificData['type'] : '';
-            $attributes = isset($specificData['attributes']) ? json_encode($specificData['attributes']) : '[]';
+            $isRequired = isset($specificData['is_required']) ? $specificData['is_required'] : 0;
+            $attributes = isset($specificData['attributes'])
+                ? Mage::helper('M2ePro')->jsonEncode($specificData['attributes']) : '[]';
 
             $recommendedValue = $specificData['mode'] == $specificInstance::DICTIONARY_MODE_RECOMMENDED_VALUE
                 ? $specificData['recommended_value'] : '';
@@ -279,6 +292,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
                 'template_description_id' => $id,
                 'xpath'                   => $xpath,
                 'mode'                    => $specificData['mode'],
+                'is_required'             => $isRequired,
                 'recommended_value'       => $recommendedValue,
                 'custom_value'            => $customValue,
                 'custom_attribute'        => $customAttribute,
@@ -287,16 +301,16 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
             ));
             $specificInstance->save();
         }
-        //----------------------------
+        // ---------------------------------------
 
         // Is Need Synchronize
-        //----------------------------
+        // ---------------------------------------
         $newData = $amazonDescriptionTemplate->getDataSnapshot();
         $amazonDescriptionTemplate->setSynchStatusNeed($newData, $oldData);
-        //----------------------------
+        // ---------------------------------------
 
         // Run Processor for Variation Relation Parents
-        //----------------------------
+        // ---------------------------------------
         if ($amazonDescriptionTemplate->getResource()->isDifferent($newData, $oldData)) {
 
             /** @var Ess_M2ePro_Model_Mysql4_Listing_Product_Collection $listingProductCollection */
@@ -317,7 +331,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
 
             $massProcessor->execute();
         }
-        //----------------------------
+        // ---------------------------------------
 
         $this->_getSession()->addSuccess(Mage::helper('M2ePro')->__('Policy was successfully saved'));
         return $this->_redirectUrl(Mage::helper('M2ePro')->getBackUrl('list',array(),array('edit'=>array('id'=>$id))));
@@ -392,7 +406,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         uksort($specifics, 'callback');
     }
 
-    //---------------------------------------------
+    // ---------------------------------------
 
     public function deleteAction()
     {
@@ -425,7 +439,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         $this->_redirect('*/*/index');
     }
 
-    //#############################################
+    //########################################
 
     public function getCategoryChooserHtmlAction()
     {
@@ -434,33 +448,29 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         $editBlock = $this->getLayout()->createBlock($blockName);
         $editBlock->setMarketplaceId($this->getRequest()->getPost('marketplace_id'));
 
-        $productDataNick = $this->getRequest()->getPost('product_data_nick');
-        $browseNodeId    = $this->getRequest()->getPost('browsenode_id');
-        $categoryPath    = $this->getRequest()->getPost('category_path');
+        $browseNodeId = $this->getRequest()->getPost('browsenode_id');
+        $categoryPath = $this->getRequest()->getPost('category_path');
 
         $recentlySelectedCategories = Mage::helper('M2ePro/Component_Amazon_Category')->getRecent(
             $this->getRequest()->getPost('marketplace_id'),
-            array('product_data_nick' => $productDataNick,
-                  'browsenode_id'     => $browseNodeId,
-                  'path'              => $categoryPath)
+            array('browsenode_id' => $browseNodeId, 'path' => $categoryPath)
         );
 
         if (empty($recentlySelectedCategories)) {
             Mage::helper('M2ePro/Data_Global')->setValue('category_chooser_hide_recent', true);
         }
 
-        if ($productDataNick && $browseNodeId && $categoryPath) {
+        if ($browseNodeId && $categoryPath) {
             $editBlock->setSelectedCategory(array(
-                                                'productDataNick' => $productDataNick,
-                                                'browseNodeId'    => $browseNodeId,
-                                                'categoryPath'    => $categoryPath
+                                                'browseNodeId' => $browseNodeId,
+                                                'categoryPath' => $categoryPath
                                             ));
         }
 
         $this->getResponse()->setBody($editBlock->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function getCategoryInfoByBrowseNodeIdAction()
     {
@@ -486,34 +496,16 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
 
         $dbCategoryPath = str_replace(' > ', '>', $this->getRequest()->getPost('category_path'));
 
-        // -- check by full match [browsenode_id + product_data + path]
         foreach ($tempCategories as $category) {
 
-            if ($category['product_data_nick'] == $this->getRequest()->getPost('product_data_nick') &&
-                $category['path'] .'>'. $category['title'] == $dbCategoryPath) {
-
-                return $this->getResponse()->setBody(json_encode($category));
+            $tempCategoryPath = !is_null($category['path']) ? $category['path'] .'>'. $category['title']
+                                                            : $category['title'];
+            if ($tempCategoryPath == $dbCategoryPath) {
+                return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($category));
             }
         }
 
-        // -- check by partial match [browsenode_id + product_data]
-        foreach ($tempCategories as $category) {
-
-            if ($category['product_data_nick'] == $this->getRequest()->getPost('product_data_nick')) {
-                return $this->getResponse()->setBody(json_encode($category));
-            }
-        }
-
-        // -- check by partial match [browsenode_id + path]
-        foreach ($tempCategories as $category) {
-
-            if ($category['path'] .'>'. $category['title'] == $dbCategoryPath) {
-                $category['partial_match'] = true;
-                return $this->getResponse()->setBody(json_encode($category));
-            }
-        }
-
-        return $this->getResponse()->setBody(null);
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($tempCategories[0]));
     }
 
     public function getCategoryInfoByCategoryIdAction()
@@ -533,7 +525,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         }
 
         $this->formatCategoryRow($category);
-        return $this->getResponse()->setBody(json_encode($category));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($category));
     }
 
     public function getChildCategoriesAction()
@@ -553,18 +545,22 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         $queryStmt = $select->query();
         $tempCategories = array();
 
+        $sortIndex = 0;
         while ($row = $queryStmt->fetch()) {
+
             $this->formatCategoryRow($row);
-            $tempCategories[] = $row;
+            $this->isItOtherCategory($row) ? $tempCategories[10000] = $row
+                                           : $tempCategories[$sortIndex++] = $row;
         }
 
-        return $this->getResponse()->setBody(json_encode($tempCategories));
+        ksort($tempCategories);
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array_values($tempCategories)));
     }
 
     public function searchCategoryAction()
     {
         if (!$keywords = $this->getRequest()->getParam('query', '')) {
-            $this->getResponse()->setBody(json_encode(array()));
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array()));
             return;
         }
 
@@ -573,7 +569,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
 
         $select = $connRead->select()
             ->from(Mage::getSingleton('core/resource')->getTableName('m2epro_amazon_dictionary_category'))
-            ->where('is_listable = 1')
+            ->where('is_leaf = 1')
             ->where('marketplace_id = ?', $this->getRequest()->getParam('marketplace_id'));
 
         $where = array();
@@ -601,24 +597,178 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
             $categories[] = $row;
         }
 
-        $this->getResponse()->setBody(json_encode($categories));
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($categories));
     }
 
     public function saveRecentCategoryAction()
     {
-        $marketplaceId   = $this->getRequest()->getPost('marketplace_id');
-        $productDataNick = $this->getRequest()->getPost('product_data_nick');
-        $browseNodeId    = $this->getRequest()->getPost('browsenode_id');
-        $categoryPath    = $this->getRequest()->getPost('category_path');
+        $marketplaceId = $this->getRequest()->getPost('marketplace_id');
+        $browseNodeId  = $this->getRequest()->getPost('browsenode_id');
+        $categoryPath  = $this->getRequest()->getPost('category_path');
 
-        if (!$productDataNick || !$browseNodeId || !$categoryPath) {
-            return $this->getResponse()->setBody(json_encode(array('result' => false)));
+        if (!$marketplaceId || !$browseNodeId || !$categoryPath) {
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('result' => false)));
         }
 
         Mage::helper('M2ePro/Component_Amazon_Category')->addRecent(
-            $marketplaceId, $productDataNick, $browseNodeId, $categoryPath
+            $marketplaceId, $browseNodeId, $categoryPath
         );
-        return $this->getResponse()->setBody(json_encode(array('result' => true)));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('result' => true)));
+    }
+
+    public function getAvailableProductTypesAction()
+    {
+        $marketplaceId = (int)$this->getRequest()->getPost('marketplace_id');
+        $browsenodeId  = $this->getRequest()->getPost('browsenode_id');
+
+        $resource = Mage::getSingleton('core/resource');
+        $tableName = $resource->getTableName('m2epro_amazon_dictionary_category_product_data');
+
+        $queryStmt = $resource->getConnection('core_read')
+               ->select()
+               ->from($tableName)
+               ->where('marketplace_id = ?', $marketplaceId)
+               ->where('browsenode_id = ?', $browsenodeId)
+               ->query();
+
+        $cachedProductTypes = array();
+
+        while ($row = $queryStmt->fetch()) {
+
+            $cachedProductTypes[$row['product_data_nick']] = array(
+                'product_data_nick'   => $row['product_data_nick'],
+                'is_applicable'       => $row['is_applicable'],
+                'required_attributes' => $row['required_attributes']
+            );
+        }
+
+        $model = Mage::getModel('M2ePro/Amazon_Marketplace_Details');
+        $model->setMarketplaceId($marketplaceId);
+
+        $allAvailableProductTypes = $model->getProductData();
+        $shouldBeUpdatedProductTypes = array_diff(array_keys($allAvailableProductTypes),
+                                                  array_keys($cachedProductTypes));
+
+        if (count($shouldBeUpdatedProductTypes) > 0) {
+
+            $result = $this->updateProductDataNicksInfo($marketplaceId, $browsenodeId, $shouldBeUpdatedProductTypes);
+            $cachedProductTypes = array_merge($cachedProductTypes, $result);
+        }
+
+        foreach ($cachedProductTypes as $nick => &$productTypeInfo) {
+
+            if (!$productTypeInfo['is_applicable']) {
+                unset($cachedProductTypes[$nick]);
+                continue;
+            }
+
+            $productTypeInfo['title'] = isset($allAvailableProductTypes[$nick])
+                ? $allAvailableProductTypes[$nick]['title'] : $nick;
+
+            $productTypeInfo['group'] = isset($allAvailableProductTypes[$nick])
+                ? $allAvailableProductTypes[$nick]['group'] : 'Other';
+
+            $productTypeInfo['required_attributes'] = (array)Mage::helper('M2ePro')->jsonDecode(
+                $productTypeInfo['required_attributes']
+            );
+        }
+
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
+            'product_data' => $cachedProductTypes,
+            'grouped_data' => $this->getGroupedProductDataNicksInfo($cachedProductTypes),
+            'recent_data'  => $this->getRecentProductDataNicksInfo($marketplaceId, $cachedProductTypes)
+         )));
+    }
+
+    private function updateProductDataNicksInfo($marketplaceId, $browsenodeId, $productDataNicks)
+    {
+        $marketplaceNativeId = Mage::helper('M2ePro/Component_Amazon')
+               ->getCachedObject('Marketplace', $marketplaceId)
+               ->getNativeId();
+
+        $dispatcherObject = Mage::getModel('M2ePro/Amazon_Connector_Dispatcher');
+        $connectorObj = $dispatcherObject->getVirtualConnector('category','get','productsDataInfo',
+                                                               array(
+                                                                   'marketplace'        => $marketplaceNativeId,
+                                                                   'browsenode_id'      => $browsenodeId,
+                                                                   'product_data_nicks' => $productDataNicks
+                                                               ));
+        $dispatcherObject->process($connectorObj);
+        $response = $connectorObj->getResponseData();
+
+        if ($response === false || empty($response['info'])) {
+            return array();
+        }
+
+        $insertsData = array();
+        foreach ($response['info'] as $dataNickKey => $info) {
+
+            $insertsData[$dataNickKey] = array(
+                'marketplace_id'      => $marketplaceId,
+                'browsenode_id'       => $browsenodeId,
+                'product_data_nick'   => $dataNickKey,
+                'is_applicable'       => (int)$info['applicable'],
+                'required_attributes' => Mage::helper('M2ePro')->jsonEncode($info['required_attributes'])
+            );
+        }
+
+        $resource = Mage::getSingleton('core/resource');
+        $tableName = $resource->getTableName('m2epro_amazon_dictionary_category_product_data');
+
+        $resource->getConnection('core_write')->insertMultiple($tableName, $insertsData);
+
+        return $insertsData;
+    }
+
+    private function getGroupedProductDataNicksInfo(array $cachedProductTypes)
+    {
+        $groupedData = array();
+
+        foreach ($cachedProductTypes as $nick => $productTypeInfo) {
+            $groupedData[$productTypeInfo['group']][$productTypeInfo['title']] = $productTypeInfo;
+        }
+
+        ksort($groupedData);
+        foreach ($groupedData as $group => &$productTypes) {
+            ksort($productTypes);
+        }
+
+        return $groupedData;
+    }
+
+    private function getRecentProductDataNicksInfo($marketplaceId, array $cachedProductTypes)
+    {
+        $recentProductDataNicks = array();
+
+        foreach (Mage::helper('M2ePro/Component_Amazon_ProductData')->getRecent($marketplaceId) as $nick) {
+
+            if (!isset($cachedProductTypes[$nick]) || !$cachedProductTypes[$nick]['is_applicable']) {
+                continue;
+            }
+
+            $recentProductDataNicks[$nick] = array(
+                'title'               => $cachedProductTypes[$nick]['title'],
+                'group'               => $cachedProductTypes[$nick]['group'],
+                'product_data_nick'   => $nick,
+                'is_applicable'       => 1,
+                'required_attributes' => $cachedProductTypes[$nick]['required_attributes']
+            );
+        }
+
+        return $recentProductDataNicks;
+    }
+
+    public function saveRecentProductDataNickAction()
+    {
+        $marketplaceId   = $this->getRequest()->getPost('marketplace_id');
+        $productDataNick = $this->getRequest()->getPost('product_data_nick');
+
+        if (!$marketplaceId || !$productDataNick) {
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('result' => false)));
+        }
+
+        Mage::helper('M2ePro/Component_Amazon_ProductData')->addRecent($marketplaceId, $productDataNick);
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('result' => true)));
     }
 
     public function getVariationThemesAction()
@@ -627,18 +777,26 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         $model->setMarketplaceId($this->getRequest()->getParam('marketplace_id'));
 
         $variationThemes = $model->getVariationThemes($this->getRequest()->getParam('product_data_nick'));
-        return $this->getResponse()->setBody(json_encode($variationThemes));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($variationThemes));
     }
 
-    //---------------------------------------------
+    // ---------------------------------------
 
     private function formatCategoryRow(&$row)
     {
-        $row['required_attributes'] = !is_null($row['required_attributes'])
-            ? (array)json_decode($row['required_attributes'], true) : array();
+        $row['product_data_nicks'] = !is_null($row['product_data_nicks'])
+            ? (array)Mage::helper('M2ePro')->jsonDecode($row['product_data_nicks']) : array();
     }
 
-    //#############################################
+    private function isItOtherCategory($row)
+    {
+        $parentTitle = explode('>', $row['path']);
+        $parentTitle = array_pop($parentTitle);
+
+        return preg_match("/^.* \({$parentTitle}\)$/i", $row['title']);
+    }
+
+    //########################################
 
     public function getAllSpecificsAction()
     {
@@ -651,18 +809,20 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
             ->where('product_data_nick = ?', $this->getRequest()->getParam('product_data_nick'))
             ->query()->fetchAll();
 
+        $helper = Mage::helper('M2ePro');
+
         $specifics = array();
         foreach ($tempSpecifics as $tempSpecific) {
 
-            $tempSpecific['values']             = (array)json_decode($tempSpecific['values'], true);
-            $tempSpecific['recommended_values'] = (array)json_decode($tempSpecific['recommended_values'], true);
-            $tempSpecific['params']             = (array)json_decode($tempSpecific['params'], true);
-            $tempSpecific['data_definition']    = (array)json_decode($tempSpecific['data_definition'], true);
+            $tempSpecific['values']             = (array)$helper->jsonDecode($tempSpecific['values']);
+            $tempSpecific['recommended_values'] = (array)$helper->jsonDecode($tempSpecific['recommended_values']);
+            $tempSpecific['params']             = (array)$helper->jsonDecode($tempSpecific['params']);
+            $tempSpecific['data_definition']    = (array)$helper->jsonDecode($tempSpecific['data_definition']);
 
             $specifics[$tempSpecific['specific_id']] = $tempSpecific;
         }
 
-        return $this->getResponse()->setBody(json_encode($specifics));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($specifics));
     }
 
     public function getAddSpecificsHtmlAction()
@@ -689,11 +849,13 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
         $blockName = 'M2ePro/adminhtml_common_amazon_template_description_category_specific_add_grid';
         $grid = $this->getLayout()->createBlock($blockName);
 
+        $helper = Mage::helper('M2ePro');
+
         $grid->setMarketplaceId($this->getRequest()->getParam('marketplace_id'));
         $grid->setProductDataNick($this->getRequest()->getParam('product_data_nick'));
         $grid->setCurrentXpath($this->getRequest()->getParam('current_indexed_xpath'));
-        $grid->setRenderedSpecifics((array)json_decode($this->getRequest()->getParam('rendered_specifics'), true));
-        $grid->setSelectedSpecifics((array)json_decode($this->getRequest()->getParam('selected_specifics'), true));
+        $grid->setRenderedSpecifics((array)$helper->jsonDecode($this->getRequest()->getParam('rendered_specifics')));
+        $grid->setSelectedSpecifics((array)$helper->jsonDecode($this->getRequest()->getParam('selected_specifics')));
         $grid->setOnlyDesired($this->getRequest()->getParam('only_desired'), false);
         $grid->setSearchQuery($this->getRequest()->getParam('query'));
 
@@ -719,8 +881,8 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_Template_DescriptionController
             }
         }
 
-        return $this->getResponse()->setBody(json_encode($attributes));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($attributes));
     }
 
-    //#############################################
+    //########################################
 }

@@ -1,14 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Block_Adminhtml_Synchronization_Log_Grid extends Ess_M2ePro_Block_Adminhtml_Log_Grid_Abstract
 {
     protected $viewComponentHelper = NULL;
 
-    // ####################################
+    //########################################
 
     public function __construct()
     {
@@ -20,14 +22,14 @@ abstract class Ess_M2ePro_Block_Adminhtml_Synchronization_Log_Grid extends Ess_M
         $channel = $this->getRequest()->getParam('channel');
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId(
             'synchronizationLogGrid' . (!is_null($task) ? $task : '') . ucfirst($channel)
         );
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('create_date');
         $this->setDefaultDir('DESC');
         $this->setSaveParametersInSession(true);
@@ -37,19 +39,19 @@ abstract class Ess_M2ePro_Block_Adminhtml_Synchronization_Log_Grid extends Ess_M
         !is_null($task) && $filters['task'] = $task;
         !is_null($task) && $filters['component_mode'] = $channel;
         $this->setDefaultFilter($filters);
-        //------------------------------
+        // ---------------------------------------
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareCollection()
     {
         // Get collection logs
-        //--------------------------------
+        // ---------------------------------------
         $collection = Mage::getModel('M2ePro/Synchronization_Log')->getCollection();
-        //--------------------------------
+        // ---------------------------------------
 
-        $channel = $this->getData('channel');
+        $channel = $this->getRequest()->getParam('channel');
         if (!empty($channel)) {
             $collection->getSelect()->where('component_mode = ?', $channel);
         } else {
@@ -58,22 +60,22 @@ abstract class Ess_M2ePro_Block_Adminhtml_Synchronization_Log_Grid extends Ess_M
                 ->where('component_mode IN(\'' . implode('\',\'', $components) . '\') OR component_mode IS NULL');
         }
 
-        if (isset($components) && in_array(Ess_M2ePro_Helper_Component_Ebay::NICK, $components)
-            && Mage::helper('M2ePro/View_Ebay')->isSimpleMode()) {
+        // some actions must be excluded
+        // ---------------------------------------
+        $allTitles = Mage::helper('M2ePro/Module_Log')->getActionsTitlesByClass('Synchronization_Log');
+        if (count($this->getActionTitles()) != count($allTitles)) {
 
-            $excludeTasks = array(
-                Ess_M2ePro_Model_Synchronization_Log::TASK_FEEDBACKS,
-                Ess_M2ePro_Model_Synchronization_Log::TASK_OTHER_LISTINGS
-            );
-            $collection->getSelect()->where('task NOT IN ('.implode(',', $excludeTasks).')');
+            $excludeTasks = array_diff($allTitles, $this->getActionTitles());
+            $collection->getSelect()->where('task NOT IN ('.implode(',', array_keys($excludeTasks)).')');
         }
+        // ---------------------------------------
 
         // we need sort by id also, because create_date may be same for some adjacents entries
-        //--------------------------------
+        // ---------------------------------------
         if ($this->getRequest()->getParam('sort', 'create_date') == 'create_date') {
             $collection->setOrder('id', $this->getRequest()->getParam('dir', 'DESC'));
         }
-        //--------------------------------
+        // ---------------------------------------
 
         // Set collection to grid
         $this->setCollection($collection);
@@ -106,7 +108,6 @@ abstract class Ess_M2ePro_Block_Adminhtml_Synchronization_Log_Grid extends Ess_M
         $this->addColumn('description', array(
             'header'    => Mage::helper('M2ePro')->__('Description'),
             'align'     => 'left',
-            //'width'     => '300px',
             'type'      => 'text',
             'string_limit' => 350,
             'index'     => 'description',
@@ -131,79 +132,19 @@ abstract class Ess_M2ePro_Block_Adminhtml_Synchronization_Log_Grid extends Ess_M
     protected function _prepareMassaction()
     {
         // Set massaction identifiers
-        //--------------------------------
+        // ---------------------------------------
         $this->setMassactionIdField('id');
         $this->getMassactionBlock()->setFormFieldName('ids');
-        //--------------------------------
+        // ---------------------------------------
     }
 
-    // ####################################
-
-    public function callbackDescription($value, $row, $column, $isExport)
-    {
-        $fullDescription = Mage::getModel('M2ePro/Log_Abstract')->decodeDescription($row->getData('description'));
-        $row->setData('description', $fullDescription);
-
-        $value = $column->getRenderer()->render($row);
-
-        preg_match_all('/href="([^"]*)"/', $fullDescription, $matches);
-
-        if (!count($matches[0])) {
-            return $this->prepareLongText($fullDescription, $value);
-        }
-
-        foreach ($matches[1] as $key => $href) {
-
-            preg_match_all('/route:([^;]*)/', $href, $routeMatch);
-            preg_match_all('/back:([^;]*)/', $href, $backMatch);
-            preg_match_all('/filter:([^;]*)/', $href, $filterMatch);
-            preg_match_all('/channel:([^;]*)/', $href, $channelMatch);
-
-            if (count($routeMatch[1]) == 0) {
-                $fullDescription = str_replace($matches[0][$key], '', $fullDescription);
-                $value = str_replace($matches[0][$key], '', $value);
-
-                continue;
-            }
-
-            $params = array();
-            if (count($backMatch[1]) > 0) {
-                $params['back'] = Mage::helper('M2ePro')->makeBackUrlParam($backMatch[1][$key]);
-            }
-            if (count($filterMatch[1]) > 0) {
-                $params['filter'] = base64_encode($filterMatch[1][$key]);
-            }
-            if (count($channelMatch[1]) > 0) {
-                $params['channel'] = $channelMatch[1][$key];
-            }
-
-            $url = $routeMatch[1][$key];
-            $fullDescription = str_replace($href, $this->getUrl($url, $params), $fullDescription);
-            $value = str_replace($href, $this->getUrl($url, $params), $value);
-        }
-
-        return $this->prepareLongText($fullDescription, $value);
-    }
-
-    protected function prepareLongText($fullText, $renderedText)
-    {
-        if (strlen($fullText) == strlen($renderedText)) {
-            return $renderedText;
-        }
-
-        $renderedText .= '&nbsp;(<a href="javascript:void(0)" onclick="LogHandlerObj.showFullText(this);">more</a>)
-                          <div style="display: none;"><br/>'.$fullText.'<br/><br/></div>';
-
-        return $renderedText;
-    }
-
-    // ####################################
+    //########################################
 
     public function getGridUrl()
     {
         return $this->getUrl('*/*/synchronizationGrid', array(
             '_current'=>true,
-            'channel' => $this->getData('channel')
+            'channel' => $this->getRequest()->getParam('channel')
         ));
     }
 
@@ -212,9 +153,5 @@ abstract class Ess_M2ePro_Block_Adminhtml_Synchronization_Log_Grid extends Ess_M
         return false;
     }
 
-    // ####################################
-
-    abstract protected function getActionTitles();
-
-    // ####################################
+    //########################################
 }

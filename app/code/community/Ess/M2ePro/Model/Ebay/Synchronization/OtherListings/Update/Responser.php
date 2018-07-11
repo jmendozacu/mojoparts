@@ -1,61 +1,75 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Update_Responser
-    extends Ess_M2ePro_Model_Connector_Ebay_Inventory_Get_ItemsResponser
+    extends Ess_M2ePro_Model_Ebay_Connector_Inventory_Get_ItemsResponser
 {
     protected $synchronizationLog = NULL;
 
-    // ########################################
+    //########################################
 
-    public function unsetProcessingLocks(Ess_M2ePro_Model_Processing_Request $processingRequest)
+    protected function processResponseMessages()
     {
-        parent::unsetProcessingLocks($processingRequest);
+        parent::processResponseMessages();
 
-        /** @var $lockItem Ess_M2ePro_Model_LockItem */
-        $lockItem = Mage::getModel('M2ePro/LockItem');
+        foreach ($this->getResponse()->getMessages()->getEntities() as $message) {
 
-        $tempNick = Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Update::LOCK_ITEM_PREFIX;
-        $tempNick .= '_'.$this->params['account_id'];
+            if (!$message->isError() && !$message->isWarning()) {
+                continue;
+            }
 
-        $lockItem->setNick($tempNick);
-        $lockItem->setMaxInactiveTime(Ess_M2ePro_Model_Processing_Request::MAX_LIFE_TIME_INTERVAL);
+            $logType = $message->isError() ? Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR
+                : Ess_M2ePro_Model_Log_Abstract::TYPE_WARNING;
 
-        $lockItem->remove();
-
-        $this->getAccount()->deleteObjectLocks(NULL, $processingRequest->getHash());
-        $this->getAccount()->deleteObjectLocks('synchronization', $processingRequest->getHash());
-        $this->getAccount()->deleteObjectLocks('synchronization_ebay', $processingRequest->getHash());
-        $this->getAccount()->deleteObjectLocks(
-            Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Update::LOCK_ITEM_PREFIX,
-            $processingRequest->getHash()
-        );
+            $this->getSynchronizationLog()->addMessage(
+                Mage::helper('M2ePro')->__($message->getText()),
+                $logType,
+                Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH
+            );
+        }
     }
 
-    public function eventFailedExecuting($message)
+    protected function isNeedProcessResponse()
     {
-        parent::eventFailedExecuting($message);
+        if (!parent::isNeedProcessResponse()) {
+            return false;
+        }
+
+        if ($this->getResponse()->getMessages()->hasErrorEntities()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    //########################################
+
+    public function failDetected($messageText)
+    {
+        parent::failDetected($messageText);
 
         $this->getSynchronizationLog()->addMessage(
-            Mage::helper('M2ePro')->__($message),
+            Mage::helper('M2ePro')->__($messageText),
             Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR,
             Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH
         );
     }
 
-    // ########################################
+    //########################################
 
-    protected function processResponseData($response)
+    protected function processResponseData()
     {
         try {
 
             /** @var $updatingModel Ess_M2ePro_Model_Ebay_Listing_Other_Updating */
             $updatingModel = Mage::getModel('M2ePro/Ebay_Listing_Other_Updating');
             $updatingModel->initialize($this->getAccount());
-            $updatingModel->processResponseData($response);
+            $updatingModel->processResponseData($this->getPreparedResponseData());
 
         } catch (Exception $exception) {
 
@@ -67,7 +81,7 @@ class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Update_Responser
         }
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -85,7 +99,7 @@ class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Update_Responser
         return $this->getObjectByParam('Marketplace','marketplace_id');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     protected function getSynchronizationLog()
     {
@@ -100,5 +114,5 @@ class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Update_Responser
         return $this->synchronizationLog;
     }
 
-    // ########################################
+    //########################################
 }

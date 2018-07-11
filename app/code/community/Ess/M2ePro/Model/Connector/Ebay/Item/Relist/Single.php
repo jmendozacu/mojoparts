@@ -1,13 +1,29 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Connector_Ebay_Item_Relist_Single
     extends Ess_M2ePro_Model_Connector_Ebay_Item_SingleAbstract
 {
-    // ########################################
+    //########################################
+
+    public function __construct(array $params = array(), Ess_M2ePro_Model_Listing_Product $listingProduct)
+    {
+        parent::__construct($params, $listingProduct);
+
+        $additionalData = $this->listingProduct->getAdditionalData();
+
+        if (isset($additionalData['add_to_schedule'])) {
+            unset($additionalData['add_to_schedule']);
+            $this->listingProduct->setSettings('additional_data', $additionalData)->save();
+        }
+    }
+
+    //########################################
 
     protected function getCommand()
     {
@@ -24,7 +40,7 @@ class Ess_M2ePro_Model_Connector_Ebay_Item_Relist_Single
         return Ess_M2ePro_Model_Listing_Product::ACTION_RELIST;
     }
 
-    // ########################################
+    //########################################
 
     protected function filterManualListingProduct()
     {
@@ -44,7 +60,7 @@ class Ess_M2ePro_Model_Connector_Ebay_Item_Relist_Single
             return false;
         }
 
-        if(!$this->listingProduct->getChildObject()->isSetCategoryTemplate()) {
+        if (!$this->listingProduct->getChildObject()->isSetCategoryTemplate()) {
 
             $message = array(
                 // M2ePro_TRANSLATIONS
@@ -73,7 +89,30 @@ class Ess_M2ePro_Model_Connector_Ebay_Item_Relist_Single
         return $this->buildRequestDataObject($data)->getData();
     }
 
-    //----------------------------------------
+    // ---------------------------------------
+
+    public function process()
+    {
+        $result = parent::process();
+
+        if ($this->params['status_changer'] == Ess_M2ePro_Model_Listing_Product::STATUS_CHANGER_SYNCH &&
+            $this->listingProduct->getActionConfigurator()->isPartialMode() &&
+            $this->isNewRequiredSpecificNeeded($this->messages)) {
+
+            $this->processRelistActionWithAllDataAction();
+        }
+
+        $additionalData = $this->listingProduct->getAdditionalData();
+
+        if ($this->isVariationErrorAppeared($this->messages) &&
+            $this->getRequestDataObject()->hasVariations() &&
+            !isset($additionalData['is_variation_mpn_filled'])
+        ) {
+            $this->tryToResolveVariationMpnErrors();
+        }
+
+        return $result;
+    }
 
     protected function prepareResponseData($response)
     {
@@ -121,7 +160,17 @@ class Ess_M2ePro_Model_Connector_Ebay_Item_Relist_Single
         return $response;
     }
 
-    // ########################################
+    //########################################
+
+    protected function isResponseValid($response)
+    {
+        if (parent::isResponseValid($response)) {
+            return true;
+        }
+
+        $this->processAsPotentialDuplicate();
+        return false;
+    }
 
     protected function processResponseInfo($responseInfo)
     {
@@ -151,7 +200,7 @@ class Ess_M2ePro_Model_Connector_Ebay_Item_Relist_Single
         $this->getLogger()->logListingProductMessage($this->listingProduct, $message);
     }
 
-    // ########################################
+    //########################################
 
     private function checkAndLogNotAccessedError($message)
     {
@@ -184,8 +233,9 @@ class Ess_M2ePro_Model_Connector_Ebay_Item_Relist_Single
         $this->getResponseObject()->markAsNeedUpdateConditionData();
 
         $message = array(
-            parent::MESSAGE_TEXT_KEY => 'M2E Pro was not able to send Condition on eBay.
-                                         Please try to perform the Relist Action once more.',
+            parent::MESSAGE_TEXT_KEY => Mage::helper('M2ePro')->__(
+                'M2E Pro was not able to send Condition on eBay.
+                Please try to perform the Relist Action once more.'),
             parent::MESSAGE_TYPE_KEY => parent::MESSAGE_TYPE_WARNING
         );
 
@@ -194,5 +244,25 @@ class Ess_M2ePro_Model_Connector_Ebay_Item_Relist_Single
         );
     }
 
-    // ########################################
+    //########################################
+
+    private function processRelistActionWithAllDataAction()
+    {
+        $message = array(
+            self::MESSAGE_TEXT_KEY => Mage::helper('M2ePro')->__(
+                'It has been detected that the Category you are using is going to require the Product Identifiers
+                to be specified (UPC, EAN, ISBN, etc.). The Relist Action will be automatically performed
+                to send the value(s) of the required Identifier(s) based on the settings
+                provided in eBay Catalog Identifiers section of the Description Policy.'),
+            self::MESSAGE_TYPE_KEY => self::MESSAGE_TYPE_WARNING,
+        );
+
+        $this->getLogger()->logListingProductMessage($this->listingProduct, $message);
+
+        $this->unlockListingProduct();
+
+        $this->getResponseObject()->tryToReListItemWithFullDataAction();
+    }
+
+    //########################################
 }

@@ -1,17 +1,21 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
-/**
- * @method Ess_M2ePro_Model_Ebay_Listing_Product_Action_Configurator getConfigurator()
- */
+use Ess_M2ePro_Model_Ebay_Template_Description_Source as DescriptionSource;
+
 class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
     extends Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Abstract
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getData()
     {
         $data = array(
@@ -20,11 +24,15 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
 
         $this->logLimitationsAndReasons();
 
-        if (!$this->getIsVariationItem() || !$this->getConfigurator()->isVariations()) {
+        if (!$this->getIsVariationItem() || !$this->getConfigurator()->isVariationsAllowed()) {
             return $data;
         }
 
         $data['variation'] = $this->getVariationsData();
+
+        $this->getConfigurator()->tryToIncreasePriority(
+            Ess_M2ePro_Model_Ebay_Listing_Product_Action_Configurator::PRIORITY_VARIATION
+        );
 
         if ($sets = $this->getSetsData()) {
             $data['variations_sets'] = $sets;
@@ -32,47 +40,62 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
 
         $data['variation_image'] = $this->getImagesData();
 
+        if ($variationsThatCanNotBeDeleted = $this->getVariationsThatCanNotBeDeleted()) {
+            $data['variations_that_can_not_be_deleted'] = $variationsThatCanNotBeDeleted;
+        }
+
         return $data;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getVariationsData()
     {
         $data = array();
 
         $qtyMode = $this->getEbayListingProduct()->getEbaySellingFormatTemplate()->getQtyMode();
 
-        $variations = $this->getListingProduct()->getVariations(true);
         $productsIds = array();
+        $variationIdsIndexes = array();
 
-        foreach ($variations as $variation) {
-
+        foreach ($this->getListingProduct()->getVariations(true) as $variation) {
             /** @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
+            /** @var $ebayVariation Ess_M2ePro_Model_Ebay_Listing_Product_Variation */
+
+            $ebayVariation = $variation->getChildObject();
+
+            if (isset($this->validatorsData['variation_fixed_price_'.$variation->getId()])) {
+                $variationPrice = $this->validatorsData['variation_fixed_price_'.$variation->getId()];
+            } else {
+                $variationPrice = $ebayVariation->getPrice();
+            }
 
             $item = array(
                 '_instance_' => $variation,
-                'price' => $variation->getChildObject()->getPrice(),
-                'qty' => $variation->getChildObject()->isDelete() ? 0 : $variation->getChildObject()->getQty(),
-                'sku' => $variation->getChildObject()->getSku(),
-                'add' => $variation->getChildObject()->isAdd(),
-                'delete' => $variation->getChildObject()->isDelete(),
-                'specifics' => array()
+                'price'      => $variationPrice,
+                'qty'        => $ebayVariation->isDelete() ? 0 : $ebayVariation->getQty(),
+                'sku'        => $ebayVariation->getSku(),
+                'add'        => $ebayVariation->isAdd(),
+                'delete'     => $ebayVariation->isDelete(),
+                'specifics'  => array()
             );
 
             if (($qtyMode == Ess_M2ePro_Model_Template_SellingFormat::QTY_MODE_PRODUCT_FIXED ||
                 $qtyMode == Ess_M2ePro_Model_Template_SellingFormat::QTY_MODE_PRODUCT) && !$item['delete']) {
 
-                $options = $variation->getOptions();
-                foreach ($options as $option) {
-                    $productsIds[] = $option['product_id'];
+                foreach ($variation->getOptions(true) as $option) {
+                    $productsIds[] = $option->getProductId();
                 }
             }
 
             if ($this->getEbayListingProduct()->isPriceDiscountStp()) {
 
                 $priceDiscountData = array(
-                    'original_retail_price' => $variation->getChildObject()->getPriceDiscountStp()
+                    'original_retail_price' => $ebayVariation->getPriceDiscountStp()
                 );
 
                 if ($this->getEbayMarketplace()->isStpAdvancedEnabled()) {
@@ -88,11 +111,10 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
 
             if ($this->getEbayListingProduct()->isPriceDiscountMap()) {
                 $priceDiscountMapData = array(
-                    'minimum_advertised_price' => $variation->getChildObject()->getPriceDiscountMap(),
+                    'minimum_advertised_price' => $ebayVariation->getPriceDiscountMap(),
                 );
 
-                $exposure = $variation->getChildObject()->
-                    getEbaySellingFormatTemplate()->getPriceDiscountMapExposureType();
+                $exposure = $ebayVariation->getEbaySellingFormatTemplate()->getPriceDiscountMapExposureType();
                 $priceDiscountMapData['minimum_advertised_price_exposure'] =
                     Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling::
                         getPriceDiscountMapExposureType($exposure);
@@ -100,21 +122,33 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
                 $item['price_discount_map'] = $priceDiscountMapData;
             }
 
-            $options = $variation->getOptions(true);
+            $variationDetails = $this->getVariationDetails($variation);
 
-            foreach ($options as $option) {
+            if (!empty($variationDetails)) {
+                $item['details'] = $variationDetails;
+            }
+
+            foreach ($variation->getOptions(true) as $option) {
                 /** @var $option Ess_M2ePro_Model_Listing_Product_Variation_Option */
+
                 $item['specifics'][$option->getAttribute()] = $option->getOption();
             }
 
             $data[] = $item;
+
+            $variationIdsIndexes[$variation->getId()] = count($data) - 1;
         }
+
+        $this->addMetaData('variation_ids_indexes', $variationIdsIndexes);
 
         $this->checkQtyWarnings($productsIds);
 
         return $data;
     }
 
+    /**
+     * @return bool
+     */
     public function getSetsData()
     {
         $additionalData = $this->getListingProduct()->getAdditionalData();
@@ -126,6 +160,20 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
         return false;
     }
 
+    public function getVariationsThatCanNotBeDeleted()
+    {
+        $additionalData = $this->getListingProduct()->getAdditionalData();
+
+        if (isset($additionalData['variations_that_can_not_be_deleted'])) {
+            return $additionalData['variations_that_can_not_be_deleted'];
+        }
+
+        return false;
+    }
+
+    /**
+     * @return array
+     */
     public function getImagesData()
     {
         $attributeLabels = array();
@@ -145,7 +193,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
         return $this->getImagesDataByAttributeLabels($attributeLabels);
     }
 
-    // ########################################
+    //########################################
 
     private function logLimitationsAndReasons()
     {
@@ -163,13 +211,13 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
             return;
         }
 
-        $tempResult = Mage::helper('M2ePro/Component_Ebay_Category_Ebay')
+        $isVariationEnabled = Mage::helper('M2ePro/Component_Ebay_Category_Ebay')
                                     ->isVariationEnabled(
                                         (int)$this->getCategorySource()->getMainCategory(),
                                         $this->getMarketplace()->getId()
                                     );
 
-        if (!$tempResult) {
+        if (!is_null($isVariationEnabled) && !$isVariationEnabled) {
             $this->addWarningMessage(
                 Mage::helper('M2ePro')->__(
                     'The Product was Listed as a Simple Product as it has limitation for Multi-Variation Items. '.
@@ -200,7 +248,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
         }
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     private function getConfigurableImagesAttributeLabels()
     {
@@ -212,16 +260,24 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
 
         $product = $this->getMagentoProduct()->getProduct();
 
-        $attributeCode = $descriptionTemplate->getVariationConfigurableImages();
+        $attributeCodes = $descriptionTemplate->getDecodedVariationConfigurableImages();
+        $attributes = array();
 
-        /** @var $attribute Mage_Catalog_Model_Resource_Eav_Attribute */
-        $attribute = $product->getResource()->getAttribute($attributeCode);
+        foreach ($attributeCodes as $attributeCode) {
+            /** @var $attribute Mage_Catalog_Model_Resource_Eav_Attribute */
+            $attribute = $product->getResource()->getAttribute($attributeCode);
 
-        if (!$attribute) {
-            return array();
+            if (!$attribute) {
+                continue;
+            }
+
+            $attribute->setStoreId($product->getStoreId());
+            $attributes[] = $attribute;
         }
 
-        $attribute->setStoreId($product->getStoreId());
+        if (empty($attributes)) {
+            return array();
+        }
 
         $attributeLabels = array();
 
@@ -233,15 +289,18 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
             /** @var $configurableAttribute Mage_Catalog_Model_Product_Type_Configurable_Attribute */
             $configurableAttribute->setStoteId($product->getStoreId());
 
-            if ((int)$attribute->getAttributeId() == (int)$configurableAttribute->getAttributeId()) {
+            foreach ($attributes as $attribute) {
 
-                $attributeLabels = array_values($attribute->getStoreLabels());
-                $attributeLabels[] = $configurableAttribute->getData('label');
-                $attributeLabels[] = $attribute->getFrontendLabel();
+                if ((int)$attribute->getAttributeId() == (int)$configurableAttribute->getAttributeId()) {
 
-                $attributeLabels = array_filter($attributeLabels);
+                    $attributeLabels = array_values($attribute->getStoreLabels());
+                    $attributeLabels[] = $configurableAttribute->getData('label');
+                    $attributeLabels[] = $attribute->getFrontendLabel();
 
-                break;
+                    $attributeLabels = array_filter($attributeLabels);
+
+                    break 2;
+                }
             }
         }
 
@@ -249,7 +308,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
 
             $this->addNotFoundAttributesMessages(
                 Mage::helper('M2ePro')->__('Change Images for Attribute'),
-                array($attributeCode)
+                $attributes
             );
 
             return array();
@@ -261,21 +320,17 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
     private function getImagesDataByAttributeLabels(array $attributeLabels)
     {
         $images = array();
+        $imagesLinks = array();
         $attributeLabel = false;
 
-        $variations = $this->getListingProduct()->getVariations(true);
-
-        foreach ($variations as $variation) {
-
+        foreach ($this->getListingProduct()->getVariations(true) as $variation) {
             /** @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
 
             if ($variation->getChildObject()->isDelete()) {
                 continue;
             }
 
-            $options = $variation->getOptions(true);
-
-            foreach ($options as $option) {
+            foreach ($variation->getOptions(true) as $option) {
 
                 /** @var $option Ess_M2ePro_Model_Listing_Product_Variation_Option */
 
@@ -291,29 +346,56 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
                     continue;
                 }
 
-                $attributeLabel = $foundAttributeLabel;
-
-                $optionImages = $option->getChildObject()->getImagesForEbay();
-
-                if (count($optionImages) <= 0) {
-                    continue;
+                if (!isset($imagesLinks[$option->getOption()])) {
+                    $imagesLinks[$option->getOption()] = array();
                 }
 
-                $images[$option->getOption()] = array_slice($optionImages,0,1);
+                $currentCountOfImages = count($imagesLinks[$option->getOption()]);
+                if ($currentCountOfImages >= DescriptionSource::VARIATION_IMAGES_COUNT_MAX) {
+                    break;
+                }
+
+                $attributeLabel = $foundAttributeLabel;
+
+                $optionImages = $this->getEbayListingProduct()->getEbayDescriptionTemplate()
+                                     ->getSource($option->getMagentoProduct())
+                                     ->getVariationImages();
+
+                $links = array();
+                foreach ($optionImages as $image) {
+
+                    if (!$image->getUrl()) {
+                        continue;
+                    }
+
+                    if ($currentCountOfImages + count($links) >= DescriptionSource::VARIATION_IMAGES_COUNT_MAX) {
+                        break;
+                    }
+
+                    $links[] = $image->getUrl();
+                    $images[] = $image;
+                }
+
+                $imagesLinks[$option->getOption()] = array_merge($links, $imagesLinks[$option->getOption()]);
             }
         }
 
-        if (!$attributeLabel || !$images) {
+        if (!$attributeLabel || !$imagesLinks) {
             return array();
+        }
+
+        if (!empty($images)) {
+            $this->addMetaData('ebay_product_variation_images_hash',
+                               Mage::helper('M2ePro/Component_Ebay_Images')->getHash($images));
         }
 
         return array(
             'specific' => $attributeLabel,
-            'images' => $images
+            'images'   => $imagesLinks
         );
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_Category_Source
@@ -323,7 +405,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
         return $this->getEbayListingProduct()->getCategoryTemplateSource();
     }
 
-    // ########################################
+    //########################################
 
     public function checkQtyWarnings($productsIds)
     {
@@ -357,6 +439,9 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
         }
     }
 
+    /**
+     * @param int $type
+     */
     public function addQtyWarnings($type)
     {
         if ($type === Ess_M2ePro_Model_Magento_Product::FORCING_QTY_TYPE_MANAGE_STOCK_NO) {
@@ -374,5 +459,125 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Variations
         }
     }
 
-    // ########################################
+    //########################################
+
+    private function getVariationDetails(Ess_M2ePro_Model_Listing_Product_Variation $variation)
+    {
+        $data = array();
+
+        /** @var Ess_M2ePro_Model_Ebay_Template_Description $ebayDescriptionTemplate */
+        $ebayDescriptionTemplate = $this->getEbayListingProduct()->getEbayDescriptionTemplate();
+
+        $options = NULL;
+        $additionalData = $variation->getAdditionalData();
+
+        foreach (array('isbn','upc','ean','mpn') as $tempType) {
+
+            if ($tempType == 'mpn' && !empty($additionalData['ebay_mpn_value'])) {
+                $data[$tempType] = $additionalData['ebay_mpn_value'];
+                continue;
+            }
+
+            if (isset($additionalData['product_details'][$tempType])) {
+                $data[$tempType] = $additionalData['product_details'][$tempType];
+                continue;
+            }
+
+            if ($tempType == 'mpn') {
+
+                if ($ebayDescriptionTemplate->isProductDetailsModeNone('brand')) {
+                    continue;
+                }
+
+                if ($ebayDescriptionTemplate->isProductDetailsModeDoesNotApply('brand')) {
+                    $data[$tempType] = Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Description::
+                                                                            PRODUCT_DETAILS_DOES_NOT_APPLY;
+                    continue;
+                }
+            }
+
+            if ($ebayDescriptionTemplate->isProductDetailsModeNone($tempType)) {
+                continue;
+            }
+
+            if ($ebayDescriptionTemplate->isProductDetailsModeDoesNotApply($tempType)) {
+                $data[$tempType] = Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Description::
+                                                                            PRODUCT_DETAILS_DOES_NOT_APPLY;
+                continue;
+            }
+
+            if (!$this->getMagentoProduct()->isConfigurableType() &&
+                !$this->getMagentoProduct()->isGroupedType()) {
+                continue;
+            }
+
+            $attribute = $ebayDescriptionTemplate->getProductDetailAttribute($tempType);
+
+            if (!$attribute) {
+                continue;
+            }
+
+            if (is_null($options)) {
+                $options = $variation->getOptions(true);
+            }
+
+            /** @var $option Ess_M2ePro_Model_Listing_Product_Variation_Option */
+            $option = reset($options);
+
+            $this->searchNotFoundAttributes();
+            $tempValue = $option->getMagentoProduct()->getAttributeValue($attribute);
+
+            if (!$this->processNotFoundAttributes(strtoupper($tempType)) || !$tempValue) {
+                continue;
+            }
+
+            $data[$tempType] = $tempValue;
+        }
+
+        return $this->deleteNotAllowedIdentifier($data);
+    }
+
+    private function deleteNotAllowedIdentifier(array $data)
+    {
+        if (empty($data)) {
+            return $data;
+        }
+
+        $categoryId = $this->getCategorySource()->getMainCategory();
+        $marketplaceId = $this->getMarketplace()->getId();
+        $categoryFeatures = Mage::helper('M2ePro/Component_Ebay_Category_Ebay')
+                                  ->getFeatures($categoryId, $marketplaceId);
+
+        if (empty($categoryFeatures)) {
+            return $data;
+        }
+
+        $statusDisabled = Ess_M2ePro_Helper_Component_Ebay_Category_Ebay::PRODUCT_IDENTIFIER_STATUS_DISABLED;
+
+        foreach (array('ean','upc','isbn') as $identifier) {
+
+            $key = $identifier.'_enabled';
+            if (!isset($categoryFeatures[$key]) || $categoryFeatures[$key] != $statusDisabled) {
+                continue;
+            }
+
+            if (isset($data[$identifier])) {
+
+                unset($data[$identifier]);
+
+                // M2ePro_TRANSLATIONS
+                // The value of %type% was not sent because it is not allowed in this Category
+                $this->addWarningMessage(
+                    Mage::helper('M2ePro')->__(
+                        'The value of %type% was not sent because it is not allowed in this Category',
+                        Mage::helper('M2ePro')->__(strtoupper($identifier))
+                    )
+                );
+            }
+        }
+
+        return $data;
+    }
+
+    //########################################
 }

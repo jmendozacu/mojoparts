@@ -1,10 +1,10 @@
 ListingActionHandler = Class.create(ActionHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     sendPartsResponses: [],
 
-    //----------------------------------
+    // ---------------------------------------
 
     options: {},
 
@@ -14,9 +14,9 @@ ListingActionHandler = Class.create(ActionHandler, {
         return this;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
-    startActions: function(title,url,selectedProductsParts)
+    startActions: function(title,url,selectedProductsParts,requestParams)
     {
         MagentoMessageObj.clearAll();
         $('listing_container_errors_summary').hide();
@@ -28,10 +28,10 @@ ListingActionHandler = Class.create(ActionHandler, {
         GridWrapperObj.lock();
         $('loading-mask').setStyle({visibility: 'hidden'});
 
-        self.sendPartsOfProducts(selectedProductsParts,selectedProductsParts.length,url);
+        self.sendPartsOfProducts(selectedProductsParts,selectedProductsParts.length,url,requestParams);
     },
 
-    sendPartsOfProducts: function(parts,totalPartsCount,url)
+    sendPartsOfProducts: function(parts,totalPartsCount,url,requestParams)
     {
         var self = this;
 
@@ -147,11 +147,15 @@ ListingActionHandler = Class.create(ActionHandler, {
 
         ListingProgressBarObj.setStatus(str_replace('%product_title%', partExecuteString, self.options.text.sending_data_message));
 
+        if (typeof requestParams == 'undefined') {
+            requestParams = {}
+        }
+
+        requestParams['selected_products'] = partString;
+
         new Ajax.Request(url + 'id/' + self.gridHandler.listingId, {
             method: 'post',
-            parameters: {
-                selected_products: partString
-            },
+            parameters: requestParams,
             onSuccess: function(transport) {
 
                 if (!transport.responseText.isJSON()) {
@@ -208,7 +212,7 @@ ListingActionHandler = Class.create(ActionHandler, {
         return;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     listAction: function()
     {
@@ -219,7 +223,8 @@ ListingActionHandler = Class.create(ActionHandler, {
 
         this.startActions(
             this.options.text.listing_selected_items_message,
-            this.options.url.runListProducts,selectedProductsParts
+            this.options.url.runListProducts,
+            selectedProductsParts
         );
     },
 
@@ -232,7 +237,8 @@ ListingActionHandler = Class.create(ActionHandler, {
 
         this.startActions(
             this.options.text.relisting_selected_items_message,
-            this.options.url.runRelistProducts,selectedProductsParts
+            this.options.url.runRelistProducts,
+            selectedProductsParts
         );
     },
 
@@ -245,7 +251,8 @@ ListingActionHandler = Class.create(ActionHandler, {
 
         this.startActions(
             this.options.text.revising_selected_items_message,
-            this.options.url.runReviseProducts,selectedProductsParts
+            this.options.url.runReviseProducts,
+            selectedProductsParts
         );
     },
 
@@ -258,7 +265,8 @@ ListingActionHandler = Class.create(ActionHandler, {
 
         this.startActions(
             this.options.text.stopping_selected_items_message,
-            this.options.url.runStopProducts,selectedProductsParts
+            this.options.url.runStopProducts,
+            selectedProductsParts
         );
     },
 
@@ -271,7 +279,21 @@ ListingActionHandler = Class.create(ActionHandler, {
 
         this.startActions(
             this.options.text.stopping_and_removing_selected_items_message,
-            this.options.url.runStopAndRemoveProducts,selectedProductsParts
+            this.options.url.runStopAndRemoveProducts,
+            selectedProductsParts
+        );
+    },
+
+    previewItemsAction: function()
+    {
+        var orderedSelectedProductsArray = this.gridHandler.getOrderedSelectedProductsArray();
+        if (orderedSelectedProductsArray.length == 0) {
+            return;
+        }
+
+        this.openWindow(
+            M2ePro.url.previewItems + 'productIds/' + implode(',', orderedSelectedProductsArray)
+                                    + '/currentProductId/' + orderedSelectedProductsArray[0]
         );
     },
 
@@ -288,7 +310,8 @@ ListingActionHandler = Class.create(ActionHandler, {
             function() {
                 self.startActions(
                     self.options.text.start_translate_selected_items_message,
-                    self.options.url.runStartTranslateProducts,selectedProductsParts
+                    self.options.url.runStartTranslateProducts,
+                    selectedProductsParts
                 );
             }, function() {
                 self.gridHandler.unselectAll();
@@ -308,9 +331,10 @@ ListingActionHandler = Class.create(ActionHandler, {
 
         this.startActions(
             this.options.text.stop_translate_selected_items_message,
-            this.options.url.runStopTranslateProducts,selectedProductsParts
+            this.options.url.runStopTranslateProducts,
+            selectedProductsParts
         );
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

@@ -1,17 +1,32 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_General
     extends Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Validator
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function validate()
     {
         if ($this->getVariationManager()->isRelationParentType() && !$this->validateParentListingProductFlags()) {
+            return false;
+        }
+
+        if ($this->getAmazonListingProduct()->isAfnChannel()) {
+
+            // M2ePro_TRANSLATIONS
+            // List Action for FBA Items is impossible as their Quantity is unknown. You can run Revise Action for such Items, but the Quantity value will be ignored.
+            $this->addMessage('List Action for FBA Items is impossible as their Quantity is unknown. You can run Revise
+            Action for such Items, but the Quantity value will be ignored.');
+
             return false;
         }
 
@@ -24,11 +39,28 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_General
             return false;
         }
 
-        if (!$this->getVariationManager()->isPhysicalUnit()) {
+        if ($this->getVariationManager()->isLogicalUnit()) {
             return true;
         }
 
-        if (!$this->validatePhysicalUnitRequirements() || !$this->validatePhysicalUnitMatching()) {
+        if (!$this->validateQty()) {
+            return false;
+        }
+
+        if (!$this->validateRegularPrice() || !$this->validateBusinessPrice()) {
+            return false;
+        }
+
+        $condition = $this->getAmazonListingProduct()->getListingSource()->getCondition();
+        if (empty($condition)) {
+            // M2ePro_TRANSLATIONS
+            // You cannot list this Product because the Item Condition is not specified. You can set the Condition in the Selling Settings of the Listing.
+            $this->addMessage('You cannot list this Product because the Item Condition is not specified.
+                               You can set the Condition in the Selling Settings of the Listing.');
+            return false;
+        }
+
+        if ($this->getVariationManager()->isPhysicalUnit() && !$this->validatePhysicalUnitMatching()) {
             return false;
         }
 
@@ -39,29 +71,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_General
         return true;
     }
 
-    // ########################################
-
-    private function validatePhysicalUnitRequirements()
-    {
-        if (!$this->validateQty()) {
-            return false;
-        }
-
-        if (!$this->validatePrice()) {
-            return false;
-        }
-
-        $condition = $this->getAmazonListingProduct()->getListingSource()->getCondition();
-        if (empty($condition)) {
-// M2ePro_TRANSLATIONS
-// You cannot list this Product because the Item Condition is not specified. You can set the Condition in the Selling Settings of the Listing.
-            $this->addMessage('You cannot list this Product because the Item Condition is not specified.
-                               You can set the Condition in the Selling Settings of the Listing.');
-            return false;
-        }
-
-        return true;
-    }
+    //########################################
 
     private function validateChildRequirements()
     {
@@ -94,5 +104,5 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_General
         return true;
     }
 
-    // ########################################
+    //########################################
 }

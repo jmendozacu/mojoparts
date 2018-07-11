@@ -3,7 +3,7 @@ error_reporting(E_ALL);
 libxml_use_internal_errors(true);
 include('config.php'); 
 
-$input_result = mysqli_query($con, "SELECT * FROM mojo_ebaycopy_input_listings");
+$input_result = mysqli_query($con, "SELECT * FROM mojo_ebaycopy_input_listings where processed_flag=0");
 $numRows = mysqli_num_rows($input_result);
 $insertCount = 0;
 $updateCount = 0;
@@ -325,20 +325,36 @@ while ($input_row = mysqli_fetch_array($input_result)) {
 			
 			if (!empty($item->ItemCompatibilityList->Compatibility)) {
 				foreach($item->ItemCompatibilityList->Compatibility as $compat) {
-					$compatibility .= "Year=".$compat->NameValueList[1]->Value;
-					$compatibility .= "|Make=".$compat->NameValueList[2]->Value;
-					$compatibility .= "|Model=".$compat->NameValueList[3]->Value;
+
+				$epidAr = array();
+				foreach($item->ItemCompatibilityList->Compatibility as $compat) {
+					$epid_query = NULL;
+					$year = $compat->NameValueList[1]->Value;
+					$make = $compat->NameValueList[2]->Value;
+					$model = $compat->NameValueList[3]->Value;
+					$epid_query = "select e.epid from m2epro_ebay_dictionary_motor_epid e where e.year='$year' and e.make='$make' and e.model='$model'";
 					if (isset($compat->NameValueList[4]->Value)) {
-						$compatibility .= '|Trim='.str_replace('"','',$compat->NameValueList[4]->Value);
+						$epid_query .= " and e.trim='".str_replace("'","''",$compat->NameValueList[4]->Value)."'";
 					}
 					if (isset($compat->NameValueList[5]->Value)) {
-						$compatibility .= '|Engine='.str_replace('"','',$compat->NameValueList[5]->Value);
+						$epid_query .= " and e.engine='".$compat->NameValueList[5]->Value."'";
 					}
-					if (isset($compat->CompatibilityNotes) && $compat->CompatibilityNotes<>"") {
-						$compatibility .= '|Notes='.str_replace('"','',$compat->CompatibilityNotes);
+
+					$epid_query .= ";";
+//echo $epid_query.PHP_EOL;
+					$result_epid = mysqli_query($con, $epid_query);
+					if (!$result_epid) {
+						printf("Error: %s\n", mysqli_error($con));
+						exit();
 					}
-					$compatibility .= PHP_EOL;
+					while ($epid_row = mysqli_fetch_array($result_epid)) {
+						$m2e_epid = '""ITEM""|""'.$epid_row['epid'].'""';
+						if ($compat->CompatibilityNotes != null) $m2e_epid .= '|""'.$compat->CompatibilityNotes.'""';
+						array_push($epidAr, $m2e_epid);
+					}
 				}
+				if (empty($epidAr)) $compatibility = "";
+				else $compatibility = implode(",",$epidAr);
 			}
 
 			$listingPrice = $item->CurrentPrice;

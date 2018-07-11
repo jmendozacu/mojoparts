@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Mysql4_Ebay_Motor_Ktypes_Collection
     extends Varien_Data_Collection_Db
 {
-    // ########################################
+    //########################################
 
     public function __construct($idFieldName = NULL)
     {
@@ -19,28 +21,28 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Motor_Ktypes_Collection
             $this->_idFieldName = $idFieldName;
         }
 
-        $table = Mage::getSingleton('core/resource')->getTableName('m2epro_ebay_dictionary_motor_ktype');
+        $table = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('m2epro_ebay_dictionary_motor_ktype');
 
         $this->getSelect()->reset()->from(
             array('main_table' => $table)
         );
     }
 
-    // ########################################
+    //########################################
 
     public function getAllIds()
     {
         $idsSelect = clone $this->getSelect();
-        $idsSelect->reset(Zend_Db_Select::ORDER);
         $idsSelect->reset(Zend_Db_Select::LIMIT_COUNT);
         $idsSelect->reset(Zend_Db_Select::LIMIT_OFFSET);
         $idsSelect->reset(Zend_Db_Select::COLUMNS);
 
         $idsSelect->columns($this->_idFieldName, 'main_table');
-        $idsSelect->limit(1000);
+        $idsSelect->limit(Ess_M2ePro_Helper_Component_Ebay_Motors::MAX_ITEMS_COUNT_FOR_ATTRIBUTE);
 
         return $this->getConnection()->fetchCol($idsSelect);
     }
 
-    // ########################################
+    //########################################
 }

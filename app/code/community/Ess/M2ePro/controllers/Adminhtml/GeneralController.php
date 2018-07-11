@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_GeneralController
     extends Ess_M2ePro_Controller_Adminhtml_BaseController
 {
-    //#############################################
+    //########################################
 
     public function getAccountsAction()
     {
@@ -31,10 +33,10 @@ class Ess_M2ePro_Adminhtml_GeneralController
         }
 
         $this->loadLayout();
-        $this->getResponse()->setBody(json_encode($accounts));
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($accounts));
     }
 
-    //#############################################
+    //########################################
 
     public function validationCheckRepetitionValueAction()
     {
@@ -46,7 +48,7 @@ class Ess_M2ePro_Adminhtml_GeneralController
         $dataValue = $this->getRequest()->getParam('data_value','');
 
         if ($model == '' || $dataField == '' || $dataValue == '') {
-            return $this->getResponse()->setBody(json_encode(array('result'=>false)));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('result'=>false)));
         }
 
         $collection = Mage::getModel('M2ePro/'.$model)->getCollection();
@@ -66,68 +68,19 @@ class Ess_M2ePro_Adminhtml_GeneralController
             $collection->addFieldToFilter('component_mode', $component);
         }
 
-        return $this->getResponse()->setBody(json_encode(array('result'=>!(bool)$collection->getSize())));
-    }
+        $filterField = $this->getRequest()->getParam('filter_field');
+        $filterValue = $this->getRequest()->getParam('filter_value');
 
-    //#############################################
-
-    public function synchCheckStateAction()
-    {
-        $lockItem = Mage::getModel('M2ePro/Synchronization_LockItem');
-
-        if ($lockItem->isExist()) {
-            return $this->getResponse()->setBody('executing');
+        if ($filterField && $filterValue) {
+            $collection->addFieldToFilter($filterField, $filterValue);
         }
 
-        return $this->getResponse()->setBody('inactive');
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(
+            array('result'=>!(bool)$collection->getSize())
+        ));
     }
 
-    public function synchGetLastResultAction()
-    {
-        $operationHistoryCollection = Mage::getModel('M2ePro/Synchronization_OperationHistory')->getCollection();
-        $operationHistoryCollection->addFieldToFilter('nick', 'synchronization');
-        $operationHistoryCollection->setOrder('id', 'DESC');
-        $operationHistoryCollection->getSelect()->limit(1);
-
-        $operationHistory = $operationHistoryCollection->getFirstItem();
-
-        $logCollection = Mage::getModel('M2ePro/Synchronization_Log')->getCollection();
-        $logCollection->addFieldToFilter('operation_history_id', (int)$operationHistory->getId());
-        $logCollection->addFieldToFilter('type', array('in' => array(Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR)));
-
-        if ($logCollection->getSize() > 0) {
-            return $this->getResponse()->setBody('error');
-        }
-
-        $logCollection = Mage::getModel('M2ePro/Synchronization_Log')->getCollection();
-        $logCollection->addFieldToFilter('operation_history_id', (int)$operationHistory->getId());
-        $logCollection->addFieldToFilter('type', array('in' => array(Ess_M2ePro_Model_Log_Abstract::TYPE_WARNING)));
-
-        if ($logCollection->getSize() > 0) {
-            return $this->getResponse()->setBody('warning');
-        }
-
-        return $this->getResponse()->setBody('success');
-    }
-
-    public function synchGetExecutingInfoAction()
-    {
-        $response = array();
-        $lockItem = Mage::getModel('M2ePro/Synchronization_LockItem');
-
-        if (!$lockItem->isExist()) {
-            $response['mode'] = 'inactive';
-        } else {
-            $response['mode'] = 'executing';
-            $response['title'] = $lockItem->getTitle();
-            $response['percents'] = $lockItem->getPercents();
-            $response['status'] = $lockItem->getStatus();
-        }
-
-        return $this->getResponse()->setBody(json_encode($response));
-    }
-
-    //#############################################
+    //########################################
 
     public function modelGetAllAction()
     {
@@ -138,7 +91,7 @@ class Ess_M2ePro_Adminhtml_GeneralController
         $dataField = $this->getRequest()->getParam('data_field','');
 
         if ($model == '' || $idField == '' || $dataField == '') {
-            return $this->getResponse()->setBody(json_encode(array()));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array()));
         }
 
         $collection = Mage::getModel('M2ePro/'.$model)->getCollection();
@@ -159,10 +112,10 @@ class Ess_M2ePro_Adminhtml_GeneralController
 
         $data = $collection->toArray();
 
-        return $this->getResponse()->setBody(json_encode($data['items']));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($data['items']));
     }
 
-    //#############################################
+    //########################################
 
     public function magentoRuleGetNewConditionHtmlAction()
     {
@@ -252,7 +205,7 @@ class Ess_M2ePro_Adminhtml_GeneralController
         }
     }
 
-    //#############################################
+    //########################################
 
     public function categoriesJsonAction()
     {
@@ -294,22 +247,108 @@ class Ess_M2ePro_Adminhtml_GeneralController
         return $category;
     }
 
-    //#############################################
+    //########################################
 
     public function requirementsPopupCloseAction()
     {
-        Mage::helper('M2ePro/Module')->getConfig()->setGroupValue('/view/requirements/popup/', 'closed', 1);
+        Mage::helper('M2ePro/Module')->getCacheConfig()->setGroupValue('/view/requirements/popup/', 'closed', 1);
     }
 
-    //#############################################
+    //########################################
 
     public function checkCustomerIdAction()
     {
         $customerId = $this->getRequest()->getParam('customer_id');
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'ok' => (bool)Mage::getModel('customer/customer')->load($customerId)->getId()
         )));
     }
 
-    //#############################################
+    //########################################
+
+    public function getCreateAttributeHtmlPopupAction()
+    {
+        $post = $this->getRequest()->getPost();
+
+        /** @var Ess_M2ePro_Block_Adminhtml_General_CreateAttribute $block */
+        $block = $this->getLayout()->createBlock('M2ePro/adminhtml_general_createAttribute');
+        $block->handlerId($post['handler_id']);
+
+        if (isset($post['allowed_attribute_types'])) {
+            $block->allowedTypes(explode(',', $post['allowed_attribute_types']));
+        }
+
+        if (isset($post['apply_to_all_attribute_sets']) && !$post['apply_to_all_attribute_sets']) {
+            $block->applyToAll(false);
+        }
+
+        $this->getResponse()->setBody($block->toHtml());
+    }
+
+    public function generateAttributeCodeByLabelAction()
+    {
+        $label = $this->getRequest()->getParam('store_label');
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(
+            Ess_M2ePro_Model_Magento_Attribute_Builder::generateCodeByLabel($label))
+        );
+    }
+
+    public function isAttributeCodeUniqueAction()
+    {
+        $attributeObj = Mage::getModel('eav/entity_attribute')->loadByCode(
+            Mage::getModel('catalog/product')->getResource()->getTypeId(),
+            $this->getRequest()->getParam('code')
+        );
+
+        $isAttributeUnique = is_null($attributeObj->getId());
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($isAttributeUnique));
+    }
+
+    public function createAttributeAction()
+    {
+        /** @var Ess_M2ePro_Model_Magento_Attribute_Builder $model */
+        $model = Mage::getModel('M2ePro/Magento_Attribute_Builder');
+
+        $model->setLabel($this->getRequest()->getParam('store_label'))
+              ->setCode($this->getRequest()->getParam('code'))
+              ->setInputType($this->getRequest()->getParam('input_type'))
+              ->setDefaultValue($this->getRequest()->getParam('default_value'))
+              ->setScope($this->getRequest()->getParam('scope'));
+
+        $attributeResult = $model->save();
+
+        if (!isset($attributeResult['result']) || !$attributeResult['result']) {
+
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($attributeResult));
+            return;
+        }
+
+        foreach ($this->getRequest()->getParam('attribute_sets', array()) as $seId) {
+
+            /** @var Mage_Eav_Model_Entity_Attribute_Set $set */
+            $set = Mage::getModel('eav/entity_attribute_set')->load($seId);
+
+            if (!$set->getId()) {
+                continue;
+            }
+
+            /** @var Ess_M2ePro_Model_Magento_Attribute_Relation $model */
+            $model = Mage::getModel('M2ePro/Magento_Attribute_Relation');
+            $model->setAttributeObj($attributeResult['obj'])
+                  ->setAttributeSetObj($set);
+
+            $setResult = $model->save();
+
+            if (!isset($setResult['result']) || !$setResult['result']) {
+
+                $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($setResult));
+                return;
+            }
+        }
+
+        unset($attributeResult['obj']);
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($attributeResult));
+    }
+
+    //########################################
 }

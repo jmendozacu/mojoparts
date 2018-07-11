@@ -1,22 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Component_Ebay_Category_Store extends Mage_Core_Helper_Abstract
 {
-    // ########################################
+    //########################################
 
     public function getPath($categoryId, $accountId, $delimiter = ' > ')
-    {
-        $pathData = $this->getPathData($categoryId, $accountId, 'title');
-        return implode($delimiter, $pathData);
-    }
-
-    // ########################################
-
-    protected function getPathData($categoryId, $accountId, $dataField)
     {
         $account = Mage::helper('M2ePro/Component_Ebay')->getCachedObject('Account', $accountId);
         $categories = $account->getChildObject()->getEbayStoreCategories();
@@ -38,7 +32,7 @@ class Ess_M2ePro_Helper_Component_Ebay_Category_Store extends Mage_Core_Helper_A
                 break;
             }
 
-            $pathData[] = $currentCategory[$dataField];
+            $pathData[] = $currentCategory['title'];
 
             if ($currentCategory['parent_id'] == 0) {
                 break;
@@ -47,10 +41,11 @@ class Ess_M2ePro_Helper_Component_Ebay_Category_Store extends Mage_Core_Helper_A
             $categoryId = $currentCategory['parent_id'];
         }
 
-        return array_reverse($pathData);
+        array_reverse($pathData);
+        return implode($delimiter, $pathData);
     }
 
-    // ########################################
+    //########################################
 
     public function getSameTemplatesData($ids)
     {
@@ -66,10 +61,11 @@ class Ess_M2ePro_Helper_Component_Ebay_Category_Store extends Mage_Core_Helper_A
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
 
         $etocTable = Mage::getModel('M2ePro/Ebay_Template_OtherCategory')->getResource()->getMainTable();
-        $eascTable = Mage::getSingleton('core/resource')->getTableName('m2epro_ebay_account_store_category');
+        $eascTable = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('m2epro_ebay_account_store_category');
 
         // prepare category main select
-        // -------------------------------------------
+        // ---------------------------------------
         $primarySelect = $connRead->select();
         $primarySelect->from(
                 array('primary_table' => $etocTable)
@@ -81,10 +77,10 @@ class Ess_M2ePro_Helper_Component_Ebay_Category_Store extends Mage_Core_Helper_A
             ))
             ->where('store_category_main_mode = ?', Ess_M2ePro_Model_Ebay_Template_Category::CATEGORY_MODE_EBAY)
             ->group(array('category_id', 'account_id'));
-        // -------------------------------------------
+        // ---------------------------------------
 
         // prepare category secondary select
-        // -------------------------------------------
+        // ---------------------------------------
         $secondarySelect = $connRead->select();
         $secondarySelect->from(
                 array('secondary_table' => $etocTable)
@@ -96,7 +92,7 @@ class Ess_M2ePro_Helper_Component_Ebay_Category_Store extends Mage_Core_Helper_A
             ))
             ->where('store_category_secondary_mode = ?', Ess_M2ePro_Model_Ebay_Template_Category::CATEGORY_MODE_EBAY)
             ->group(array('category_id', 'account_id'));
-        // -------------------------------------------
+        // ---------------------------------------
 
         $unionSelect = $connRead->select();
         $unionSelect->union(array(
@@ -117,5 +113,5 @@ class Ess_M2ePro_Helper_Component_Ebay_Category_Store extends Mage_Core_Helper_A
         return $connRead->query($mainSelect)->fetchColumn() !== false;
     }
 
-    // ########################################
+    //########################################
 }

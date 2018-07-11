@@ -1,53 +1,53 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
-class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Chooser_Edit extends Mage_Adminhtml_Block_Widget_Container
+class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Chooser_Edit extends Ess_M2ePro_Block_Adminhtml_Widget_Container
 {
-    // ########################################
-
     protected $_categoryType = null;
 
     protected $_selectedCategory = array();
 
-    // ########################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayListingCategoryChooserEdit');
-        //------------------------------
+        // ---------------------------------------
 
         // Set buttons actions
-        //------------------------------
+        // ---------------------------------------
         $this->removeButton('back');
         $this->removeButton('reset');
         $this->removeButton('delete');
         $this->removeButton('add');
         $this->removeButton('save');
         $this->removeButton('edit');
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $this->setTemplate('M2ePro/ebay/listing/category/chooser/edit.phtml');
-        //------------------------------
+        // ---------------------------------------
     }
 
-    // ########################################
+    //########################################
 
     protected function _toHtml()
     {
-        //------------------------------
+        // ---------------------------------------
         $tabsContainer = $this->getLayout()->createBlock('M2ePro/adminhtml_ebay_listing_category_chooser_tabs');
         $tabsContainer->setDestElementId('chooser_tabs_container');
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $data = array(
             'id'      => 'category_edit_confirm_button',
             'class'   => '',
@@ -55,7 +55,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Chooser_Edit extends Mage
             'onclick' => 'EbayListingCategoryChooserHandlerObj.confirmCategory();',
         );
         $doneButton = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
-        //------------------------------
+        // ---------------------------------------
 
         $cancelWord = Mage::helper('M2ePro')->__('Cancel');
 
@@ -76,12 +76,12 @@ HTML;
                $buttonsContainer;
     }
 
-    // ########################################
+    //########################################
 
     public function getCategoryType()
     {
         if (is_null($this->_categoryType)) {
-            throw new LogicException('Category type is not set.');
+            throw new Ess_M2ePro_Model_Exception_Logic('Category type is not set.');
         }
 
         return $this->_categoryType;
@@ -130,5 +130,5 @@ HTML;
         return $this;
     }
 
-    // ########################################
+    //########################################
 }

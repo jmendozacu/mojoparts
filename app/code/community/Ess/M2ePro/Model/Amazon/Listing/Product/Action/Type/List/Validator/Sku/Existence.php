@@ -1,30 +1,48 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Existence
     extends Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Validator
 {
-    // ########################################
-
     private $existenceResult = array();
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param array $result
+     * @return $this
+     */
     public function setExistenceResult(array $result)
     {
         $this->existenceResult = $result;
         return $this;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function validate()
     {
         if (empty($this->existenceResult['asin'])) {
             return true;
+        }
+
+        if (empty($this->existenceResult['info'])) {
+            // M2ePro_TRANSLATIONS
+            // There is an unexpected error appeared during the process of linking Magento Product to Amazon Product. The data was not sent back from Amazon.
+            $this->addMessage(
+                'There is an unexpected error appeared during the process of linking Magento Product
+                 to Amazon Product. The data was not sent back from Amazon.'
+            );
+
+            return false;
         }
 
         if (!$this->getVariationManager()->isRelationMode()) {
@@ -42,7 +60,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
         return false;
     }
 
-    // ########################################
+    //########################################
 
     private function processSimpleOrIndividualProduct()
     {
@@ -53,7 +71,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because in your Inventory the provided SKU "%sku%" is assigned to the Parent Product (ASIN: "%asin%") while you are trying to List a Child or Simple Product. Please check the Settings and try again.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because in your Inventory the provided SKU %sku%
                      is assigned to the Parent Product (ASIN/ISBN: "%asin%") while you are trying to List a Child or
                      Simple Product. Please check the Settings and try again.',
@@ -70,7 +88,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because in your Inventory the provided SKU "%sku%" is assigned to the Product with different ASIN/ISBN (%asin%). Please check the Settings and try again.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because in your Inventory the provided SKU "%sku%" is assigned
                      to the Product with different ASIN/ISBN (%asin%). Please check the Settings and try again.',
                     array('!sku' => $this->data['sku'], '!asin' => $asin)
@@ -88,22 +106,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
         $asin = $this->existenceResult['asin'];
         $info = $this->existenceResult['info'];
 
-        if (empty($info)) {
-// M2ePro_TRANSLATIONS
-// There is an unexpected error appeared during the process of linking Magento Product to Amazon Product. The data was not sent back from Amazon.
-            $this->addMessage(
-                'There is an unexpected error appeared during the process of linking Magento Product
-                 to Amazon Product. The data was not sent back from Amazon.'
-            );
-
-            return;
-        }
-
         if (empty($info['type']) || $info['type'] != 'parent') {
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because in your Inventory the provided SKU "%sku%" is assigned to the Child or Simple Product (ASIN/ISBN: "%asin%") while you want to list Parent Product. Please check the Settings and try again.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because in your Inventory the provided SKU "%sku%" is assigned
                      to the Child or Simple Product (ASIN/ISBN: "%asin%") while you want to list Parent Product.
                      Please check the Settings and try again.',
@@ -118,7 +125,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because working with Amazon Parent Product (ASIN/ISBN: "%asin%") found by SKU "%sku%" is limited due to Amazon API restrictions.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because working with Amazon Parent Product (ASIN/ISBN: "%asin%")
                      found by SKU "%sku%" is limited due to Amazon API restrictions.',
                     array('!sku' => $this->data['sku'], '!asin' => $asin)
@@ -134,7 +141,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because the number of Variation Attributes of the Amazon Parent Product (ASIN/ISBN: "%asin%") found by SKU "%sku%" does not match the number of Variation Attributes of the Magento Parent Product.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because the number of Variation Attributes of
                      the Amazon Parent Product (ASIN/ISBN: "%asin%") found by SKU "%sku%" does not match the number of
                      Variation Attributes of the Magento Parent Product.',
@@ -157,7 +164,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because Product found on Amazon (ASIN/ISBN: "%asin%") by SKU "%sku%" is not a Child Product.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because Product found on Amazon (ASIN/ISBN: "%asin%") by SKU "%sku%"
                      is not a Child Product.',
                     array('!sku' => $this->data['sku'], '!asin' => $asin)
@@ -171,7 +178,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because Product found on Amazon (ASIN/ISBN: "%asin%") by SKU "%sku%" is a Child Product of the Parent Product (ASIN/ISBN: "%parent_asin%") access to which limited by Amazon API restriction.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because Item found on Amazon (ASIN/ISBN: "%asin%") by SKU "%sku%"
                      is a Child Product of the Parent Product (ASIN/ISBN: "%parent_asin%")
                      access to which limited by Amazon API restriction.',
@@ -192,7 +199,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because in your Inventory the provided SKU "%sku%" is assigned to the Amazon Child Product (ASIN/ISBN: "%asin%") related to the Amazon Parent Product (ASIN/ISBN: "%parent_asin%") with different ASIN. Please check the Settings and try again.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because in your Inventory the provided SKU "%sku%" is assigned
                      to the Amazon Child Product (ASIN/ISBN: "%asin%") related to the Amazon Parent Product
                      (ASIN/ISBN: "%parent_asin%") with different ASIN/ISBN. Please check the Settings and try again.',
@@ -209,7 +216,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because in your Inventory the provided SKU "%sku%" is assigned to the Amazon Product (ASIN/ISBN: "%asin%") with different ASIN/ISBN. Please check the Settings and try again.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because in your Inventory the provided SKU "%sku%" is
                     assigned to the Amazon Product (ASIN/ISBN: "%asin%") with different ASIN/ISBN.
                     Please check the Settings and try again.',
@@ -248,7 +255,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product cannot be Listed because ASIN/ISBN "%asin%" found on Amazon by SKU "%sku%" has already been used by you to link another Magento Product to Amazon Product.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product cannot be Listed because ASIN/ISBN "%asin%" found on Amazon by SKU "%sku%" has already been
                      used by you to link another Magento Product to Amazon Product.',
                     array('!sku' => $this->data['sku'], '!asin' => $asin)
@@ -261,7 +268,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
         $this->link($this->existenceResult['asin'], $this->data['sku']);
     }
 
-    // ########################################
+    //########################################
 
     private function link($generalId, $sku)
     {
@@ -275,11 +282,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Product has been found by SKU "%sku%" in your Inventory and successfully linked.
             $this->addMessage(
-                Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+                Mage::helper('M2ePro/Module_Log')->encodeDescription(
                     'Product has been found by SKU "%sku%" in your Inventory and successfully linked.',
                     array('!sku' => $sku)
                 ),
-                Ess_M2ePro_Model_Log_Abstract::TYPE_SUCCESS
+                Ess_M2ePro_Model_Connector_Connection_Response_Message::TYPE_SUCCESS
             );
 
             return;
@@ -288,7 +295,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
 // M2ePro_TRANSLATIONS
 // Unexpected error during process of linking by SKU "%sku%". The required SKU has been found but the data is not sent back. Please try again.
         $this->addMessage(
-            Mage::getSingleton('M2ePro/Log_Abstract')->encodeDescription(
+            Mage::helper('M2ePro/Module_Log')->encodeDescription(
                 'Unexpected error during process of linking by SKU "%sku%".
                  The required SKU has been found but the data is not sent back. Please try again.',
                 array('!sku' => $sku)
@@ -296,5 +303,5 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Exi
         );
     }
 
-    // ########################################
+    //########################################
 }

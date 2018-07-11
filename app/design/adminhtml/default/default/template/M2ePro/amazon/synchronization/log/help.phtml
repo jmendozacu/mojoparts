@@ -1,0 +1,12 @@
+<div id="block_notice_amazon_logs_synchronizations_grid" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Synchronization'); ?>">
+    <?php echo Mage::helper('M2ePro')->__('This Log contains information on processes which were done in Synchronization Tasks.<br/><br/>
+    <b>Note:</b> Logs of Default, Inventory, Order, 3rd Party Listing, and Repricing Synchronizations are only recorded when Error(s) or Warning(s) appears.');
+
+    $url = Mage::helper("M2ePro/Module_Support")->getDocumentationUrl(NULL, NULL, "x/foIVAQ#Logs-SynchronizationLog");
+
+    echo Mage::helper('M2ePro')->__('
+            <br/><br/>More detailed information on how to work with this Page you can find <a href="%url%" target="_blank">here</a>.',
+        $url
+    );
+?>
+</div>

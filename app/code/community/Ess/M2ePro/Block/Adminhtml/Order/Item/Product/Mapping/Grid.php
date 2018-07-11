@@ -1,51 +1,54 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Mapping_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('orderItemProductMappingGrid');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('product_id');
         $this->setDefaultDir('DESC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
     }
 
     protected function _prepareCollection()
     {
-        $collection = Mage::getModel('catalog/product')->getCollection()
-            ->addAttributeToSelect('sku')
+        /** @var Ess_M2ePro_Model_Order_Item $orderItem */
+        $storeId = Mage_Catalog_Model_Abstract::DEFAULT_STORE_ID;
+        if ($orderItem = Mage::helper('M2ePro/Data_Global')->getValue('order_item')) {
+            $storeId = $orderItem->getStoreId();
+        }
+
+        /* @var $collection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                          Mage::getModel('catalog/product')->getResource());
+
+        $collection->setStoreId($storeId)
             ->addAttributeToSelect('name')
-            ->addAttributeToSelect('type_id')
-            ->joinField(
-                'qty',
-                'cataloginventory/stock_item',
-                'qty',
-                'product_id=entity_id',
-                '{{table}}.stock_id=1',
-                'left'
-            )
-            ->joinField(
-                'is_in_stock',
-                'cataloginventory/stock_item',
-                'is_in_stock',
-                'product_id=entity_id',
-                '{{table}}.stock_id=1',
-                'left'
-            );
+            ->addAttributeToSelect('sku')
+            ->addAttributeToSelect('type_id');
+
+        $collection->joinStockItem(array(
+            'qty' => 'qty',
+            'is_in_stock' => 'is_in_stock'
+        ));
 
         $this->setCollection($collection);
 
@@ -109,7 +112,7 @@ class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Mapping_Grid extends Mage_Ad
         ));
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnProductId($productId, $product, $column, $isExport)
     {
@@ -127,12 +130,13 @@ class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Mapping_Grid extends Mage_Ad
         $magentoProduct = Mage::getModel('M2ePro/Magento_Product');
         $magentoProduct->setProduct($product);
 
-        $imageUrlResized = $magentoProduct->getThumbnailImageLink();
-        if (is_null($imageUrlResized)) {
+        $imageResized = $magentoProduct->getThumbnailImage();
+        if (is_null($imageResized)) {
             return $withoutImageHtml;
         }
 
-        $imageHtml = $productId.'<hr /><img src="'.$imageUrlResized.'" />';
+        $imageHtml = $productId.'<hr /><img style="max-width: 100px; max-height: 100px;" src="'.
+            $imageResized->getUrl().'" />';
         $withImageHtml = str_replace('>'.$productId.'<','>'.$imageHtml.'<',$withoutImageHtml);
 
         return $withImageHtml;
@@ -170,10 +174,11 @@ class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Mapping_Grid extends Mage_Ad
     public function callbackColumnActions($value, $row, $column, $isExport)
     {
         $productId = (int)$row->getId();
+        $productSku = $row->getSku();
         $label = Mage::helper('M2ePro')->__('Map To This Product');
 
         $js = <<<JS
-$('product_id').setValue('{$productId}'); $('sku').setValue(''); $$('#product_mapping_submit_button')[0].click();
+OrderEditItemHandlerObj.assignProduct('{$productId}', '{$productSku}');
 JS;
 
         $html = <<<HTML
@@ -199,7 +204,7 @@ HTML;
         );
     }
 
-    // ####################################
+    //########################################
 
     public function getGridUrl()
     {
@@ -211,5 +216,5 @@ HTML;
         return false;
     }
 
-    // ####################################
+    //########################################
 }

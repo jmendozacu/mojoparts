@@ -1,15 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Component_Amazon extends Mage_Core_Helper_Abstract
 {
-    // M2ePro_TRANSLATIONS
-    // Amazon (Beta)
     const NICK  = 'amazon';
-    const TITLE = 'Amazon (Beta)';
 
     const MARKETPLACE_CA = 24;
     const MARKETPLACE_DE = 25;
@@ -17,14 +16,42 @@ class Ess_M2ePro_Helper_Component_Amazon extends Mage_Core_Helper_Abstract
     const MARKETPLACE_JP = 27;
     const MARKETPLACE_CN = 32;
 
-    // ########################################
+    const MAX_ALLOWED_FEED_REQUESTS_PER_HOUR = 30;
+
+    const SKU_MAX_LENGTH = 40;
+
+    //########################################
 
     public function getTitle()
     {
-        return Mage::helper('M2ePro')->__(self::TITLE);
+        return Mage::helper('M2ePro')->__('Amazon');
     }
 
-    // ########################################
+    public function getChannelTitle()
+    {
+        return Mage::helper('M2ePro')->__('Amazon');
+    }
+
+    //########################################
+
+    public function getHumanTitleByListingProductStatus($status)
+    {
+        $statuses = array(
+            Ess_M2ePro_Model_Listing_Product::STATUS_UNKNOWN    => Mage::helper('M2ePro')->__('Unknown'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED => Mage::helper('M2ePro')->__('Not Listed'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_LISTED     => Mage::helper('M2ePro')->__('Active'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_STOPPED    => Mage::helper('M2ePro')->__('Inactive'),
+            Ess_M2ePro_Model_Listing_Product::STATUS_BLOCKED    => Mage::helper('M2ePro')->__('Inactive (Blocked)')
+        );
+
+        if (!isset($statuses[$status])) {
+            return NULL;
+        }
+
+        return $statuses[$status];
+    }
+
+    //########################################
 
     public function isEnabled()
     {
@@ -47,7 +74,7 @@ class Ess_M2ePro_Helper_Component_Amazon extends Mage_Core_Helper_Abstract
         return !is_null($mode) && $mode == self::NICK;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getModel($modelName)
     {
@@ -71,7 +98,7 @@ class Ess_M2ePro_Helper_Component_Amazon extends Mage_Core_Helper_Abstract
         return $this->getModel($modelName)->getCollection();
     }
 
-    // ########################################
+    //########################################
 
     public function getRegisterUrl($marketplaceId = NULL)
     {
@@ -108,14 +135,27 @@ class Ess_M2ePro_Helper_Component_Amazon extends Mage_Core_Helper_Abstract
         return 'https://sellercentral.'.$domain.'/gp/orders-v2/details/?orderID='.$orderId;
     }
 
-    // ########################################
+    //########################################
+
+    public function isASIN($string)
+    {
+        if (strlen($string) != 10) {
+            return false;
+        }
+
+        if (!preg_match('/^B[A-Z0-9]{9}$/', $string)) {
+            return false;
+        }
+
+        return true;
+    }
 
     public function getApplicationName()
     {
         return Mage::helper('M2ePro/Module')->getConfig()->getGroupValue('/amazon/', 'application_name');
     }
 
-    // ########################################
+    // ----------------------------------------
 
     public function getCurrencies()
     {
@@ -148,7 +188,7 @@ class Ess_M2ePro_Helper_Component_Amazon extends Mage_Core_Helper_Abstract
         );
     }
 
-    // ########################################
+    // ----------------------------------------
 
     public function getMarketplacesAvailableForApiCreation()
     {
@@ -161,24 +201,15 @@ class Ess_M2ePro_Helper_Component_Amazon extends Mage_Core_Helper_Abstract
     public function getMarketplacesAvailableForAsinCreation()
     {
         $collection = $this->getMarketplacesAvailableForApiCreation();
-        return $collection->addFieldToFilter('is_asin_available', 1);
+        return $collection->addFieldToFilter('is_new_asin_available', 1);
     }
 
-    // ########################################
-
-    public function isASIN($string)
-    {
-        return !empty($string) &&
-               $string{0} == 'B' &&
-               strlen($string) == 10;
-    }
-
-    // ########################################
+    //########################################
 
     public function clearCache()
     {
         Mage::helper('M2ePro/Data_Cache_Permanent')->removeTagValues(self::NICK);
     }
 
-    // ########################################
+    //########################################
 }

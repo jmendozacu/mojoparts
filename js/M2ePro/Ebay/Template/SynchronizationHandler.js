@@ -1,13 +1,14 @@
 EbayTemplateSynchronizationHandler = Class.create();
 EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function()
     {
+        var self = this;
         Validation.add('validate-qty', M2ePro.translator.translate('Wrong value. Only integer numbers.'), function(value, el) {
 
-            if (!el.up('tr').visible()) {
+            if (self.isElementHiddenFromPage(el)) {
                 return true;
             }
 
@@ -18,7 +19,7 @@ EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler()
             return true;
         });
 
-        //-----------------
+        // ---------------------------------------
         Validation.add('M2ePro-validate-conditions-between', M2ePro.translator.translate('Must be greater than "Min".'), function(value, el) {
 
             var minValue = $(el.id.replace('_max','')).value;
@@ -29,9 +30,9 @@ EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler()
 
             return parseInt(value) > parseInt(minValue);
         });
-        //-----------------
+        // ---------------------------------------
 
-        //-----------------
+        // ---------------------------------------
         Validation.add('M2ePro-validate-stop-relist-conditions-product-status', M2ePro.translator.translate('Inconsistent Settings in Relist and Stop Rules.'), function(value, el) {
 
             if (EbayTemplateSynchronizationHandlerObj.isRelistModeDisabled()) {
@@ -102,105 +103,24 @@ EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler()
 
             return true;
         });
-        //-----------------
-
-        //-----------------
-        Validation.add('M2ePro-validate-schedule-interval-date', M2ePro.translator.translate('Wrong value.'), function(value, el) {
-
-            if (!el.up('tr').visible()) {
-                return true;
-            }
-
-            return el.value.match('^[0-9]{4}-[0-9]{2}-[0-9]{1,2}$');
-        });
-
-        Validation.add('M2ePro-validate-schedule-week-days', M2ePro.translator.translate('You need to choose at set at least one time for the schedule to run.'), function(value, el) {
-
-            var countOfCheckedDays = 0;
-
-            if (!EbayTemplateSynchronizationHandlerObj.isScheduleModeEnabled()) {
-                return true;
-            }
-
-            $$('.schedule_week_day_mode').each(function(el) {
-                el.checked && countOfCheckedDays++;
-            });
-
-            return countOfCheckedDays > 0;
-        });
-
-        Validation.add('M2ePro-validate-selected-schedule-time', M2ePro.translator.translate('You should specify time.'), function(value, el) {
-
-            var countUnselectedControls = 0;
-
-            if (!EbayTemplateSynchronizationHandlerObj.isScheduleModeEnabled()) {
-                return true;
-            }
-
-            if (!el.up('tr').select('.schedule_week_day_mode').shift().checked) {
-                return true;
-            }
-
-            el.up('td').select('select').each(function(el) {
-                el.value == '' && countUnselectedControls++;
-            });
-
-            return countUnselectedControls == 0;
-        });
-        //-----------------
-
-        //-----------------
-        Validation.add('M2ePro-validate-schedule-wrong-interval-date', M2ePro.translator.translate('Must be greater than "Active From" Date.'), function(value, el) {
-
-            if (!el.up('tr').visible()) {
-                return true;
-            }
-
-            var fromDate = new Date($('schedule_interval_date_from').value),
-                toDate   = new Date(value);
-
-            return (toDate - fromDate) >= 0;
-        });
-
-        Validation.add('M2ePro-validate-schedule-wrong-interval-time', M2ePro.translator.translate('Must be greater than "From Time".'), function(value, el) {
-
-            if (!EbayTemplateSynchronizationHandlerObj.isScheduleModeEnabled()) {
-                return true;
-            }
-
-            if (!el.up('tr').select('.schedule_week_day_mode').shift().checked) {
-                return true;
-            }
-
-            var now      = new Date(),
-                fromTime = new Date(now.toDateString() + ' ' + $(el.id.replace('validator_to','from')).value),
-                toTime   = new Date(now.toDateString() + ' ' + $(el.id.replace('validator_to','to')).value);
-
-            return (toTime - fromTime) > 0;
-        });
-        //-----------------
+        // ---------------------------------------
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     isRelistModeDisabled: function()
     {
         return $('relist_mode').value == 0;
     },
 
-    isScheduleModeEnabled: function()
-    {
-        return $('schedule_mode').value == 1;
-    },
-
-    //----------------------------------
+    // ---------------------------------------
 
     getNavigationTabName: function(element)
     {
         return $('ebay_template_synchronization_edit_form_navigation_bar_' + element.id.split('_').shift());
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     setVirtualTabsAsInactive: function()
     {
@@ -242,7 +162,7 @@ EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler()
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     listMode_change: function()
     {
@@ -280,7 +200,7 @@ EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler()
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     reviseQty_change: function()
     {
@@ -296,26 +216,130 @@ EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler()
         }
     },
 
-    reviseQtyMaxAppliedValueMode_change: function()
+    reviseQtyMaxAppliedValueMode_change: function(event)
     {
+        var self = EbayTemplateSynchronizationHandlerObj;
+
         $('revise_update_qty_max_applied_value_tr').hide();
 
         if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Synchronization::REVISE_MAX_AFFECTED_QTY_MODE_ON')) {
             $('revise_update_qty_max_applied_value_tr').show();
+        } else if (!event.cancelable) {
+            self.openReviseMaxAppliedQtyDisableConfirmationPopUp();
         }
     },
 
-    //----------------------------------
+    openReviseMaxAppliedQtyDisableConfirmationPopUp: function()
+    {
+        Dialog.info(null, {
+            draggable: true,
+            resizable: true,
+            closable: true,
+            className: "magento",
+            windowClassName: "popup-window",
+            title: 'Are you sure?',
+            width: 600,
+            height: 400,
+            zIndex: 100,
+            hideEffect: Element.hide,
+            showEffect: Element.show,
+            onClose: function() {
+                $('revise_update_qty_max_applied_value_mode').selectedIndex = 1;
+                $('revise_update_qty_max_applied_value_mode').simulate('change');
+            }
+        });
+
+        $('modal_dialog_message').update($('revise_qty_max_applied_value_confirmation_popup_template').innerHTML);
+
+        setTimeout(function() {
+            Windows.getFocusedWindow().content.style.height = '';
+            Windows.getFocusedWindow().content.style.maxHeight = '630px';
+        }, 50);
+    },
+
+    reviseQtyMaxAppliedValueDisableConfirm: function()
+    {
+        Windows.getFocusedWindow().close();
+
+        $('revise_update_qty_max_applied_value_mode').selectedIndex = 0;
+        $('revise_update_qty_max_applied_value_mode').simulate('change');
+    },
+
+    // ---------------------------------------
+
+    revisePrice_change: function()
+    {
+        if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Synchronization::REVISE_UPDATE_PRICE_YES')) {
+            $('revise_update_price_max_allowed_deviation_mode_tr').show();
+            $('revise_update_price_max_allowed_deviation_tr').show();
+            $('revise_update_price_line').show();
+            $('revise_update_price_max_allowed_deviation_mode').simulate('change');
+        } else {
+            $('revise_update_price_max_allowed_deviation_mode_tr').hide();
+            $('revise_update_price_max_allowed_deviation_tr').hide();
+            $('revise_update_price_line').hide();
+            $('revise_update_price_max_allowed_deviation_mode').value = M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Synchronization::REVISE_MAX_ALLOWED_PRICE_DEVIATION_MODE_OFF');
+        }
+    },
+
+    revisePriceMaxAllowedDeviationMode_change: function(event)
+    {
+        var self = EbayTemplateSynchronizationHandlerObj;
+
+        $('revise_update_price_max_allowed_deviation_tr').hide();
+
+        if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Synchronization::REVISE_MAX_ALLOWED_PRICE_DEVIATION_MODE_ON')) {
+            $('revise_update_price_max_allowed_deviation_tr').show();
+        } else if (!event.cancelable) {
+            self.openReviseMaxAllowedDeviationPriceDisableConfirmationPopUp();
+        }
+    },
+
+    openReviseMaxAllowedDeviationPriceDisableConfirmationPopUp: function()
+    {
+        Dialog.info(null, {
+            draggable: true,
+            resizable: true,
+            closable: true,
+            className: "magento",
+            windowClassName: "popup-window",
+            title: 'Are you sure?',
+            width: 600,
+            height: 400,
+            zIndex: 100,
+            hideEffect: Element.hide,
+            showEffect: Element.show,
+            onClose: function() {
+                $('revise_update_price_max_allowed_deviation_mode').selectedIndex = 1;
+                $('revise_update_price_max_allowed_deviation_mode').simulate('change');
+            }
+        });
+
+        $('modal_dialog_message').update($('revise_price_max_max_allowed_deviation_confirmation_popup_template').innerHTML);
+
+        setTimeout(function() {
+            Windows.getFocusedWindow().content.style.height = '';
+            Windows.getFocusedWindow().content.style.maxHeight = '630px';
+        }, 50);
+    },
+
+    revisePriceMaxAllowedDeviationDisableConfirm: function()
+    {
+        Windows.getFocusedWindow().close();
+
+        $('revise_update_price_max_allowed_deviation_mode').selectedIndex = 0;
+        $('revise_update_price_max_allowed_deviation_mode').simulate('change');
+    },
+
+    // ---------------------------------------
 
     relistMode_change: function()
     {
         $('relist_filter_user_lock_tr_container').hide();
-        $('relist_send_data_tr_container').hide();
         $('magento_block_ebay_template_synchronization_form_data_relist_rules').hide();
 
         if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Synchronization::RELIST_MODE_YES')) {
             $('relist_filter_user_lock_tr_container').show();
-            $('relist_send_data_tr_container').show();
             $('magento_block_ebay_template_synchronization_form_data_relist_rules').show();
         }
     },
@@ -347,7 +371,7 @@ EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler()
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     stopQty_change: function()
     {
@@ -376,53 +400,15 @@ EbayTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler()
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
-    scheduleModeChange: function()
-    {
-        $('schedule_interval_mode_tr','schedule_interval_value_tr',
-          'magento_block_ebay_template_synchronization_form_data_schedule_week').invoke('hide');
-
-        if (this.value == 1) {
-            $('schedule_interval_mode_tr','magento_block_ebay_template_synchronization_form_data_schedule_week').invoke('show');
-            $('schedule_interval_mode').simulate('change');
+    stopMode_change: function () {
+        if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Synchronization::STOP_MODE_YES')) {
+            $('magento_block_ebay_template_synchronization_form_data_stop_rules').show();
+        } else {
+            $('magento_block_ebay_template_synchronization_form_data_stop_rules').hide();
         }
-    },
-
-    scheduleIntervalModeChange: function()
-    {
-        var valueTr = $('schedule_interval_value_tr');
-
-        valueTr.hide();
-        if (EbayTemplateSynchronizationHandlerObj.isScheduleModeEnabled() && this.value == 1) {
-            valueTr.show();
-        }
-    },
-
-    scheduleDayModeChange: function()
-    {
-        var containerFrom = $(this.id.replace('mode','') + 'container_from'),
-            containerTo   = $(this.id.replace('mode','') + 'container_to');
-
-        containerFrom.hide();
-        containerTo.hide();
-
-        if (this.checked) {
-            containerFrom.show();
-            containerTo.show();
-        }
-    },
-
-    scheduleTimeSelectChange: function()
-    {
-        var inputId = this.id.match('(.)*(?=_)')[0];
-
-        var hours   = $(inputId + '_hours').value,
-            minutes = $(inputId + '_minutes').value,
-            ampm    = $(inputId + '_ampm').value;
-
-        $(inputId).value =  hours + ':' + minutes + ' ' + ampm;
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

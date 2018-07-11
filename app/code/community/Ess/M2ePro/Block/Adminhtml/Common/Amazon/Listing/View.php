@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminhtml_Block_Widget_Grid_Container
@@ -9,22 +11,25 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
     const VIEW_MODE_AMAZON   = 'amazon';
     const VIEW_MODE_MAGENTO  = 'magento';
     const VIEW_MODE_SELLERCENTRAL = 'sellercentral';
+    const VIEW_MODE_SETTINGS = 'settings';
 
     const DEFAULT_VIEW_MODE = self::VIEW_MODE_AMAZON;
+
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('amazonListingView');
         $this->_blockGroup = 'M2ePro';
         $this->_controller = 'adminhtml_common_amazon_listing_view_' . $this->getViewMode();
-        //------------------------------
+        // ---------------------------------------
 
         // Set header text
-        //------------------------------
+        // ---------------------------------------
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
         if (!Mage::helper('M2ePro/View_Common_Component')->isSingleActiveComponent()) {
@@ -37,52 +42,57 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
         }
 
         $this->_headerText = $headerText;
-        //------------------------------
+        // ---------------------------------------
 
         // Set buttons actions
-        //------------------------------
+        // ---------------------------------------
         $this->removeButton('back');
         $this->removeButton('reset');
         $this->removeButton('delete');
         $this->removeButton('add');
         $this->removeButton('save');
         $this->removeButton('edit');
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $url = $this->getUrl('*/adminhtml_common_log/listing', array(
             'id' => $listingData['id'],
-            'channel' => Ess_M2ePro_Block_Adminhtml_Common_Log_Tabs::TAB_ID_AMAZON
+            'channel' => Ess_M2ePro_Block_Adminhtml_Common_Log_Tabs::CHANNEL_ID_AMAZON
         ));
         $this->_addButton('view_log', array(
             'label'   => Mage::helper('M2ePro')->__('View Log'),
             'onclick' => 'window.open(\'' . $url . '\')',
             'class'   => 'button_link'
         ));
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $this->_addButton('edit_settings', array(
             'label'   => Mage::helper('M2ePro')->__('Edit Settings'),
             'onclick' => '',
             'class'   => 'drop_down edit_settings_drop_down'
         ));
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $this->_addButton('add_products', array(
             'label'     => Mage::helper('M2ePro')->__('Add Products'),
             'onclick'   => '',
             'class'     => 'add drop_down add_products_drop_down'
         ));
-        //------------------------------
+        // ---------------------------------------
     }
 
-    // ####################################
+    //########################################
 
     public function getViewMode()
     {
-        $allowedModes = array(self::VIEW_MODE_AMAZON, self::VIEW_MODE_MAGENTO, self::VIEW_MODE_SELLERCENTRAL);
+        $allowedModes = array(
+            self::VIEW_MODE_AMAZON,
+            self::VIEW_MODE_SETTINGS,
+            self::VIEW_MODE_MAGENTO,
+            self::VIEW_MODE_SELLERCENTRAL
+        );
         $mode = $this->getParam('view_mode', self::DEFAULT_VIEW_MODE);
 
         if (in_array($mode, $allowedModes)) {
@@ -109,7 +119,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
         return $default;
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
@@ -131,14 +141,14 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
         /** @var $helper Ess_M2ePro_Helper_Data */
         $helper = Mage::helper('M2ePro');
 
-        //------------------------------
+        // ---------------------------------------
         $urls = $helper->getControllerActions(
             'adminhtml_common_listing_autoAction', array(
                 'listing_id' => $this->getRequest()->getParam('id'),
                 'component' => Ess_M2ePro_Helper_Component_Amazon::NICK
             )
         );
-        $showAutoAction   = json_encode((bool)$this->getRequest()->getParam('auto_actions'));
+        $showAutoAction   = Mage::helper('M2ePro')->jsonEncode((bool)$this->getRequest()->getParam('auto_actions'));
 
         $path = 'adminhtml_common_log/listingProduct';
         $urls[$path] = $this->getUrl('*/' . $path, array(
@@ -151,10 +161,16 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
         $path = 'adminhtml_common_listing/duplicateProducts';
         $urls[$path] = $this->getUrl('*/' . $path);
 
-        $urls = json_encode($urls);
-        //------------------------------
+        $urls = array_merge($urls, Mage::helper('M2ePro')->getControllerActions(
+            'adminhtml_common_amazon_listing_repricing',
+            array(
+                'id' => $listingData['id'],
+                'account_id' => $listingData['account_id']
+            )
+        ));
 
-        // todo next (change)
+        $urls = Mage::helper('M2ePro')->jsonEncode($urls);
+        // ---------------------------------------
 
         $component = Ess_M2ePro_Helper_Component_Amazon::NICK;
 
@@ -162,17 +178,18 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
         $productsIdsForList = empty($temp) ? '' : $temp;
 
         $gridId = $this->getChild('grid')->getId();
-        $ignoreListings = json_encode(array($listingData['id']));
+        $ignoreListings = Mage::helper('M2ePro')->jsonEncode(array($listingData['id']));
 
         $marketplaceId = Mage::helper('M2ePro/Data_Global')->getValue('marketplace_id');
         $marketplaceInstance = Mage::helper('M2ePro/Component_Amazon')->getCachedObject('Marketplace',$marketplaceId);
-        $marketplace = json_encode($marketplaceInstance->getData());
-        $isNewAsinAvailable = json_encode($marketplaceInstance->getChildObject()->isNewAsinAvailable());
-        $isMarketplaceSynchronized = json_encode($marketplaceInstance->getChildObject()->isSynchronized());
+        $marketplace = Mage::helper('M2ePro')->jsonEncode($marketplaceInstance->getData());
+        $isNewAsinAvailable = Mage::helper('M2ePro')->jsonEncode(
+            $marketplaceInstance->getChildObject()->isNewAsinAvailable()
+        );
 
         $logViewUrl = $this->getUrl('*/adminhtml_common_log/listing',array(
             'id' => $listingData['id'],
-            'channel' => Ess_M2ePro_Block_Adminhtml_Common_Log_Tabs::TAB_ID_AMAZON,
+            'channel' => Ess_M2ePro_Block_Adminhtml_Common_Log_Tabs::CHANNEL_ID_AMAZON,
             'back' => $helper->makeBackUrlParam('*/adminhtml_common_amazon_listing/view',
                                                 array('id' =>$listingData['id']))
         ));
@@ -251,6 +268,8 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
                                                     ->escapeJs(Mage::helper('M2ePro')
                                                     ->__('Removing From Amazon And Listing Selected Items'));
 
+        $removingSelectedItemsMessage = $helper->escapeJs($helper->__('Removing From Listing Selected Items'));
+
         $successfullyMovedMessage = $helper->escapeJs($helper->__('Product(s) was successfully Moved.'));
         $productsWereNotMovedMessage = $helper->escapeJs(
             $helper->__('Product(s) was not Moved. <a target="_blank" href="%url%">View Log</a> for details.')
@@ -283,6 +302,14 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
         $unmapFromAsin = $this->getUrl('*/adminhtml_common_amazon_listing/unmapFromAsin');
         $mapToNewAsin = $this->getUrl('*/adminhtml_common_amazon_listing/mapToNewAsin');
 
+        $switchToAFN = $this->getUrl('*/adminhtml_common_amazon_listing/switchToAFN');
+        $switchToMFN = $this->getUrl('*/adminhtml_common_amazon_listing/switchToMFN');
+
+        $getAFNQtyBySku = $this->getUrl('*/adminhtml_common_amazon_listing/getAFNQtyBySku');
+        $getUpdatedRepricingPriceBySkus = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_repricing/getUpdatedPriceBySkus'
+        );
+
         $variationProductManage = $this->getUrl(
             '*/adminhtml_common_amazon_listing_variation_product_manage/index');
         $variationProductSetGeneralIdOwner = $this->getUrl(
@@ -297,6 +324,25 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
             '*/adminhtml_common_amazon_listing_variation_product_manage/viewTemplateDescriptionsGrid');
         $manageVariationMapToTemplateDescription = $this->getUrl(
             '*/adminhtml_common_amazon_listing_variation_product_manage/mapToTemplateDescription');
+        $addAttributesToVocabularyUrl = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_variation_product_manage/addAttributesToVocabulary'
+        );
+        $addOptionsToVocabularyUrl = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_variation_product_manage/addOptionsToVocabulary'
+        );
+
+        $viewVocabularyAjax = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_variation_product_manage/viewVocabularyAjax'
+        );
+        $saveAutoActionSettings = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_variation_product_manage/saveAutoActionSettings'
+        );
+        $removeAttributeFromVocabulary = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_variation_product_manage/removeAttributeFromVocabulary'
+        );
+        $removeOptionFromVocabulary = $this->getUrl(
+            '*/adminhtml_common_amazon_listing_variation_product_manage/removeOptionFromVocabulary'
+        );
 
         $viewVariationsSettingsAjax = $this->getUrl(
             '*/adminhtml_common_amazon_listing_variation_product_manage/viewVariationsSettingsAjax');
@@ -311,6 +357,20 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
             '*/adminhtml_common_amazon_listing/validateProductsForTemplateDescriptionAssign');
         $viewTemplateDescriptionsGrid = $this->getUrl('*/adminhtml_common_amazon_listing/viewTemplateDescriptionsGrid');
         $templateDescriptionPopupTitle = $helper->escapeJs($helper->__('Assign Description Policy'));
+
+        $assignShippingTemplate    = $this->getUrl('*/adminhtml_common_amazon_listing/assignShippingTemplate');
+        $unmapFromTemplateShipping = $this->getUrl('*/adminhtml_common_amazon_listing/unassignShippingTemplate');
+        $viewTemplateShippingPopup = $this->getUrl('*/adminhtml_common_amazon_listing/viewTemplateShippingPopup');
+        $viewTemplateShippingGrid  = $this->getUrl('*/adminhtml_common_amazon_listing/viewTemplateShippingGrid');
+
+        $assignProductTaxCode    = $this->getUrl('*/adminhtml_common_amazon_template_productTaxCode/assign');
+        $unassignProductTaxCode     = $this->getUrl('*/adminhtml_common_amazon_template_productTaxCode/unassign');
+        $viewProductTaxCodePopup = $this->getUrl('*/adminhtml_common_amazon_template_productTaxCode/viewPopup');
+        $viewProductTaxCodeGrid  = $this->getUrl('*/adminhtml_common_amazon_template_productTaxCode/viewGrid');
+
+        $templateShippingTemplatePopupTitle = $helper->escapeJs($helper->__('Assign Shipping Template Policy'));
+        $templateShippingOverridePopupTitle = $helper->escapeJs($helper->__('Assign Shipping Override Policy'));
+        $templateProductTaxCodePopupTitle = $helper->escapeJs($helper->__('Assign Product Tax Code Policy'));
 
         $enterProductSearchQueryMessage = $helper->escapeJs(
             $helper->__('Please enter Product Title or ASIN/ISBN/UPC/EAN.')
@@ -334,6 +394,8 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
 
         $noVariationsLeftText = $helper->__('All variations are already added.');
 
+        $notSet = $helper->__('Not Set');
+        $setAttributes = $helper->__('Set Attributes');
         $variationManageMatchedAttributesError = $helper->__('Please choose valid Attributes.');
         $variationManageMatchedAttributesErrorDuplicateSelection =
             $helper->__('You can not choose the same Attribute twice.');
@@ -346,14 +408,17 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
 
         $emptySkuError = $helper->escapeJs($helper->__('Please enter Amazon Parent Product SKU.'));
 
-        $translations = json_encode(array(
+        $translations = Mage::helper('M2ePro')->jsonEncode(array(
             'Auto Add/Remove Rules' => $helper->__('Auto Add/Remove Rules'),
             'Based on Magento Categories' => $helper->__('Based on Magento Categories'),
             'You must select at least 1 Category.' => $helper->__('You must select at least 1 Category.'),
             'Rule with the same Title already exists.' => $helper->__('Rule with the same Title already exists.')
         ));
 
-        $javascriptsMain = <<<JAVASCRIPT
+        $constants = Mage::helper('M2ePro')
+            ->getClassConstantAsJson('Ess_M2ePro_Model_Amazon_Account');
+
+        $javascriptsMain = <<<HTML
 <script type="text/javascript">
 
     if (typeof M2ePro == 'undefined') {
@@ -363,6 +428,10 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
         M2ePro.customData = {};
         M2ePro.text = {};
     }
+
+    M2ePro.php.setConstants(
+        {$constants}, 'Ess_M2ePro_Model_Amazon_Account'
+    );
 
     M2ePro.url.add({$urls});
     M2ePro.translator.add({$translations});
@@ -389,6 +458,12 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
     M2ePro.url.unmapFromAsin = '{$unmapFromAsin}';
     M2ePro.url.mapToNewAsin = '{$mapToNewAsin}';
 
+    M2ePro.url.switchToAFN = '{$switchToAFN}';
+    M2ePro.url.switchToMFN = '{$switchToMFN}';
+
+    M2ePro.url.getAFNQtyBySku = '{$getAFNQtyBySku}';
+    M2ePro.url.getUpdatedRepricingPriceBySkus = '{$getUpdatedRepricingPriceBySkus}';
+
     M2ePro.url.variationProductManage = '{$variationProductManage}';
     M2ePro.url.variationProductSetGeneralIdOwner = '{$variationProductSetGeneralIdOwner}';
     M2ePro.url.variationProductSetVariationTheme = '{$variationProductSetVariationTheme}';
@@ -398,6 +473,12 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
     M2ePro.url.manageVariationViewTemplateDescriptionsGrid = '{$manageVariationViewTemplateDescriptionsGrid}';
     M2ePro.url.manageVariationMapToTemplateDescription = '{$manageVariationMapToTemplateDescription}';
     M2ePro.url.viewVariationsSettingsAjax = '{$viewVariationsSettingsAjax}';
+    M2ePro.url.addAttributesToVocabulary = '{$addAttributesToVocabularyUrl}';
+    M2ePro.url.addOptionsToVocabulary = '{$addOptionsToVocabularyUrl}';
+    M2ePro.url.viewVocabularyAjax = '{$viewVocabularyAjax}';
+    M2ePro.url.saveAutoActionSettings = '{$saveAutoActionSettings}';
+    M2ePro.url.removeAttributeFromVocabulary = '{$removeAttributeFromVocabulary}';
+    M2ePro.url.removeOptionFromVocabulary = '{$removeOptionFromVocabulary}';
 
     M2ePro.url.newAsin = '{$newAsinUrl}';
 
@@ -405,6 +486,16 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
     M2ePro.url.unmapFromTemplateDescription = '{$unmapFromTemplateDescription}';
     M2ePro.url.validateProductsForTemplateDescriptionAssign = '{$validateProductsForTemplateDescriptionAssign}';
     M2ePro.url.viewTemplateDescriptionsGrid = '{$viewTemplateDescriptionsGrid}';
+
+    M2ePro.url.assignShippingTemplate = '{$assignShippingTemplate}';
+    M2ePro.url.unassignShippingTemplate = '{$unmapFromTemplateShipping}';
+    M2ePro.url.viewTemplateShippingPopup = '{$viewTemplateShippingPopup}';
+    M2ePro.url.viewTemplateShippingGrid = '{$viewTemplateShippingGrid}';
+
+    M2ePro.url.assignProductTaxCode = '{$assignProductTaxCode}';
+    M2ePro.url.unassignProductTaxCode = '{$unassignProductTaxCode}';
+    M2ePro.url.viewProductTaxCodePopup = '{$viewProductTaxCodePopup}';
+    M2ePro.url.viewProductTaxCodeGrid = '{$viewProductTaxCodeGrid}';
 
     M2ePro.url.prepareData = '{$prepareData}';
     M2ePro.url.getGridHtml = '{$getMoveToListingGridHtml}';
@@ -447,6 +538,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
     M2ePro.text.stopping_selected_items_message = '{$stoppingSelectedItemsMessage}';
     M2ePro.text.stopping_and_removing_selected_items_message = '{$stoppingAndRemovingSelectedItemsMessage}';
     M2ePro.text.deleting_and_removing_selected_items_message = '{$deletingAndRemovingSelectedItemsMessage}';
+    M2ePro.text.removing_selected_items_message = '{$removingSelectedItemsMessage}';
 
     M2ePro.text.successfully_moved = '{$successfullyMovedMessage}';
     M2ePro.text.products_were_not_moved = '{$productsWereNotMovedMessage}';
@@ -463,6 +555,10 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
 
     M2ePro.text.templateDescriptionPopupTitle = '{$templateDescriptionPopupTitle}';
 
+    M2ePro.text.templateShippingTemplatePopupTitle = '{$templateShippingTemplatePopupTitle}';
+    M2ePro.text.templateShippingOverridePopupTitle = '{$templateShippingOverridePopupTitle}';
+    M2ePro.text.templateProductTaxCodePopupTitle = '{$templateProductTaxCodePopupTitle}';
+
     M2ePro.text.assign = '{$assignString}';
     M2ePro.text.confirm = '{$textConfirm}';
 
@@ -476,6 +572,8 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
 
     M2ePro.text.no_variations_left = '{$noVariationsLeftText}';
 
+    M2ePro.text.not_set = '{$notSet}';
+    M2ePro.text.set_attributes = '{$setAttributes}';
     M2ePro.text.variation_manage_matched_attributes_error = '{$variationManageMatchedAttributesError}';
     M2ePro.text.variation_manage_matched_attributes_error_duplicate =
         '{$variationManageMatchedAttributesErrorDuplicateSelection}';
@@ -492,26 +590,28 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
 
     M2ePro.customData.marketplace = {$marketplace};
     M2ePro.customData.isNewAsinAvailable = {$isNewAsinAvailable};
-    M2ePro.customData.isMarketplaceSynchronized = {$isMarketplaceSynchronized};
 
     Event.observe(window, 'load', function() {
 
-        ListingGridHandlerObj = new AmazonListingGridHandler(
+        ListingGridHandlerObj = new CommonAmazonListingGridHandler(
             '{$gridId}',
             {$listingData['id']}
         );
 
-        // todo next
         ListingGridHandlerObj.actionHandler.setOptions(M2ePro);
         ListingGridHandlerObj.movingHandler.setOptions(M2ePro);
         ListingGridHandlerObj.productSearchHandler.setOptions(M2ePro);
         ListingGridHandlerObj.templateDescriptionHandler.setOptions(M2ePro);
+        ListingGridHandlerObj.templateShippingHandler.setOptions(M2ePro);
+        ListingGridHandlerObj.templateProductTaxCodeHandler.setOptions(M2ePro);
         ListingGridHandlerObj.variationProductManageHandler.setOptions(M2ePro);
+        ListingGridHandlerObj.fulfillmentHandler.setOptions(M2ePro);
+        ListingGridHandlerObj.repricingHandler.setOptions(M2ePro);
 
         ListingProgressBarObj = new ProgressBar('listing_view_progress_bar');
         GridWrapperObj = new AreaWrapper('listing_view_content_container');
 
-        ListingProductVariationHandlerObj = new ListingProductVariationHandler(M2ePro,
+        ListingProductVariationHandlerObj = new CommonListingProductVariationHandler(M2ePro,
                                                                                ListingGridHandlerObj);
 
         if (M2ePro.productsIdsForList) {
@@ -524,55 +624,58 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_View extends Mage_Adminht
             ListingAutoActionHandlerObj.loadAutoActionHtml();
         }
 
+        CommonAmazonListingAfnQtyHandlerObj = new CommonAmazonListingAfnQtyHandler();
+        CommonAmazonListingRepricingPriceHandlerObj = new CommonAmazonListingRepricingPriceHandler();
+
     });
 
 </script>
-JAVASCRIPT;
+HTML;
 
         $helpBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_common_amazon_listing_view_help');
         $productSearchBlock = $this->getLayout()
                                    ->createBlock('M2ePro/adminhtml_common_amazon_listing_productSearch_main');
 
-        //------------------------------
+        // ---------------------------------------
         $data = array(
             'target_css_class' => 'edit_settings_drop_down',
             'items'            => $this->getTemplatesButtonDropDownItems()
         );
         $templatesDropDownBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_widget_button_dropDown');
         $templatesDropDownBlock->setData($data);
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $data = array(
             'target_css_class' => 'add_products_drop_down',
             'items'            => $this->getAddProductsDropDownItems()
         );
         $addProductsDropDownBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_widget_button_dropDown');
         $addProductsDropDownBlock->setData($data);
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $listingSwitcher = $this->getLayout()->createBlock(
             'M2ePro/adminhtml_common_amazon_listing_view_listingSwitcher'
         );
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $viewHeaderBlock = $this->getLayout()->createBlock(
             'M2ePro/adminhtml_listing_view_header','',
             array('listing' => Mage::helper('M2ePro/Component_Amazon')->getCachedObject('Listing',$listingData['id']))
         );
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $switchToIndividualPopup = $this->getLayout()->createBlock(
             'M2ePro/adminhtml_common_amazon_listing_variation_product_switchToIndividualPopup');
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $switchToParentPopup = $this->getLayout()->createBlock(
             'M2ePro/adminhtml_common_amazon_listing_variation_product_switchToParentPopup');
-        //------------------------------
+        // ---------------------------------------
 
         return $javascriptsMain
             . $templatesDropDownBlock->toHtml()
@@ -590,7 +693,7 @@ JAVASCRIPT;
     {
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
-        //------------------------------
+        // ---------------------------------------
         $collection = Mage::getModel('M2ePro/Listing')->getCollection();
         $collection->addFieldToFilter('component_mode', Ess_M2ePro_Helper_Component_Amazon::NICK);
         $collection->addFieldToFilter('id', array('neq' => $listingData['id']));
@@ -604,13 +707,13 @@ JAVASCRIPT;
                 'url' => $this->getUrl('*/*/view', array('id' => $item->getId()))
             );
         }
-        //------------------------------
+        // ---------------------------------------
 
         if (count($items) == 0) {
             return parent::getHeaderHtml();
         }
 
-        //------------------------------
+        // ---------------------------------------
         $data = array(
             'target_css_class' => 'listing-profile-title',
             'style' => 'max-height: 120px; overflow: auto; width: 200px;',
@@ -618,19 +721,19 @@ JAVASCRIPT;
         );
         $dropDownBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_widget_button_dropDown');
         $dropDownBlock->setData($data);
-        //------------------------------
+        // ---------------------------------------
 
         return parent::getHeaderHtml() . $dropDownBlock->toHtml();
     }
 
     public function getHeaderText()
     {
-        //------------------------------
+        // ---------------------------------------
         $changeProfile = Mage::helper('M2ePro')->__('Change Listing');
         $headerText = parent::getHeaderText();
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
         $listingTitle = Mage::helper('M2ePro')->escapeHtml($listingData['title']);
-        //------------------------------
+        // ---------------------------------------
 
         return <<<HTML
 {$headerText} <a href="javascript: void(0);"
@@ -653,7 +756,7 @@ HTML;
             )
         );
 
-        //------------------------------
+        // ---------------------------------------
         $url = $this->getUrl(
             '*/adminhtml_common_amazon_listing/edit',
             array(
@@ -667,9 +770,9 @@ HTML;
             'label' => Mage::helper('M2ePro')->__('Selling'),
             'target' => '_blank'
         );
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $url = $this->getUrl(
             '*/adminhtml_common_amazon_listing/edit',
             array(
@@ -683,15 +786,15 @@ HTML;
             'label' => Mage::helper('M2ePro')->__('Search'),
             'target' => '_blank'
         );
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $items[] = array(
             'url' => 'javascript: void(0);',
             'onclick' => 'ListingAutoActionHandlerObj.loadAutoActionHtml();',
             'label' => Mage::helper('M2ePro')->__('Auto Add/Remove Rules')
         );
-        //------------------------------
+        // ---------------------------------------
 
         return $items;
     }
@@ -705,7 +808,7 @@ HTML;
             'id' => $listingData['id']
         ));
 
-        //------------------------------
+        // ---------------------------------------
         $url = $this->getUrl(
             '*/adminhtml_common_listing_productAdd/index',
             array(
@@ -721,9 +824,9 @@ HTML;
             'url' => $url,
             'label' => Mage::helper('M2ePro')->__('From Products List')
         );
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $url = $this->getUrl(
             '*/adminhtml_common_listing_productAdd/index',
             array(
@@ -739,8 +842,10 @@ HTML;
             'url' => $url,
             'label' => Mage::helper('M2ePro')->__('From Categories')
         );
-        //------------------------------
+        // ---------------------------------------
 
         return $items;
     }
+
+    //########################################
 }

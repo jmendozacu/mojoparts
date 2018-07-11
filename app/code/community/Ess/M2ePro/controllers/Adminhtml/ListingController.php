@@ -1,13 +1,30 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_ListingController
     extends Ess_M2ePro_Controller_Adminhtml_BaseController
 {
-    //#############################################
+    //########################################
+
+    public function saveTitleAction()
+    {
+        $listingId = $this->getRequest()->getParam('id');
+        $title = $this->getRequest()->getParam('title');
+
+        if (is_null($listingId)) {
+            return;
+        }
+
+        $model = Mage::getModel('M2ePro/Listing')->loadInstance((int)$listingId);
+        $model->setTitle($title)->save();
+
+        Mage::getModel('M2ePro/Listing_Log')->getResource()->updateListingTitle($listingId, $title);
+    }
 
     public function clearLogAction()
     {
@@ -23,7 +40,7 @@ class Ess_M2ePro_Adminhtml_ListingController
             Mage::getModel('M2ePro/Listing_Log')->clearMessages($id);
         }
 
-        $this->_getSession()->addSuccess(Mage::helper('M2ePro')->__('The Listing(s) Log was successfully cleaned.'));
+        $this->_getSession()->addSuccess(Mage::helper('M2ePro')->__('The Listing(s) Log was successfully cleared.'));
         $this->_redirectUrl(Mage::helper('M2ePro')->getBackUrl('list'));
     }
 
@@ -38,7 +55,7 @@ class Ess_M2ePro_Adminhtml_ListingController
         return $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function saveListingAdditionalDataAction()
     {
@@ -58,5 +75,5 @@ class Ess_M2ePro_Adminhtml_ListingController
         return $this->getResponse()->setBody(0);
     }
 
-    //#############################################
+    //########################################
 }

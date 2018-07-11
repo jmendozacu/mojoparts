@@ -1,0 +1,19 @@
+#!/bin/bash
+current_date=$(date "+%Y.%m.%d")
+log_name=logs/temp.log
+exec &> $log_name.$current_date
+set -o errexit
+
+php_log_name=logs/temp-php.log
+php temp.php > $php_log_name.$current_date
+rc=$? # this is the return code from php job, since it always returns 0 on exit(<some message>);
+
+if [ $rc = 0 ]; then
+#	cd /var/www/html/magmi/cli/
+#	sudo chown ec2-user ../state/progress.txt
+#	sudo chmod 755 ../state/progress.txt
+
+	echo test
+
+fi
+

@@ -1,19 +1,19 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
 {
-    // ########################################
-
     /**
      * @var Ess_M2ePro_Model_Listing_Product
      */
     private $listingProduct = NULL;
 
-    // ########################################
+    //########################################
 
     /**
      * @param Ess_M2ePro_Model_Listing_Product $listingProduct
@@ -23,7 +23,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
         $this->listingProduct = $listingProduct;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Listing_Product
@@ -41,30 +41,45 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
         return $this->getListingProduct()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isVariationProduct()
     {
         return (bool)(int)$this->getAmazonListingProduct()->getData('is_variation_product');
     }
 
+    /**
+     * @return bool
+     */
     public function isVariationParent()
     {
         return (bool)(int)$this->getAmazonListingProduct()->getData('is_variation_parent');
     }
 
+    /**
+     * @return int
+     */
     public function getVariationParentId()
     {
         return (int)$this->getAmazonListingProduct()->getData('variation_parent_id');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isSimpleType()
     {
         return !$this->isVariationProduct();
     }
 
+    /**
+     * @return bool
+     */
     public function isIndividualType()
     {
         return $this->isVariationProduct() &&
@@ -72,6 +87,9 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
                !$this->getVariationParentId();
     }
 
+    /**
+     * @return bool
+     */
     public function isRelationParentType()
     {
         return $this->isVariationProduct() &&
@@ -79,6 +97,9 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
                !$this->getVariationParentId();
     }
 
+    /**
+     * @return bool
+     */
     public function isRelationChildType()
     {
         return $this->isVariationProduct() &&
@@ -86,7 +107,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
                $this->getVariationParentId();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function setSimpleType()
     {
@@ -117,32 +138,48 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
                                   ->save();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isIndividualMode()
     {
         return $this->isIndividualType();
     }
 
+    /**
+     * @return bool
+     */
     public function isRelationMode()
     {
         return $this->isRelationParentType() || $this->isRelationChildType();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isLogicalUnit()
     {
         return $this->isRelationParentType();
     }
 
+    /**
+     * @return bool
+     */
     public function isPhysicalUnit()
     {
         return $this->isIndividualType() || $this->isRelationChildType();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return mixed
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function getTypeModel()
     {
         $model = NULL;
@@ -154,7 +191,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
         } else if ($this->isRelationChildType()) {
             $model = Mage::getModel('M2ePro/Amazon_Listing_Product_Variation_Manager_Type_Relation_Child');
         } else {
-            throw new Exception('This Product is not a Variation Product.');
+            throw new Ess_M2ePro_Model_Exception('This Product is not a Variation Product.');
         }
 
         /** @var $model Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager_Abstract */
@@ -163,8 +200,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
         return $model;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function modeCanBeSwitched()
     {
         return ($this->isIndividualType() || $this->isRelationParentType()) &&
@@ -193,5 +233,5 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
         return true;
     }
 
-    // ########################################
+    //########################################
 }

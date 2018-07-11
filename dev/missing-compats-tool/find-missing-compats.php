@@ -3,7 +3,8 @@ error_reporting(E_ALL);
 libxml_use_internal_errors(true);
 include('config.php'); 
 
-$input_result = mysqli_query($con, "select ei.item_id from m2epro_ebay_item ei inner join m2epro_ebay_listing_product elp on elp.ebay_item_id=ei.id inner join m2epro_listing_product lp on lp.id=elp.listing_product_id inner join catalog_product_entity cpe on cpe.sku=elp.online_sku inner join catalog_product_entity_varchar rc on rc.entity_id=cpe.entity_id and rc.attribute_id=144 where lp.`status`=2 and rc.value like '20170817-%%'");
+$input_result = mysqli_query($con, "select ei.item_id from m2epro_ebay_item ei inner join m2epro_ebay_listing_product elp on elp.ebay_item_id=ei.id inner join m2epro_listing_product lp on lp.id=elp.listing_product_id inner join catalog_product_entity cpe on cpe.sku=elp.online_sku inner join catalog_product_entity_varchar rc on rc.entity_id=cpe.entity_id and rc.attribute_id=144 where lp.`status`=2"); 
+// and rc.value like '20170817-%%'");
 $numRows = mysqli_num_rows($input_result);
 $rowNum = 0;
 $pctDone = 0.0;

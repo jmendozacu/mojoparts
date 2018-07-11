@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Search_Custom
@@ -11,33 +13,43 @@ class Ess_M2ePro_Model_Amazon_Search_Custom
 
     private $query = null;
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param Ess_M2ePro_Model_Listing_Product $listingProduct
+     * @return $this
+     */
     public function setListingProduct(Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
         $this->listingProduct = $listingProduct;
         return $this;
     }
 
+    /**
+     * @param $query
+     * @return $this
+     */
     public function setQuery($query)
     {
         $this->query = (string)$query;
         return $this;
     }
 
-    // ########################################
+    //########################################
 
     public function process()
     {
-        $searchData = Mage::getModel('M2ePro/Connector_Amazon_Dispatcher')->processConnector(
-            'custom', $this->getSearchMethod(), 'requester', $this->getConnectorParams(),
-            $this->listingProduct->getAccount(), 'Ess_M2ePro_Model_Amazon_Search'
+        $dispatcherObject = Mage::getModel('M2ePro/Amazon_Connector_Dispatcher');
+        $connectorObj = $dispatcherObject->getCustomConnector(
+            'Amazon_Search_Custom_'.ucfirst($this->getSearchMethod()).'_Requester',
+            $this->getConnectorParams(), $this->listingProduct->getAccount()
         );
 
-        return $this->prepareResult($searchData);
+        $dispatcherObject->process($connectorObj);
+        return $this->prepareResult($connectorObj->getPreparedResponseData());
     }
 
-    // ########################################
+    //########################################
 
     private function getConnectorParams()
     {
@@ -70,13 +82,13 @@ class Ess_M2ePro_Model_Amazon_Search_Custom
         $amazonHelper     = Mage::helper('M2ePro/Component_Amazon');
         $strippedQuery    = $this->getStrippedQuery();
 
-        if ($amazonHelper->isASIN($strippedQuery) || $validationHelper->isISBN10($strippedQuery)) {
+        if ($amazonHelper->isASIN($strippedQuery)) {
             return 'byAsin';
         }
 
         if ($validationHelper->isEAN($strippedQuery) ||
             $validationHelper->isUPC($strippedQuery) ||
-            $validationHelper->isISBN13($strippedQuery)
+            $validationHelper->isISBN($strippedQuery)
         ) {
             return 'byIdentifier';
         }
@@ -90,10 +102,10 @@ class Ess_M2ePro_Model_Amazon_Search_Custom
 
         $validationHelper = Mage::helper('M2ePro');
 
-        return (Mage::helper('M2ePro/Component_Amazon')->isASIN($query) ? 'asin' :
-               ($validationHelper->isISBN($query)                       ? 'isbn' :
-               ($validationHelper->isUPC($query)                        ? 'upc'  :
-               ($validationHelper->isEAN($query)                        ? 'ean'  : false))));
+        return (Mage::helper('M2ePro/Component_Amazon')->isASIN($query) ? 'ASIN' :
+               ($validationHelper->isISBN($query)                       ? 'ISBN' :
+               ($validationHelper->isUPC($query)                        ? 'UPC'  :
+               ($validationHelper->isEAN($query)                        ? 'EAN'  : false))));
     }
 
     private function prepareResult($searchData)
@@ -126,5 +138,5 @@ class Ess_M2ePro_Model_Amazon_Search_Custom
         return str_replace('-', '', $this->query);
     }
 
-    // ########################################
+    //########################################
 }

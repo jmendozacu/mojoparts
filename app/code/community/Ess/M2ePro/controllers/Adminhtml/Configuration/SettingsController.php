@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Configuration_SettingsController
     extends Ess_M2ePro_Controller_Adminhtml_Configuration_MainController
 {
-    //#############################################
+    //########################################
 
     public function saveAction()
     {
@@ -30,8 +32,13 @@ class Ess_M2ePro_Adminhtml_Configuration_SettingsController
             (int)$this->getRequest()->getParam('force_qty_value')
         );
 
-        Mage::helper('M2ePro/Module')->getSynchronizationConfig()->setGroupValue(
-            '/defaults/inspector/', 'mode',
+        Mage::helper('M2ePro/Module')->getConfig()->setGroupValue(
+            '/magento/attribute/','price_type_converting',
+            (int)$this->getRequest()->getParam('price_convert_mode')
+        );
+
+        Mage::helper('M2ePro/Module')->getConfig()->setGroupValue(
+            '/listing/product/inspector/', 'mode',
             (int)$this->getRequest()->getParam('inspector_mode')
         );
 
@@ -42,17 +49,39 @@ class Ess_M2ePro_Adminhtml_Configuration_SettingsController
         $this->_redirectUrl($this->_getRefererUrl());
     }
 
-    //#############################################
+    //########################################
 
     public function restoreBlockNoticesAction()
     {
-        foreach ($_COOKIE as $name => $value) {
-            strpos($name,'m2e_bn_') !== false && setcookie($name, '', 0, '/');
+        foreach (Mage::app()->getRequest()->getCookie() as $name => $value) {
+            if (strpos($name,'m2e_bn_') !== false || strpos($name,'_skip_save_confirmation') !== false) {
+                setcookie($name, '', 0, '/');
+            }
+        }
+
+        $collection = Mage::getModel('M2ePro/Listing')->getCollection();
+
+        foreach ($collection as $listing) {
+            /** @var $listing Ess_M2ePro_Model_Listing */
+
+            $additionalData = $listing->getSettings('additional_data');
+
+            if ($listing->isComponentModeEbay()) {
+                unset($additionalData['show_settings_step']);
+                unset($additionalData['mode_same_category_data']);
+            }
+
+            if ($listing->isComponentModeAmazon()) {
+                unset($additionalData['show_new_asin_step']);
+            }
+
+            $listing->setSettings('additional_data', $additionalData);
+            $listing->save();
         }
 
         $this->_getSession()->addSuccess(Mage::helper('M2ePro')->__('All Help Blocks were restored.'));
         $this->_redirectUrl($this->_getRefererUrl());
     }
 
-    //#############################################
+    //########################################
 }

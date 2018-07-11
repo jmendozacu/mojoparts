@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Data_Global extends Mage_Core_Helper_Abstract
 {
-    // ########################################
+    //########################################
 
     public function getValue($key)
     {
@@ -20,7 +22,7 @@ class Ess_M2ePro_Helper_Data_Global extends Mage_Core_Helper_Abstract
         Mage::register($globalKey,$value,!Mage::helper('M2ePro/Module')->isDevelopmentEnvironment());
     }
 
-    // ########################################
+    //########################################
 
     public function unsetValue($key)
     {
@@ -28,5 +30,5 @@ class Ess_M2ePro_Helper_Data_Global extends Mage_Core_Helper_Abstract
         Mage::unregister($globalKey);
     }
 
-    // ########################################
+    //########################################
 }

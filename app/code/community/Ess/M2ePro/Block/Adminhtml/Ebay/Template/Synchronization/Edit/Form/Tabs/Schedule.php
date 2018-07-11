@@ -1,36 +1,38 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Template_Synchronization_Edit_Form_Tabs_Schedule
     extends Ess_M2ePro_Block_Adminhtml_Ebay_Template_Synchronization_Edit_Form_Data
 {
-    // ####################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayTemplateSynchronizationEditFormTabsSchedule');
-        //------------------------------
+        // ---------------------------------------
 
         $this->setTemplate('M2ePro/ebay/template/synchronization/form/tabs/schedule.phtml');
     }
 
-    // ####################################
+    //########################################
 
     public function getFormData()
     {
         $data = parent::getFormData();
 
-        //--
+        // ---------------------------------------
         if (!empty($data['schedule_interval_settings']) && is_string($data['schedule_interval_settings'])) {
 
-            $scheduleIntervalSettings = json_decode($data['schedule_interval_settings'], true);
+            $scheduleIntervalSettings = Mage::helper('M2ePro')->jsonDecode($data['schedule_interval_settings']);
             unset($data['schedule_interval_settings']);
 
             if (isset($scheduleIntervalSettings['mode'])) {
@@ -49,12 +51,12 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Template_Synchronization_Edit_Form_Tabs_Sc
         } else {
             unset($data['schedule_interval_settings']);
         }
-        //--
+        // ---------------------------------------
 
-        //--
+        // ---------------------------------------
         if (!empty($data['schedule_week_settings']) && is_string($data['schedule_week_settings'])) {
 
-            $scheduleWeekSettings = json_decode($data['schedule_week_settings'], true);
+            $scheduleWeekSettings = Mage::helper('M2ePro')->jsonDecode($data['schedule_week_settings']);
             unset($data['schedule_week_settings']);
 
             $parsedSettings = array();
@@ -78,12 +80,12 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Template_Synchronization_Edit_Form_Tabs_Sc
         } else {
             unset($data['schedule_week_settings']);
         }
-        //--
+        // ---------------------------------------
 
         return $data;
     }
 
-    // ####################################
+    //########################################
 
     public function getDefault()
     {
@@ -91,13 +93,14 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Template_Synchronization_Edit_Form_Tabs_Sc
             ? Mage::getSingleton('M2ePro/Ebay_Template_Synchronization')->getScheduleDefaultSettingsSimpleMode()
             : Mage::getSingleton('M2ePro/Ebay_Template_Synchronization')->getScheduleDefaultSettingsAdvancedMode();
 
-        $default['schedule_interval_settings'] = json_decode($default['schedule_interval_settings'], true);
-        $default['schedule_week_settings'] = json_decode($default['schedule_week_settings'], true);
+        $helper = Mage::helper('M2ePro');
+        $default['schedule_interval_settings'] = $helper->jsonDecode($default['schedule_interval_settings']);
+        $default['schedule_week_settings'] = $helper->jsonDecode($default['schedule_week_settings']);
 
         return $default;
     }
 
-    // ####################################
+    //########################################
 
     public function isDayExistInWeekSettingsArray($day, $weekSettings)
     {
@@ -105,5 +108,5 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Template_Synchronization_Edit_Form_Tabs_Sc
         return in_array(strtolower($day), $daysInSettingsArray);
     }
 
-    // ####################################
+    //########################################
 }

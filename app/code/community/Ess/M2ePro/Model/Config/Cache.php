@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Config_Cache extends Ess_M2ePro_Model_Config_Abstract
 {
-    // ########################################
+    //########################################
 
     public function __construct()
     {
@@ -25,5 +27,5 @@ class Ess_M2ePro_Model_Config_Cache extends Ess_M2ePro_Model_Config_Abstract
         $this->_init('M2ePro/Config_Cache');
     }
 
-    // ########################################
+    //########################################
 }

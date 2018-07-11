@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2015 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abstract
@@ -12,16 +14,15 @@ class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abst
     private $productId = NULL;
 
     private $affectedListingsProducts = array();
-    private $affectedOtherListings = array();
 
-    //####################################
+    //########################################
 
     public function beforeProcess()
     {
         $productId = (int)$this->getEventObserver()->getData('item')->getData('product_id');
 
         if ($productId <= 0) {
-            throw new Exception('Product ID should be greater than 0.');
+            throw new Ess_M2ePro_Model_Exception('Product ID should be greater than 0.');
         }
 
         $this->productId = $productId;
@@ -29,35 +30,24 @@ class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abst
 
     public function process()
     {
-        // skip qty changes when it was reserved
-        $reservationTempKey = Ess_M2ePro_Helper_Data::CUSTOM_IDENTIFIER.'_order_reservation';
-        $reservationTempValue = $this->getEventObserver()->getData('item')->getData($reservationTempKey);
-
-        if (!is_null($reservationTempValue)) {
-            return;
-        }
-
         if (!$this->areThereAffectedItems()) {
             return;
         }
 
-        Mage::getModel('M2ePro/ProductChange')->addUpdateAction(
-            $this->getProductId(),
-            Ess_M2ePro_Model_ProductChange::INITIATOR_OBSERVER
-        );
+        $this->addListingProductInstructions();
 
         $this->processQty();
         $this->processStockAvailability();
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     private function processQty()
     {
         $oldValue = (int)$this->getEventObserver()->getData('item')->getOrigData('qty');
         $newValue = (int)$this->getEventObserver()->getData('item')->getData('qty');
 
-        if (!$this->updateProductChangeRecord('qty',$oldValue,$newValue) || $oldValue == $newValue) {
+        if ($oldValue == $newValue) {
             return;
         }
 
@@ -68,15 +58,6 @@ class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abst
             $this->logListingProductMessage($listingProduct,
                                             Ess_M2ePro_Model_Listing_Log::ACTION_CHANGE_PRODUCT_QTY,
                                             $oldValue, $newValue);
-        }
-
-        foreach ($this->getAffectedOtherListings() as $otherListing) {
-
-            /** @var Ess_M2ePro_Model_Listing_Other $otherListing */
-
-            $this->logOtherListingMessage($otherListing,
-                                          Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_QTY,
-                                          $oldValue, $newValue);
         }
     }
 
@@ -92,8 +73,7 @@ class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abst
         $oldValue = $oldValue ? 'IN Stock' : 'OUT of Stock';
         $newValue = $newValue ? 'IN Stock' : 'OUT of Stock';
 
-        if (!$this->updateProductChangeRecord('stock_availability',$oldValue,$newValue) ||
-            $oldValue == $newValue) {
+        if ($oldValue == $newValue) {
             return;
         }
 
@@ -105,45 +85,49 @@ class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abst
                                             Ess_M2ePro_Model_Listing_Log::ACTION_CHANGE_PRODUCT_STOCK_AVAILABILITY,
                                             $oldValue, $newValue);
         }
-
-        foreach ($this->getAffectedOtherListings() as $otherListing) {
-
-            /** @var Ess_M2ePro_Model_Listing_Other $otherListing */
-
-            $this->logOtherListingMessage($otherListing,
-                                          Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_STOCK_AVAILABILITY,
-                                          $oldValue, $newValue);
-        }
     }
 
-    //####################################
+    //########################################
 
     private function getProductId()
     {
         return $this->productId;
     }
 
-    private function updateProductChangeRecord($attributeCode, $oldValue, $newValue)
+    private function addListingProductInstructions()
     {
-        return Mage::getModel('M2ePro/ProductChange')->updateAttribute(
-            $this->getProductId(),
-            $attributeCode,
-            $oldValue,
-            $newValue,
-            Ess_M2ePro_Model_ProductChange::INITIATOR_OBSERVER
+        $synchronizationInstructionsData = array();
+
+        foreach ($this->getAffectedListingsProducts() as $listingProduct) {
+            /** @var Ess_M2ePro_Model_Magento_Product_ChangeProcessor_Abstract $changeProcessor */
+            $changeProcessor = Mage::getModel(
+                'M2ePro/'.ucfirst($listingProduct->getComponentMode()).'_Magento_Product_ChangeProcessor'
+            );
+            $changeProcessor->setListingProduct($listingProduct);
+            $changeProcessor->setDefaultInstructionTypes(array(
+                Ess_M2ePro_Model_Magento_Product_ChangeProcessor_Abstract::INSTRUCTION_TYPE_PRODUCT_STATUS_DATA_POTENTIALLY_CHANGED,
+                Ess_M2ePro_Model_Magento_Product_ChangeProcessor_Abstract::INSTRUCTION_TYPE_PRODUCT_QTY_DATA_POTENTIALLY_CHANGED,
+            ));
+            $changeProcessor->process();
+        }
+
+        Mage::getResourceModel('M2ePro/Listing_Product_Instruction')->add(
+            $synchronizationInstructionsData
         );
     }
 
-    //####################################
+    //########################################
 
     private function areThereAffectedItems()
     {
-        return count($this->getAffectedListingsProducts()) > 0 ||
-               count($this->getAffectedOtherListings()) > 0;
+        return count($this->getAffectedListingsProducts()) > 0;
     }
 
-    //------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return Ess_M2ePro_Model_Listing_Product[]
+     */
     private function getAffectedListingsProducts()
     {
         if (!empty($this->affectedListingsProducts)) {
@@ -154,18 +138,7 @@ class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abst
                                                             ->getItemsByProductId($this->getProductId());
     }
 
-    private function getAffectedOtherListings()
-    {
-        if (!empty($this->affectedOtherListings)) {
-            return $this->affectedOtherListings;
-        }
-
-        return $this->affectedOtherListings = Mage::getResourceModel('M2ePro/Listing_Other')->getItemsByProductId(
-            $this->getProductId(), array('component_mode' => Ess_M2ePro_Helper_Component_Ebay::NICK)
-        );
-    }
-
-    //####################################
+    //########################################
 
     private function logListingProductMessage(Ess_M2ePro_Model_Listing_Product $listingProduct, $action,
                                               $oldValue, $newValue)
@@ -183,7 +156,7 @@ class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abst
             Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION,
             NULL,
             $action,
-            Mage::getModel('M2ePro/Log_Abstract')->encodeDescription(
+            Mage::helper('M2ePro/Module_Log')->encodeDescription(
                 'From [%from%] to [%to%].',
                 array('!from'=>$oldValue,'!to'=>$newValue)
             ),
@@ -192,27 +165,5 @@ class Ess_M2ePro_Model_Observer_StockItem extends Ess_M2ePro_Model_Observer_Abst
         );
     }
 
-    private function logOtherListingMessage(Ess_M2ePro_Model_Listing_Other $otherListing, $action,
-                                            $oldValue, $newValue)
-    {
-        // M2ePro_TRANSLATIONS
-        // From [%from%] to [%to%].
-
-        $log = Mage::getModel('M2ePro/Listing_Other_Log');
-        $log->setComponentMode($otherListing->getComponentMode());
-
-        $log->addProductMessage(
-            $otherListing->getId(),
-            Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION,
-            NULL,
-            $action,
-            Mage::getModel('M2ePro/Log_Abstract')->encodeDescription(
-                'From [%from%] to [%to%]',array('!from'=>$oldValue,'!to'=>$newValue)
-            ),
-            Ess_M2ePro_Model_Log_Abstract::TYPE_NOTICE,
-            Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW
-        );
-    }
-
-    //####################################
+    //########################################
 }

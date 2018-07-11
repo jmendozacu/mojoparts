@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_Abstract
 {
-    // ################################
+    //########################################
 
     public function getAll($returnType = self::RETURN_TYPE_ARRAYS)
     {
@@ -17,7 +19,7 @@ class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_A
         return $this->_convertCollectionToReturnType($attributeSetsCollection, $returnType);
     }
 
-    // --------------------------------
+    // ---------------------------------------
 
     public function getFromProducts($products, $returnType = self::RETURN_TYPE_ARRAYS)
     {
@@ -28,7 +30,7 @@ class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_A
 
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $tableName = Mage::getSingleton('core/resource')->getTableName('catalog/product');
+        $tableName = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('catalog/product');
 
         $dbSelect = $connRead->select()
             ->from($tableName, 'attribute_set_id')
@@ -43,7 +45,7 @@ class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_A
         return $this->_convertFetchNumArrayToReturnType($fetchArray, $returnType, 'eav/entity_attribute_set');
     }
 
-    // --------------------------------
+    // ---------------------------------------
 
     public function getContainsAttribute($attribute, $returnType = self::RETURN_TYPE_ARRAYS)
     {
@@ -75,7 +77,7 @@ class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_A
         return $this->_getContainsAttributeIds($attributes, $returnType);
     }
 
-    // ################################
+    //########################################
 
     public function getProductsByAttributeSet($attributeSet, $returnType = self::RETURN_TYPE_IDS)
     {
@@ -94,13 +96,15 @@ class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_A
             return array();
         }
 
-        $productsCollection = Mage::getModel('catalog/product')->getCollection();
+        /* @var $productsCollection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $productsCollection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                                  Mage::getModel('catalog/product')->getResource());
         $productsCollection->addFieldToFilter('attribute_set_id', array('in' => $attributeSetIds));
 
         return $this->_convertCollectionToReturnType($productsCollection, $returnType);
     }
 
-    // ################################
+    //########################################
 
     public function isDefault($setId)
     {
@@ -126,87 +130,7 @@ class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_A
         return $collection->getColumnValues('attribute_set_name');
     }
 
-    // ################################
-
-    public function create($attributeSetName, $sourceAttributeSetId = NULL)
-    {
-        empty($sourceAttributeSetId) &&
-            $sourceAttributeSetId = Mage::getModel('catalog/product')->getDefaultAttributeSetId();
-
-        if (!Mage::getModel('eav/entity_attribute_set')->load($sourceAttributeSetId)->getId()){
-            return false;
-        }
-
-        $entityTypeId = Mage::getModel('catalog/product')->getResource()->getTypeId();
-
-        /** @var $attributeSet Mage_Eav_Model_Entity_Attribute_Set */
-        $attributeSet = Mage::getModel('eav/entity_attribute_set')
-            ->setEntityTypeId($entityTypeId)
-            ->setAttributeSetName($attributeSetName);
-
-        try {
-            // check if name is valid
-            $attributeSet->validate();
-            // copy parameters to new set from source set
-            $attributeSet->save();
-            $attributeSet->initFromSkeleton($sourceAttributeSetId)->save();
-        } catch (Exception $e) {
-            return false;
-        }
-
-        return (int)$attributeSet->getId();
-    }
-
-    // ################################
-
-    public function attributeAdd($attributeId, $attributeSetId, $attributeGroupId = NULL, $sortOrder = '0')
-    {
-        /** @var $attribute Mage_Eav_Model_Entity_Attribute */
-        $attribute = Mage::getModel('eav/entity_attribute')->load($attributeId);
-        if (!$attribute->getId()) {
-            return false;
-        }
-
-        /** @var $attributeSet Mage_Eav_Model_Entity_Attribute_Set */
-        $attributeSet = Mage::getModel('eav/entity_attribute_set')->load($attributeSetId);
-        if (!$attributeSet->getId()) {
-            return false;
-        }
-
-        if (!empty($attributeGroupId)) {
-            if (!Mage::getModel('eav/entity_attribute_group')->load($attributeGroupId)->getId()) {
-                return false;
-            }
-        } else {
-            $attributeGroupId = $attributeSet->getDefaultGroupId();
-        }
-
-        $attribute->setAttributeSetId($attributeSet->getId());
-
-        $filteredAttributes = Mage::getModel('eav/entity_attribute')->getResourceCollection()
-            ->setAttributeSetFilter($attributeSet->getId())
-            ->addFieldToFilter('entity_attribute.attribute_id', $attributeId)
-            ->load();
-
-        // attribute is already in set
-        if (count($filteredAttributes) > 0) {
-            return false;
-        }
-
-        try {
-            $attribute->setEntityTypeId($attributeSet->getEntityTypeId())
-                ->setAttributeSetId($attributeSetId)
-                ->setAttributeGroupId($attributeGroupId)
-                ->setSortOrder($sortOrder)
-                ->save();
-        } catch (Exception $e) {
-            return false;
-        }
-
-        return true;
-    }
-
-    // ################################
+    //########################################
 
     protected function _getContainsAttributeIds(array $attributeIds,
                                                              $returnType = self::RETURN_TYPE_ARRAYS,
@@ -218,7 +142,7 @@ class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_A
 
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $tableName = Mage::getSingleton('core/resource')->getTableName('eav/entity_attribute');
+        $tableName = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('eav/entity_attribute');
 
         $dbSelect = $connRead->select()
             ->from($tableName, 'attribute_set_id')
@@ -238,5 +162,5 @@ class Ess_M2ePro_Helper_Magento_AttributeSet extends Ess_M2ePro_Helper_Magento_A
         return $this->_convertFetchNumArrayToReturnType($fetchArray, $returnType, 'eav/entity_attribute_set');
     }
 
-    // ################################
+    //########################################
 }

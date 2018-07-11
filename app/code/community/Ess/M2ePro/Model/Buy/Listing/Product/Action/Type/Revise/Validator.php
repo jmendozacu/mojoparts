@@ -1,20 +1,21 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Revise_Validator
     extends Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function validate()
     {
-        if (!$this->validateLockedObject()) {
-            return false;
-        }
-
         if (!$this->validateSku()) {
             return false;
         }
@@ -29,8 +30,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Revise_Validator
         }
 
         $generalId = $this->getBuyListingProduct()->getGeneralId();
-        $condition = $this->getCondition();
-        if (empty($generalId) || empty($condition)) {
+        if (empty($generalId)) {
 
             // M2ePro_TRANSLATIONS
             // Rakuten.com data was not received yet. Please wait and try again later.
@@ -38,7 +38,6 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Revise_Validator
 
             return false;
         }
-        $this->data['condition'] = $condition;
 
         if ($this->getVariationManager()->isVariationProduct() && !$this->validateVariationProductMatching()) {
             return false;
@@ -55,5 +54,5 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Revise_Validator
         return true;
     }
 
-    // ########################################
+    //########################################
 }

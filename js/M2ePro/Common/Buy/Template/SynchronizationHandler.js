@@ -1,7 +1,6 @@
-CommonBuyTemplateSynchronizationHandler = Class.create();
-CommonBuyTemplateSynchronizationHandler.prototype = Object.extend(new CommonHandler(), {
+CommonBuyTemplateSynchronizationHandler = Class.create(CommonBuyTemplateEditHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function()
     {
@@ -32,7 +31,7 @@ CommonBuyTemplateSynchronizationHandler.prototype = Object.extend(new CommonHand
             return true;
         });
 
-        //-----------------
+        // ---------------------------------------
         Validation.add('M2ePro-validate-conditions-between', M2ePro.translator.translate('Must be greater than "Min".'), function(value, el) {
 
             var minValue = $(el.id.replace('_max','')).value;
@@ -43,9 +42,9 @@ CommonBuyTemplateSynchronizationHandler.prototype = Object.extend(new CommonHand
 
             return parseInt(value) > parseInt(minValue);
         });
-        //-----------------
+        // ---------------------------------------
 
-        //-----------------
+        // ---------------------------------------
         Validation.add('M2ePro-validate-stop-relist-conditions-product-status', M2ePro.translator.translate('Inconsistent Settings in Relist and Stop Rules.'), function(value, el) {
 
             if (BuyTemplateSynchronizationHandlerObj.isRelistModeDisabled()) {
@@ -116,29 +115,29 @@ CommonBuyTemplateSynchronizationHandler.prototype = Object.extend(new CommonHand
 
             return true;
         });
-        //-----------------
+        // ---------------------------------------
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     isRelistModeDisabled: function()
     {
         return $('relist_mode').value == 0;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
-    duplicate_click: function($headId)
+    duplicate_click: function($super, $headId)
     {
         this.setValidationCheckRepetitionValue('M2ePro-synchronization-tpl-title',
                                                 M2ePro.translator.translate('The specified Title is already used for other Policy. Policy Title must be unique.'),
                                                 'Template_Synchronization', 'title', '', '',
                                                 M2ePro.php.constant('Ess_M2ePro_Helper_Component_Buy::NICK'));
 
-        CommonHandlerObj.duplicate_click($headId, M2ePro.translator.translate('Add Synchronization Policy.'));
+        $super($headId, M2ePro.translator.translate('Add Synchronization Policy.'));
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     stopQty_change: function()
     {
@@ -260,14 +259,118 @@ CommonBuyTemplateSynchronizationHandler.prototype = Object.extend(new CommonHand
         }
     },
 
-    reviseQtyMaxAppliedValueMode_change: function()
+    reviseQtyMaxAppliedValueMode_change: function(event)
     {
+        var self = BuyTemplateSynchronizationHandlerObj;
+
         $('revise_update_qty_max_applied_value_tr').hide();
 
         if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_MAX_AFFECTED_QTY_MODE_ON')) {
             $('revise_update_qty_max_applied_value_tr').show();
+        } else if (!event.cancelable) {
+            self.openReviseMaxAppliedQtyDisableConfirmationPopUp();
         }
+    },
+
+    openReviseMaxAppliedQtyDisableConfirmationPopUp: function()
+    {
+        Dialog.info(null, {
+            draggable: true,
+            resizable: true,
+            closable: true,
+            className: "magento",
+            windowClassName: "popup-window",
+            title: 'Are you sure?',
+            width: 600,
+            height: 400,
+            zIndex: 100,
+            hideEffect: Element.hide,
+            showEffect: Element.show,
+            onClose: function() {
+                $('revise_update_qty_max_applied_value_mode').selectedIndex = 1;
+                $('revise_update_qty_max_applied_value_mode').simulate('change');
+            }
+        });
+
+        $('modal_dialog_message').update($('revise_qty_max_applied_value_confirmation_popup_template').innerHTML);
+
+        setTimeout(function() {
+            Windows.getFocusedWindow().content.style.height = '';
+            Windows.getFocusedWindow().content.style.maxHeight = '630px';
+        }, 50);
+    },
+
+    reviseQtyMaxAppliedValueDisableConfirm: function()
+    {
+        Windows.getFocusedWindow().close();
+
+        $('revise_update_qty_max_applied_value_mode').selectedIndex = 0;
+        $('revise_update_qty_max_applied_value_mode').simulate('change');
+    },
+
+    // ---------------------------------------
+
+    revisePrice_change: function()
+    {
+        if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_UPDATE_PRICE_YES')) {
+            $('revise_update_price_max_allowed_deviation_mode_tr').show();
+            $('revise_update_price_max_allowed_deviation_tr').show();
+            $('revise_update_price_max_allowed_deviation_mode').simulate('change');
+        } else {
+            $('revise_update_price_max_allowed_deviation_mode_tr').hide();
+            $('revise_update_price_max_allowed_deviation_tr').hide();
+            $('revise_update_price_max_allowed_deviation_mode').value = M2ePro.php.constant('Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_MAX_ALLOWED_PRICE_DEVIATION_MODE_OFF');
+        }
+    },
+
+    revisePriceMaxAllowedDeviationMode_change: function(event)
+    {
+        var self = BuyTemplateSynchronizationHandlerObj;
+
+        $('revise_update_price_max_allowed_deviation_tr').hide();
+
+        if (this.value == M2ePro.php.constant('Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_MAX_ALLOWED_PRICE_DEVIATION_MODE_ON')) {
+            $('revise_update_price_max_allowed_deviation_tr').show();
+        } else if (!event.cancelable) {
+            self.openReviseMaxAllowedDeviationPriceDisableConfirmationPopUp();
+        }
+    },
+
+    openReviseMaxAllowedDeviationPriceDisableConfirmationPopUp: function()
+    {
+        Dialog.info(null, {
+            draggable: true,
+            resizable: true,
+            closable: true,
+            className: "magento",
+            windowClassName: "popup-window",
+            title: 'Are you sure?',
+            width: 600,
+            height: 400,
+            zIndex: 100,
+            hideEffect: Element.hide,
+            showEffect: Element.show,
+            onClose: function() {
+                $('revise_update_price_max_allowed_deviation_mode').selectedIndex = 1;
+                $('revise_update_price_max_allowed_deviation_mode').simulate('change');
+            }
+        });
+
+        $('modal_dialog_message').update($('revise_price_max_max_allowed_deviation_confirmation_popup_template').innerHTML);
+
+        setTimeout(function() {
+            Windows.getFocusedWindow().content.style.height = '';
+            Windows.getFocusedWindow().content.style.maxHeight = '630px';
+        }, 50);
+    },
+
+    revisePriceMaxAllowedDeviationDisableConfirm: function()
+    {
+        Windows.getFocusedWindow().close();
+
+        $('revise_update_price_max_allowed_deviation_mode').selectedIndex = 0;
+        $('revise_update_price_max_allowed_deviation_mode').simulate('change');
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

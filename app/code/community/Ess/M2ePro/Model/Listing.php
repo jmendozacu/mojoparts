@@ -1,11 +1,25 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
+/**
+ * @method Ess_M2ePro_Model_Amazon_Listing|Ess_M2ePro_Model_Ebay_Listing getChildObject()
+ */
 class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstract
 {
+    const INSTRUCTION_TYPE_PRODUCT_ADDED       = 'listing_product_added';
+    const INSTRUCTION_INITIATOR_ADDING_PRODUCT = 'adding_product_to_listing';
+
+    const INSTRUCTION_TYPE_PRODUCT_MOVED_FROM_OTHER       = 'listing_product_moved_from_other';
+    const INSTRUCTION_INITIATOR_MOVING_PRODUCT_FROM_OTHER = 'moving_product_from_other_to_listing';
+
+    const INSTRUCTION_TYPE_PRODUCT_MOVED_FROM_LISTING       = 'listing_product_moved_from_listing';
+    const INSTRUCTION_INITIATOR_MOVING_PRODUCT_FROM_LISTING = 'moving_product_from_listing_to_listing';
+
     const SOURCE_PRODUCTS_CUSTOM     = 1;
     const SOURCE_PRODUCTS_CATEGORIES = 2;
 
@@ -17,11 +31,12 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
     const ADDING_MODE_NONE          = 0;
     const ADDING_MODE_ADD           = 1;
 
+    const AUTO_ADDING_ADD_NOT_VISIBLE_NO   = 0;
+    const AUTO_ADDING_ADD_NOT_VISIBLE_YES  = 1;
+
     const DELETING_MODE_NONE        = 0;
     const DELETING_MODE_STOP        = 1;
     const DELETING_MODE_STOP_REMOVE = 2;
-
-    // ########################################
 
     /**
      * @var Ess_M2ePro_Model_Account
@@ -33,7 +48,7 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
      */
     private $marketplaceModel = NULL;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -41,16 +56,20 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         $this->_init('M2ePro/Listing');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function isLocked()
     {
-        if (parent::isLocked()) {
-            return true;
-        }
-
         if ($this->isComponentModeEbay() && $this->getAccount()->getChildObject()->isModeSandbox()) {
             return false;
+        }
+
+        if (parent::isLocked()) {
+            return true;
         }
 
         return (bool)Mage::getModel('M2ePro/Listing_Product')
@@ -86,7 +105,7 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
                                      // Listing was successfully deleted
                                      'Listing was successfully deleted',
                                      Ess_M2ePro_Model_Log_Abstract::TYPE_NOTICE,
-                                     Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH );
+                                     Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH);
 
         $this->accountModel = NULL;
         $this->marketplaceModel = NULL;
@@ -97,7 +116,7 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         return true;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -121,7 +140,7 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
          $this->accountModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -145,8 +164,14 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
          $this->marketplaceModel = $instance;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param bool $asObjects
+     * @param array $filters
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getProducts($asObjects = false, array $filters = array())
     {
         $products = $this->getRelatedComponentItems('Listing_Product','listing_id',$asObjects,$filters);
@@ -161,36 +186,51 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         return $products;
     }
 
+    /**
+     * @param bool $asObjects
+     * @param array $filters
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getAutoCategoriesGroups($asObjects = false, array $filters = array())
     {
         return $this->getRelatedComponentItems('Listing_Auto_Category_Group', 'listing_id', $asObjects, $filters);
     }
 
-    // ########################################
+    //########################################
 
     public function getTitle()
     {
         return $this->getData('title');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     public function getAccountId()
     {
         return (int)$this->getData('account_id');
     }
 
+    /**
+     * @return int
+     */
     public function getMarketplaceId()
     {
         return (int)$this->getData('marketplace_id');
     }
 
+    /**
+     * @return int
+     */
     public function getStoreId()
     {
         return (int)$this->getData('store_id');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getCreateDate()
     {
@@ -202,113 +242,194 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         return $this->getData('update_date');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isSourceProducts()
     {
         return (int)$this->getData('source_products') == self::SOURCE_PRODUCTS_CUSTOM;
     }
 
+    /**
+     * @return bool
+     */
     public function isSourceCategories()
     {
         return (int)$this->getData('source_products') == self::SOURCE_PRODUCTS_CATEGORIES;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getAutoMode()
     {
         return (int)$this->getData('auto_mode');
     }
 
+    /**
+     * @return bool
+     */
     public function isAutoModeNone()
     {
         return $this->getAutoMode() == self::AUTO_MODE_NONE;
     }
 
+    /**
+     * @return bool
+     */
     public function isAutoModeGlobal()
     {
         return $this->getAutoMode() == self::AUTO_MODE_GLOBAL;
     }
 
+    /**
+     * @return bool
+     */
     public function isAutoModeWebsite()
     {
         return $this->getAutoMode() == self::AUTO_MODE_WEBSITE;
     }
 
+    /**
+     * @return bool
+     */
     public function isAutoModeCategory()
     {
         return $this->getAutoMode() == self::AUTO_MODE_CATEGORY;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
+    public function isAutoGlobalAddingAddNotVisibleYes()
+    {
+        return $this->getData('auto_global_adding_add_not_visible') == self::AUTO_ADDING_ADD_NOT_VISIBLE_YES;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAutoWebsiteAddingAddNotVisibleYes()
+    {
+        return $this->getData('auto_website_adding_add_not_visible') == self::AUTO_ADDING_ADD_NOT_VISIBLE_YES;
+    }
+
+    //########################################
+
+    /**
+     * @return int
+     */
     public function getAutoGlobalAddingMode()
     {
         return (int)$this->getData('auto_global_adding_mode');
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isAutoGlobalAddingModeNone()
     {
         return $this->getAutoGlobalAddingMode() == self::ADDING_MODE_NONE;
     }
 
+    /**
+     * @return bool
+     */
     public function isAutoGlobalAddingModeAdd()
     {
         return $this->getAutoGlobalAddingMode() == self::ADDING_MODE_ADD;
     }
 
-    // #######################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getAutoWebsiteAddingMode()
     {
         return (int)$this->getData('auto_website_adding_mode');
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isAutoWebsiteAddingModeNone()
     {
         return $this->getAutoWebsiteAddingMode() == self::ADDING_MODE_NONE;
     }
 
+    /**
+     * @return bool
+     */
     public function isAutoWebsiteAddingModeAdd()
     {
         return $this->getAutoWebsiteAddingMode() == self::ADDING_MODE_ADD;
     }
 
-    // #######################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getAutoWebsiteDeletingMode()
     {
         return (int)$this->getData('auto_website_deleting_mode');
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isAutoWebsiteDeletingModeNone()
     {
         return $this->getAutoWebsiteDeletingMode() == self::DELETING_MODE_NONE;
     }
 
+    /**
+     * @return bool
+     */
     public function isAutoWebsiteDeletingModeStop()
     {
         return $this->getAutoWebsiteDeletingMode() == self::DELETING_MODE_STOP;
     }
 
+    /**
+     * @return bool
+     */
     public function isAutoWebsiteDeletingModeStopRemove()
     {
         return $this->getAutoWebsiteDeletingMode() == self::DELETING_MODE_STOP_REMOVE;
     }
 
-    // ########################################
+    //########################################
 
-    public function addProduct($product, $checkingMode = false, $checkHasProduct = true)
+    public function addProduct($product,
+                               $initiator = Ess_M2ePro_Helper_Data::INITIATOR_UNKNOWN,
+                               $checkingMode = false, $checkHasProduct = true,
+                               array $logAdditionalInfo = array())
     {
-        $productId = $product instanceof Mage_Catalog_Model_Product ?
-                        (int)$product->getId() : (int)$product;
+        if ($product instanceof Mage_Catalog_Model_Product) {
+            $productId = (int)$product->getId();
+            $productType = $product->getTypeId();
+        } else {
+            $productId = (int)$product;
+            $productType = Ess_M2ePro_Model_Magento_Product::getTypeIdByProductId($productId);
+        }
+
+        if ($productType == 'virtual') {
+            return false;
+        }
 
         if ($checkHasProduct && $this->hasProduct($productId)) {
             return false;
@@ -329,6 +450,8 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
             Mage::helper('M2ePro/Component')->getComponentModel($this->getComponentMode(),'Listing_Product')
                                     ->setData($data)->save();
 
+        $listingProductTemp->getChildObject()->afterSaveNewEntity();
+
         $variationUpdaterModel = ucwords($this->getComponentMode()).'_Listing_Product_Variation_Updater';
         /** @var Ess_M2ePro_Model_Listing_Product_Variation_Updater $variationUpdaterObject */
         $variationUpdaterObject = Mage::getModel('M2ePro/'.$variationUpdaterModel);
@@ -336,44 +459,53 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         $variationUpdaterObject->afterMassProcessEvent();
 
         // Add message for listing log
-        //------------------------------
+        // ---------------------------------------
         $tempLog = Mage::getModel('M2ePro/Listing_Log');
         $tempLog->setComponentMode($this->getComponentMode());
         $tempLog->addProductMessage( $this->getId(),
                                      $productId,
                                      $listingProductTemp->getId(),
-                                     Ess_M2ePro_Helper_Data::INITIATOR_UNKNOWN,
+                                     $initiator,
                                      NULL,
                                      Ess_M2ePro_Model_Listing_Log::ACTION_ADD_PRODUCT_TO_LISTING,
                                      // M2ePro_TRANSLATIONS
                                      // Item was successfully Added
                                      'Item was successfully Added',
                                      Ess_M2ePro_Model_Log_Abstract::TYPE_NOTICE,
-                                     Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW);
-        //------------------------------
+                                     Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW,
+                                     $logAdditionalInfo);
+        // ---------------------------------------
+
+        $instruction = Mage::getModel('M2ePro/Listing_Product_Instruction');
+        $instruction->setData(array(
+            'listing_product_id' => $listingProductTemp->getId(),
+            'component'          => $this->getComponentMode(),
+            'type'               => self::INSTRUCTION_TYPE_PRODUCT_ADDED,
+            'initiator'          => self::INSTRUCTION_INITIATOR_ADDING_PRODUCT,
+            'priority'           => 70,
+        ));
+        $instruction->save();
 
         return $listingProductTemp;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
-    public function addProductsFromCategory($categoryId)
+    public function addProductsFromCategory($categoryId,
+                                            $initiator = Ess_M2ePro_Helper_Data::INITIATOR_UNKNOWN)
     {
         $categoryProductsArray = $this->getProductsFromCategory($categoryId);
         foreach ($categoryProductsArray as $productTemp) {
-            $this->addProduct($productTemp);
+            $this->addProduct($productTemp, $initiator);
         }
     }
 
     public function getProductsFromCategory($categoryId, $hideProductsPresentedInAnotherListings = false)
     {
-        // Make collection
-        //----------------------------
-        $collection = Mage::getModel('catalog/product')->getCollection();
-        //----------------------------
+        /* @var $collection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                          Mage::getModel('catalog/product')->getResource());
 
-        // Hide products others listings
-        //----------------------------
         if ($hideProductsPresentedInAnotherListings) {
 
             $table = Mage::getResourceModel('M2ePro/Listing_Product')->getMainTable();
@@ -384,21 +516,15 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
 
             $collection->getSelect()->where('`e`.`entity_id` NOT IN ('.$dbSelect->__toString().')');
         }
-        //----------------------------
 
-        // Add categories filter
-        //----------------------------
-        $table = Mage::getSingleton('core/resource')->getTableName('catalog_category_product');
+        $table = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('catalog_category_product');
         $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
             ->select()
             ->from($table,new Zend_Db_Expr('DISTINCT `product_id`'))
             ->where("`category_id` = ?",(int)$categoryId);
 
         $collection->getSelect()->where('`e`.`entity_id` IN ('.$dbSelect->__toString().')');
-        //----------------------------
 
-        // Get categories products
-        //----------------------------
         $sqlQuery = $collection->getSelect()->__toString();
 
         $categoryProductsArray = Mage::getResourceModel('core/config')
@@ -408,8 +534,12 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         return (array)$categoryProductsArray;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param int $productId
+     * @return bool
+     */
     public function hasProduct($productId)
     {
         return count($this->getProducts(false,array('product_id'=>$productId))) > 0;
@@ -423,7 +553,7 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         $processedListings = array();
 
         // Delete Products
-        //------------------
+        // ---------------------------------------
         $listingsProducts = Mage::getModel('M2ePro/Listing_Product')
                                     ->getCollection()
                                     ->addFieldToFilter('product_id', $productId)
@@ -435,11 +565,22 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         foreach ($listingsProducts as $listingProduct) {
 
             if (!isset($listingsProductsForRemove[$listingProduct->getId()])) {
-                $listingProduct->deleteProcessingRequests();
-                $listingProduct->deleteObjectLocks();
+                $listingProduct->deleteProcessingLocks();
                 $listingProduct->isStoppable() && Mage::getModel('M2ePro/StopQueue')->add($listingProduct);
                 $listingProduct->setStatus(Ess_M2ePro_Model_Listing_Product::STATUS_STOPPED)->save();
-                $listingsProductsForRemove[$listingProduct->getId()] = $listingProduct;
+
+                if ($listingProduct->isComponentModeAmazon()) {
+                    /** @var Ess_M2ePro_Model_Amazon_Listing_Product $amazonListingProduct */
+                    $amazonListingProduct = $listingProduct->getChildObject();
+                    $variationManager = $amazonListingProduct->getVariationManager();
+
+                    if (!$variationManager->isRelationChildType() ||
+                        !isset($listingsProducts[$variationManager->getVariationParentId()])) {
+                        $listingsProductsForRemove[$listingProduct->getId()] = $listingProduct;
+                    }
+                } else {
+                    $listingsProductsForRemove[$listingProduct->getId()] = $listingProduct;
+                }
             }
 
             $listingId = $listingProduct->getListingId();
@@ -461,29 +602,89 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
                                     Ess_M2ePro_Model_Listing_Log::ACTION_DELETE_PRODUCT_FROM_MAGENTO,
                                     NULL,
                                     Ess_M2ePro_Model_Log_Abstract::TYPE_WARNING,
-                                    Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH );
+                                    Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH);
         }
 
         $processedListings = array();
 
         // Delete Options
-        //------------------
+        // ---------------------------------------
         $variationOptions = Mage::getModel('M2ePro/Listing_Product_Variation_Option')
                                     ->getCollection()
                                     ->addFieldToFilter('product_id', $productId)
                                     ->getItems();
 
-        $deletedVariationsIds = array();
+        $processedVariationsIds = array();
 
         /** @var $variationOption Ess_M2ePro_Model_Listing_Product_Variation_Option */
         foreach ($variationOptions as $variationOption) {
 
+            if (in_array($variationOption->getListingProductVariationId(),$processedVariationsIds)) {
+                continue;
+            }
+
+            $processedVariationsIds[] = $variationOption->getListingProductVariationId();
+
             /** @var $listingProduct Ess_M2ePro_Model_Listing_Product */
             $listingProduct = $variationOption->getListingProduct();
 
-            if (!in_array($variationOption->getListingProductVariationId(),$deletedVariationsIds)) {
-                $variationOption->getListingProductVariation()->deleteInstance();
-                $deletedVariationsIds[] = $variationOption->getListingProductVariationId();
+            if ($variationOption->isComponentModeEbay()) {
+
+                /** @var Ess_M2ePro_Model_Ebay_Listing_Product_Variation $ebayVariation */
+                $variation = $variationOption->getListingProductVariation();
+                $ebayVariation = $variation->getChildObject();
+
+                if (!$ebayVariation->isNotListed()) {
+                    $additionalData = $listingProduct->getAdditionalData();
+                    $variationsThatCanNotBeDeleted = isset($additionalData['variations_that_can_not_be_deleted'])
+                        ? $additionalData['variations_that_can_not_be_deleted'] : array();
+
+                    $specifics = array();
+
+                    foreach ($variation->getOptions(true, array(), true, false) as $option) {
+                        $specifics[$option->getAttribute()] = $option->getOption();
+                    }
+
+                    $tempVariation = array(
+                        'qty'       => 0,
+                        'price'     => $ebayVariation->getOnlinePrice(),
+                        'sku'       => $ebayVariation->getOnlineSku(),
+                        'add'       => 0,
+                        'delete'    => 1,
+                        'specifics' => $specifics,
+                        'has_sales' => true,
+                    );
+
+                    if ($ebayVariation->isDelete()) {
+                        $tempVariation['sku'] = 'del-' . sha1(microtime(1).$ebayVariation->getOnlineSku());
+                    }
+
+                    $specificsReplacements = $listingProduct->getChildObject()->getVariationSpecificsReplacements();
+                    if (!empty($specificsReplacements)) {
+                        $tempVariation['variations_specifics_replacements'] = $specificsReplacements;
+                    }
+
+                    $variationAdditionalData = $variation->getAdditionalData();
+                    if (isset($variationAdditionalData['ebay_mpn_value'])) {
+                        $tempVariation['details']['mpn'] = $variationAdditionalData['ebay_mpn_value'];
+                    }
+
+                    $variationsThatCanNotBeDeleted[] = $tempVariation;
+                    $additionalData['variations_that_can_not_be_deleted'] = $variationsThatCanNotBeDeleted;
+
+                    $listingProduct->setSettings('additional_data', $additionalData)->save();
+                }
+
+                $variation->deleteInstance();
+            } else {
+                $listingProduct->deleteProcessingLocks();
+
+                if ($listingProduct->isStoppable()) {
+                    Mage::getModel('M2ePro/StopQueue')->add($listingProduct);
+                    $listingProduct->setStatus(Ess_M2ePro_Model_Listing_Product::STATUS_STOPPED)->save();
+                }
+
+                $listingsProductsForRemove[$listingProduct->getId()] = $listingProduct;
             }
 
             $listingId = $listingProduct->getListingId();
@@ -510,21 +711,38 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
                                     Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH);
         }
 
+        $amazonParentListingProductsForRemove = array();
+
         foreach ($listingsProductsForRemove as $listingProduct) {
+            if ($listingProduct->isComponentModeAmazon()) {
+                /** @var Ess_M2ePro_Model_Amazon_Listing_Product $amazonListingProduct */
+                $amazonListingProduct = $listingProduct->getChildObject();
+                $variationManager = $amazonListingProduct->getVariationManager();
+
+                if ($variationManager->isRelationChildType()) {
+                    /** @var Ess_M2ePro_Model_Amazon_Listing_Product $amazonParentListingProduct */
+                    $amazonParentListingProduct = $variationManager->getTypeModel()->getAmazonParentListingProduct();
+                    $listingProduct->deleteInstance();
+                    $amazonParentListingProduct->getVariationManager()->getTypeModel()->getProcessor()->process();
+                    continue;
+                }
+
+                if ($variationManager->isVariationParent()) {
+                    $amazonParentListingProductsForRemove[] = $listingProduct;
+                    continue;
+                }
+            }
+
             $listingProduct->deleteInstance();
         }
 
-        //------------------
+        foreach ($amazonParentListingProductsForRemove as $listingProduct) {
+            $listingProduct->deleteInstance();
+        }
+        // ---------------------------------------
     }
 
-    // ########################################
-
-    public function getTrackingAttributes()
-    {
-        return $this->getChildObject()->getTrackingAttributes();
-    }
-
-    // ########################################
+    //########################################
 
     public function save()
     {
@@ -538,5 +756,5 @@ class Ess_M2ePro_Model_Listing extends Ess_M2ePro_Model_Component_Parent_Abstrac
         return parent::delete();
     }
 
-    // ########################################
+    //########################################
 }

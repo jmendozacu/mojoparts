@@ -1,12 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_NewAsin_Manual
     extends Mage_Adminhtml_Block_Widget_Grid_Container
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
@@ -14,28 +18,28 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_NewAsin_Manual
         $listingId = $this->getRequest()->getParam('id');
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('newAsinDescriptionTemplateManual');
-        //------------------------------
+        // ---------------------------------------
 
         // Set header text
-        //------------------------------
+        // ---------------------------------------
         $this->_headerText = Mage::helper('M2ePro')->__("Set Description Policy for New ASIN/ISBN Creation");
         $this->_blockGroup = 'M2ePro';
         $this->_controller = 'adminhtml_common_amazon_listing_add_newAsin_manual';
-        //------------------------------
+        // ---------------------------------------
 
         // Set buttons actions
-        //------------------------------
+        // ---------------------------------------
         $this->removeButton('back');
         $this->removeButton('reset');
         $this->removeButton('delete');
         $this->removeButton('add');
         $this->removeButton('save');
         $this->removeButton('edit');
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $url = $this->getUrl('*/*/resetNewAsin', array(
             '_current' => true
         ));
@@ -46,19 +50,20 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_NewAsin_Manual
         ));
 
         $url = $this->getUrl('*/*/index', array('_current' => true, 'step' => 3));
-        //------------------------------
+        // ---------------------------------------
         $this->_addButton('save_and_go_to_listing_view', array(
             'label'     => Mage::helper('M2ePro')->__('Continue'),
             'onclick'   => 'ListingGridHandlerObj.checkManualProducts(\''.$url.'\')',
             'class'     => 'scalable next'
         ));
-        //------------------------------
+        // ---------------------------------------
     }
 
     public function getGridHtml()
     {
-        $listing = Mage::helper('M2ePro/Component')
-            ->getCachedUnknownObject('Listing', $this->getRequest()->getParam('id'));
+        $listing = Mage::helper('M2ePro/Component')->getCachedUnknownObject(
+            'Listing', $this->getRequest()->getParam('id')
+        );
 
         $viewHeaderBlock = $this->getLayout()->createBlock(
             'M2ePro/adminhtml_listing_view_header','',
@@ -72,12 +77,12 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_NewAsin_Manual
     {
         $helper = Mage::helper('M2ePro');
 
-        // --------TEXT------------------
+        // TEXT
         $templateDescriptionPopupTitle = $helper->escapeJs($helper->__('Assign Description Policy'));
         $setDescriptionPolicy = $helper->escapeJs($helper->__('Set Description Policy.'));
-        // -------------------------------
+        // ---------------------------------------
 
-        // ---------URL-------------------
+        // URL
         $mapToTemplateDescription = $this->getUrl('*/adminhtml_common_amazon_listing/mapToTemplateDescription');
         $unmapFromTemplateDescription = $this->getUrl('*/adminhtml_common_amazon_listing/unmapFromTemplateDescription');
         $validateProductsForTemplateDescriptionAssign = $this->getUrl(
@@ -88,7 +93,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_NewAsin_Manual
         $unmapFromNewAsin = $this->getUrl('*/adminhtml_common_amazon_listing/unmapFromAsin');
 
         $checkNewAsinManualProducts = $this->getUrl('*/*/checkNewAsinManualProducts', array('_current' => true));
-        // -------------------------------
+        // ---------------------------------------
 
         $javascript = <<<HTML
 <script type="text/javascript">
@@ -122,7 +127,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Amazon_Listing_Add_NewAsin_Manual
 
         CommonHandler.prototype.scroll_page_to_top = function() { return; }
 
-        ListingGridHandlerObj = new NewAsinTemplateDescriptionGridHandler(
+        ListingGridHandlerObj = new CommonAmazonListingNewAsinTemplateDescriptionGridHandler(
             '{$this->getChild('grid')->getId()}',
             {$this->getListing()->getId()}
         );
@@ -140,12 +145,12 @@ HTML;
         '</div>';
     }
 
-    // ####################################
+    //########################################
 
     public function getListing()
     {
         if (!$listingId = $this->getRequest()->getParam('id')) {
-            throw new Exception('Listing is not defined');
+            throw new Ess_M2ePro_Model_Exception('Listing is not defined');
         }
 
         if (is_null($this->listing)) {
@@ -156,6 +161,5 @@ HTML;
         return $this->listing;
     }
 
-    // ####################################
-
+    //########################################
 }

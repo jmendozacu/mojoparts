@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstract
 {
-    // ################################
+    //########################################
 
     public function getCategoriesByProduct($product, $storeId = 0, $returnType = self::RETURN_TYPE_IDS)
     {
@@ -27,7 +29,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
 
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $categoryProductTableName = Mage::getSingleton('core/resource')->getTableName('catalog/category_product');
+        $categoryProductTableName = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('catalog/category_product');
 
         $dbSelect = $connRead->select()
             ->from(array('ccp' => $categoryProductTableName), 'category_id')
@@ -39,7 +42,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
             $storeModel = Mage::getModel('core/store')->load($storeId);
             if (!is_null($storeModel)) {
                 $websiteId = $storeModel->getWebsiteId();
-                $productWebsiteTableName = Mage::getSingleton('core/resource')->getTableName('catalog/product_website');
+                $productWebsiteTableName = Mage::helper('M2ePro/Module_Database_Structure')
+                    ->getTableNameWithPrefix('catalog/product_website');
                 $dbSelect->joinLeft(array('cpw' => $productWebsiteTableName), 'ccp.product_id = cpw.product_id')
                          ->where('cpw.website_id = ?', (int)$websiteId);
             }
@@ -53,7 +57,7 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
         return $this->_convertFetchNumArrayToReturnType($fetchArray, $returnType, 'catalog/category');
     }
 
-    // -------------------------------
+    // ---------------------------------------
 
     public function getGeneralProductsFromCategories(array $categories,
                                                      $storeId = 0,
@@ -77,14 +81,15 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
         return $this->_getProductsFromCategoryIds($categoryIds, $storeId, $returnType);
     }
 
-    // -------------------------------
+    // ---------------------------------------
 
     public function getUncategorizedProducts($storeId = 0, $returnType = self::RETURN_TYPE_IDS)
     {
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $productTableName = Mage::getSingleton('core/resource')->getTableName('catalog/product');
-        $categoryProductTableName = Mage::getSingleton('core/resource')->getTableName('catalog/category_product');
+        $productTableName = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('catalog/product');
+        $categoryProductTableName = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('catalog/category_product');
 
         $dbSelect = $connRead->select()
             ->from(array('cp' => $productTableName), 'entity_id')
@@ -96,7 +101,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
             $storeModel = Mage::getModel('core/store')->load($storeId);
             if (!is_null($storeModel)) {
                 $websiteId = $storeModel->getWebsiteId();
-                $productWebsiteTableName = Mage::getSingleton('core/resource')->getTableName('catalog/product_website');
+                $productWebsiteTableName = Mage::helper('M2ePro/Module_Database_Structure')
+                    ->getTableNameWithPrefix('catalog/product_website');
                 $dbSelect->joinLeft(array('cpw' => $productWebsiteTableName), 'cp.entity_id = cpw.product_id')
                          ->where('cpw.website_id = ?', (int)$websiteId);
             }
@@ -119,7 +125,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
 
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $categoryProductTableName = Mage::getSingleton('core/resource')->getTableName('catalog/category_product');
+        $categoryProductTableName = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('catalog/category_product');
 
         $dbSelect = $connRead->select()
             ->from(array('ccp' => $categoryProductTableName), 'product_id')
@@ -130,7 +137,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
             $storeModel = Mage::getModel('core/store')->load($storeId);
             if (!is_null($storeModel)) {
                 $websiteId = $storeModel->getWebsiteId();
-                $productWebsiteTableName = Mage::getSingleton('core/resource')->getTableName('catalog/product_website');
+                $productWebsiteTableName = Mage::helper('M2ePro/Module_Database_Structure')
+                    ->getTableNameWithPrefix('catalog/product_website');
                 $dbSelect->joinLeft(array('cpw' => $productWebsiteTableName), 'ccp.product_id = cpw.product_id')
                          ->where('cpw.website_id = ?', (int)$websiteId);
             }
@@ -147,7 +155,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
     {
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $tableName = Mage::getSingleton('core/resource')->getTableName('catalog/category_product');
+        $tableName = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('catalog/category_product');
 
         $dbSelect = $connRead->select()
             ->from(array('ccp' => $tableName))
@@ -158,7 +167,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
             $storeModel = Mage::getModel('core/store')->load($storeId);
             if (!is_null($storeModel)) {
                 $websiteId = $storeModel->getWebsiteId();
-                $productWebsiteTableName = Mage::getSingleton('core/resource')->getTableName('catalog/product_website');
+                $productWebsiteTableName = Mage::helper('M2ePro/Module_Database_Structure')
+                    ->getTableNameWithPrefix('catalog/product_website');
                 $dbSelect->joinLeft(array('cpw' => $productWebsiteTableName), 'ccp.product_id = cpw.product_id')
                     ->where('cpw.website_id = ?', (int)$websiteId);
             }
@@ -192,13 +202,12 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
                 $resultCategories[] = $categoryId;
                 break;
             }
-
         }
 
         return array_values(array_unique($resultCategories));
     }
 
-    // ################################
+    //########################################
 
     protected function _getProductsFromCategoryIds(array $categoryIds, $storeId, $returnType, $onlyGeneral = false)
     {
@@ -208,7 +217,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
 
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $tableName = Mage::getSingleton('core/resource')->getTableName('catalog/category_product');
+        $tableName = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('catalog/category_product');
 
         $dbSelect = $connRead->select()
             ->from(array('ccp' => $tableName), 'product_id')
@@ -224,7 +234,8 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
             $storeModel = Mage::getModel('core/store')->load($storeId);
             if (!is_null($storeModel)) {
                 $websiteId = $storeModel->getWebsiteId();
-                $productWebsiteTableName = Mage::getSingleton('core/resource')->getTableName('catalog/product_website');
+                $productWebsiteTableName = Mage::helper('M2ePro/Module_Database_Structure')
+                    ->getTableNameWithPrefix('catalog/product_website');
                 $dbSelect->joinLeft(array('cpw' => $productWebsiteTableName), 'ccp.product_id = cpw.product_id')
                     ->where('cpw.website_id = ?', (int)$websiteId);
             }
@@ -238,7 +249,7 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
         return $this->_convertFetchNumArrayToReturnType($fetchArray, $returnType, 'catalog/product');
     }
 
-    // ################################
+    //########################################
 
     public function getPath($categoryId)
     {
@@ -271,5 +282,5 @@ class Ess_M2ePro_Helper_Magento_Category extends Ess_M2ePro_Helper_Magento_Abstr
         return $categoryPath;
     }
 
-    // ################################
+    //########################################
 }

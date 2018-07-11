@@ -1,60 +1,59 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Upgrade_Migration_ToVersion611
 {
     const BACKUP_TABLE_PREFIX = '__backup_v611';
 
-    //####################################
-
     /** @var Ess_M2ePro_Model_Upgrade_MySqlSetup */
     private $installer = NULL;
 
-    //####################################
+    //########################################
 
+    /**
+     * @return Ess_M2ePro_Model_Upgrade_MySqlSetup
+     */
     public function getInstaller()
     {
         return $this->installer;
     }
 
+    /**
+     * @param Ess_M2ePro_Model_Upgrade_MySqlSetup $installer
+     */
     public function setInstaller(Ess_M2ePro_Model_Upgrade_MySqlSetup $installer)
     {
         $this->installer = $installer;
     }
 
-    //####################################
+    //########################################
 
     /*
         DELETE FROM `m2epro_wizard` WHERE (`nick` = 'amazonNewAsin' OR `nick` = 'buyNewSku');
         UPDATE `m2epro_wizard` SET `priority` = 5 WHERE (`priority` = 7);
     */
 
-    //####################################
+    //########################################
 
     public function migrate()
     {
-        try {
+        $this->prepareWizardsTable();
 
-            $this->prepareWizardsTable();
+        $this->processProcessing();
+        $this->processLogs();
+        $this->processConfigData();
 
-            $this->processProcessing();
-            $this->processLogs();
-            $this->processConfigData();
-
-            $this->prepareOrdersTables();
-            $this->prepareOrdersConfigTable();
-            $this->processOrdersData();
-
-        } catch (Exception $e) {
-            echo $e->getMessage();
-            die;
-        }
+        $this->prepareOrdersTables();
+        $this->prepareOrdersConfigTable();
+        $this->processOrdersData();
     }
 
-    //####################################
+    //########################################
 
     private function prepareWizardsTable()
     {
@@ -65,7 +64,7 @@ class Ess_M2ePro_Model_Upgrade_Migration_ToVersion611
         $connection->update($tempTable, array('priority' => 5), '`priority` = 7');
     }
 
-    //------------------------------------
+    // ---------------------------------------
 
     private function processProcessing()
     {
@@ -91,7 +90,7 @@ class Ess_M2ePro_Model_Upgrade_Migration_ToVersion611
         $model->process();
     }
 
-    //------------------------------------
+    // ---------------------------------------
 
     private function prepareOrdersTables()
     {
@@ -207,5 +206,5 @@ SQL
         $migrationInstance->migrate();
     }
 
-    //####################################
+    //########################################
 }

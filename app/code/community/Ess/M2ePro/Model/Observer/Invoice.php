@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2015 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Observer_Invoice extends Ess_M2ePro_Model_Observer_Abstract
 {
-    //####################################
+    //########################################
 
     public function process()
     {
@@ -32,53 +34,9 @@ class Ess_M2ePro_Model_Observer_Invoice extends Ess_M2ePro_Model_Observer_Abstra
             return;
         }
 
-        $this->createChange($order);
-
-        Mage::getSingleton('M2ePro/Order_Log_Manager')
-            ->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION);
-
-        $result = $order->getChildObject()->updatePaymentStatus();
-
-        $result ? $this->addSessionSuccessMessage()
-                : $this->addSessionErrorMessage($order);
+        $order->getLog()->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION);
+        $order->getChildObject()->updatePaymentStatus();
     }
 
-    //####################################
-
-    private function createChange(Ess_M2ePro_Model_Order $order)
-    {
-        $orderId   = $order->getId();
-        $action    = Ess_M2ePro_Model_Order_Change::ACTION_UPDATE_PAYMENT;
-        $creator   = Ess_M2ePro_Model_Order_Change::CREATOR_TYPE_OBSERVER;
-        $component = $order->getComponentMode();
-
-        Mage::getModel('M2ePro/Order_Change')->create($orderId, $action, $creator, $component, array());
-    }
-
-    //-------------------------------------
-
-    private function addSessionSuccessMessage()
-    {
-        $message = Mage::helper('M2ePro')->__('Payment Status for eBay Order was updated to Paid.');
-        Mage::getSingleton('adminhtml/session')->addSuccess($message);
-    }
-
-    private function addSessionErrorMessage(Ess_M2ePro_Model_Order $order)
-    {
-        $url = Mage::helper('adminhtml')
-            ->getUrl('M2ePro/adminhtml_ebay_log/order', array('order_id' => $order->getId()));
-
-        $channelTitle = $order->getComponentTitle();
-        // M2ePro_TRANSLATIONS
-        // Payment Status for %chanel_title% Order was not updated. View <a href="%url%" target="_blank">Order Log</a> for more details.
-        $message  = Mage::helper('M2ePro')->__(
-            'Payment Status for %chanel_title% Order was not updated.'.
-            ' View <a href="%url%" target="_blank">Order Log</a> for more details.',
-            $channelTitle, $url
-        );
-
-        Mage::getSingleton('adminhtml/session')->addError($message);
-    }
-
-    //####################################
+    //########################################
 }

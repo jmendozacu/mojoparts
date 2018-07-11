@@ -1,31 +1,31 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
     extends Ess_M2ePro_Block_Adminhtml_Magento_Product_Grid_Abstract
 {
-    // ####################################
-
     protected $listing = NULL;
 
-    // ####################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayListingSettingsGridAbstract');
-        //------------------------------
+        // ---------------------------------------
 
         $this->showAdvancedFilterProductsOption = false;
     }
 
-    // ####################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Listing
@@ -55,7 +55,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
         return $collection;
     }
 
-    // ####################################
+    //########################################
 
     protected function addColumns()
     {
@@ -65,13 +65,12 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
             'width'     => '100px',
             'type'      => 'number',
             'index'     => 'entity_id',
-            'frame_callback' => array($this, 'callbackColumnProductId'),
+            'frame_callback' => array($this, 'callbackColumnListingProductId'),
         ));
 
         $modeParent   = Ess_M2ePro_Model_Ebay_Template_Manager::MODE_PARENT;
         $modeCustom   = Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM;
         $modeTemplate = Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE;
-        $modePolicy   = Ess_M2ePro_Model_Ebay_Template_Manager::MODE_POLICY;
 
         $templatePayment  = Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_PAYMENT;
         $templateShipping = Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SHIPPING;
@@ -87,32 +86,25 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
                     'label' => Mage::helper('M2ePro')->__('Payment'),
                     'value' => array(
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeParent,
                                 'template' => $templatePayment
                             )),
                             'label' => Mage::helper('M2ePro')->__('Use from Listing Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeCustom,
                                 'template' => $templatePayment
                             )),
                             'label' => Mage::helper('M2ePro')->__('Custom Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeTemplate,
                                 'template' => $templatePayment
                             )),
-                            'label' => Mage::helper('M2ePro')->__('M2E Pro Policy')
-                        ),
-                        array(
-                            'value' => json_encode(array(
-                                'mode'     => $modePolicy,
-                                'template' => $templatePayment
-                            )),
-                            'label' => Mage::helper('M2ePro')->__('eBay Policy')
+                            'label' => Mage::helper('M2ePro')->__('Policies')
                         ),
                     ),
                 ),
@@ -121,33 +113,26 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
                     'label' => Mage::helper('M2ePro')->__('Shipping'),
                     'value' => array(
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeParent,
                                 'template' => $templateShipping
                             )),
                             'label' => Mage::helper('M2ePro')->__('Use from Listing Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeCustom,
                                 'template' => $templateShipping
                             )),
                             'label' => Mage::helper('M2ePro')->__('Custom Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeTemplate,
                                 'template' => $templateShipping
                             )),
-                            'label' => Mage::helper('M2ePro')->__('M2E Pro Policy')
-                        ),
-                        array(
-                            'value' => json_encode(array(
-                                'mode'     => $modePolicy,
-                                'template' => $templateShipping
-                            )),
-                            'label' => Mage::helper('M2ePro')->__('eBay Policy')
-                        ),
+                            'label' => Mage::helper('M2ePro')->__('Policies')
+                        )
                     ),
                 ),
 
@@ -155,33 +140,26 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
                     'label' => Mage::helper('M2ePro')->__('Return'),
                     'value' => array(
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeParent,
                                 'template' => $templateReturn
                             )),
                             'label' => Mage::helper('M2ePro')->__('Use from Listing Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeCustom,
                                 'template' => $templateReturn
                             )),
                             'label' => Mage::helper('M2ePro')->__('Custom Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeTemplate,
                                 'template' => $templateReturn
                             )),
-                            'label' => Mage::helper('M2ePro')->__('M2E Pro Policy')
-                        ),
-                        array(
-                            'value' => json_encode(array(
-                                'mode'     => $modePolicy,
-                                'template' => $templateReturn
-                            )),
-                            'label' => Mage::helper('M2ePro')->__('eBay Policy')
-                        ),
+                            'label' => Mage::helper('M2ePro')->__('Policies')
+                        )
                     ),
                 )
             ),
@@ -203,25 +181,25 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
                     'label' => Mage::helper('M2ePro')->__('Price, Quantity and Format'),
                     'value' => array(
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeParent,
                                 'template' => $templateSelling
                             )),
                             'label' => Mage::helper('M2ePro')->__('Use from Listing Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeCustom,
                                 'template' => $templateSelling
                             )),
                             'label' => Mage::helper('M2ePro')->__('Custom Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeTemplate,
                                 'template' => $templateSelling
                             )),
-                            'label' => Mage::helper('M2ePro')->__('M2E Pro Policy')
+                            'label' => Mage::helper('M2ePro')->__('Policies')
                         ),
                     ),
                 ),
@@ -230,25 +208,25 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
                     'label' => Mage::helper('M2ePro')->__('Description'),
                     'value' => array(
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeParent,
                                 'template' => $templateDescription
                             )),
                             'label' => Mage::helper('M2ePro')->__('Use from Listing Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeCustom,
                                 'template' => $templateDescription
                             )),
                             'label' => Mage::helper('M2ePro')->__('Custom Settings')
                         ),
                         array(
-                            'value' => json_encode(array(
+                            'value' => Mage::helper('M2ePro')->jsonEncode(array(
                                 'mode'     => $modeTemplate,
                                 'template' => $templateDescription
                             )),
-                            'label' => Mage::helper('M2ePro')->__('M2E Pro Policy')
+                            'label' => Mage::helper('M2ePro')->__('Policies')
                         ),
                     ),
                 )
@@ -266,20 +244,20 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
                 'type'  => 'options',
                 'sortable'  => false,
                 'options' => array(
-                    json_encode(array(
+                    Mage::helper('M2ePro')->jsonEncode(array(
                         'mode'     => $modeParent,
                         'template' => $templateSynch
                     )) => Mage::helper('M2ePro')->__('Use from Listing Settings'),
 
-                    json_encode(array(
+                    Mage::helper('M2ePro')->jsonEncode(array(
                         'mode'     => $modeCustom,
                         'template' => $templateSynch
                     )) => Mage::helper('M2ePro')->__('Custom Settings'),
 
-                    json_encode(array(
+                    Mage::helper('M2ePro')->jsonEncode(array(
                         'mode'     => $modeTemplate,
                         'template' => $templateSynch
-                    )) => Mage::helper('M2ePro')->__('M2E Pro Policy'),
+                    )) => Mage::helper('M2ePro')->__('Policies'),
                 ),
                 'filter_condition_callback' => array($this, 'callbackFilterSettings'),
                 'frame_callback' => array($this, 'callbackColumnSynchSettings')
@@ -301,21 +279,21 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
         ));
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareMassaction()
     {
         // Set massaction identifiers
-        //--------------------------------
+        // ---------------------------------------
         $this->setMassactionIdField('listing_product_id');
         $this->setMassactionIdFieldOnlyIndexValue(true);
-        //--------------------------------
+        // ---------------------------------------
 
         // Set mass-action
-        //--------------------------------
+        // ---------------------------------------
         $this->_prepareMassactionGroup()
              ->_prepareMassactionItems();
-        //--------------------------------
+        // ---------------------------------------
 
         return parent::_prepareMassaction();
     }
@@ -356,7 +334,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
         return $this;
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnTitle($value, $row, $column, $isExport)
     {
@@ -373,7 +351,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
         return $value;
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnGeneralSettings($value, $row, $column, $isExport)
     {
@@ -393,9 +371,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM:
                 $paymentSettings = $helper->__('Custom Settings'); break;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE:
-                $paymentSettings = $helper->__('M2E Pro > ') . $tm->getResultObject()->getTitle(); break;
-            case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_POLICY:
-                $paymentSettings = $helper->__('eBay > ') . $tm->getResultObject()->getApiName(); break;
+                $paymentSettings = $tm->getResultObject()->getTitle(); break;
         }
 
         $tm = $listingProduct->getTemplateManager(Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SHIPPING);
@@ -407,9 +383,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM:
                 $shippingSettings = $helper->__('Custom Settings'); break;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE:
-                $shippingSettings = $helper->__('M2E Pro > ') . $tm->getResultObject()->getTitle(); break;
-            case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_POLICY:
-                $shippingSettings = $helper->__('eBay > ') . $tm->getResultObject()->getApiName(); break;
+                $shippingSettings = $tm->getResultObject()->getTitle(); break;
         }
 
         $tm = $listingProduct->getTemplateManager(Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_RETURN);
@@ -421,9 +395,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Settings_Grid_Abstract
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM:
                 $returnSettings = $helper->__('Custom Settings'); break;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE:
-                $returnSettings = $helper->__('M2E Pro > ') . $tm->getResultObject()->getTitle(); break;
-            case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_POLICY:
-                $returnSettings = $helper->__('eBay > ') . $tm->getResultObject()->getApiName(); break;
+                $returnSettings = $tm->getResultObject()->getTitle(); break;
         }
 
         $html = <<<HTML
@@ -442,7 +414,7 @@ HTML;
         return $html;
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnSellingSettings($value, $row, $column, $isExport)
     {
@@ -462,7 +434,7 @@ HTML;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM:
                 $sellingSettings = $helper->__('Custom Settings'); break;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE:
-                $sellingSettings = $helper->__('M2E Pro > ') . $tm->getResultObject()->getTitle(); break;
+                $sellingSettings = $tm->getResultObject()->getTitle(); break;
         }
 
         $tm = $listingProduct->getTemplateManager(Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_DESCRIPTION);
@@ -474,7 +446,7 @@ HTML;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM:
                 $descriptionSettings = $helper->__('Custom Settings'); break;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE:
-                $descriptionSettings = $helper->__('M2E Pro > ') . $tm->getResultObject()->getTitle(); break;
+                $descriptionSettings = $tm->getResultObject()->getTitle(); break;
         }
 
         $html = <<<HTML
@@ -490,7 +462,7 @@ HTML;
         return $html;
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnSynchSettings($value, $row, $column, $isExport)
     {
@@ -510,7 +482,7 @@ HTML;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM:
                 $synchSettings = $helper->__('Custom Settings'); break;
             case Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE:
-                $synchSettings = $helper->__('M2E Pro > ') . $tm->getResultObject()->getTitle(); break;
+                $synchSettings = $tm->getResultObject()->getTitle(); break;
         }
 
         $html = <<<HTML
@@ -522,7 +494,7 @@ HTML;
         return $html;
     }
 
-    // ####################################
+    //########################################
 
     protected function getGroupOrder()
     {
@@ -574,7 +546,7 @@ HTML;
         return $actions;
     }
 
-    // ####################################
+    //########################################
 
     protected function callbackFilterTitle($collection, $column)
     {
@@ -592,7 +564,7 @@ HTML;
         );
     }
 
-    // ####################################
+    //########################################
 
     protected function callbackFilterSettings($collection, $column)
     {
@@ -601,7 +573,7 @@ HTML;
             return;
         }
 
-        $filter = json_decode($filter, true);
+        $filter = Mage::helper('M2ePro')->jsonDecode($filter);
 
         $field = 'template_'.$filter['template'].'_mode';
         $value = $filter['mode'];
@@ -613,7 +585,7 @@ HTML;
         );
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
@@ -623,9 +595,9 @@ HTML;
         $key = 'adminhtml_ebay_template/saveListingProduct';
         $urls[$key] = $this->getUrl("*/{$key}");
 
-        $urls = json_encode($urls);
+        $urls = Mage::helper('M2ePro')->jsonEncode($urls);
 
-        $translations = json_encode(array(
+        $translations = Mage::helper('M2ePro')->jsonEncode(array(
             'Edit Payment and Shipping Settings' => Mage::helper('M2ePro')->__('Edit Payment and Shipping Settings'),
             'Edit Selling Settings' => Mage::helper('M2ePro')->__('Edit Selling Settings'),
             'Edit Synchronization Settings' => Mage::helper('M2ePro')->__('Edit Synchronization Settings'),
@@ -639,7 +611,6 @@ HTML;
     M2ePro.translator.add({$translations});
 
     EbayListingSettingsGridHandlerObj.afterInitPage();
-    EbayListingSettingsGridHandlerObj.getGridMassActionObj().setGridIds('{$this->getGridIdsJson()}');
 </script>
 HTML;
 
@@ -658,23 +629,5 @@ HTML;
         return parent::_toHtml() . $additionalJs . $commonJs;
     }
 
-    // ####################################
-
-    private function getGridIdsJson()
-    {
-        $select = clone $this->getCollection()->getSelect();
-        $select->reset(Zend_Db_Select::ORDER);
-        $select->reset(Zend_Db_Select::LIMIT_COUNT);
-        $select->reset(Zend_Db_Select::LIMIT_OFFSET);
-        $select->reset(Zend_Db_Select::COLUMNS);
-        $select->resetJoinLeft();
-
-        $select->columns('elp.listing_product_id');
-
-        $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-
-        return implode(',',$connRead->fetchCol($select));
-    }
-
-    // ####################################
+    //########################################
 }

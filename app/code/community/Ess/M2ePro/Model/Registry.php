@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2015 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Registry extends Ess_M2ePro_Model_Abstract
 {
-    //####################################
+    //########################################
 
     public function _construct()
     {
@@ -14,5 +16,24 @@ class Ess_M2ePro_Model_Registry extends Ess_M2ePro_Model_Abstract
         $this->_init('M2ePro/Registry');
     }
 
-    //####################################
+    //########################################
+
+    public function getKey()
+    {
+        return $this->getData('key');
+    }
+
+    public function getValue()
+    {
+        return $this->getData('value');
+    }
+
+    //########################################
+
+    public function getValueFromJson()
+    {
+        return is_null($this->getId()) ?  array() : Mage::helper('M2ePro')->jsonDecode($this->getValue());
+    }
+
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -9,8 +11,6 @@
  */
 class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Component_Abstract
 {
-    // ########################################
-
     /**
      * @var Ess_M2ePro_Model_Marketplace
      */
@@ -26,7 +26,7 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
      */
     private $otherCategorySourceModels = array();
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -34,7 +34,7 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         $this->_init('M2ePro/Ebay_Template_OtherCategory');
     }
 
-    // ########################################
+    //########################################
 
     public function deleteInstance()
     {
@@ -50,7 +50,7 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         return true;
     }
 
-    // #######################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -74,7 +74,7 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
          $this->marketplaceModel = $instance;
     }
 
-    //---------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -98,7 +98,7 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
          $this->accountModel = $instance;
     }
 
-    //---------------------------------------
+    // ---------------------------------------
 
     /**
      * @param Ess_M2ePro_Model_Magento_Product $magentoProduct
@@ -119,19 +119,25 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         return $this->otherCategorySourceModels[$productId];
     }
 
-    // #######################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getMarketplaceId()
     {
         return (int)$this->getData('marketplace_id');
     }
 
+    /**
+     * @return int
+     */
     public function getAccountId()
     {
         return (int)$this->getData('account_id');
     }
 
-    //---------------------------------------
+    // ---------------------------------------
 
     public function getCreateDate()
     {
@@ -143,8 +149,11 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         return $this->getData('update_date');
     }
 
-    // #######################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getCategorySecondarySource()
     {
         return array(
@@ -155,8 +164,11 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         );
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     */
     public function getStoreCategoryMainSource()
     {
         return array(
@@ -167,6 +179,9 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         );
     }
 
+    /**
+     * @return array
+     */
     public function getStoreCategorySecondarySource()
     {
         return array(
@@ -177,8 +192,11 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         );
     }
 
-    // #######################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getDefaultSettings()
     {
         return array(
@@ -200,38 +218,7 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         );
     }
 
-    // #######################################
-
-    /**
-     * @param bool $asArrays
-     * @param string|array $columns
-     * @return array
-     */
-    public function getAffectedListingsProducts($asArrays = true, $columns = '*')
-    {
-        /** @var Ess_M2ePro_Model_Mysql4_Listing_Product_Collection $collection */
-        $collection = Mage::helper('M2ePro/Component_Ebay')->getCollection('Listing_Product');
-        $collection->addFieldToFilter('template_other_category_id', $this->getId());
-
-        if (is_array($columns) && !empty($columns)) {
-            $collection->getSelect()->reset(Zend_Db_Select::COLUMNS);
-            $collection->getSelect()->columns($columns);
-        }
-
-        return $asArrays ? (array)$collection->getData() : (array)$collection->getItems();
-    }
-
-    public function setSynchStatusNeed($newData, $oldData)
-    {
-        $listingsProducts = $this->getAffectedListingsProducts(true, array('id'));
-        if (empty($listingsProducts)) {
-            return;
-        }
-
-        $this->getResource()->setSynchStatusNeed($newData,$oldData,$listingsProducts);
-    }
-
-    // #######################################
+    //########################################
 
     public function save()
     {
@@ -245,5 +232,5 @@ class Ess_M2ePro_Model_Ebay_Template_OtherCategory extends Ess_M2ePro_Model_Comp
         return parent::delete();
     }
 
-    // #######################################
+    //########################################
 }

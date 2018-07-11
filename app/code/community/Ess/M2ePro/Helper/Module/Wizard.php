@@ -1,8 +1,10 @@
 <?php
 
 /*
-* @copyright  Copyright (c) 2013 by  ESS-UA.
-*/
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
+ */
 
 class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
 {
@@ -22,7 +24,7 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
 
     private $cache = null;
 
-    // ########################################
+    //########################################
 
     /**
      * Wizards Factory
@@ -31,10 +33,16 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
      */
     public function getWizard($nick)
     {
-        return Mage::getSingleton('M2ePro/Wizard_'.ucfirst($nick));
+        try {
+            $model = Mage::getSingleton('M2ePro/Wizard_'.ucfirst($nick));
+        } catch (Exception $e) {
+           return false;
+        }
+
+        return $model;
     }
 
-    // ########################################
+    //########################################
 
     public function isNotStarted($nick)
     {
@@ -63,7 +71,7 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         return $this->isCompleted($nick) || $this->isSkipped($nick);
     }
 
-    // ########################################
+    //########################################
 
     private function getConfigValue($nick, $key)
     {
@@ -74,7 +82,7 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         }
 
         if (($this->cache = Mage::helper('M2ePro/Data_Cache_Permanent')->getValue('wizard')) !== false) {
-            $this->cache = json_decode($this->cache, true);
+            $this->cache = Mage::helper('M2ePro')->jsonDecode($this->cache);
             return $this->cache[$nick][$key];
         }
 
@@ -90,13 +98,13 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         $this->cache[$nick][$key] = $value;
 
         Mage::helper('M2ePro/Data_Cache_Permanent')->setValue('wizard',
-                                                    json_encode($this->cache),
+                                                    Mage::helper('M2ePro')->jsonEncode($this->cache),
                                                     array('wizard'),
                                                     60*60);
 
         /** @var $connWrite Varien_Db_Adapter_Pdo_Mysql */
         $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
-        $tableName = Mage::getSingleton('core/resource')->getTableName('m2epro_wizard');
+        $tableName = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('m2epro_wizard');
 
         $connWrite->update(
             $tableName,
@@ -107,7 +115,7 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         return $this;
     }
 
-    // --------------------------------------------
+    // ---------------------------------------
 
     public function getView($nick)
     {
@@ -144,7 +152,7 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         return $this->getConfigValue($nick, self::KEY_TYPE);
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param string $view
@@ -164,7 +172,7 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         return null;
     }
 
-    // ------------------------------------------------------
+    // ---------------------------------------
 
     private function getAllWizards($view)
     {
@@ -176,13 +184,14 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
                 continue;
             }
 
-            $wizards[] = $this->getWizard($nick);
+            $wizardModel = $this->getWizard($nick);
+            $wizardModel && $wizards[] = $wizardModel;
         }
 
         return $wizards;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param string $block
@@ -199,7 +208,7 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         );
     }
 
-    // ########################################
+    //########################################
 
     public function addWizardHandlerJs()
     {
@@ -208,7 +217,7 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         );
     }
 
-    // ########################################
+    //########################################
 
     public function getNick($wizard)
     {
@@ -218,13 +227,13 @@ class Ess_M2ePro_Helper_Module_Wizard extends Mage_Core_Helper_Abstract
         return $nick;
     }
 
-    // ########################################
+    //########################################
 
     private function loadCache()
     {
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $tableName = Mage::getSingleton('core/resource')->getTableName('m2epro_wizard');
+        $tableName = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('m2epro_wizard');
 
         $this->cache = $connRead->fetchAll(
             $connRead->select()->from($tableName,'*')
@@ -252,12 +261,12 @@ FUNCTION;
         }
 
         Mage::helper('M2ePro/Data_Cache_Permanent')->setValue('wizard',
-                                                    json_encode($this->cache),
+                                                    Mage::helper('M2ePro')->jsonEncode($this->cache),
                                                     array('wizard'),
                                                     60*60);
     }
 
-    // ########################################
+    //########################################
 
     public function getActiveBlockerWizard($view)
     {
@@ -278,5 +287,5 @@ FUNCTION;
         return null;
     }
 
-    // ########################################
+    //########################################
 }

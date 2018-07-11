@@ -1,13 +1,13 @@
 EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     storeId: null,
     marketplaceId: null,
     checkAttributesAvailability: false,
     listingProductIds: '',
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function()
     {
@@ -26,7 +26,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getSwitcherNickByElementId: function(id)
     {
@@ -79,27 +79,9 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         return this.getSwitcherValueMode(templateNick) == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::MODE_TEMPLATE');
     },
 
-    isSwitcherValueModePolicy: function(templateNick)
-    {
-        return this.getSwitcherValueMode(templateNick) == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::MODE_POLICY');
-    },
-
     isExistSynchronizationTab: function()
     {
         return typeof EbayTemplateSynchronizationHandlerObj != 'undefined';
-    },
-
-    isNeededSaveWatermarkImage: function(ajaxResponse)
-    {
-        var isDescriptionTemplate = false;
-
-        ajaxResponse.each(function(template) {
-            if (template.nick == M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_DESCRIPTION')) {
-                isDescriptionTemplate = true;
-            }
-        });
-
-        return isDescriptionTemplate && $('watermark_image').value != '';
     },
 
     getTemplateDataContainer: function(templateNick)
@@ -107,7 +89,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         return $('template_'+templateNick+'_data_container');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     change: function()
     {
@@ -119,9 +101,6 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         switch (templateMode) {
             case M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::MODE_PARENT'):
                 EbayListingTemplateSwitcherHandlerObj.clearContent(templateNick);
-                break;
-
-            case M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::MODE_POLICY'):
                 break;
 
             case M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::MODE_CUSTOM'):
@@ -143,7 +122,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     clearMessages: function(templateNick)
     {
@@ -152,7 +131,10 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
 
     checkMessages: function(templateNick)
     {
-        if (!this.checkAttributesAvailability && templateNick != M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SELLING_FORMAT')) {
+        if (!this.checkAttributesAvailability &&
+            templateNick != M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SELLING_FORMAT') &&
+            templateNick != M2ePro.php.constant('Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SHIPPING')
+        ) {
             return;
         }
 
@@ -193,7 +175,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         );
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     updateEditVisibility: function(templateNick)
     {
@@ -229,12 +211,10 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
     {
         var labelContainer = $('template_' + templateNick + '_nick_label');
         var templateLabel  = labelContainer.down('span.template');
-        var policyLabel    = labelContainer.down('span.policy');
         var parentLabel    = labelContainer.down('span.parent');
 
         labelContainer.hide();
         templateLabel.hide();
-        policyLabel.hide();
 
         parentLabel && parentLabel.hide();
 
@@ -243,18 +223,13 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
             templateLabel.show();
         }
 
-        if (this.isSwitcherValueModePolicy(templateNick)) {
-            labelContainer.show();
-            policyLabel.show();
-        }
-
         if (this.isSwitcherValueModeEmpty(templateNick) && parentLabel) {
             labelContainer.show();
             parentLabel.show();
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     scrollToFirstFailedElement: function()
     {
@@ -266,7 +241,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         firstFailed.up('table').scrollIntoView();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     saveSwitchers: function(callback)
     {
@@ -301,9 +276,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
 
                 params['tab'] = ebayListingTemplateEditTabsJsTabs.activeTab.id.split('_').pop();
 
-                if (EbayListingTemplateSwitcherHandlerObj.isNeededSaveWatermarkImage(response)) {
-                    EbayTemplateDescriptionHandlerObj.saveWatermarkImage(callback, params);
-                } else if (typeof callback == 'function') {
+                if (typeof callback == 'function') {
                     callback(params);
                 }
 
@@ -311,7 +284,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     isTemplateTitleUnique: function(templateNick, templateTitle)
     {
@@ -332,7 +305,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         return unique;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     validateCustomTemplate: function(templateNick)
     {
@@ -346,7 +319,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         return true;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     customSaveAsTemplate: function(templateNick)
     {
@@ -368,8 +341,11 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
 
         var me = this;
         if(!me.isCreatedDialog) {
+            var html = template.innerHTML;
+            template.down('.dialog_confirm_content').remove();
             me.isCreatedDialog = true;
-            Dialog._openDialog(template.innerHTML, {
+
+            Dialog._openDialog(html, {
                 draggable: true,
                 resizable: true,
                 closable: true,
@@ -407,6 +383,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
                                 EbayListingTemplateSwitcherHandlerObj.updateButtonsVisibility(template.nick);
                                 EbayListingTemplateSwitcherHandlerObj.updateEditVisibility(template.nick);
                                 EbayListingTemplateSwitcherHandlerObj.updateTemplateLabelVisibility(template.nick);
+                                EbayListingTemplateSwitcherHandlerObj.checkMessages(template.nick);
                             });
                         }.bind(this)
                     });
@@ -415,6 +392,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
                 }.bind(this),
                 cancel: function() {},
                 onClose: function() {
+                    template.insert('<div class="dialog_confirm_content"></div>');
                     me.isCreatedDialog = false;
                 }
             });
@@ -437,7 +415,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         );
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     editTemplate: function(templateNick)
     {
@@ -446,7 +424,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         window.open(M2ePro.url.get('adminhtml_ebay_template/edit', {id: templateId, nick: templateNick}) , '_blank');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     customizeTemplate: function(templateNick)
     {
@@ -459,7 +437,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         this.getSwitcher(templateNick).selectedIndex = 0;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     clearContent: function(templateNick)
     {
@@ -467,7 +445,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         this.getTemplateDataContainer(templateNick).hide();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     reloadContent: function(templateNick, callback)
     {
@@ -497,7 +475,7 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     addToSwitcher: function(templateNick, templateId, templateTitle)
     {
@@ -531,12 +509,12 @@ EbayListingTemplateSwitcherHandler = Class.create(CommonHandler, {
 
         optionGroup = document.createElement('optgroup');
         optionGroup.className = 'templates-group';
-        optionGroup.label = M2ePro.translator.translate('M2E Pro Policies');
+        optionGroup.label = M2ePro.translator.translate('Policies');
 
         switcher.appendChild(optionGroup);
 
         return optionGroup;
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

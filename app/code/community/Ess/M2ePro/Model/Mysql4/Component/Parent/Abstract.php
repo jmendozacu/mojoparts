@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Mysql4_Component_Parent_Abstract
@@ -9,7 +11,7 @@ abstract class Ess_M2ePro_Model_Mysql4_Component_Parent_Abstract
 {
     protected $childMode = NULL;
 
-    // ########################################
+    //########################################
 
     public function __construct($params)
     {
@@ -17,10 +19,10 @@ abstract class Ess_M2ePro_Model_Mysql4_Component_Parent_Abstract
             $this->setChildMode($params['child_mode']);
         }
 
-        parent::__construct($params);
+        parent::__construct();
     }
 
-    // ########################################
+    //########################################
 
     public function setChildMode($mode)
     {
@@ -34,7 +36,7 @@ abstract class Ess_M2ePro_Model_Mysql4_Component_Parent_Abstract
         return $this->childMode;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getChildModel()
     {
@@ -66,7 +68,7 @@ abstract class Ess_M2ePro_Model_Mysql4_Component_Parent_Abstract
         return substr($primaryName,strlen('m2epro_'.$this->childMode.'_')).'_id';
     }
 
-    // ########################################
+    //########################################
 
     protected function _getLoadSelect($field, $value, $object)
     {
@@ -119,12 +121,13 @@ abstract class Ess_M2ePro_Model_Mysql4_Component_Parent_Abstract
         $childData[$this->getChildPrimary()] = (int)$object->getData('id');
         unset($childData['id'],$childData['create_date'],$childData['update_date']);
 
-        Mage::getModel($this->getChildModel())
-                ->addData($childData)
-                ->save();
+        $childObject = Mage::getModel($this->getChildModel());
+        $childObject->setParentObject($object);
+        $childObject->addData($childData)
+                    ->save();
 
         return $result;
     }
 
-    // ########################################
+    //########################################
 }

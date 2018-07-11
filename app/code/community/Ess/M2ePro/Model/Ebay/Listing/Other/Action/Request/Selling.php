@@ -1,14 +1,19 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Listing_Other_Action_Request_Selling
     extends Ess_M2ePro_Model_Ebay_Listing_Other_Action_Request
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getData()
     {
         return array_merge(
@@ -17,11 +22,14 @@ class Ess_M2ePro_Model_Ebay_Listing_Other_Action_Request_Selling
         );
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getQtyData()
     {
-        if (!$this->getConfigurator()->isQty()) {
+        if (!$this->getConfigurator()->isQtyAllowed()) {
             return array();
         }
 
@@ -36,9 +44,12 @@ class Ess_M2ePro_Model_Ebay_Listing_Other_Action_Request_Selling
         );
     }
 
+    /**
+     * @return array
+     */
     public function getPriceData()
     {
-        if (!$this->getConfigurator()->isPrice()) {
+        if (!$this->getConfigurator()->isPriceAllowed()) {
             return array();
         }
 
@@ -53,5 +64,5 @@ class Ess_M2ePro_Model_Ebay_Listing_Other_Action_Request_Selling
         );
     }
 
-    // ########################################
+    //########################################
 }

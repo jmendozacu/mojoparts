@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Development_Tools_M2ePro_GeneralController
     extends Ess_M2ePro_Controller_Adminhtml_Development_CommandController
 {
-    //#############################################
+    //########################################
 
     /**
      * @title "Clear Cache"
@@ -46,7 +48,7 @@ class Ess_M2ePro_Adminhtml_Development_Tools_M2ePro_GeneralController
         $this->_redirectUrl(Mage::helper('M2ePro/View_Development')->getPageToolsTabUrl());
     }
 
-    //#############################################
+    //########################################
 
     /**
      * @title "Repair Broken Tables"
@@ -64,8 +66,7 @@ class Ess_M2ePro_Adminhtml_Development_Tools_M2ePro_GeneralController
         $brokenTables = Mage::helper('M2ePro/Module_Database_Repair')->getBrokenTablesInfo();
 
         if ($brokenTables['total_count'] <= 0) {
-            echo $this->getEmptyResultsHtml('No Broken Tables');
-            return;
+            return $this->getResponse()->setBody($this->getEmptyResultsHtml('No Broken Tables'));
         }
 
         $currentUrl = Mage::helper('adminhtml')->getUrl('*/*/*');
@@ -172,7 +173,7 @@ HTML;
 </html>
 HTML;
 
-        echo $html;
+        return $this->getResponse()->setBody($html);
     }
 
     /**
@@ -190,10 +191,13 @@ HTML;
         $tableName = array_pop($tableNames);
 
         $info = Mage::helper('M2ePro/Module_Database_Repair')->getBrokenRecordsInfo($tableName);
-        return '<pre>' . print_r($info);
+
+        return $this->getResponse()->setBody('<pre>' .
+             "<span>Broken Records '{$tableName}'<span><br>" .
+             print_r($info, true));
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @title "Repair Removed Stores"
@@ -220,7 +224,11 @@ HTML;
 
                 $tempResult = $connection->select()
                     ->distinct()
-                    ->from(Mage::getSingleton('core/resource')->getTableName($tableName), array($columnInfo['name']))
+                    ->from(
+                        Mage::helper('M2ePro/Module_Database_Structure')
+                            ->getTableNameWithPrefix($tableName),
+                        array($columnInfo['name'])
+                    )
                     ->where("{$columnInfo['name']} IS NOT NULL")
                     ->query()
                     ->fetchAll(Zend_Db::FETCH_COLUMN);
@@ -242,8 +250,7 @@ HTML;
         $removedStoreIds = array_diff($usedStoresIds, $existsStoreIds);
 
         if (count($removedStoreIds) <= 0) {
-            echo $this->getEmptyResultsHtml('No Removed Magento Stores');
-            return;
+            return $this->getResponse()->setBody($this->getEmptyResultsHtml('No Removed Magento Stores'));
         }
 
         $html = $this->getStyleHtml();
@@ -267,7 +274,7 @@ HTML;
 </form>
 HTML;
 
-        print str_replace('%count%', count($removedStoreIds), $html);
+        return $this->getResponse()->setBody(str_replace('%count%', count($removedStoreIds), $html));
     }
 
     /**
@@ -293,7 +300,7 @@ HTML;
                 if ($columnInfo['type'] == 'int') {
 
                     $connection->update(
-                        Mage::getSingleton('core/resource')->getTableName($tableName),
+                        Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix($tableName),
                         array($columnInfo['name'] => $replaceIdTo),
                         "`{$columnInfo['name']}` = {$replaceIdFrom}"
                     );
@@ -301,7 +308,7 @@ HTML;
                     continue;
                 }
 
-                //json
+                // json
                 $bind = array($columnInfo['name'] => new Zend_Db_Expr(
                     "REPLACE(
                         REPLACE(
@@ -315,7 +322,7 @@ HTML;
                 ));
 
                 $connection->update(
-                    Mage::getSingleton('core/resource')->getTableName($tableName),
+                    Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix($tableName),
                     $bind,
                     "`{$columnInfo['name']}` LIKE '%store_id\":\"{$replaceIdFrom}\"%' OR
                      `{$columnInfo['name']}` LIKE '%store_id\":{$replaceIdFrom}%'"
@@ -326,7 +333,7 @@ HTML;
         $this->_redirect('*/*/showRemovedMagentoStores');
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @title "Repair Listing Product Structure"
@@ -336,67 +343,191 @@ HTML;
     {
         ini_set('display_errors', 1);
 
-        foreach (array('Ebay', 'Amazon', 'Buy', 'Play') as $component) {
+        // -- Listing_Product_Variation_Option to un-existed Listing_Product_Variation
+        $deletedOptions = 0;
 
-            $collection = Mage::helper("M2ePro/Component_{$component}")
-                    ->getCollection('Listing_Product_Variation_Option');
+        /** @var $collection Mage_Core_Model_Mysql4_Collection_Abstract */
+        $collection = Mage::getModel('M2ePro/Listing_Product_Variation_Option')->getCollection();
+        $collection->getSelect()->joinLeft(
+            array('mlpv' => $collection->getResource()->getTable('M2ePro/Listing_Product_Variation')),
+            'main_table.listing_product_variation_id=mlpv.id',
+            array()
+        );
+        $collection->addFieldToFilter('mlpv.id', array('null' => true));
+        $collection->getSelect()->group('main_table.id');
 
-            $deletedOptions = $deletedVariations = $deletedProducts = 0;
-
-            /* @var $option Ess_M2ePro_Model_Listing_Product_Variation_Option */
-            while($option = $collection->fetchItem()) {
-
-                try {
-                    $variation = $option->getListingProductVariation();
-                } catch (LogicException $e) {
-
-                    $tempOption = Mage::getModel('M2ePro/Listing_Product_Variation_Option')->load($option->getId());
-                    if (!is_null($tempOption->getId())) {
-                        $option->deleteInstance() && $deletedOptions++;
-                    }
-                    continue;
-                }
-
-                try {
-                    $listingProduct = $variation->getListingProduct();
-                } catch (LogicException $e) {
-                    $variation->deleteInstance() && $deletedVariations++;
-                    continue;
-                }
-
-                try {
-                    $listing = $listingProduct->getListing();
-                } catch (LogicException $e) {
-                    $listingProduct->deleteInstance() && $deletedProducts++;
-                    continue;
-                }
-            }
-
-            printf('Deleted options on %s count = %d <br/>', $component, $deletedOptions);
-            printf('Deleted variations on %s count = %d <br/>', $component, $deletedVariations);
-            printf('Deleted products on %s count = %d <br/>', $component, $deletedProducts);
+        /* @var $item Ess_M2ePro_Model_Listing_Product_Variation_Option */
+        while ($item = $collection->fetchItem()) {
+            $item->getResource()->delete($item);
+            $deletedOptions++;
         }
-    }
+        // --
 
-    //#############################################
+        // -- Listing_Product_Variation to un-existed Listing_Product OR with no Listing_Product_Variation_Option
+        $deletedVariations = 0;
+
+        /** @var $collection Mage_Core_Model_Mysql4_Collection_Abstract */
+        $collection = Mage::getModel('M2ePro/Listing_Product_Variation')->getCollection();
+        $collection->getSelect()->joinLeft(
+            array('mlp' => $collection->getResource()->getTable('M2ePro/Listing_Product')),
+            'main_table.listing_product_id=mlp.id',
+            array()
+        );
+        $collection->getSelect()->joinLeft(
+            array('mlpvo' => $collection->getResource()->getTable('M2ePro/Listing_Product_Variation_Option')),
+            'main_table.id=mlpvo.listing_product_variation_id',
+            array()
+        );
+
+        $collection->getSelect()->where('mlp.id IS NULL OR mlpvo.id IS NULL');
+        $collection->getSelect()->group('main_table.id');
+
+        /* @var $item Ess_M2ePro_Model_Listing_Product_Variation */
+        while ($item = $collection->fetchItem()) {
+            $item->getResource()->delete($item);
+            $deletedVariations++;
+        }
+        // --
+
+        // -- Listing_Product to un-existed Listing
+        $deletedProducts = 0;
+
+        /** @var $collection Mage_Core_Model_Mysql4_Collection_Abstract */
+        $collection = Mage::getModel('M2ePro/Listing_Product')->getCollection();
+        $collection->getSelect()->joinLeft(
+            array('ml' => $collection->getResource()->getTable('M2ePro/Listing')),
+            'main_table.listing_id=ml.id',
+            array()
+        );
+        $collection->addFieldToFilter('ml.id', array('null' => true));
+        $collection->getSelect()->group('main_table.id');
+
+        /* @var $item Ess_M2ePro_Model_Listing_Product */
+        while ($item = $collection->fetchItem()) {
+            $item->getResource()->delete($item);
+            $deletedProducts++;
+        }
+        // --
+
+        // -- Listing to un-existed Account
+        $deletedListings = 0;
+
+        /** @var $collection Mage_Core_Model_Mysql4_Collection_Abstract */
+        $collection = Mage::getModel('M2ePro/Listing')->getCollection();
+        $collection->getSelect()->joinLeft(
+            array('ma' => $collection->getResource()->getTable('M2ePro/Account')),
+            'main_table.account_id=ma.id',
+            array()
+        );
+        $collection->addFieldToFilter('ma.id', array('null' => true));
+        $collection->getSelect()->group('main_table.id');
+
+        /* @var $item Ess_M2ePro_Model_Listing */
+        while ($item = $collection->fetchItem()) {
+            $item->getResource()->delete($item);
+            $deletedListings++;
+        }
+        // --
+
+        printf('Deleted options: %d <br/>', $deletedOptions);
+        printf('Deleted variations: %d <br/>', $deletedVariations);
+        printf('Deleted products: %d <br/>', $deletedProducts);
+        printf('Deleted listings: %d <br/>', $deletedListings);
+
+        printf('<br/>Please run repair broken tables feature.<br/>');
+    }
 
     /**
-     * @title "Remove Config Duplicates"
-     * @description "Remove Configuration Duplicates"
-     * @confirm "Are you sure?"
+     * @title "Repair OrderItem => Order Structure"
+     * @description "OrderItem->getOrder() => remove OrderItem if is need"
+     */
+    public function repairOrderItemOrderStructureAction()
+    {
+        ini_set('display_errors', 1);
+
+        /** @var $collection Mage_Core_Model_Mysql4_Collection_Abstract */
+        $collection = Mage::getModel('M2ePro/Order_Item')->getCollection();
+        $collection->getSelect()->joinLeft(
+            array('mo' => $collection->getResource()->getTable('M2ePro/Order')),
+            'main_table.order_id=mo.id',
+            array()
+        );
+        $collection->addFieldToFilter('mo.id', array('null' => true));
+
+        $deletedOrderItems = 0;
+
+        /* @var $item Ess_M2ePro_Model_Order_Item */
+        while ($item = $collection->fetchItem()) {
+            $item->deleteInstance() && $deletedOrderItems++;
+        }
+
+        printf('Deleted OrderItems records: %d', $deletedOrderItems);
+    }
+
+    /**
+     * @title "Repair eBay ItemID N\A"
+     * @description "Repair Item is Listed but have N\A Ebay Item ID"
+     */
+    public function repairEbayItemIdStructureAction()
+    {
+        ini_set('display_errors', 1);
+
+        $items = 0;
+
+        $collection = Mage::helper('M2ePro/Component_Ebay')->getCollection('Listing_Product');
+        $collection->getSelect()->joinLeft(
+            array('ei' => Mage::getResourceModel('M2ePro/Ebay_Item')->getMainTable()),
+            '`second_table`.`ebay_item_id` = `ei`.`id`',
+            array('item_id' => 'item_id')
+        );
+        $collection->addFieldToFilter('status',
+                                      array('nin' => array(Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED,
+                                                           Ess_M2ePro_Model_Listing_Product::STATUS_UNKNOWN)));
+
+        $collection->addFieldToFilter('item_id', array('null' => true));
+
+        /* @var $item Ess_M2ePro_Model_Order_Item */
+        while ($item = $collection->fetchItem()) {
+
+            $item->setData('status', Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED)->save();
+            $items++;
+        }
+
+        printf('Processed items %d', $items);
+    }
+
+    /**
+     * @title "Repair Amazon Products without variations"
+     * @description "Repair Amazon Products without variations"
      * @new_line
      */
-    public function removeConfigDuplicatesAction()
+    public function repairAmazonProductWithoutVariationsAction()
     {
-        /** @var $installerInstance Ess_M2ePro_Model_Upgrade_MySqlSetup */
-        $installerInstance = new Ess_M2ePro_Model_Upgrade_MySqlSetup('M2ePro_setup');
-        $installerInstance->removeConfigDuplicates();
+        ini_set('display_errors', 1);
 
-        Mage::helper('M2ePro/Module')->clearCache();
+        $items = 0;
 
-        $this->_getSession()->addSuccess('Remove duplicates was successfully completed.');
-        $this->_redirectUrl(Mage::helper('M2ePro/View_Development')->getPageToolsTabUrl());
+        $collection = Mage::helper('M2ePro/Component_Amazon')->getCollection('Listing_Product');
+        $collection->getSelect()->joinLeft(
+            array('mlpv' => Mage::getResourceModel('M2ePro/Listing_Product_Variation')->getMainTable()),
+            '`second_table`.`listing_product_id` = `mlpv`.`listing_product_id`',
+            array()
+        );
+        $collection->addFieldToFilter('is_variation_product', 1);
+        $collection->addFieldToFilter('is_variation_product_matched', 1);
+        $collection->addFieldToFilter('mlpv.id', array('null' => true));
+
+        /* @var $item Ess_M2ePro_Model_Listing_Product */
+        while ($item = $collection->fetchItem()) {
+
+            $item->getChildObject()->setData('is_variation_product_matched' , 0)->save();
+            $items++;
+        }
+
+        printf('Processed items %d', $items);
     }
+
+    //########################################
 
     /**
      * @title "Check Server Connection"
@@ -404,42 +535,50 @@ HTML;
      */
     public function serverCheckConnectionAction()
     {
-        $curlObject = curl_init();
+        $resultHtml = '';
 
-        //set the server we are using
-        curl_setopt($curlObject, CURLOPT_URL, Mage::helper('M2ePro/Server')->getEndpoint());
+        try {
 
-        // stop CURL from verifying the peer's certificate
-        curl_setopt($curlObject, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($curlObject, CURLOPT_SSL_VERIFYHOST, false);
+            $response = Mage::helper('M2ePro/Server_Request')->single(
+                array('timeout' => 30), null, null, false, false
+            );
 
-        // disable http headers
-        curl_setopt($curlObject, CURLOPT_HEADER, false);
+        } catch (Ess_M2ePro_Model_Exception_Connection $e) {
 
-        // set the data body of the request
-        curl_setopt($curlObject, CURLOPT_POST, true);
-        curl_setopt($curlObject, CURLOPT_POSTFIELDS, http_build_query(array(),'','&'));
+            $resultHtml .= "<h2>{$e->getMessage()}</h2><pre><br/>";
+            $additionalData = $e->getAdditionalData();
 
-        // set it to return the transfer as a string from curl_exec
-        curl_setopt($curlObject, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($curlObject, CURLOPT_CONNECTTIMEOUT, 15);
-        curl_setopt($curlObject, CURLOPT_TIMEOUT, 30);
+            if (!empty($additionalData['curl_info'])) {
+                $resultHtml .= '</pre><h2>Report</h2><pre>';
+                $resultHtml .= print_r($additionalData['curl_info'], true);
+                $resultHtml .= '</pre>';
+            }
 
-        $response = curl_exec($curlObject);
+            if (!empty($additionalData['curl_error_number']) && !empty($additionalData['curl_error_message'])) {
+                $resultHtml .= '<h2 style="color:red;">Errors</h2>';
+                $resultHtml .= $additionalData['curl_error_number'] .': '
+                               . $additionalData['curl_error_message'] . '<br/><br/>';
+            }
 
-        echo '<h1>Response</h1><pre>';
-        print_r($response);
-        echo '</pre><h1>Report</h1><pre>';
-        print_r(curl_getinfo($curlObject));
-        echo '</pre>';
+            return $this->getResponse()->setBody($resultHtml);
 
-        echo '<h2 style="color:red;">Errors</h2>';
-        echo curl_errno($curlObject) . ' ' . curl_error($curlObject) . '<br/><br/>';
+        } catch (Exception $e) {
 
-        curl_close($curlObject);
+            return $this->getResponse()->setBody("<h2>{$e->getMessage()}</h2><pre><br/>");
+        }
+
+        $resultHtml .= '<h2>Response</h2><pre>';
+        $resultHtml .= print_r($response['body'], true);
+        $resultHtml .= '</pre>';
+
+        $resultHtml .= '</pre><h2>Report</h2><pre>';
+        $resultHtml .= print_r($response['curl_info'], true);
+        $resultHtml .= '</pre>';
+
+        return $this->getResponse()->setBody($resultHtml);
     }
 
-    //#############################################
+    //########################################
 
     private function getEmptyResultsHtml($messageText)
     {
@@ -453,5 +592,5 @@ HTML;
 HTML;
     }
 
-    //#############################################
+    //########################################
 }

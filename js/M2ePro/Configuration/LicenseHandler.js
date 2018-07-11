@@ -1,28 +1,69 @@
 ConfigurationLicenseHandler = Class.create();
 ConfigurationLicenseHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
-    initialize: function() {},
-
-    //----------------------------------
-
-    changeLicenseKey: function()
+    changeLicenseKeyPopup: function()
     {
-        $('license_text_key_container').hide();
-        $('license_input_key_container').show();
-        $('change_license_key_container').hide();
-        $('confirm_license_key_container').show();
+        changeLicensePopup = Dialog.info(null, {
+            draggable: true,
+            resizable: true,
+            closable: true,
+            className: "magento",
+            windowClassName: "popup-window",
+            title: M2ePro.translator.translate('Extension Key'),
+            top: 150,
+            width: 450,
+            height: 250,
+            zIndex: 100,
+            hideEffect: Element.hide,
+            showEffect: Element.show
+        });
+
+        changeLicensePopup.options.destroyOnClose = true;
+        $('modal_dialog_message').insert($('change_license_popup').innerHTML);
+        ModuleNoticeObj.observeModulePrepareStart($('modal_dialog_message').down('#block_notice_change_license'));
+
+        var self = this;
+        $('block_notice_change_license').observe('click', function(e) {
+            setTimeout(function() {
+                self.autoHeightFix();
+            }.bind(this), 1000)
+        });
+        self.autoHeightFix();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     confirmLicenseKey: function()
     {
-        configEditForm.submit(M2ePro.url.get('adminhtml_configuration_license/confirmKey'));
+        var newLicenseKey = $('new_license_key').value.trim(),
+            oldLicenseKey = $('license_text_key_container').innerHTML.trim();
+
+        var licenseForm = new varienForm('popup_change_license_form');
+        if (!licenseForm.validate()) {
+            return;
+        }
+
+        if (oldLicenseKey == newLicenseKey) {
+            changeLicensePopup.close();
+            return;
+        }
+
+        new Ajax.Request(M2ePro.url.get('adminhtml_configuration_license/confirmKey'), {
+            method: 'post',
+            asynchronous: false,
+            parameters: {
+                key: newLicenseKey
+            },
+            onSuccess: function(transport) {}
+        });
+
+        changeLicensePopup.close();
+        location.reload();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     completeStep: function()
     {
@@ -42,20 +83,7 @@ ConfigurationLicenseHandler.prototype = Object.extend(new CommonHandler(), {
                 }
             }
         });
-    },
-
-    //----------------------------------
-
-    componentSetTrial: function(button)
-    {
-        if (!confirm(M2ePro.translator.translate('Are you sure?'))) {
-            return;
-        }
-
-        var componentName = $(button).up().readAttribute('id');
-        componentName = componentName.substr(componentName.indexOf('_') + 1);
-        this.postForm(M2ePro.url.get('component_set_trial'), {component:componentName});
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

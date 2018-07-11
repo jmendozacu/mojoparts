@@ -1,9 +1,19 @@
+<?php $url = $this->isEditMode() ? Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/nYsVAQ') :
+    Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/LosVAQ');
+?>
 <div id="block_notice_buy_listing_add_selling_settings" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('Selling Settings'); ?>">
-    <?php echo Mage::helper('M2ePro')->__('On this Page you can specify main Selling Settings for Rakuten.com Items you are going to sell using this M2E Pro Listing.<br/><br/>
+    <?php echo Mage::helper('M2ePro')->__('
+    On this Page you can specify main <strong>Selling Settings</strong> for Rakuten.com Items you are going to sell using
+    this M2E Pro Listing.<br/><br/>
 
-    You can set the Source to form SKU of Rakuten.com Item, appropriate Condition, Condition Note.<br/><br/>
+    You can provide a settings for Reference ID formatting, appropriate Condition, Condition Note, Gift Wrap, Gift Message
+    and also specify Additional Settings - Handling Time and Restock Date.<br/><br/>
 
-    In addition to, in this Section you can select Selling Format Policy that contains Settings connected with forming of Price, Quantity etc. and Synchronization Policy that describes Rules of Automatic Synchronization of Magento Product and Rakuten.com Item.'); ?>
+    In addition to, in this Section you can select Selling Format Policy that contains Settings connected with forming of
+    Price, Quantity etc. and Synchronization Policy that describes Rules of Automatic Synchronization of Magento Product
+    and Rakuten.com Item.<br/><br/>
+    More detailed information about ability to work with this Page you can find <a href="%url%" target="_blank">here</a>.', $url
+    ); ?>
 </div>
 
 <?php
@@ -46,9 +56,24 @@
     // Data for current tab
     //-----------------------------
     M2ePro.text.condition_note_length_error = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Must be not more than 2000 characters long.')); ?>';
+    M2ePro.text.sku_modification_custom_value_error = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('%value% placeholder should be specified')); ?>';
+
+    M2ePro.text.sku_modification_custom_value_max_length_error = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('The SKU length must be less than %value%',
+        Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_List_Validator_Sku_General::SKU_MAX_LENGTH)); ?>';
+
     M2ePro.php.setConstants(
         <?php echo Mage::helper('M2ePro')->getClassConstantAsJson('Ess_M2ePro_Helper_Component_Buy'); ?>,
         'Ess_M2ePro_Helper_Component'
+    );
+
+    M2ePro.php.setConstants(
+        <?php echo Mage::helper('M2ePro')->getClassConstantAsJson('Ess_M2ePro_Model_Buy_Listing'); ?>,
+        'Ess_M2ePro_Model_Buy_Listing'
+    );
+
+    M2ePro.php.setConstants(
+        <?php echo Mage::helper('M2ePro')->getClassConstantAsJson('Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_List_Validator_Sku_General'); ?>,
+        'Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_List_Validator_Sku_General'
     );
 
     M2ePro.url.addNewSellingFormatTemplate = '<?php echo $this->getUrl('*/adminhtml_common_buy_template_sellingFormat/new'); ?>';
@@ -56,7 +81,7 @@
     M2ePro.url.editSellingFormatTemplate = '<?php echo $this->getUrl('*/adminhtml_common_buy_template_sellingFormat/edit'); ?>' + 'id/';
     M2ePro.url.getSellingFormatTemplates = '<?php echo $this->getUrl('*/adminhtml_general/modelGetAll',array('model'=>'Template_SellingFormat','id_field'=>'id','data_field'=>'title','sort_field'=>'title','sort_dir'=>'ASC','component_mode'=>Ess_M2ePro_Helper_Component_Buy::NICK)); ?>';
     M2ePro.url.editSynchronizationTemplate = '<?php echo $this->getUrl('*/adminhtml_common_buy_template_synchronization/edit'); ?>' + 'id/';
-    M2ePro.url.getSynchronizationTemplates = '<?php echo $this->getUrl('*/adminhtml_general/modelGetAll',array('model'=>'Template_Synchronization','id_field'=>'id','data_field'=>'title','component_mode'=>Ess_M2ePro_Helper_Component_Buy::NICK)); ?>';
+    M2ePro.url.getSynchronizationTemplates = '<?php echo $this->getUrl('*/adminhtml_general/modelGetAll',array('model'=>'Template_Synchronization','id_field'=>'id','data_field'=>'title','sort_field'=>'title','sort_dir'=>'ASC','component_mode'=>Ess_M2ePro_Helper_Component_Buy::NICK)); ?>';
 
     M2ePro.autoCompleteData = {
         url : {}
@@ -65,6 +90,8 @@
         sellingFormatTemplatesDropDown    : <?php echo $this->sellingFormatTemplatesDropDown    ? 'true' : 'false'; ?>,
         synchronizationsTemplatesDropDown : <?php echo $this->synchronizationsTemplatesDropDown ? 'true' : 'false'; ?>
     };
+    M2ePro.autoCompleteData.url.getSellingFormatTemplates    = '<?php echo $this->getUrl('*/adminhtml_common_general/searchAutocomplete', array('model' => 'Template_SellingFormat', 'component' => Ess_M2ePro_Helper_Component_Buy::NICK)); ?>';
+
     M2ePro.autoCompleteData.url.getSynchronizationTemplates    = '<?php echo $this->getUrl('*/adminhtml_common_general/searchAutocomplete', array('model' => 'Template_Synchronization', 'component' => Ess_M2ePro_Helper_Component_Buy::NICK)); ?>';
 
     Event.observe(window, 'load', function() {
@@ -72,7 +99,7 @@
         CommonListingSettingsHandlerObj = new CommonListingSettingsHandler();
         CommonListingSettingsHandlerObj.setConstants('<?php echo Mage::helper('M2ePro')->getClassConstantAsJson('Ess_M2ePro_Model_Listing'); ?>');
 
-        BuyListingChannelSettingsHandlerObj = new BuyListingChannelSettingsHandler();
+        BuyListingChannelSettingsHandlerObj = new CommonBuyListingChannelSettingsHandler();
         BuyListingChannelSettingsHandlerObj.setConstants('<?php echo Mage::helper('M2ePro')->getClassConstantAsJson('Ess_M2ePro_Model_Buy_Listing'); ?>');
 
         $('template_selling_format_id').observe('change', function() {
@@ -96,7 +123,7 @@
         AutoCompleteHandler = new AutoComplete();
 
         if (M2ePro.autoCompleteData.flags.sellingFormatTemplatesDropDown) {
-            $('template_selling_format_id').observe('change', CommonListingSettingsHandlerObj.selling_format_template_id_change)
+            $('template_selling_format_id').observe('change', CommonListingSettingsHandlerObj.selling_format_template_id_change);
             if ($('template_selling_format_id').value) {
                 $('template_selling_format_id').simulate('change');
             }
@@ -112,7 +139,7 @@
         }
 
         if (M2ePro.autoCompleteData.flags.synchronizationsTemplatesDropDown) {
-            $('template_synchronization_id').observe('change', CommonListingSettingsHandlerObj.synchronization_template_id_change)
+            $('template_synchronization_id').observe('change', CommonListingSettingsHandlerObj.synchronization_template_id_change);
             if ($('template_synchronization_id').value) {
                 $('template_synchronization_id').simulate('change');
             }
@@ -128,6 +155,9 @@
         }
 
         $('sku_mode').observe('change', BuyListingChannelSettingsHandlerObj.sku_mode_change);
+
+        $('sku_modification_mode')
+            .observe('change', BuyListingChannelSettingsHandlerObj.sku_modification_mode_change);
 
         $('shipping_standard_mode').observe('change', BuyListingChannelSettingsHandlerObj.shipping_standard_mode_change);
         $('shipping_standard_mode').simulate('change');
@@ -168,11 +198,11 @@
                     <td class="value">
                         <input type="hidden" id="sku_custom_attribute" name="sku_custom_attribute" value="<?php echo $this->getData('sku_custom_attribute'); ?>" />
 
-                        <select name="sku_mode" id="sku_mode">
+                        <select name="sku_mode" id="sku_mode" class="M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text">
                             <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::SKU_MODE_PRODUCT_ID ?>" <?php if ($this->getData('sku_mode') == Ess_M2ePro_Model_Buy_Listing::SKU_MODE_PRODUCT_ID) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Product ID') ?></option>
                             <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::SKU_MODE_DEFAULT ?>" <?php if ($this->getData('sku_mode') == Ess_M2ePro_Model_Buy_Listing::SKU_MODE_DEFAULT) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Product SKU') ?></option>
 
-                            <optgroup label="Magento Attribute">
+                            <optgroup class="M2ePro-custom-attribute-optgroup" label="Magento Attribute">
                                 <?php foreach ($generalAttributesByInputTypes['text'] as $attribute): ?>
                                     <option attribute_code="<?php echo $attribute['code']; ?>" value="<?php echo Ess_M2ePro_Model_Buy_Listing::SKU_MODE_CUSTOM_ATTRIBUTE ?>" <?php if ($this->getData('sku_custom_attribute') == $attribute['code']) echo ' selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?></option>
                                 <?php endforeach ?>
@@ -183,6 +213,32 @@
                             <b>Note:</b> If you List a Product and M2E Pro find a Product with the same Reference ID in Rakuten.com Inventory, they will be Mapped.'); ?></span>
                         </p>
                     </td>
+                </tr>
+
+                <tr>
+                    <td class="label">
+                        <label for="sku_modification_mode"><?php echo Mage::helper('M2ePro')->__('Modification') ?>:</label>
+                    </td>
+                    <td class="value">
+                        <select name="sku_modification_mode" id="sku_modification_mode">
+                            <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_NONE; ?>" <?php if ($this->getData('sku_modification_mode') == Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_NONE) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('None'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_PREFIX; ?>" <?php if ($this->getData('sku_modification_mode') == Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_PREFIX) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Prefix'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_POSTFIX; ?>" <?php if ($this->getData('sku_modification_mode') == Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_POSTFIX) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Postfix'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_TEMPLATE; ?>" <?php if ($this->getData('sku_modification_mode') == Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_TEMPLATE) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Template'); ?></option>
+                        </select>
+                        <p class="note">
+                            <span><?php echo Mage::helper('M2ePro')->__('Select one of the available variants to modify Reference ID of Rakuten.com Item that was formed based on the Source you provided.'); ?></span>
+                        </p>
+                    </td>
+                </tr>
+
+                <tr id="sku_modification_custom_value_tr" <?php if ($this->getData('sku_modification_mode') == Ess_M2ePro_Model_Buy_Listing::SKU_MODIFICATION_MODE_NONE): ?>style="display: none;"<?php endif; ?>>
+                    <td class="label">
+                        <label for="sku_modification_custom_value"><?php echo Mage::helper('M2ePro')->__('Modification Value') ?>: <span class="required">*</span></label>
+                    </td>
+                    <td class="value">
+                        <input type="text" id="sku_modification_custom_value" name="sku_modification_custom_value" class="input-text M2ePro-required-when-visible M2ePro-validate-sku-modification-custom-value M2ePro-validate-sku-modification-custom-value-max-length" value="<?php echo Mage::helper('M2ePro')->escapeHtml($this->getData('sku_modification_custom_value')); ?>" />
+                    <td>
                 </tr>
 
                 <tr>
@@ -234,18 +290,11 @@
                             </select>
                             <span id="template_selling_format_label" <?php if (count($this->sellingFormatTemplates)) echo 'style="display: none;"';?>><?php echo Mage::helper('M2ePro')->__('No Policies available.'); ?></span>
                         <?php else: ?>
-                            <input type="text" id="template_selling_format_autocomplete" class="input-text" selected_id="" style="width: 275px; color: gray;"
-                                   value="<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Type Policy Name Here...')); ?>"
-                                   onblur="if (this.value.trim().length == 0) {
-                                       this.value = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Type Policy Name Here...')); ?>';
-                                       this.style.color = 'gray';
-                                       }"
-                                   onfocus="if (this.value == '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Type Policy Name Here...')); ?>') {
-                                       this.value = '';
-                                       this.style.color = '';
-                                       }"
+                            <input type="text" id="template_selling_format_autocomplete" class="input-text" selected_id="<?php echo $this->getData('template_selling_format_id'); ?>" style="width: 275px;"
+                                   placeholder="<?php echo Mage::helper('M2ePro')->__('Type Policy Name Here...'); ?>"
+                                   value="<?php echo $this->getSellingFormatTemplateTitleById($this->getData('template_selling_format_id')); ?>"
                                 >
-                            <input type="hidden" name="template_selling_format_id" id="template_selling_format_id" class="required-entry" value="" />
+                            <input type="hidden" name="template_selling_format_id" id="template_selling_format_id" class="required-entry" value="<?php echo $this->getData('template_selling_format_id'); ?>" />
                         <?php endif; ?>
                     </td>
                     <td class="value">
@@ -278,18 +327,11 @@
                             </select>
                             <span id="template_synchronization_label" <?php if (count($this->synchronizationsTemplates)) echo 'style="display: none;"';?>><?php echo Mage::helper('M2ePro')->__('No Policies available.'); ?></span>
                         <?php else:?>
-                            <input type="text" id="template_synchronization_autocomplete" class="input-text" selected_id="" style="width: 275px; color: gray;"
-                                   value="<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Type Policy Name Here...')); ?>"
-                                   onblur="if (this.value.trim().length == 0) {
-                                       this.value = '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Type Policy Name Here...')); ?>';
-                                       this.style.color = 'gray';
-                                       }"
-                                   onfocus="if (this.value == '<?php echo Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Type Policy Name Here...')); ?>') {
-                                       this.value = '';
-                                       this.style.color = '';
-                                       }"
-                                >
-                            <input type="hidden" name="template_synchronization_id" id="template_synchronization_id" class="required-entry" value="" />
+                            <input type="text" id="template_synchronization_autocomplete" class="input-text" selected_id="<?php echo $this->getData('template_synchronization_id'); ?>" style="width: 275px;"
+                                   placeholder="<?php echo Mage::helper('M2ePro')->__('Type Policy Name Here...'); ?>"
+                                   value="<?php echo $this->getSynchronizationTemplateTitleById($this->getData('template_synchronization_id')); ?>"
+                             >
+                            <input type="hidden" name="template_synchronization_id" id="template_synchronization_id" class="required-entry" value="<?php echo $this->getData('template_synchronization_id'); ?>" />
                         <?php endif; ?>
                     </td>
                     <td class="value">
@@ -355,7 +397,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="shipping_standard_custom_attribute" id="shipping_standard_custom_attribute" style="width: 300px;" class="M2ePro-required-when-visible">
+                                    <select name="shipping_standard_custom_attribute" id="shipping_standard_custom_attribute" style="width: 300px;" class="M2ePro-required-when-visible M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,price">
                                         <?php if ($this->getData('shipping_standard_custom_attribute') == ''): ?>
                                             <option class="empty"></option>
                                         <?php endif; ?>
@@ -378,7 +420,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="shipping_expedited_custom_attribute" id="shipping_expedited_custom_attribute" style="width: 300px;" class="M2ePro-required-when-visible">
+                                    <select name="shipping_expedited_custom_attribute" id="shipping_expedited_custom_attribute" style="width: 300px;" class="M2ePro-required-when-visible M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,price">
                                         <?php if ($this->getData('shipping_expedited_custom_attribute') == ''): ?>
                                             <option class="empty"></option>
                                         <?php endif; ?>
@@ -401,7 +443,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="shipping_two_day_custom_attribute" id="shipping_two_day_custom_attribute" style="width: 300px;" class="M2ePro-required-when-visible">
+                                    <select name="shipping_two_day_custom_attribute" id="shipping_two_day_custom_attribute" style="width: 300px;" class="M2ePro-required-when-visible M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,price">
                                         <?php if ($this->getData('shipping_two_day_custom_attribute') == ''): ?>
                                             <option class="empty"></option>
                                         <?php endif; ?>
@@ -424,7 +466,7 @@
                                     </select>
                                 </td>
                                 <td>
-                                    <select name="shipping_one_day_custom_attribute" id="shipping_one_day_custom_attribute" style="width: 300px;" class="M2ePro-required-when-visible">
+                                    <select name="shipping_one_day_custom_attribute" id="shipping_one_day_custom_attribute" style="width: 300px;" class="M2ePro-required-when-visible M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,price">
                                         <?php if ($this->getData('shipping_one_day_custom_attribute') == ''): ?>
                                             <option class="empty"></option>
                                         <?php endif; ?>
@@ -467,7 +509,7 @@
                         <input type="hidden" id="condition_custom_attribute" name="condition_custom_attribute" value="<?php echo $this->getData('condition_custom_attribute'); ?>" />
                         <input type="hidden" id="condition_value" name="condition_value" value="<?php echo $this->getData('condition_value'); ?>" />
 
-                        <select name="condition_mode" id="condition_mode">
+                        <select name="condition_mode" id="condition_mode" class="M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,select">
                             <optgroup label="Recommended Value">
                                 <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::CONDITION_MODE_DEFAULT ?>" attribute_code="<?php echo Ess_M2ePro_Model_Buy_Listing::CONDITION_NEW ?>" <?php if ($this->getData('condition_value') == Ess_M2ePro_Model_Buy_Listing::CONDITION_NEW) echo ' selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('New') ?></option>
                                 <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::CONDITION_MODE_DEFAULT ?>" attribute_code="<?php echo Ess_M2ePro_Model_Buy_Listing::CONDITION_USED_LIKE_NEW ?>" <?php if ($this->getData('condition_value') == Ess_M2ePro_Model_Buy_Listing::CONDITION_USED_LIKE_NEW) echo ' selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('Used - Like New') ?></option>
@@ -477,7 +519,7 @@
                                 <option value="<?php echo Ess_M2ePro_Model_Buy_Listing::CONDITION_MODE_DEFAULT ?>" attribute_code="<?php echo Ess_M2ePro_Model_Buy_Listing::CONDITION_REFURBISHED ?>" <?php if ($this->getData('condition_value') == Ess_M2ePro_Model_Buy_Listing::CONDITION_REFURBISHED) echo ' selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->__('Refurbished') ?></option>
                             </optgroup>
 
-                            <optgroup label="Magento Attribute">
+                            <optgroup class="M2ePro-custom-attribute-optgroup" label="Magento Attribute">
                                 <?php foreach ($generalAttributesByInputTypes['text_select'] as $attribute): ?>
                                     <option attribute_code="<?php echo $attribute['code']; ?>" value="<?php echo Ess_M2ePro_Model_Buy_Listing::CONDITION_MODE_CUSTOM_ATTRIBUTE ?>" <?php if ($this->getData('condition_custom_attribute') == $attribute['code']) echo ' selected="selected"'; ?>><?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?></option>
                                 <?php endforeach ?>
@@ -512,7 +554,7 @@
                         <textarea name="condition_note_value" id="condition_note_value" class="M2ePro-required-when-visible M2ePro-validate-condition-note-length"><?php echo Mage::helper('M2ePro')->escapeHtml($this->getData('condition_note_value')) ?></textarea>
                     </td>
                     <td class="value">
-                        <select name="condition_note_custom_attribute" id="condition_note_custom_attribute" style="width: 150px; margin-top: -4px;">
+                        <select name="condition_note_custom_attribute" id="condition_note_custom_attribute" class="M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,textarea" apply_to_all_attribute_sets="0" style="width: 150px; margin-top: -4px;">
                             <?php foreach ($attributesByInputTypes['text_textarea'] as $attribute): ?>
                                 <option value="<?php echo $attribute['code']; ?>"><?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?></option>
                             <?php endforeach ?>

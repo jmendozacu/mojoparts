@@ -1,14 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
     extends Ess_M2ePro_Model_Magento_Product_Rule_Condition_Abstract
 {
-    // ####################################
-
     protected $_entityAttributeValues = null;
 
     protected $_isUsedForRuleProperty = 'is_used_for_promo_rules';
@@ -17,7 +17,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
 
     protected $_customFiltersCache = array();
 
-    // ####################################
+    //########################################
 
     public function getValue()
     {
@@ -32,7 +32,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
         return $this->getData('value');
     }
 
-    // ####################################
+    //########################################
 
     /**
      * Validate product attribute value for condition
@@ -100,7 +100,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
         }
     }
 
-    // ####################################
+    //########################################
 
     public function getAttributeElement()
     {
@@ -119,7 +119,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
         return Mage::getBlockSingleton('M2ePro/adminhtml_magento_product_rule_renderer_editable');
     }
 
-    // ####################################
+    //########################################
 
     /**
      * Retrieve value element chooser URL
@@ -142,7 +142,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
         return Mage::helper('adminhtml')->getUrl('*/adminhtml_general/getRuleConditionChooserHtml', $urlParameters);
     }
 
-    // ####################################
+    //########################################
 
     /**
      * Customize default operator input by type mapper for some types
@@ -158,6 +158,10 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
              */
             $this->_defaultOperatorInputByType['category'] = array('==', '!=', '{}', '!{}', '()', '!()');
             $this->_arrayInputTypes[] = 'category';
+            /*
+             * price and price range modification
+             */
+            $this->_defaultOperatorInputByType['price'] = array('==', '!=', '>=', '>', '<=', '<', '{}', '!{}');
         }
         return $this->_defaultOperatorInputByType;
     }
@@ -192,7 +196,9 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
         $attributes['category_ids'] = Mage::helper('catalogrule')->__('Category');
 
         foreach ($this->getCustomFilters() as $filterId => $instanceName) {
-            $customFilterInstance = $this->getCustomFilterInstance($filterId);
+            // $this->_data property is not initialized jet, so we can't cache a created custom filter as
+            // it requires that data
+            $customFilterInstance = $this->getCustomFilterInstance($filterId, false);
 
             if ($customFilterInstance instanceof Ess_M2ePro_Model_Magento_Product_Rule_Custom_Abstract) {
                 $attributes[$filterId] = $customFilterInstance->getLabel();
@@ -532,7 +538,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
         return $op;
     }
 
-    // ####################################
+    //########################################
 
     protected function getCustomFilters()
     {
@@ -550,23 +556,28 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Product
 
     /**
      * @param $filterId
+     * @param $isReadyToCache
      * @return Ess_M2ePro_Model_Magento_Product_Rule_Custom_Abstract
      */
-    protected function getCustomFilterInstance($filterId)
+    protected function getCustomFilterInstance($filterId, $isReadyToCache = true)
     {
         $customFilters = $this->getCustomFilters();
         if (!isset($customFilters[$filterId])) {
             return null;
         }
 
-        if (!isset($this->_customFiltersCache[$filterId])) {
-            $this->_customFiltersCache[$filterId] = Mage::getModel(
-                'M2ePro/Magento_Product_Rule_Custom_'.$customFilters[$filterId]
-            );
+        if (isset($this->_customFiltersCache[$filterId])) {
+            return $this->_customFiltersCache[$filterId];
         }
 
-        return $this->_customFiltersCache[$filterId];
+        /** @var Ess_M2ePro_Model_Magento_Product_Rule_Custom_Abstract $model */
+        $model = Mage::getModel('M2ePro/Magento_Product_Rule_Custom_'.$customFilters[$filterId]);
+        $model->setFilterOperator($this->getData('operator'))
+              ->setFilterCondition($this->getData('value'));
+
+        $isReadyToCache && $this->_customFiltersCache[$filterId] = $model;
+        return $model;
     }
 
-    // ####################################
+    //########################################
 }

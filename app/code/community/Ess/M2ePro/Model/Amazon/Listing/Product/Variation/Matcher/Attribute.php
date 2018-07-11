@@ -1,17 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute
 {
-    // ##########################################################
-
     /** @var Ess_M2ePro_Model_Magento_Product $magentoProduct */
     private $magentoProduct = null;
-
-    private $marketplaceId = null;
 
     private $sourceAttributes = array();
 
@@ -20,151 +18,269 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute
     /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute_Resolver $resolver */
     private $resolver = null;
 
-    private $matchedAttributes = array();
+    private $matchedAttributes = null;
 
     private $canUseDictionary = true;
 
-    // ##########################################################
+    //########################################
 
+    /**
+     * @param Ess_M2ePro_Model_Magento_Product $product
+     * @return $this
+     */
     public function setMagentoProduct(Ess_M2ePro_Model_Magento_Product $product)
     {
         $this->magentoProduct = $product;
         $this->sourceAttributes = array();
 
-        $this->matchedAttributes = array();
+        $this->matchedAttributes = null;
 
         return $this;
     }
 
-    public function setMarketplaceId($marketplaceId)
-    {
-        $this->marketplaceId = $marketplaceId;
-        $this->matchedAttributes = array();
+    // ---------------------------------------
 
-        return $this;
-    }
-
-    // ----------------------------------------------------------
-
+    /**
+     * @param array $attributes
+     * @return $this
+     */
     public function setSourceAttributes(array $attributes)
     {
         $this->sourceAttributes = $attributes;
         $this->magentoProduct   = null;
 
-        $this->matchedAttributes = array();
+        $this->matchedAttributes = null;
 
         return $this;
     }
 
+    /**
+     * @param array $attributes
+     * @return $this
+     */
     public function setDestinationAttributes(array $attributes)
     {
         $this->destinationAttributes = $attributes;
-        $this->matchedAttributes = array();
+        $this->matchedAttributes     = null;
 
         return $this;
     }
 
-    // ----------------------------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @param bool $flag
+     * @return $this
+     */
     public function canUseDictionary($flag = true)
     {
         $this->canUseDictionary = $flag;
         return $this;
     }
 
-    // ##########################################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isAmountEqual()
     {
-        return count($this->getSourceAttributesData()) == count($this->getDestinationAttributesData());
+        return count($this->getSourceAttributes()) == count($this->getDestinationAttributes());
     }
 
-    // ----------------------------------------------------------
+    /**
+     * @return bool
+     */
+    public function isSourceAmountGreater()
+    {
+        return count($this->getSourceAttributes()) > count($this->getDestinationAttributes());
+    }
 
+    /**
+     * @return bool
+     */
+    public function isDestinationAmountGreater()
+    {
+        return count($this->getSourceAttributes()) < count($this->getDestinationAttributes());
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return array
+     */
     public function getMatchedAttributes()
     {
-        if (empty($this->matchedAttributes)) {
+        if (is_null($this->matchedAttributes)) {
             $this->match();
         }
 
         return $this->matchedAttributes;
     }
 
-    // ----------------------------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isFullyMatched()
     {
         return count($this->getMagentoUnmatchedAttributes()) <= 0 && count($this->getChannelUnmatchedAttributes()) <= 0;
     }
 
+    /**
+     * @return bool
+     */
     public function isNotMatched()
     {
         return count($this->getMatchedAttributes()) <= 0;
     }
 
+    /**
+     * @return bool
+     */
     public function isPartiallyMatched()
     {
         return !$this->isFullyMatched() && !$this->isNotMatched();
     }
 
-    // ----------------------------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     */
     public function getMagentoUnmatchedAttributes()
     {
         return array_keys($this->getMatchedAttributes(), null);
     }
 
+    /**
+     * @return array
+     */
     public function getChannelUnmatchedAttributes()
     {
         $matchedChannelAttributes = array_values($this->getMatchedAttributes());
         return array_diff($this->destinationAttributes, $matchedChannelAttributes);
     }
 
-    // ##########################################################
+    //########################################
 
     private function match()
     {
-        $this->validate();
-
-        if (!is_null($this->magentoProduct) && $this->magentoProduct->isGroupedType()) {
+        if (!is_null($this->magentoProduct) && $this->magentoProduct->isGroupedType() &&
+            !$this->magentoProduct->getVariationVirtualAttributes()
+        ) {
             $channelAttribute = reset($this->destinationAttributes);
 
             $this->matchedAttributes = array(
                 Ess_M2ePro_Model_Magento_Product_Variation::GROUPED_PRODUCT_ATTRIBUTE_LABEL => $channelAttribute
             );
 
-            return $this;
+            return;
         }
 
-        foreach ($this->getSourceAttributesData() as $magentoAttribute => $names) {
+        if ($this->matchByNames()) {
+            return;
+        }
+
+        if (!$this->canUseDictionary) {
+            return;
+        }
+
+        if ($this->matchByLocalVocabulary()) {
+            return;
+        }
+
+        $this->matchByServerVocabulary();
+    }
+
+    private function matchByNames()
+    {
+        $this->getResolver()->clearSourceAttributes();
+
+        foreach ($this->getSourceAttributes() as $attribute) {
             $this->getResolver()->addSourceAttribute(
-                $magentoAttribute, $this->prepareAttributeNames($magentoAttribute, $names)
+                $attribute, $this->prepareAttributeNames($attribute)
             );
         }
 
-        foreach ($this->getDestinationAttributesData() as $channelAttribute => $names) {
+        $this->getResolver()->clearDestinationAttributes();
+
+        foreach ($this->getDestinationAttributes() as $attribute) {
             $this->getResolver()->addDestinationAttribute(
-                $channelAttribute, $this->prepareAttributeNames($channelAttribute, $names)
+                $attribute, $this->prepareAttributeNames($attribute)
             );
         }
 
         $this->matchedAttributes = $this->getResolver()->resolve()->getResolvedAttributes();
 
-        return $this;
+        return $this->isFullyMatched();
     }
 
-    private function validate()
+    private function matchByLocalVocabulary()
     {
-        if (is_null($this->marketplaceId)) {
-            throw new Exception('Marketplace ID was not set.');
+        $this->getResolver()->clearSourceAttributes();
+
+        foreach ($this->getSourceAttributesData() as $attribute => $names) {
+            $this->getResolver()->addSourceAttribute(
+                $attribute, $this->prepareAttributeNames($attribute, $names)
+            );
         }
 
-        if (!$this->isAmountEqual()) {
-            throw new Exception('Amounts of Source and Destination Attributes are not equal.');
+        $this->getResolver()->clearDestinationAttributes();
+
+        foreach ($this->getDestinationAttributesLocalVocabularyData() as $attribute => $names) {
+            $this->getResolver()->addDestinationAttribute(
+                $attribute, $this->prepareAttributeNames($attribute, $names)
+            );
         }
+
+        $this->matchedAttributes = $this->getResolver()->resolve()->getResolvedAttributes();
+
+        return $this->isFullyMatched();
     }
 
-    // ##########################################################
+    private function matchByServerVocabulary()
+    {
+        $this->getResolver()->clearSourceAttributes();
+
+        foreach ($this->getSourceAttributesData() as $attribute => $names) {
+            $this->getResolver()->addSourceAttribute(
+                $attribute, $this->prepareAttributeNames($attribute, $names)
+            );
+        }
+
+        $this->getResolver()->clearDestinationAttributes();
+
+        foreach ($this->getDestinationAttributesServerVocabularyData() as $attribute => $names) {
+            $this->getResolver()->addDestinationAttribute(
+                $attribute, $this->prepareAttributeNames($attribute, $names)
+            );
+        }
+
+        $this->matchedAttributes = $this->getResolver()->resolve()->getResolvedAttributes();
+
+        return $this->isFullyMatched();
+    }
+
+    //########################################
+
+    private function getSourceAttributes()
+    {
+        if (!empty($this->sourceAttributes)) {
+            return $this->sourceAttributes;
+        }
+
+        if (!is_null($this->magentoProduct)) {
+            $magentoVariations = $this->magentoProduct
+                ->getVariationInstance()
+                ->getVariationsTypeStandard();
+
+            $this->sourceAttributes = array_keys($magentoVariations['set']);
+        }
+
+        return $this->sourceAttributes;
+    }
 
     private function getSourceAttributesData()
     {
@@ -173,35 +289,56 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute
                 ->getVariationInstance()
                 ->getTitlesVariationSet();
 
+            $magentoStandardVariations = $this->magentoProduct
+                ->getVariationInstance()
+                ->getVariationsTypeStandard();
+
             $resultData = array();
-            foreach ($magentoAttributesNames as $attribute => $data) {
-                $resultData[$attribute] = $data['titles'];
+            foreach (array_keys($magentoStandardVariations['set']) as $attribute) {
+                $titles = array();
+                if (isset($magentoAttributesNames[$attribute])) {
+                    $titles = $magentoAttributesNames[$attribute]['titles'];
+                }
+
+                $resultData[$attribute] = $titles;
             }
 
             return $resultData;
         }
 
-        return array_fill_keys($this->sourceAttributes, array());
+        return array_fill_keys($this->getSourceAttributes(), array());
     }
 
-    private function getDestinationAttributesData()
+    private function getDestinationAttributes()
     {
-        if (!$this->canUseDictionary) {
-            return array_fill_keys($this->destinationAttributes, array());
-        }
+        return $this->destinationAttributes;
+    }
 
-        $marketplaceDetails = Mage::getModel('M2ePro/Amazon_Marketplace_Details');
-        $marketplaceDetails->setMarketplaceId($this->marketplaceId);
+    private function getDestinationAttributesLocalVocabularyData()
+    {
+        $vocabularyHelper = Mage::helper('M2ePro/Component_Amazon_Vocabulary');
 
         $resultData = array();
-        foreach ($this->destinationAttributes as $attribute) {
-            $resultData[$attribute] = $marketplaceDetails->getVocabularyAttributeNames($attribute);
+        foreach ($this->getDestinationAttributes() as $attribute) {
+            $resultData[$attribute] = $vocabularyHelper->getLocalAttributeNames($attribute);
         }
 
         return $resultData;
     }
 
-    // ----------------------------------------------------------
+    private function getDestinationAttributesServerVocabularyData()
+    {
+        $vocabularyHelper = Mage::helper('M2ePro/Component_Amazon_Vocabulary');
+
+        $resultData = array();
+        foreach ($this->getDestinationAttributes() as $attribute) {
+            $resultData[$attribute] = $vocabularyHelper->getServerAttributeNames($attribute);
+        }
+
+        return $resultData;
+    }
+
+    // ---------------------------------------
 
     private function getResolver()
     {
@@ -213,12 +350,8 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute
         return $this->resolver;
     }
 
-    private function prepareAttributeNames($attribute, $names)
+    private function prepareAttributeNames($attribute, array $names = array())
     {
-        if (!is_array($names)) {
-            $names = array();
-        }
-
         $names[] = $attribute;
         $names = array_unique($names);
 
@@ -228,5 +361,5 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute
         return $names;
     }
 
-    // ##########################################################
+    //########################################
 }

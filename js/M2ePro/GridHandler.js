@@ -1,6 +1,6 @@
 GridHandler = Class.create(CommonHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function(gridId)
     {
@@ -8,7 +8,7 @@ GridHandler = Class.create(CommonHandler, {
         this.prepareActions();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     afterInitPage: function()
     {
@@ -22,7 +22,7 @@ GridHandler = Class.create(CommonHandler, {
         }).bind(this));
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getGridObj: function()
     {
@@ -34,7 +34,7 @@ GridHandler = Class.create(CommonHandler, {
         return window[this.gridId + '_massactionJsObject'];
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getCellContent: function(rowId,cellIndex)
     {
@@ -55,7 +55,7 @@ GridHandler = Class.create(CommonHandler, {
         return '';
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getProductNameByRowId: function(rowId)
     {
@@ -66,7 +66,7 @@ GridHandler = Class.create(CommonHandler, {
         return (matches && !Object.isUndefined(matches[1])) ? matches[1] : '';
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     selectAll: function()
     {
@@ -84,7 +84,7 @@ GridHandler = Class.create(CommonHandler, {
         this.getGridObj().reload();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     selectByRowId: function(rowId)
     {
@@ -106,7 +106,7 @@ GridHandler = Class.create(CommonHandler, {
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getSelectedProductsString: function()
     {
@@ -118,14 +118,30 @@ GridHandler = Class.create(CommonHandler, {
         return this.getSelectedProductsString().split(',');
     },
 
-    //----------------------------------
+    getOrderedSelectedProductsArray: function()
+    {
+        var selectedProductsArray = this.getSelectedProductsArray();
+        var checkboxesValuesArray = this.getGridMassActionObj().getCheckboxesValuesAsString().split(',');
+
+        var orderedSelectedProductArray = [];
+
+        checkboxesValuesArray.forEach(function (value) {
+            if (selectedProductsArray.indexOf(value) >= 0) {
+                orderedSelectedProductArray.push(value);
+            }
+        });
+
+        return orderedSelectedProductArray;
+    },
+
+    // ---------------------------------------
 
     confirm: function()
     {
         return confirm(M2ePro.translator.translate('Are you sure?'));
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     massActionSubmitClick: function()
     {
@@ -141,6 +157,10 @@ GridHandler = Class.create(CommonHandler, {
                 selectAction = false;
                 return;
             }
+
+            if (o.selected && o.value != '') {
+                GridHandler.currentAction = o.value;
+            }
         });
 
         if (!selectAction) {
@@ -149,7 +169,7 @@ GridHandler = Class.create(CommonHandler, {
 
         this.scroll_page_to_top();
 
-        if (!this.confirm()) {
+        if (!this.confirm.call(this)) {
             return;
         }
 
@@ -168,7 +188,7 @@ GridHandler = Class.create(CommonHandler, {
         }).bind(this));
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     viewItemHelp: function(rowId, data, hideViewLog)
     {
@@ -226,7 +246,7 @@ GridHandler = Class.create(CommonHandler, {
         $('grid_help_icon_close_'+rowId).hide();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     createHelpTitleHtml: function(rowId)
     {
@@ -327,7 +347,7 @@ GridHandler = Class.create(CommonHandler, {
         return html;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     createHelpViewAllLogHtml: function(rowId)
     {
@@ -336,26 +356,26 @@ GridHandler = Class.create(CommonHandler, {
                '</a></div>';
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getLogViewUrl: function(rowId)
     {
         alert('abstract getLogViewUrl');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     prepareActions: function()
     {
         alert('abstract prepareActions');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getComponent: function()
     {
         alert('abstract getComponent');
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

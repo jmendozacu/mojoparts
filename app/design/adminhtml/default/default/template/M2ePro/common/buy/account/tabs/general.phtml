@@ -1,26 +1,33 @@
 <div id="block_notice_buy_accounts_general" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('General'); ?>">
-    <?php echo Mage::helper('M2ePro')->__('On this Page you have to fill in General information on your Rakuten.com Account and provide all necessary accesses for the further work.'); ?>
+    <?php echo Mage::helper('M2ePro')->__('
+    On this Page you have to fill in General information on your Rakuten.com Account and provide all necessary accesses for the further work.<br/><br/>
+    More detailed information about ability to work with this Page you can find <a href="%url%" target="_blank">here</a>.',
+    Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/ooMVAQ')
+    ); ?>
 </div>
 
 <?php
-$formData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data') ? Mage::helper('M2ePro/Data_Global')->getValue('temp_data')->toArray() : array();
+    $formData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data') ? Mage::helper('M2ePro/Data_Global')->getValue('temp_data')->toArray() : array();
 
-if (isset($formData['other_listings_mapping_settings'])) {
-    $formData['other_listings_mapping_settings'] = (array)json_decode($formData['other_listings_mapping_settings'],true);
-}
+    if (isset($formData['other_listings_mapping_settings'])) {
+        $formData['other_listings_mapping_settings'] = (array)json_decode($formData['other_listings_mapping_settings'],true);
+    }
 
-$defaults = array(
-    'title' => '',
-    'web_login' => '',
-    'ftp_login' => '',
-    'ftp_inventory_access' => 0,
-    'ftp_new_sku_access' => 0,
-    'ftp_orders_access' => 0
-);
+    $defaults = array(
+        'title' => '',
+        'web_login' => '',
+        'ftp_login' => ''
+    );
 
-$formData = array_merge($defaults, $formData);
+    $formData = array_merge($defaults, $formData);
 
-$isEdit = !!$this->getRequest()->getParam('id');
+    $isEdit = !!$this->getRequest()->getParam('id');
+
+    $licenseMessage = '';
+
+    if ($isEdit) {
+        $licenseMessage = (string)Mage::helper('M2ePro/Data_Global')->getValue('license_message');
+    }
 ?>
 
 <script type="text/javascript">
@@ -51,6 +58,8 @@ $isEdit = !!$this->getRequest()->getParam('id');
     M2ePro.formData.id = '<?php echo $this->getRequest()->getParam('id'); ?>';
 
     Event.observe(window, 'load', function() {
+        <?php echo $licenseMessage; ?>
+
         BuyAccountHandlerObj = new CommonBuyAccountHandler();
         editForm = new varienForm('edit_form', '<?php echo $this->getValidationUrl(); ?>');
 
@@ -108,6 +117,32 @@ $isEdit = !!$this->getRequest()->getParam('id');
     </div>
 
 </div>
+
+<?php if (!empty($formData['seller_id'])) : ?>
+<div class="entry-edit" id="magento_block_buy_accounts_access_details">
+    <div class="entry-edit-head">
+        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Access Details'); ?></h4>
+    </div>
+
+    <div class="fieldset">
+        <div class="hor-scroll">
+
+            <table class="form-list" cellspacing="0" cellpadding="0">
+                <tr id="buy_account_access_details">
+                    <td class="label">
+                        <label><?php echo Mage::helper('M2ePro')->__('Seller ID'); ?>: </label>
+                    </td>
+                    <td class="value">
+                        <input id="seller_id" type="text" name="seller_id" disabled="disabled" value="<?php echo $formData['seller_id'];?>" class="input-text M2ePro-required-when-visible" />
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+
+</div>
+<?php endif; ?>
 
 <?php if (!$this->marketplace) { ?>
 <div class="entry-edit" id="magento_block_buy_accounts_general_none_marketplace">
@@ -215,65 +250,6 @@ $isEdit = !!$this->getRequest()->getParam('id');
         </div>
     </div>
 
-</div>
-
-<div class="entry-edit" id="magento_block_buy_accounts_general_ftp_accesses">
-    <div class="entry-edit-head">
-        <h4 class="icon-head head-edit-form fieldset-legend"><?php echo Mage::helper('M2ePro')->__('Inventory, Orders And New SKU FTP Accesses'); ?></h4>
-    </div>
-
-    <div class="fieldset">
-        <div class="hor-scroll">
-            <div id="block_notice_buy_accounts_general_ftp_accesses" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('FTP Accesses'); ?>">
-                <?php echo Mage::helper('M2ePro')->__('All these Actions must be allowed to your Rakuten.com Account by Rakuten first.'); ?>
-            </div>
-            <table class="form-list" cellspacing="0" cellpadding="0">
-                <tr>
-                    <td class="label">
-                        <label for="ftp_inventory_access"><?php echo Mage::helper('M2ePro')->__('FTP Inventory Access'); ?>: </label>
-                    </td>
-                    <td class="value" style="width: auto;">
-                        <select id="ftp_inventory_access" name="ftp_inventory_access">
-                            <option value="0" <?php if ($formData['ftp_inventory_access'] == 0) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
-                            <option value="1" <?php if ($formData['ftp_inventory_access'] == 1) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
-                        </select>
-                        <p class="note">
-                            <span><?php echo Mage::helper('M2ePro')->__('Set <i>Yes</i>, if you have enabled Inventory Generation Option on your FTP.'); ?></span>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="label">
-                        <label for="ftp_orders_access"><?php echo Mage::helper('M2ePro')->__('FTP Orders Access'); ?>: </label>
-                    </td>
-                    <td class="value" style="width: auto;">
-                        <select id="ftp_orders_access" name="ftp_orders_access">
-                            <option value="0" <?php if ($formData['ftp_orders_access'] == 0) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
-                            <option value="1" <?php if ($formData['ftp_orders_access'] == 1) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
-                        </select>
-                        <p class="note">
-                            <span><?php echo Mage::helper('M2ePro')->__('Set <i>Yes</i>, if you have enabled Orders Generation Option on your FTP.'); ?></span>
-                        </p>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="label">
-                        <label for="ftp_new_sku_access"><?php echo Mage::helper('M2ePro')->__('FTP New SKU Access'); ?>: </label>
-                    </td>
-                    <td class="value" style="width: auto;">
-                        <select id="ftp_new_sku_access" name="ftp_new_sku_access">
-                            <option value="0" <?php if ($formData['ftp_new_sku_access'] == 0) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
-                            <option value="1" <?php if ($formData['ftp_new_sku_access'] == 1) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
-                        </select>
-                        <p class="note">
-                            <span><?php echo Mage::helper('M2ePro')->__('Set <i>Yes</i>, if you have enabled new SKU Creation Option on your FTP.
-                            <br/><b>Note:</b> The access of getting new SKU must be taken from Rakuten.com'); ?></span>
-                        </p>
-                    </td>
-                </tr>
-            </table>
-        </div>
-    </div>
 </div>
 
 <?php } ?>

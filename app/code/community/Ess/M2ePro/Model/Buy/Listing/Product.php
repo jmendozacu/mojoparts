@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -12,14 +14,14 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
     const SEARCH_SETTINGS_STATUS_NOT_FOUND       = 1;
     const SEARCH_SETTINGS_STATUS_ACTION_REQUIRED = 2;
 
-    // ########################################
+    //########################################
 
     /**
      * @var Ess_M2ePro_Model_Buy_Listing_Product_Variation_Manager
      */
     protected $variationManager = NULL;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -27,7 +29,11 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         $this->_init('M2ePro/Buy_Listing_Product');
     }
 
-    // ########################################
+    //########################################
+
+    public function afterSaveNewEntity() {}
+
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -45,7 +51,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getAccount()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -63,7 +69,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getMarketplace()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Listing
@@ -81,7 +87,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getListing()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Buy_Listing_Source
@@ -91,7 +97,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getBuyListing()->getSource($this->getActualMagentoProduct());
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Template_SellingFormat
@@ -109,7 +115,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getSellingFormatTemplate()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Template_Synchronization
@@ -127,21 +133,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getSynchronizationTemplate()->getChildObject();
     }
 
-    // ########################################
-
-    /**
-     * @return Ess_M2ePro_Model_Buy_Template_NewProduct
-     */
-    public function getNewProductTemplate()
-    {
-        return Mage::helper('M2ePro')->getCachedObject(
-            'Buy_Template_NewProduct',
-            $this->getData('template_new_product_id'),NULL,
-            array('template')
-        );
-    }
-
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Magento_Product_Cache
@@ -166,6 +158,12 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
             $this->getMagentoProduct()->isGroupedType()) {
 
             $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                                                     array(
+                                                         'listing_product_id' => $this->getId()
+                                                     ));
+            }
             $variation  = reset($variations);
             $options    = $variation->getOptions(true);
             $option     = reset($options);
@@ -176,7 +174,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getMagentoProduct();
     }
 
-    // ########################################
+    //########################################
 
     public function getBuyItem()
     {
@@ -188,6 +186,9 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
                         ->getFirstItem();
     }
 
+    /**
+     * @return Ess_M2ePro_Model_Buy_Listing_Product_Variation_Manager
+     */
     public function getVariationManager()
     {
         if (is_null($this->variationManager)) {
@@ -198,44 +199,55 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->variationManager;
     }
 
-    public function getVariations($asObjects = false, array $filters = array())
+    /**
+     * @param bool $asObjects
+     * @param array $filters
+     * @param bool $tryToGetFromStorage
+     * @return array
+     */
+    public function getVariations($asObjects = false, array $filters = array(), $tryToGetFromStorage = true)
     {
-        return $this->getParentObject()->getVariations($asObjects,$filters);
+        return $this->getParentObject()->getVariations($asObjects,$filters,$tryToGetFromStorage);
     }
 
-    // ########################################
-
-    public function getTemplateNewProductId()
-    {
-        return $this->getData('template_new_product_id');
-    }
-
-    //-----------------------------------------
+    //########################################
 
     public function getSku()
     {
         return $this->getData('sku');
     }
 
+    /**
+     * @return int
+     */
     public function getGeneralId()
     {
         return (int)$this->getData('general_id');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return float
+     */
     public function getOnlinePrice()
     {
         return (float)$this->getData('online_price');
     }
 
+    /**
+     * @return int
+     */
     public function getOnlineQty()
     {
         return (int)$this->getData('online_qty');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     public function getCondition()
     {
         return (int)$this->getData('condition');
@@ -246,13 +258,16 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getData('condition_note');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getShippingStandardRate()
     {
         return $this->getData('shipping_standard_rate');
     }
 
+    /**
+     * @return int
+     */
     public function getShippingExpeditedMode()
     {
         return (int)$this->getData('shipping_expedited_mode');
@@ -263,40 +278,51 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->getData('shipping_expedited_rate');
     }
 
-    //-----------------------------------------
-
-    public function isIgnoreNextInventorySynch()
-    {
-        return (bool)$this->getData('ignore_next_inventory_synch');
-    }
-
-    // ########################################
+    //########################################
 
     public function getSearchSettingsStatus()
     {
         return $this->getData('search_settings_status');
     }
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getSearchSettingsData()
     {
         return $this->getSettings('search_settings_data');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getGeneralIdSearchInfo()
     {
         return $this->getSettings('general_id_search_info');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return float|int
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getPrice()
     {
         if ($this->getVariationManager()->isVariationProduct() &&
             $this->getVariationManager()->isVariationProductMatched()) {
 
             $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                                                     array(
+                                                         'listing_product_id' => $this->getId()
+                                                     ));
+            }
             /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
             $variation = reset($variations);
 
@@ -308,19 +334,31 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         /** @var $calculator Ess_M2ePro_Model_Buy_Listing_Product_PriceCalculator */
         $calculator = Mage::getModel('M2ePro/Buy_Listing_Product_PriceCalculator');
         $calculator->setSource($src)->setProduct($this->getParentObject());
-        $calculator->setModifyByCoefficient(true);
+        $calculator->setCoefficient($this->getBuySellingFormatTemplate()->getPriceCoefficient());
+        $calculator->setVatPercent($this->getBuySellingFormatTemplate()->getPriceVatPercent());
 
         return $calculator->getProductValue();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param bool $magentoMode
+     * @return int
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getQty($magentoMode = false)
     {
         if ($this->getVariationManager()->isVariationProduct() &&
             $this->getVariationManager()->isVariationProductMatched()) {
 
             $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                                                     array(
+                                                         'listing_product_id' => $this->getId()
+                                                     ));
+            }
             /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
             $variation = reset($variations);
 
@@ -335,7 +373,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $calculator->getProductValue();
     }
 
-    // ########################################
+    //########################################
 
     public function listAction(array $params = array())
     {
@@ -357,20 +395,20 @@ class Ess_M2ePro_Model_Buy_Listing_Product extends Ess_M2ePro_Model_Component_Ch
         return $this->processDispatcher(Ess_M2ePro_Model_Listing_Product::ACTION_STOP, $params);
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     protected function processDispatcher($action, array $params = array())
     {
-        $dispatcherObject = Mage::getModel('M2ePro/Connector_Buy_Product_Dispatcher');
+        $dispatcherObject = Mage::getModel('M2ePro/Buy_Connector_Product_Dispatcher');
         return $dispatcherObject->process($action, $this->getId(), $params);
     }
 
-    // ########################################
+    //########################################
 
     public function getTrackingAttributes()
     {
         return $this->getListing()->getTrackingAttributes();
     }
 
-    // ########################################
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
@@ -27,17 +29,17 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
      */
     protected $requestsDataObjects = array();
 
-    // ########################################
+    //########################################
 
     /**
      * @param array $params
      * @param Ess_M2ePro_Model_Listing_Product[] $listingsProducts
-     * @throws Exception
+     * @throws Ess_M2ePro_Model_Exception
      */
     public function __construct(array $params = array(), array $listingsProducts)
     {
         if (empty($listingsProducts)) {
-            throw new Exception('Multiple Item Connector has received empty array');
+            throw new Ess_M2ePro_Model_Exception('Multiple Item Connector has received empty array');
         }
 
         /** @var Ess_M2ePro_Model_Account $account */
@@ -45,41 +47,56 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
         /** @var Ess_M2ePro_Model_Marketplace $marketplace */
         $marketplace = reset($listingsProducts)->getMarketplace();
 
-        $listingProductIds = array();
+        $listingProductIds   = array();
+        $actionConfigurators = array();
 
-        foreach($listingsProducts as $listingProduct) {
+        foreach ($listingsProducts as $listingProduct) {
 
             if (!($listingProduct instanceof Ess_M2ePro_Model_Listing_Product)) {
-                throw new Exception('Multiple Item Connector has received invalid Product data type');
+                throw new Ess_M2ePro_Model_Exception('Multiple Item Connector has received invalid Product data type');
             }
 
             if ($account->getId() != $listingProduct->getListing()->getAccountId()) {
-                throw new Exception('Multiple Item Connector has received Products from different Accounts');
+                throw new Ess_M2ePro_Model_Exception('Multiple Item Connector has received Products from
+                    different Accounts');
             }
 
             if ($marketplace->getId() != $listingProduct->getListing()->getMarketplaceId()) {
-                throw new Exception('Multiple Item Connector has received Products from different Marketplaces');
+                throw new Ess_M2ePro_Model_Exception('Multiple Item Connector has received Products from
+                    different Marketplaces');
             }
 
             $listingProductIds[] = $listingProduct->getId();
+
+            if (!is_null($listingProduct->getActionConfigurator())) {
+                $actionConfigurators[$listingProduct->getId()] = $listingProduct->getActionConfigurator();
+            } else {
+                $actionConfigurators[$listingProduct->getId()] = Mage::getModel(
+                    'M2ePro/Ebay_Listing_Product_Action_Configurator'
+                );
+            }
         }
 
         /** @var Ess_M2ePro_Model_Mysql4_Listing_Product_Collection $listingProductCollection */
         $listingProductCollection = Mage::helper('M2ePro/Component_Ebay')->getCollection('Listing_Product');
         $listingProductCollection->addFieldToFilter('id', array('in' => array_unique($listingProductIds)));
 
+        /** @var Ess_M2ePro_Model_Listing_Product[] $actualListingsProducts */
         $actualListingsProducts = $listingProductCollection->getItems();
 
         if (empty($actualListingsProducts)) {
-            throw new Exception('All products were removed before connector processing');
+            throw new Ess_M2ePro_Model_Exception('All products were removed before connector processing');
         }
 
-        $this->listingsProducts = $actualListingsProducts;
+        foreach ($actualListingsProducts as $actualListingProduct) {
+            $actualListingProduct->setActionConfigurator($actionConfigurators[$actualListingProduct->getId()]);
+            $this->listingsProducts[$actualListingProduct->getId()] = $actualListingProduct;
+        }
 
         parent::__construct($params,$marketplace,$account);
     }
 
-    // ########################################
+    //########################################
 
     public function process()
     {
@@ -104,7 +121,7 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
 
         foreach ($result['result'] as $listingProductId => $listingsProductResult) {
 
-            if (!isset($listingsProductResult['messages'])){
+            if (!isset($listingsProductResult['messages'])) {
                 continue;
             }
 
@@ -125,14 +142,14 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
         return $result;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     protected function eventAfterProcess()
     {
         $this->unlockListingsProducts();
     }
 
-    // ########################################
+    //########################################
 
     protected function isNeedSendRequest()
     {
@@ -168,7 +185,31 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
         return !empty($this->listingsProducts);
     }
 
-    // -----------------------------------------
+    protected function getRequestTimeout()
+    {
+        $imagesTimeout = 0;
+
+        foreach ($this->listingsProducts as $listingProduct) {
+
+            /** @var $listingProduct Ess_M2ePro_Model_Listing_Product */
+
+            $requestDataObject = $this->getRequestDataObject($listingProduct);
+            $requestData = $requestDataObject->getData();
+
+            if ($requestData['is_eps_ebay_images_mode'] === false ||
+                (is_null($requestData['is_eps_ebay_images_mode']) &&
+                    $requestData['upload_images_mode'] ==
+                        Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Description::UPLOAD_IMAGES_MODE_SELF)) {
+                continue;
+            }
+
+            $imagesTimeout += self::TIMEOUT_INCREMENT_FOR_ONE_IMAGE * $requestDataObject->getTotalImagesCount();
+        }
+
+        return parent::getRequestTimeout() + $imagesTimeout;
+    }
+
+    // ---------------------------------------
 
     protected function lockListingsProducts()
     {
@@ -190,7 +231,7 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
         }
     }
 
-    // -----------------------------------------
+    // ---------------------------------------
 
     abstract protected function filterManualListingsProducts();
 
@@ -203,7 +244,7 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
         unset($this->listingsProducts[$listingProduct->getId()]);
     }
 
-    // ########################################
+    //########################################
 
     protected function logRequestMessages(Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
@@ -230,7 +271,7 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
     protected function getListingProduct($id)
     {
         if (!isset($this->listingsProducts[$id])) {
-            throw new Exception('Listing Product was not found');
+            throw new Ess_M2ePro_Model_Exception('Listing Product was not found');
         }
 
         return $this->listingsProducts[$id];
@@ -253,7 +294,7 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
         return true;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param Ess_M2ePro_Model_Listing_Product $listingProduct
@@ -281,7 +322,7 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
         return $this->responsesObjects[$listingProduct->getId()];
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @param Ess_M2ePro_Model_Listing_Product $listingProduct
@@ -305,5 +346,5 @@ abstract class Ess_M2ePro_Model_Connector_Ebay_Item_MultipleAbstract
         return $this->requestsDataObjects[$listingProduct->getId()];
     }
 
-    // ########################################
+    //########################################
 }

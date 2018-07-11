@@ -1,64 +1,59 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Upgrade_Migration_ToVersion630
 {
     const BACKUP_TABLE_PREFIX = '__backup_v630';
 
-    //####################################
-
     /** @var Ess_M2ePro_Model_Upgrade_MySqlSetup */
     private $installer = NULL;
 
     private $forceAllSteps = false;
 
-    //####################################
+    //########################################
 
+    /**
+     * @return Ess_M2ePro_Model_Upgrade_MySqlSetup
+     */
     public function getInstaller()
     {
         return $this->installer;
     }
 
+    /**
+     * @param Ess_M2ePro_Model_Upgrade_MySqlSetup $installer
+     */
     public function setInstaller(Ess_M2ePro_Model_Upgrade_MySqlSetup $installer)
     {
         $this->installer = $installer;
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     public function setForceAllSteps($value = true)
     {
         $this->forceAllSteps = $value;
     }
 
-    //####################################
+    //########################################
 
     public function migrate()
     {
-        try {
-
-            $this->processGeneral();
-            $this->processMarketplace();
-            $this->processDescriptionTemplate();
-            $this->processListingProduct();
-            $this->processAutoActions();
-            $this->processProcessing();
-            $this->processListing();
-
-        } catch (Exception $e) {
-
-            echo '<pre>' . $e->getMessage() . '<br>';
-            echo '<pre>' . $e->getFile() . '::' . $e->getLine() . '<br>';
-            echo '<pre>' . $e->getTraceAsString() . '<br>';
-
-            die;
-        }
+        $this->processGeneral();
+        $this->processMarketplace();
+        $this->processDescriptionTemplate();
+        $this->processListingProduct();
+        $this->processAutoActions();
+        $this->processProcessing();
+        $this->processListing();
     }
 
-    //####################################
+    //########################################
 
     private function processGeneral()
     {
@@ -121,5 +116,5 @@ class Ess_M2ePro_Model_Upgrade_Migration_ToVersion630
         $model->process();
     }
 
-    //####################################
+    //########################################
 }

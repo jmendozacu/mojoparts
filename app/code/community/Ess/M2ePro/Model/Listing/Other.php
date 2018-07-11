@@ -1,13 +1,13 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_Abstract
 {
-    // ########################################
-
     /**
      * @var Ess_M2ePro_Model_Account
      */
@@ -23,7 +23,7 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
      */
     protected $magentoProductModel = NULL;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -31,7 +31,20 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
         $this->_init('M2ePro/Listing_Other');
     }
 
-    // ########################################
+    //########################################
+
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function isLocked()
+    {
+        if ($this->isComponentModeEbay() && $this->getAccount()->getChildObject()->isModeSandbox()) {
+            return false;
+        }
+
+        return parent::isLocked();
+    }
 
     public function deleteInstance()
     {
@@ -42,7 +55,7 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
         return $temp;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -66,7 +79,7 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
          $this->accountModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -90,11 +103,11 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
          $this->marketplaceModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Magento_Product_Cache
-     * @throws Exception
+     * @throws Ess_M2ePro_Model_Exception
      */
     public function getMagentoProduct()
     {
@@ -103,7 +116,7 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
         }
 
         if (is_null($this->getProductId())) {
-            throw new Exception('Product id is not set');
+            throw new Ess_M2ePro_Model_Exception('Product id is not set');
         }
 
         return $this->magentoProductModel = Mage::getModel('M2ePro/Magento_Product_Cache')
@@ -119,18 +132,27 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
         $this->magentoProductModel = $instance;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getAccountId()
     {
         return (int)$this->getData('account_id');
     }
 
+    /**
+     * @return int
+     */
     public function getMarketplaceId()
     {
         return (int)$this->getData('marketplace_id');
     }
 
+    /**
+     * @return int|null
+     */
     public function getProductId()
     {
         $temp = $this->getData('product_id');
@@ -139,72 +161,111 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
 
     public function getAdditionalData()
     {
-        $additionalData = $this->getData('additional_data');
-        is_string($additionalData) && $additionalData = json_decode($additionalData,true);
-        return is_array($additionalData) ? $additionalData : array();
+        return $this->getSettings('additional_data');
     }
 
-    //---------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     public function getStatus()
     {
         return (int)$this->getData('status');
     }
 
+    /**
+     * @return int
+     */
     public function getStatusChanger()
     {
         return (int)$this->getData('status_changer');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isNotListed()
     {
         return $this->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED;
     }
 
+    /**
+     * @return bool
+     */
     public function isUnknown()
     {
         return $this->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_UNKNOWN;
     }
 
+    /**
+     * @return bool
+     */
     public function isBlocked()
     {
         return $this->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_BLOCKED;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isListed()
     {
         return $this->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_LISTED;
     }
 
+    /**
+     * @return bool
+     */
+    public function isHidden()
+    {
+        return $this->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_HIDDEN;
+    }
+
+    /**
+     * @return bool
+     */
     public function isSold()
     {
         return $this->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_SOLD;
     }
 
+    /**
+     * @return bool
+     */
     public function isStopped()
     {
         return $this->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_STOPPED;
     }
 
+    /**
+     * @return bool
+     */
     public function isFinished()
     {
         return $this->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_FINISHED;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isListable()
     {
         return ($this->isNotListed() || $this->isSold() ||
                 $this->isStopped() || $this->isFinished() ||
-                $this->isUnknown()) &&
+                $this->isHidden() || $this->isUnknown()) &&
                 !$this->isBlocked();
     }
 
+    /**
+     * @return bool
+     */
     public function isRelistable()
     {
         return ($this->isSold() || $this->isStopped() ||
@@ -212,19 +273,25 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
                 !$this->isBlocked();
     }
 
+    /**
+     * @return bool
+     */
     public function isRevisable()
     {
-        return ($this->isListed() || $this->isUnknown()) &&
+        return ($this->isListed() || $this->isHidden() || $this->isUnknown()) &&
                 !$this->isBlocked();
     }
 
+    /**
+     * @return bool
+     */
     public function isStoppable()
     {
-        return ($this->isListed() || $this->isUnknown()) &&
+        return ($this->isListed() ||  $this->isHidden() || $this->isUnknown()) &&
                 !$this->isBlocked();
     }
 
-    // ########################################
+    //########################################
 
     public function reviseAction(array $params = array())
     {
@@ -241,7 +308,7 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
         return $this->getChildObject()->stopAction($params);
     }
 
-    // ########################################
+    //########################################
 
     public function unmapDeletedProduct($product)
     {
@@ -258,8 +325,13 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
         }
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @param int $productId
+     * @param int $logsInitiator
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function mapProduct($productId, $logsInitiator = Ess_M2ePro_Helper_Data::INITIATOR_UNKNOWN)
     {
         $this->addData(array('product_id'=>$productId))->save();
@@ -278,6 +350,10 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
             Ess_M2ePro_Model_Log_Abstract::PRIORITY_MEDIUM);
     }
 
+    /**
+     * @param int $logsInitiator
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function unmapProduct($logsInitiator = Ess_M2ePro_Helper_Data::INITIATOR_UNKNOWN)
     {
         $this->getChildObject()->beforeUnmapProduct();
@@ -296,5 +372,5 @@ class Ess_M2ePro_Model_Listing_Other extends Ess_M2ePro_Model_Component_Parent_A
             Ess_M2ePro_Model_Log_Abstract::PRIORITY_MEDIUM);
     }
 
-    // ########################################
+    //########################################
 }

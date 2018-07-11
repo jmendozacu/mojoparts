@@ -1,19 +1,19 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
     extends Ess_M2ePro_Model_Magento_Product_Rule_Condition_Abstract
 {
-    // ####################################
-
     protected $_useCustomOptions = true;
 
     static protected $_conditionModels = array();
 
-    // ####################################
+    //########################################
 
     public function __construct()
     {
@@ -30,7 +30,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         }
     }
 
-    // ####################################
+    //########################################
 
     public function setStoreId($storeId)
     {
@@ -42,8 +42,11 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return $this;
     }
 
-    // ####################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getNewChildSelectOptions()
     {
         $conditions = array(
@@ -69,14 +72,14 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return array_merge_recursive(parent::getNewChildSelectOptions(), $conditions);
     }
 
-    // ####################################
+    //########################################
 
     protected function getConditionCombine()
     {
         return $this->getType();
     }
 
-    // ------------------------------------
+    // ---------------------------------------
 
     protected function getCustomLabel()
     {
@@ -93,7 +96,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return array();
     }
 
-    // ------------------------------------
+    // ---------------------------------------
 
     protected function getProductOptions()
     {
@@ -103,7 +106,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
                 : array();
     }
 
-    // ------------------------------------
+    // ---------------------------------------
 
     protected function getOptions($value, array $optionsAttribute, array $params = array())
     {
@@ -119,7 +122,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return $options;
     }
 
-    // ------------------------------------
+    // ---------------------------------------
 
     public function setCustomOptionsFlag($flag)
     {
@@ -127,7 +130,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return $this;
     }
 
-    // ####################################
+    //########################################
 
     public function loadAggregatorOptions()
     {
@@ -168,7 +171,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         ))->setRenderer(Mage::getBlockSingleton('rule/editable'));
     }
 
-    // ####################################
+    //########################################
 
     public function loadValueOptions()
     {
@@ -201,7 +204,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return 'select';
     }
 
-    // ####################################
+    //########################################
 
     protected function beforeLoadValidate($condition)
     {
@@ -217,7 +220,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return true;
     }
 
-    // ------------------------------------
+    // ---------------------------------------
 
     public function loadArray($arr, $key='conditions')
     {
@@ -229,7 +232,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         if (!empty($arr[$key]) && is_array($arr[$key])) {
             foreach ($arr[$key] as $condArr) {
                 try {
-                    if(!$this->beforeLoadValidate($condArr)) {
+                    if (!$this->beforeLoadValidate($condArr)) {
                         continue;
                     }
 
@@ -265,7 +268,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return $this;
     }
 
-    // ####################################
+    //########################################
 
     public function asXml($containerKey='conditions', $itemKey='condition')
     {
@@ -333,7 +336,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return $str;
     }
 
-    // ####################################
+    //########################################
 
     public function getNewChildElement()
     {
@@ -399,7 +402,7 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return self::$_conditionModels;
     }
 
-    // ####################################
+    //########################################
 
     protected function _getRecursiveChildSelectOption()
     {
@@ -427,5 +430,5 @@ class Ess_M2ePro_Model_Magento_Product_Rule_Condition_Combine
         return $newModel;
     }
 
-    // ####################################
+    //########################################
 }

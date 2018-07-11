@@ -1,5 +1,5 @@
 // Create main objects
-// ----------------------------------
+// ---------------------------------------
 CommonHandlerObj = new CommonHandler();
 
 MagentoMessageObj = new MagentoMessage();
@@ -9,7 +9,36 @@ ModuleNoticeObj = new BlockNotice('Module');
 ServerNoticeObj = new BlockNotice('Server');
 
 MagentoFieldTipObj = new MagentoFieldTip();
-// ----------------------------------
+// ---------------------------------------
+
+function setPageHelpLink(url)
+{
+    if (!url) {
+        return;
+    }
+
+    var heplLink = $('page-help-link');
+
+    if (heplLink) {
+        heplLink.href = url;
+        heplLink.target = '_blank'
+    }
+}
+
+function initializationCustomAttributeInputs()
+{
+    $$('select.M2ePro-custom-attribute-can-be-created').each(function(selectObj){
+
+        var handlerObj = new AttributeCreator(selectObj.id);
+        handlerObj.setSelectObj(selectObj);
+
+        if (handlerObj.alreadyHaveAddedOption()) {
+            return true;
+        }
+
+        handlerObj.injectAddOption();
+    });
+}
 
 function initializationMagentoBlocks()
 {
@@ -41,7 +70,7 @@ function initializationMagentoBlocks()
             '<div class="entry-edit-head-right" style="float: right; width: 20%;"></div>';
         MagentoBlockObj.observePrepareStart(blockObj);
 
-        if (!IS_VIEW_EBAY && !IS_VIEW_COMMON && !IS_VIEW_CONFIGURATION) {
+        if (!IS_VIEW_EBAY && !IS_VIEW_AMAZON && !IS_VIEW_CONFIGURATION) {
             return;
         }
 
@@ -87,26 +116,55 @@ function initializationMagentoBlocks()
     });
 }
 
+function prepareFloatingToolbarContent()
+{
+    var headerElements = $$('.content-header');
+
+    if (headerElements.length == 0) {
+        return;
+    }
+
+    var wasFirstFound = false;
+    for (var i = 0; i < headerElements.length; i++) {
+
+        if (headerElements[i].parentElement.hasClassName('content-header-floating')) {
+            continue;
+        }
+
+        if (!wasFirstFound) {
+            wasFirstFound = true;
+            continue;
+        }
+
+        headerElements[i].addClassName('skip-header');
+    }
+
+    updateTopButtonToolbarToggle();
+}
+
 // Set main observers
-// ----------------------------------
+// ---------------------------------------
 Event.observe(window, 'load', function() {
 
     initializationMagentoBlocks();
+    initializationCustomAttributeInputs();
 
     var ajaxHandler = {
         onComplete: function(transport) {
             if (Ajax.activeRequestCount == 0) {
                 initializationMagentoBlocks();
+                initializationCustomAttributeInputs();
             }
         }
-
     };
+
+    prepareFloatingToolbarContent();
 
     Ajax.Responders.register(ajaxHandler);
 });
-// ----------------------------------
+// ---------------------------------------
 
-// ----------------------------------
+// ---------------------------------------
 (function(window) {
 
     var setLoc = setLocation;
@@ -119,4 +177,4 @@ Event.observe(window, 'load', function() {
     };
 
 })(window);
-// ----------------------------------
+// ---------------------------------------

@@ -1,24 +1,28 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback extends Mage_Adminhtml_Block_Widget_Grid_Container
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayFeedback');
         $this->_blockGroup = 'M2ePro';
         $this->_controller = 'adminhtml_ebay_feedback';
-        //------------------------------
+        // ---------------------------------------
 
         // Set header text
-        //------------------------------
+        // ---------------------------------------
         $accountTitle = '';
         $accountId = $this->getRequest()->getParam('account');
         if (!is_null($accountId)) {
@@ -26,10 +30,10 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback extends Mage_Adminhtml_Block_Widg
         }
 
         $this->_headerText = Mage::helper('M2ePro')->__('Feedback for account "%account_title%"', $accountTitle);
-        //------------------------------
+        // ---------------------------------------
 
         // Set buttons actions
-        //------------------------------
+        // ---------------------------------------
         $this->removeButton('back');
         $this->removeButton('reset');
         $this->removeButton('delete');
@@ -48,7 +52,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback extends Mage_Adminhtml_Block_Widg
             'onclick'   => 'setLocation(\''.$this->getUrl('*/adminhtml_ebay_account/index').'\')',
             'class'     => 'button_link'
         ));
-        //------------------------------
+        // ---------------------------------------
     }
 
     public function getGridHtml()
@@ -58,4 +62,6 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Feedback extends Mage_Adminhtml_Block_Widg
 
         return $helpBlock->toHtml() . $formBlock->toHtml() . parent::getGridHtml();
     }
+
+    //########################################
 }

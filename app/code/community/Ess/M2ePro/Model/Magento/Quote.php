@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -17,7 +19,7 @@ class Ess_M2ePro_Model_Magento_Quote
 
     private $originalStoreConfig = array();
 
-    // ########################################
+    //########################################
 
     public function __construct(Ess_M2ePro_Model_Order_Proxy $proxyOrder)
     {
@@ -37,20 +39,20 @@ class Ess_M2ePro_Model_Magento_Quote
         }
     }
 
-    // ########################################
+    //########################################
 
     public function getQuote()
     {
         return $this->quote;
     }
 
-    // ########################################
+    //########################################
 
     public function buildQuote()
     {
         try {
             // do not change invoke order
-            // --------------------
+            // ---------------------------------------
             $this->initializeQuote();
             $this->initializeCustomer();
             $this->initializeAddresses();
@@ -63,18 +65,17 @@ class Ess_M2ePro_Model_Magento_Quote
             $this->initializeQuoteItems();
             $this->initializePaymentMethodData();
 
-            //$this->quote->setTotalsCollectedFlag(false);
             $this->quote->collectTotals()->save();
 
             $this->prepareOrderNumber();
-            // --------------------
+            // ---------------------------------------
         } catch (Exception $e) {
             $this->quote->setIsActive(false)->save();
             throw $e;
         }
     }
 
-    // ########################################
+    //########################################
 
     private function initializeQuote()
     {
@@ -85,10 +86,17 @@ class Ess_M2ePro_Model_Magento_Quote
         $this->quote->getStore()->setData('current_currency', $this->quote->getStore()->getBaseCurrency());
         $this->quote->save();
 
+        $this->quote->setIsM2eProQuote(true);
+        $this->quote->setNeedProcessChannelTaxes(
+            $this->proxyOrder->isTaxModeChannel() ||
+            ($this->proxyOrder->isTaxModeMixed() &&
+                ($this->proxyOrder->hasTax() || $this->proxyOrder->getWasteRecyclingFee()))
+        );
+
         Mage::getSingleton('checkout/session')->replaceQuote($this->quote);
     }
 
-    // ########################################
+    //########################################
 
     private function initializeCustomer()
     {
@@ -105,11 +113,10 @@ class Ess_M2ePro_Model_Magento_Quote
         $this->quote->assignCustomer($this->proxyOrder->getCustomer());
     }
 
-    // ########################################
+    //########################################
 
     private function initializeAddresses()
     {
-        // ----------
         $billingAddress = $this->quote->getBillingAddress();
         $billingAddress->addData($this->proxyOrder->getBillingAddressData());
         $billingAddress->implodeStreetAddress();
@@ -118,9 +125,9 @@ class Ess_M2ePro_Model_Magento_Quote
         $billingAddress->setShippingMethod('m2eproshipping_m2eproshipping');
         $billingAddress->setCollectShippingRates(true);
         $billingAddress->setShouldIgnoreValidation($this->proxyOrder->shouldIgnoreBillingAddressValidation());
-        // ----------
 
-        // ----------
+        // ---------------------------------------
+
         $shippingAddress = $this->quote->getShippingAddress();
         $shippingAddress->setSameAsBilling(0); // maybe just set same as billing?
         $shippingAddress->addData($this->proxyOrder->getAddressData());
@@ -129,10 +136,11 @@ class Ess_M2ePro_Model_Magento_Quote
         $shippingAddress->setLimitCarrier('m2eproshipping');
         $shippingAddress->setShippingMethod('m2eproshipping_m2eproshipping');
         $shippingAddress->setCollectShippingRates(true);
-        // ----------
+
+        // ---------------------------------------
     }
 
-    // ########################################
+    //########################################
 
     private function initializeCurrency()
     {
@@ -148,7 +156,7 @@ class Ess_M2ePro_Model_Magento_Quote
         $this->quote->getStore()->setData('current_currency', $currentCurrency);
     }
 
-    // ########################################
+    //########################################
 
     /**
      * Configure store (invoked only after address, customer and store initialization and before price calculations)
@@ -164,7 +172,7 @@ class Ess_M2ePro_Model_Magento_Quote
         $storeConfigurator->prepareStoreConfigForOrder();
     }
 
-    // ########################################
+    //########################################
 
     private function configureTaxCalculation()
     {
@@ -173,7 +181,7 @@ class Ess_M2ePro_Model_Magento_Quote
         Mage::getSingleton('tax/calculation')->setCustomer($this->quote->getCustomer());
     }
 
-    // ########################################
+    //########################################
 
     private function initializeQuoteItems()
     {
@@ -188,13 +196,13 @@ class Ess_M2ePro_Model_Magento_Quote
             $product = $quoteItemBuilder->getProduct();
             $request = $quoteItemBuilder->getRequest();
 
-            // ----------------------------
+            // ---------------------------------------
             $productOriginalPrice = (float)$product->getPrice();
 
             $price = $item->getBasePrice();
             $product->setPrice($price);
             $product->setSpecialPrice($price);
-            // ----------------------------
+            // ---------------------------------------
 
             // see Mage_Sales_Model_Observer::substractQtyFromQuotes
             $this->quote->setItemsCount($this->quote->getItemsCount() + 1);
@@ -202,7 +210,7 @@ class Ess_M2ePro_Model_Magento_Quote
 
             $result = $this->quote->addProduct($product, $request);
             if (is_string($result)) {
-                throw new Exception($result);
+                throw new Ess_M2ePro_Model_Exception($result);
             }
 
             $quoteItem = $this->quote->getItemByProduct($product);
@@ -230,6 +238,9 @@ class Ess_M2ePro_Model_Magento_Quote
                 }
 
                 $quoteItem->setAdditionalData($quoteItemBuilder->getAdditionalData($quoteItem));
+
+                $quoteItem->setWasteRecyclingFee($item->getWasteRecyclingFee() / $item->getQty());
+                $quoteItem->save();
             }
         }
     }
@@ -246,11 +257,11 @@ class Ess_M2ePro_Model_Magento_Quote
 
             $address->unsetData('cached_items_all');
             $address->unsetData('cached_items_nominal');
-            $address->unsetData('cached_items_nonominal');
+            $address->unsetData('cached_items_nonnominal');
         }
     }
 
-    // ########################################
+    //########################################
 
     private function initializeShippingMethodData()
     {
@@ -258,7 +269,7 @@ class Ess_M2ePro_Model_Magento_Quote
         Mage::helper('M2ePro/Data_Global')->setValue('shipping_data', $this->proxyOrder->getShippingData());
     }
 
-    // ########################################
+    //########################################
 
     private function initializePaymentMethodData()
     {
@@ -266,7 +277,7 @@ class Ess_M2ePro_Model_Magento_Quote
         $quotePayment->importData($this->proxyOrder->getPaymentData());
     }
 
-    // ########################################
+    //########################################
 
     private function prepareOrderNumber()
     {
@@ -304,5 +315,5 @@ class Ess_M2ePro_Model_Magento_Quote
         return $prefix.$orderNumber;
     }
 
-    // ########################################
+    //########################################
 }

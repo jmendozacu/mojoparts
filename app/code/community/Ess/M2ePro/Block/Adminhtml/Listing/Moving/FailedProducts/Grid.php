@@ -1,51 +1,60 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('listingFailedProductsGrid');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('id');
         $this->setDefaultDir('ASC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
     }
 
     protected function _prepareCollection()
     {
-        $failedProducts = json_decode($this->getRequest()->getParam('failed_products'),1);
+        /** @var Ess_M2ePro_Model_Account $account */
+        $accountId = $this->getRequest()->getParam('account');
+        $marketplaceId = $this->getRequest()->getParam('marketplace');
+        $failedProducts = Mage::helper('M2ePro')->jsonDecode($this->getRequest()->getParam('failed_products'));
 
-        $collection = Mage::getModel('catalog/product')->getCollection()
-            ->addAttributeToSelect('sku')
+        $storeId = Mage_Catalog_Model_Abstract::DEFAULT_STORE_ID;
+        if ($accountId && $account = Mage::helper('M2ePro/Component')->getCachedUnknownObject('Account', $accountId)) {
+            $storeId = $account->getChildObject()->getRelatedStoreId($marketplaceId);
+        }
+
+        /* @var $collection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                          Mage::getModel('catalog/product')->getResource());
+
+        $collection->setStoreId($storeId)
             ->addAttributeToSelect('name')
-            ->addAttributeToSelect('type_id')
-            ->joinField('qty',
-                        'cataloginventory/stock_item',
-                        'qty',
-                        'product_id=entity_id',
-                        '{{table}}.stock_id=1',
-                        'left')
-            ->joinField('is_in_stock',
-                        'cataloginventory/stock_item',
-                        'is_in_stock',
-                        'product_id=entity_id',
-                        '{{table}}.stock_id=1',
-                        'left');
+            ->addAttributeToSelect('sku')
+            ->addAttributeToSelect('type_id');
 
-        $collection->addFieldToFilter('entity_id',array('in' => $failedProducts));
+        $collection->joinStockItem(array(
+            'qty' => 'qty',
+            'is_in_stock' => 'is_in_stock'
+        ));
+
+        $collection->addFieldToFilter('entity_id', array('in' => $failedProducts));
 
         $this->setCollection($collection);
 
@@ -76,7 +85,7 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts_Grid extends Mage
         ));
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnProductId($productId, $product, $column, $isExport)
     {
@@ -94,13 +103,13 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts_Grid extends Mage
         $magentoProduct = Mage::getModel('M2ePro/Magento_Product');
         $magentoProduct->setProduct($product);
 
-        $imageUrlResized = $magentoProduct->getThumbnailImageLink();
-        if (is_null($imageUrlResized)) {
+        $imageResized = $magentoProduct->getThumbnailImage();
+        if (is_null($imageResized)) {
             return $withoutImageHtml;
         }
 
         $imageHtml = $productId.'<hr style="border: 1px solid silver; border-bottom: none;"><img src="'.
-                     $imageUrlResized.'" />';
+            $imageResized->getUrl().'" style="max-width: 100px; max-height: 100px;" />';
         $withImageHtml = str_replace('>'.$productId.'<','>'.$imageHtml.'<',$withoutImageHtml);
 
         return $withImageHtml;
@@ -142,28 +151,28 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Moving_FailedProducts_Grid extends Mage
         );
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
-        $javascriptsMain = <<<JAVASCRIPT
+        $javascriptsMain = <<<HTML
 <script type="text/javascript">
 
-    $$('#listingFailedProductsGrid div.grid th').each(function(el){
+    $$('#listingFailedProductsGrid div.grid th').each(function(el) {
         el.style.padding = '4px';
     });
 
-    $$('#listingFailedProductsGrid div.grid td').each(function(el){
+    $$('#listingFailedProductsGrid div.grid td').each(function(el) {
         el.style.padding = '4px';
     });
 
 </script>
-JAVASCRIPT;
+HTML;
 
         return parent::_toHtml() . $javascriptsMain;
     }
 
-    // ####################################
+    //########################################
 
     public function getGridUrl()
     {
@@ -175,5 +184,5 @@ JAVASCRIPT;
         return false;
     }
 
-    // ####################################
+    //########################################
 }

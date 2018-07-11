@@ -1,23 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_OrderController
     extends Ess_M2ePro_Controller_Adminhtml_BaseController
 {
-    //#############################################
-
-    public function preDispatch()
-    {
-        parent::preDispatch();
-
-        Mage::getSingleton('M2ePro/Order_Log_Manager')
-            ->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_USER);
-    }
-
-    //#############################################
+    //########################################
 
     public function viewLogGridAction()
     {
@@ -30,7 +22,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->getResponse()->setBody($grid->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function getCountryRegionsAction()
     {
@@ -44,6 +36,7 @@ class Ess_M2ePro_Adminhtml_OrderController
 
             foreach ($regionsCollection as $region) {
                 $regions[] = array(
+                    'id'    => $region->getData('region_id'),
                     'value' => $region->getData('code'),
                     'label' => $region->getData('default_name')
                 );
@@ -57,10 +50,10 @@ class Ess_M2ePro_Adminhtml_OrderController
             }
         }
 
-        return $this->getResponse()->setBody(json_encode($regions));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($regions));
     }
 
-    //#############################################
+    //########################################
 
     public function reservationPlaceAction()
     {
@@ -74,7 +67,7 @@ class Ess_M2ePro_Adminhtml_OrderController
 
         /** @var $orders Ess_M2ePro_Model_Order[] */
         $orders = Mage::getModel('M2ePro/Order')
-            ->getCollection()
+                ->getCollection()
                 ->addFieldToFilter('id', array('in' => $ids))
                 ->addFieldToFilter('reservation_state', array('neq' => Ess_M2ePro_Model_Order_Reserve::STATE_PLACED))
                 ->addFieldToFilter('magento_order_id', array('null' => true));
@@ -83,6 +76,8 @@ class Ess_M2ePro_Adminhtml_OrderController
             $actionSuccessful = false;
 
             foreach ($orders as $order) {
+                $order->getLog()->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_USER);
+
                 if (!$order->isReservable()) {
                     continue;
                 }
@@ -133,6 +128,8 @@ class Ess_M2ePro_Adminhtml_OrderController
             $actionSuccessful = false;
 
             foreach ($orders as $order) {
+                $order->getLog()->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_USER);
+
                 if ($order->getReserve()->cancel()) {
                     $actionSuccessful = true;
                 }
@@ -159,7 +156,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->_redirectUrl($this->_getRefererUrl());
     }
 
-    //#############################################
+    //########################################
 
     public function editItemAction()
     {
@@ -170,7 +167,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->getResponse()->setHeader('Content-type', 'application/json');
 
         if (is_null($item->getId())) {
-            $this->getResponse()->setBody(json_encode(array(
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'error' => Mage::helper('M2ePro')->escapeJs(Mage::helper('M2ePro')->__('Order Item does not exist.'))
             )));
 
@@ -184,19 +181,19 @@ class Ess_M2ePro_Adminhtml_OrderController
         if (is_null($item->getProductId()) || !$item->getMagentoProduct()->exists()) {
             $block = $this->getLayout()->createBlock('M2ePro/adminhtml_order_item_product_mapping');
 
-            $this->getResponse()->setBody(json_encode(array(
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'title' => Mage::helper('M2ePro')->__('Mapping Product "%title%"', $item->getChildObject()->getTitle()),
                 'html' => $block->toHtml(),
                 'pop_up_config' => array(
                     'height' => 500,
-                    'width'  => 750
+                    'width'  => 900
                 ),
             )));
 
             return;
         }
 
-        if ($item->getMagentoProduct()->hasRequiredOptions()) {
+        if ($item->getMagentoProduct()->isProductWithVariations()) {
             $block = $this->getLayout()->createBlock(
                 'M2ePro/adminhtml_order_item_product_options_mapping', '', array(
                     'order_id' => $item->getOrderId(),
@@ -204,7 +201,7 @@ class Ess_M2ePro_Adminhtml_OrderController
                 )
             );
 
-            $this->getResponse()->setBody(json_encode(array(
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'title' => Mage::helper('M2ePro')->__('Setting Product Options'),
                 'html' => $block->toHtml()
             )));
@@ -212,12 +209,12 @@ class Ess_M2ePro_Adminhtml_OrderController
             return;
         }
 
-        $this->getResponse()->setBody(json_encode(array(
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'error' => Mage::helper('M2ePro')->__('Product does not have Required Options.')
         )));
     }
 
-    //#############################################
+    //########################################
 
     public function assignProductAction()
     {
@@ -231,29 +228,26 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->getResponse()->setHeader('Content-type', 'application/json');
 
         if ((!$productId && !$sku) || !$orderItem->getId()) {
-            $this->getResponse()->setBody(json_encode(array(
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'error' => Mage::helper('M2ePro')->__('Please specify Required Options.')
             )));
             return;
         }
 
-        $collection = Mage::getModel('catalog/product')->getCollection()
-            ->joinField(
-                'qty',
-                'cataloginventory/stock_item',
-                'qty',
-                'product_id=entity_id',
-                '{{table}}.stock_id=1',
-                'left'
-            );
+        /* @var $collection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                           Mage::getModel('catalog/product')->getResource());
+
+        $collection->setStoreId($orderItem->getStoreId());
+        $collection->joinStockItem();
 
         $productId && $collection->addFieldToFilter('entity_id', $productId);
-        $sku && $collection->addFieldToFilter('sku', $sku);
+        $sku       && $collection->addFieldToFilter('sku', $sku);
 
         $productData = $collection->getSelect()->query()->fetch();
 
         if (!$productData) {
-            $this->getResponse()->setBody(json_encode(array(
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'error' => Mage::helper('M2ePro')->__('Product does not exist.')
             )));
             return;
@@ -261,13 +255,17 @@ class Ess_M2ePro_Adminhtml_OrderController
 
         $orderItem->assignProduct($productData['entity_id']);
 
-        $orderItem->getOrder()->addSuccessLog('Order Item "%title%" was successfully Mapped.', array(
-            'title' => $orderItem->getChildObject()->getTitle()
-        ));
+        $orderItem->getOrder()->getLog()->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_USER);
+        $orderItem->getOrder()->addSuccessLog(
+            'Order Item "%title%" was successfully Mapped.',
+            array(
+                'title' => $orderItem->getChildObject()->getTitle(),
+            )
+        );
 
-        $this->getResponse()->setBody(json_encode(array(
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'success'  => Mage::helper('M2ePro')->__('Order Item was successfully Mapped.'),
-            'continue' => $orderItem->getMagentoProduct()->hasRequiredOptions()
+            'continue' => $orderItem->getMagentoProduct()->isProductWithVariations()
         )));
     }
 
@@ -275,16 +273,22 @@ class Ess_M2ePro_Adminhtml_OrderController
     {
         $this->loadLayout();
 
+        /** @var $item Ess_M2ePro_Model_Order_Item */
+        $itemId = $this->getRequest()->getParam('item_id');
+        $item = Mage::getModel('M2ePro/Order_Item')->load($itemId);
+
+        Mage::helper('M2ePro/Data_Global')->setValue('order_item', $item);
+
         $block = $this->getLayout()->createBlock('M2ePro/adminhtml_order_item_product_mapping_grid');
         $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function assignProductDetailsAction()
     {
         $orderItemId = $this->getRequest()->getPost('order_item_id');
-        $saveRepair = $this->getRequest()->getPost('save_repair');
+        $saveMatching = $this->getRequest()->getPost('save_matching');
 
         /** @var $orderItem Ess_M2ePro_Model_Order_Item */
         $orderItem = Mage::getModel('M2ePro/Order_Item')->load($orderItemId);
@@ -293,7 +297,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->getResponse()->setHeader('Content-type', 'application/json');
 
         if (count($optionsData) == 0 || !$orderItem->getId()) {
-            $this->getResponse()->setBody(json_encode(array(
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'error' => Mage::helper('M2ePro')->__('Please specify Required Options.')
             )));
             return;
@@ -313,39 +317,39 @@ class Ess_M2ePro_Adminhtml_OrderController
         try {
             $orderItem->assignProductDetails($associatedOptions, $associatedProducts);
         } catch (Exception $e) {
-            $this->getResponse()->setBody(json_encode(array(
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'error' => $e->getMessage()
             )));
             return;
         }
 
-        if ($saveRepair) {
+        if ($saveMatching) {
             $outputData = array(
                 'associated_options'  => $orderItem->getAssociatedOptions(),
                 'associated_products' => $orderItem->getAssociatedProducts()
             );
 
-            /** @var $orderRepair Ess_M2ePro_Model_Order_Repair */
-            $orderRepair = Mage::getModel('M2ePro/Order_Repair');
-            $orderRepair->create(
+            /** @var $orderMatching Ess_M2ePro_Model_Order_Matching */
+            $orderMatching = Mage::getModel('M2ePro/Order_Matching');
+            $orderMatching->create(
                 $orderItem->getProductId(),
-                $orderItem->getChildObject()->getRepairInput(),
+                $orderItem->getChildObject()->getVariationChannelOptions(),
                 $outputData,
-                $orderItem->getComponentMode(),
-                Ess_M2ePro_Model_Order_Repair::TYPE_VARIATION
+                $orderItem->getComponentMode()
             );
         }
 
+        $orderItem->getOrder()->getLog()->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_USER);
         $orderItem->getOrder()->addSuccessLog('Order Item "%title%" Options were Successfully configured.', array(
             'title' => $orderItem->getChildObject()->getTitle()
         ));
 
-        $this->getResponse()->setBody(json_encode(array(
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'success' => Mage::helper('M2ePro')->__('Order Item Options were Successfully configured.')
         )));
     }
 
-    //#############################################
+    //########################################
 
     public function unassignProductAction()
     {
@@ -357,40 +361,45 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->getResponse()->setHeader('Content-type', 'application/json');
 
         if (!$orderItem->getId()) {
-            $this->getResponse()->setBody(json_encode(array(
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
                 'error' => Mage::helper('M2ePro')->__('Please specify Required Options.')
             )));
             return;
         }
 
-        $repairInput = $orderItem->getChildObject()->getRepairInput();
+        $channelOptions = $orderItem->getChildObject()->getVariationChannelOptions();
 
-        if (!empty($repairInput)) {
-            $hash = Ess_M2ePro_Model_Order_Repair::generateHash($repairInput);
+        if (!empty($channelOptions)) {
+            $hash = Ess_M2ePro_Model_Order_Matching::generateHash($channelOptions);
 
             /** @var $connWrite Varien_Db_Adapter_Pdo_Mysql */
             $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
             $connWrite->delete(
-                Mage::getResourceModel('M2ePro/Order_Repair')->getMainTable(),
+                Mage::getResourceModel('M2ePro/Order_Matching')->getMainTable(),
                 array(
                     'product_id = ?' => $orderItem->getProductId(),
-                    'hash = ?' => $hash
+                    'hash = ?'       => $hash
                 )
             );
         }
 
+        $orderItem->getOrder()->getLog()->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_USER);
+
         $orderItem->unassignProduct();
 
-        $orderItem->getOrder()->addSuccessLog('Item "%title%" was successfully Unmapped.', array(
-            'title' => $orderItem->getChildObject()->getTitle()
-        ));
+        $orderItem->getOrder()->addSuccessLog(
+            'Item "%title%" was successfully Unmapped.',
+            array(
+                'title' => $orderItem->getChildObject()->getTitle()
+            )
+        );
 
-        $this->getResponse()->setBody(json_encode(array(
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'success' => Mage::helper('M2ePro')->__('Item was successfully Unmapped.')
         )));
     }
 
-    //#############################################
+    //########################################
 
     public function checkProductOptionStockAvailabilityAction()
     {
@@ -401,7 +410,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         $optionsData = $this->getProductOptionsDataFromPost();
 
         if (count($optionsData) == 0 || !$orderItem->getId()) {
-            $this->getResponse()->setBody(json_encode(array('is_in_stock' => false)));
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('is_in_stock' => false)));
             return;
         }
 
@@ -427,15 +436,15 @@ class Ess_M2ePro_Adminhtml_OrderController
             $magentoProductTemp->setProductId($productId);
 
             if (!$magentoProductTemp->isStockAvailability()) {
-                $this->getResponse()->setBody(json_encode(array('is_in_stock' => false)));
+                $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('is_in_stock' => false)));
                 return;
             }
         }
 
-        $this->getResponse()->setBody(json_encode(array('is_in_stock' => true)));
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('is_in_stock' => true)));
     }
 
-    //#############################################
+    //########################################
 
     private function getProductOptionsDataFromPost()
     {
@@ -446,7 +455,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         }
 
         foreach ($optionsData as $optionId => $optionData) {
-            $optionData = json_decode($optionData, true);
+            $optionData = Mage::helper('M2ePro')->jsonDecode($optionData);
 
             if (!isset($optionData['value_id']) || !isset($optionData['product_ids'])) {
                 return array();
@@ -458,7 +467,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         return $optionsData;
     }
 
-    //#############################################
+    //########################################
 
     public function resubmitShippingInfoAction()
     {
@@ -504,7 +513,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->_redirectUrl($this->_getRefererUrl());
     }
 
-    //#############################################
+    //########################################
 
     public function getDebugInformationAction()
     {
@@ -526,7 +535,7 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->getResponse()->setBody($debugBlock->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function deleteAction()
     {
@@ -537,7 +546,9 @@ class Ess_M2ePro_Adminhtml_OrderController
             return $this->_redirect('*/*/index');
         }
 
+        /** @var Ess_M2ePro_Model_Order $order */
         $order = Mage::getModel('M2ePro/Order')->load($id);
+        $order->getLog()->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_USER);
 
         if (is_null($order->getId())) {
             $this->_getSession()->addError(Mage::helper('M2ePro')->__('Order with such ID does not exist.'));
@@ -550,5 +561,5 @@ class Ess_M2ePro_Adminhtml_OrderController
         $this->_redirect('*/*/index');
     }
 
-    //#############################################
+    //########################################
 }

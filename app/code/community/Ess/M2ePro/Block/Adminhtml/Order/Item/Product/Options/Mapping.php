@@ -1,13 +1,17 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
-class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Options_Mapping extends Mage_Adminhtml_Block_Widget_Container
+class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Options_Mapping extends Ess_M2ePro_Block_Adminhtml_Widget_Container
 {
     /** @var $magentoProduct Ess_M2ePro_Model_Magento_Product */
     private $magentoProduct = null;
+
+    //########################################
 
     public function __construct()
     {
@@ -73,20 +77,17 @@ class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Options_Mapping extends Mage
 
     protected function _beforeToHtml()
     {
-        //------------------------------
-        $repairInput = $this->getOrderItem()->getChildObject()->getRepairInput();
-
+        // ---------------------------------------
         $channelOptions = array();
-        if (!empty($repairInput)) {
-            foreach ($repairInput as $channelOptionLabel => $channelValueLabel) {
-                $channelOptions[] = array('label' => $channelOptionLabel, 'value' => $channelValueLabel);
-            }
+
+        foreach ($this->getOrderItem()->getChildObject()->getVariationChannelOptions() as $attribute => $value) {
+            $channelOptions[] = array('label' => $attribute, 'value' => $value);
         }
 
         $this->setData('channel_options', $channelOptions);
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $this->magentoProduct = $this->getOrderItem()->getMagentoProduct();
 
         $magentoOptions = array();
@@ -144,9 +145,9 @@ class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Options_Mapping extends Mage
         }
 
         $this->setData('magento_options', $magentoOptions);
-        //------------------------------
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $data = array(
             'id'      => 'product_options_mapping_submit_button',
             'label'   => Mage::helper('M2ePro')->__('Confirm'),
@@ -155,8 +156,10 @@ class Ess_M2ePro_Block_Adminhtml_Order_Item_Product_Options_Mapping extends Mage
         );
         $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
         $this->setChild('product_options_mapping_submit_button',$buttonBlock);
-        //------------------------------
+        // ---------------------------------------
 
         parent::_beforeToHtml();
     }
+
+    //########################################
 }

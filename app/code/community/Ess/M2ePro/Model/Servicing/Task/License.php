@@ -1,20 +1,28 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Servicing_Task_License extends Ess_M2ePro_Model_Servicing_Task
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return string
+     */
     public function getPublicNick()
     {
         return 'license';
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getRequestData()
     {
         return array();
@@ -35,16 +43,16 @@ class Ess_M2ePro_Model_Servicing_Task_License extends Ess_M2ePro_Model_Servicing
             }
         }
 
-        if (isset($data['components']) && is_array($data['components'])) {
-            $this->updateComponentsData($data['components']);
-        }
-
         if (isset($data['connection']) && is_array($data['connection'])) {
             $this->updateConnectionData($data['connection']);
         }
+
+        if (isset($data['status'])) {
+            $this->updateStatus($data['status']);
+        }
     }
 
-    // ########################################
+    //########################################
 
     private function updateInfoData(array $infoData)
     {
@@ -68,10 +76,6 @@ class Ess_M2ePro_Model_Servicing_Task_License extends Ess_M2ePro_Model_Servicing
         if (array_key_exists('ip', $validationData)) {
             $primaryConfig->setGroupValue('/'.$moduleName.'/license/','ip', $validationData['ip']);
         }
-
-        if (array_key_exists('directory', $validationData)) {
-            $primaryConfig->setGroupValue('/'.$moduleName.'/license/', 'directory', $validationData['directory']);
-        }
     }
 
     private function updateValidationValidData(array $isValidData)
@@ -85,41 +89,6 @@ class Ess_M2ePro_Model_Servicing_Task_License extends Ess_M2ePro_Model_Servicing
 
         if (array_key_exists('ip', $isValidData)) {
             $primaryConfig->setGroupValue('/'.$moduleName.'/license/valid/','ip',(int)$isValidData['ip']);
-        }
-
-        if (array_key_exists('directory', $isValidData)) {
-            $primaryConfig->setGroupValue('/'.$moduleName.'/license/valid/','directory',(int)$isValidData['directory']);
-        }
-    }
-
-    private function updateComponentsData(array $componentsData)
-    {
-        $primaryConfig = Mage::helper('M2ePro/Primary')->getConfig();
-
-        foreach (Mage::helper('M2ePro/Component')->getComponents() as $component) {
-
-            if (!isset($componentsData[$component]) || !is_array($componentsData[$component])) {
-                continue;
-            }
-
-            $componentData  = $componentsData[$component];
-            $componentGroup = '/'.Mage::helper('M2ePro/Module')->getName().'/license/'.strtolower($component).'/';
-
-            if (array_key_exists('mode', $componentData)) {
-                $primaryConfig->setGroupValue($componentGroup, 'mode', (int)$componentData['mode']);
-            }
-
-            if (array_key_exists('status', $componentData)) {
-                $primaryConfig->setGroupValue($componentGroup, 'status', (int)$componentData['status']);
-            }
-
-            if (array_key_exists('expiration_date', $componentData)) {
-                $primaryConfig->setGroupValue($componentGroup, 'expiration_date', $componentData['expiration_date']);
-            }
-
-            if (array_key_exists('is_free', $componentData)) {
-                $primaryConfig->setGroupValue($componentGroup, 'is_free', (int)$componentData['is_free']);
-            }
         }
     }
 
@@ -140,5 +109,13 @@ class Ess_M2ePro_Model_Servicing_Task_License extends Ess_M2ePro_Model_Servicing
         }
     }
 
-    // ########################################
+    private function updateStatus($status)
+    {
+        $moduleName = Mage::helper('M2ePro/Module')->getName();
+        $primaryConfig = Mage::helper('M2ePro/Primary')->getConfig();
+
+        $primaryConfig->setGroupValue('/'.$moduleName.'/license/','status',(int)$status);
+    }
+
+    //########################################
 }

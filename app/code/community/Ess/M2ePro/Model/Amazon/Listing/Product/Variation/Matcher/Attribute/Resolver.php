@@ -1,13 +1,13 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute_Resolver
 {
-    // ##########################################################
-
     private $sourceAttributes = array();
 
     private $sourceAttributesNames = array();
@@ -18,8 +18,13 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute_Resolv
 
     private $resolvedAttributes = array();
 
-    // ##########################################################
+    //########################################
 
+    /**
+     * @param $attribute
+     * @param array $names
+     * @return $this
+     */
     public function addSourceAttribute($attribute, array $names)
     {
         if (in_array($attribute, $this->sourceAttributes)) {
@@ -32,6 +37,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute_Resolv
         return $this;
     }
 
+    /**
+     * @param $attribute
+     * @param array $names
+     * @return $this
+     */
     public function addDestinationAttribute($attribute, array $names)
     {
         if (in_array($attribute, $this->destinationAttributes)) {
@@ -44,38 +54,75 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Matcher_Attribute_Resolv
         return $this;
     }
 
-    // ##########################################################
+    //########################################
 
+    /**
+     * @return $this
+     */
     public function resolve()
     {
-        $matchedAttributes = array();
+        if (array_diff($this->sourceAttributes, array_keys($this->resolvedAttributes))) {
+            $this->resolvedAttributes = array();
+        }
 
-        foreach ($this->sourceAttributes as $magentoAttribute) {
-            $matchedAttributes[$magentoAttribute] = null;
+        foreach ($this->sourceAttributes as $sourceAttribute) {
 
-            $sourceNames = $this->sourceAttributesNames[$magentoAttribute];
+            if (!empty($this->resolvedAttributes[$sourceAttribute]) &&
+                in_array($this->resolvedAttributes[$sourceAttribute], $this->destinationAttributes)
+            ) {
+                continue;
+            }
 
-            foreach ($this->destinationAttributes as $channelAttribute) {
-                $destinationNames = $this->destinationAttributesNames[$channelAttribute];
+            $this->resolvedAttributes[$sourceAttribute] = null;
+
+            $sourceNames = $this->sourceAttributesNames[$sourceAttribute];
+
+            foreach ($this->destinationAttributes as $destinationAttribute) {
+                $destinationNames = $this->destinationAttributesNames[$destinationAttribute];
 
                 if (count(array_intersect($sourceNames, $destinationNames)) > 0 &&
-                    !in_array($channelAttribute, $matchedAttributes)) {
-
-                    $matchedAttributes[$magentoAttribute] = $channelAttribute;
+                    !in_array($destinationAttribute, $this->resolvedAttributes)
+                ) {
+                    $this->resolvedAttributes[$sourceAttribute] = $destinationAttribute;
                     break;
                 }
             }
         }
 
-        $this->resolvedAttributes = $matchedAttributes;
-
         return $this;
     }
 
+    /**
+     * @return array
+     */
     public function getResolvedAttributes()
     {
         return $this->resolvedAttributes;
     }
 
-    // ##########################################################
+    //########################################
+
+    /**
+     * @return $this
+     */
+    public function clearSourceAttributes()
+    {
+        $this->sourceAttributes = array();
+        $this->sourceAttributesNames = array();
+
+        return $this;
+    }
+
+    /**
+     * @return $this
+     */
+    public function clearDestinationAttributes()
+    {
+        $this->destinationAttributes = array();
+        $this->destinationAttributesNames = array();
+
+        return $this;
+    }
+
+    //########################################
 }

@@ -1,14 +1,19 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Delete_Response
     extends Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Response
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @param array $params
+     */
     public function processSuccess($params = array())
     {
         $data = array(
@@ -17,7 +22,6 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Delete_Response
             'is_general_id_owner' => Ess_M2ePro_Model_Amazon_Listing_Product::IS_GENERAL_ID_OWNER_NO,
             'template_description_id' => null,
             'online_qty' => 0,
-            'ignore_next_inventory_synch' => 1
         );
 
         $data = $this->appendStatusChangerValue($data);
@@ -26,5 +30,5 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Delete_Response
         $this->getListingProduct()->save();
     }
 
-    // ########################################
+    //########################################
 }

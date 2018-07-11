@@ -1,16 +1,17 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Amazon_Synchronization_Defaults_UpdateListingsProducts
     extends Ess_M2ePro_Model_Amazon_Synchronization_Defaults_Abstract
 {
-    const INTERVAL_COEFFICIENT_VALUE = 50000;
     const LOCK_ITEM_PREFIX = 'synchronization_amazon_default_update_listings_products';
 
-    //####################################
+    //########################################
 
     protected function getNick()
     {
@@ -22,19 +23,19 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Defaults_UpdateListingsProdu
         return 'Update Listings Products';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function getPercentsStart()
     {
-        return 10;
+        return 30;
     }
 
     protected function getPercentsEnd()
     {
-        return 100;
+        return 80;
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function intervalIsEnabled()
     {
@@ -48,17 +49,35 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Defaults_UpdateListingsProdu
             return false;
         }
 
-        $totalProducts = (int)Mage::helper('M2ePro/Component_Amazon')->getCollection('Listing_Product')->getSize();
-        $totalProducts += (int)Mage::helper('M2ePro/Component_Amazon')->getCollection('Listing_Other')->getSize();
-        $intervalCoefficient = ($totalProducts > 0) ? (int)ceil($totalProducts/self::INTERVAL_COEFFICIENT_VALUE) : 1;
-
-        $lastTime = strtotime($this->getConfigValue($this->getFullSettingsPath(),'last_time'));
-        $interval = (int)$this->getConfigValue($this->getFullSettingsPath(),'interval') * $intervalCoefficient;
-
-        return $lastTime + $interval > Mage::helper('M2ePro')->getCurrentGmtDate(true);
+        return parent::intervalIsLocked();
     }
 
-    //####################################
+    protected function intervalGetLastTime()
+    {
+        $currentLastTime = parent::intervalGetLastTime();
+
+        if (empty($currentLastTime)) {
+            return null;
+        }
+
+        if (!in_array(Ess_M2ePro_Model_Synchronization_Task_Abstract::OTHER_LISTINGS, $this->getAllowedTasksTypes())) {
+            return $currentLastTime;
+        }
+
+        $otherListingsLastTime = $this->getConfigValue('/amazon/other_listings/update/', 'last_time');
+
+        if (empty($otherListingsLastTime)) {
+            return null;
+        }
+
+        if (strtotime($otherListingsLastTime) < strtotime($currentLastTime)) {
+            return $otherListingsLastTime;
+        }
+
+        return $currentLastTime;
+    }
+
+    //########################################
 
     protected function performActions()
     {
@@ -97,9 +116,10 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Defaults_UpdateListingsProdu
                 if ($collection->getSize()) {
 
                     $dispatcherObject = Mage::getModel('M2ePro/Connector_Amazon_Dispatcher');
-                    $dispatcherObject->processConnector('defaults', 'updateListingsProducts' ,'requester',
-                                                        array(), $account,
-                                                        'Ess_M2ePro_Model_Amazon_Synchronization');
+                    $connectorObj = $dispatcherObject->getConnector('defaults', 'updateListingsProducts' ,'requester',
+                                                                    array(), $account,
+                                                                    'Ess_M2ePro_Model_Amazon_Synchronization');
+                    $dispatcherObject->process($connectorObj);
                 }
 
                 $this->getActualOperationHistory()->saveTimePoint(__METHOD__.'process'.$account->getId());
@@ -117,7 +137,7 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Defaults_UpdateListingsProdu
         }
     }
 
-    //####################################
+    //########################################
 
     private function isLockedAccount(Ess_M2ePro_Model_Account $account)
     {
@@ -128,5 +148,5 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Defaults_UpdateListingsProdu
         return $lockItem->isExist();
     }
 
-    //####################################
+    //########################################
 }

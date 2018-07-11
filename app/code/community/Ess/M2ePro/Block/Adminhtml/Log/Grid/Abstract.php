@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Block_Adminhtml_Log_Grid_Abstract
@@ -11,7 +13,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Log_Grid_Abstract
     const LISTING_PRODUCT_ID_FIELD = 'listing_product_id';
     const LISTING_PARENT_PRODUCT_ID_FIELD = 'parent_listing_product_id';
 
-    //####################################
+    //########################################
 
     protected function getEntityId()
     {
@@ -54,7 +56,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Log_Grid_Abstract
         return 'listingGrid';
     }
 
-    //####################################
+    //########################################
 
     public function isListingLog()
     {
@@ -68,14 +70,14 @@ abstract class Ess_M2ePro_Block_Adminhtml_Log_Grid_Abstract
         return !empty($listingProductId);
     }
 
-    //####################################
+    //########################################
 
     public function getListingProductId()
     {
         return $this->getRequest()->getParam('listing_product_id', false);
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /** @var Ess_M2ePro_Model_Listing_Product $listingProduct */
     protected $listingProduct = NULL;
@@ -93,7 +95,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Log_Grid_Abstract
         return $this->listingProduct;
     }
 
-    //####################################
+    //########################################
 
     protected function _getLogTypeList()
     {
@@ -122,7 +124,7 @@ abstract class Ess_M2ePro_Block_Adminhtml_Log_Grid_Abstract
         );
     }
 
-    //####################################
+    //########################################
 
     public function callbackColumnType($value, $row, $column, $isExport)
     {
@@ -167,28 +169,27 @@ abstract class Ess_M2ePro_Block_Adminhtml_Log_Grid_Abstract
 
     public function callbackDescription($value, $row, $column, $isExport)
     {
-        $fullDescription = Mage::helper('M2ePro/View')->decodeLogMessage($row->getData('description'));
+        $fullDescription = Mage::helper('M2ePro/View')->getModifiedLogMessage($row->getData('description'));
+
         $row->setData('description', $fullDescription);
+        $renderedText = $column->getRenderer()->render($row);
 
-        $value = $column->getRenderer()->render($row);
-        return $this->prepareLongText($fullDescription, $value);
-    }
-
-    //####################################
-
-    protected function prepareLongText($fullText, $renderedText)
-    {
-        if (strlen($fullText) == strlen($renderedText)) {
-            return Mage::helper('M2ePro/View')->appendLinksToLogMessage($renderedText);
+        if (strlen($fullDescription) == strlen($renderedText)) {
+            return $renderedText;
         }
 
-        $fullText = Mage::helper('M2ePro/View')->appendLinksToLogMessage($fullText);
+        $row->setData('description', strip_tags($fullDescription));
+        $renderedText = $column->getRenderer()->render($row);
 
         $renderedText .= '&nbsp;(<a href="javascript:void(0)" onclick="LogHandlerObj.showFullText(this);">more</a>)
-                          <div style="display: none;"><br/>'.$fullText.'<br/><br/></div>';
+                          <div style="display: none;"><br/>'.$fullDescription.'<br/><br/></div>';
 
         return $renderedText;
     }
 
-    //####################################
+    //########################################
+
+    abstract protected function getActionTitles();
+
+    //########################################
 }

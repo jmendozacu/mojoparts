@@ -1,26 +1,33 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2015 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_List_Validator_Sku_Existence
     extends Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
 {
-    // ########################################
-
     private $existenceResult = array();
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param array $result
+     * @return $this
+     */
     public function setExistenceResult(array $result)
     {
         $this->existenceResult = $result;
         return $this;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function validate()
     {
         if (empty($this->existenceResult['general_id'])) {
@@ -30,6 +37,8 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_List_Validator_Sku_Existe
         if ($this->getBuyListingProduct()->getGeneralId() &&
             $this->getBuyListingProduct()->getGeneralId() != $this->existenceResult['general_id']
         ) {
+            // M2ePro_TRANSLATIONS
+            // Product with the same Reference ID is found on Rakuten.com but the Rakuten.com SKU is different in Magento and on Rakuten.com.
             $this->addMessage(
                 'Product with the same Reference ID is found on Rakuten.com but the Rakuten.com SKU
                  is different in Magento and on Rakuten.com.'
@@ -42,7 +51,7 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_List_Validator_Sku_Existe
         return false;
     }
 
-    // ########################################
+    //########################################
 
     private function link($generalId, $sku)
     {
@@ -54,12 +63,14 @@ class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_List_Validator_Sku_Existe
 
         $linkingObject->link();
 
+        // M2ePro_TRANSLATIONS
+        // Product was successfully found in Rakuten.com Inventory by Reference ID and linked to your Magento Product.
         $this->addMessage(
             'Product was successfully found in Rakuten.com Inventory
              by Reference ID and linked to your Magento Product.',
-            Ess_M2ePro_Model_Log_Abstract::TYPE_SUCCESS
+            Ess_M2ePro_Model_Connector_Connection_Response_Message::TYPE_SUCCESS
         );
     }
 
-    // ########################################
+    //########################################
 }

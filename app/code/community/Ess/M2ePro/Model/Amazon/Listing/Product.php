@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -9,8 +11,23 @@
  */
 class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component_Child_Amazon_Abstract
 {
+    const INSTRUCTION_TYPE_CHANNEL_STATUS_CHANGED        = 'channel_status_changed';
+    const INSTRUCTION_TYPE_CHANNEL_QTY_CHANGED           = 'channel_qty_changed';
+    const INSTRUCTION_TYPE_CHANNEL_REGULAR_PRICE_CHANGED = 'channel_regular_price_changed';
+
     const IS_AFN_CHANNEL_NO  = 0;
     const IS_AFN_CHANNEL_YES = 1;
+
+    const IS_REPRICING_NO  = 0;
+    const IS_REPRICING_YES = 1;
+
+    const VARIATION_PARENT_IS_AFN_STATE_ALL_NO  = 0;
+    const VARIATION_PARENT_IS_AFN_STATE_PARTIAL = 1;
+    const VARIATION_PARENT_IS_AFN_STATE_ALL_YES = 2;
+
+    const VARIATION_PARENT_IS_REPRICING_STATE_ALL_NO  = 0;
+    const VARIATION_PARENT_IS_REPRICING_STATE_PARTIAL = 1;
+    const VARIATION_PARENT_IS_REPRICING_STATE_ALL_YES = 2;
 
     const IS_ISBN_GENERAL_ID_NO  = 0;
     const IS_ISBN_GENERAL_ID_YES = 1;
@@ -27,14 +44,21 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
     const GENERAL_ID_STATE_ACTION_REQUIRED = 2;
     const GENERAL_ID_STATE_READY_FOR_NEW_ASIN = 3;
 
-    // ########################################
+    const BUSINESS_DISCOUNTS_MAX_RULES_COUNT_ALLOWED = 5;
+
+    //########################################
 
     /**
      * @var Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager
      */
     protected $variationManager = NULL;
 
-    // ########################################
+    /**
+     * @var Ess_M2ePro_Model_Amazon_Listing_Product_Repricing
+     */
+    protected $repricingModel = NULL;
+
+    //########################################
 
     public function _construct()
     {
@@ -42,8 +66,13 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         $this->_init('M2ePro/Amazon_Listing_Product');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function isLocked()
     {
         if (parent::isLocked()) {
@@ -62,6 +91,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return false;
     }
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function deleteInstance()
     {
         if ($this->isLocked()) {
@@ -75,13 +109,34 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
             }
         }
 
+        if ($this->isRepricingUsed()) {
+            $this->getRepricing()->deleteInstance();
+        }
+
         $this->variationManager = NULL;
 
         $this->delete();
         return true;
     }
 
-    // ########################################
+    //########################################
+
+    public function afterSaveNewEntity()
+    {
+        /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager $variationManager */
+        $variationManager = $this->getVariationManager();
+        $magentoProduct = $this->getMagentoProduct();
+
+        if ($magentoProduct->isProductWithVariations() && !$variationManager->isVariationProduct()) {
+
+            $this->getParentObject()->setData('is_variation_product', 1);
+            $variationManager->setRelationParentType();
+            $variationManager->getTypeModel()->resetProductAttributes(false);
+            $variationManager->getTypeModel()->getProcessor()->process();
+        }
+    }
+
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -99,7 +154,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getAccount()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -117,7 +172,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getMarketplace()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Listing
@@ -135,7 +190,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getListing()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Amazon_Listing_Source
@@ -145,7 +200,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getAmazonListing()->getSource($this->getActualMagentoProduct());
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Template_SellingFormat
@@ -163,7 +218,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getSellingFormatTemplate()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Template_Synchronization
@@ -181,8 +236,87 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getSynchronizationTemplate()->getChildObject();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
+    public function isExistShippingTemplate()
+    {
+        return $this->getTemplateShippingId() > 0;
+    }
+
+    /**
+     * @return Ess_M2ePro_Model_Amazon_Template_Shipping | null
+     */
+    public function getShippingTemplate()
+    {
+        if (!$this->isExistShippingTemplate()) {
+            return null;
+        }
+
+        return Mage::helper('M2ePro')->getCachedObject(
+            'Amazon_Template_Shipping', $this->getTemplateShippingId(), NULL, array('template')
+        );
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return Ess_M2ePro_Model_Amazon_Template_Shipping_Source
+     */
+    public function getShippingTemplateSource()
+    {
+        if (!$this->isExistShippingTemplate()) {
+            return null;
+        }
+
+        return $this->getShippingTemplate()->getSource($this->getActualMagentoProduct());
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isExistProductTaxCodeTemplate()
+    {
+        return $this->getTemplateProductTaxCodeId() > 0;
+    }
+
+    /**
+     * @return Ess_M2ePro_Model_Amazon_Template_ProductTaxCode | null
+     */
+    public function getProductTaxCodeTemplate()
+    {
+        if (!$this->isExistProductTaxCodeTemplate()) {
+            return null;
+        }
+
+        return Mage::helper('M2ePro')->getCachedObject(
+            'Amazon_Template_ProductTaxCode', $this->getTemplateProductTaxCodeId(), NULL, array('template')
+        );
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return Ess_M2ePro_Model_Amazon_Template_ProductTaxCode_Source
+     */
+    public function getProductTaxCodeTemplateSource()
+    {
+        if (!$this->isExistProductTaxCodeTemplate()) {
+            return null;
+        }
+
+        return $this->getProductTaxCodeTemplate()->getSource($this->getActualMagentoProduct());
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return bool
+     */
     public function isExistDescriptionTemplate()
     {
         return $this->getTemplateDescriptionId() > 0;
@@ -197,10 +331,8 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
             return null;
         }
 
-        return Mage::helper('M2ePro/Component')->getCachedComponentObject(
-            $this->getComponentMode(),'Template_Description',
-            $this->getTemplateDescriptionId(),NULL,
-            array('template')
+        return Mage::helper('M2ePro/Component_Amazon')->getCachedObject(
+            'Template_Description',$this->getTemplateDescriptionId(),NULL,array('template')
         );
     }
 
@@ -216,7 +348,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getDescriptionTemplate()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Amazon_Template_Description_Source
@@ -230,7 +362,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getAmazonDescriptionTemplate()->getSource($this->getActualMagentoProduct());
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Magento_Product_Cache
@@ -255,6 +387,12 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
             $this->getMagentoProduct()->isGroupedType()) {
 
             $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                                                     array(
+                                                         'listing_product_id' => $this->getId()
+                                                     ));
+            }
             $variation  = reset($variations);
             $options    = $variation->getOptions(true);
             $option     = reset($options);
@@ -265,7 +403,33 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->getMagentoProduct();
     }
 
-    // ########################################
+    /**
+     * @param Ess_M2ePro_Model_Magento_Product_Cache $instance
+     * @return Ess_M2ePro_Model_Magento_Product_Cache
+     * @throws Ess_M2ePro_Model_Exception
+     */
+    public function prepareMagentoProduct(Ess_M2ePro_Model_Magento_Product_Cache $instance)
+    {
+        if (!$this->getVariationManager()->isRelationMode()) {
+            return $instance;
+        }
+
+        /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager_Type_Relation_Parent $parentTypeModel */
+
+        if ($this->getVariationManager()->isRelationParentType()) {
+            $parentTypeModel = $this->getVariationManager()->getTypeModel();
+        } else {
+            $parentAmazonListingProduct = $this->getVariationManager()->getTypeModel()->getAmazonParentListingProduct();
+            $parentTypeModel = $parentAmazonListingProduct->getVariationManager()->getTypeModel();
+        }
+
+        $instance->setVariationVirtualAttributes($parentTypeModel->getVirtualProductAttributes());
+        $instance->setVariationFilterAttributes($parentTypeModel->getVirtualChannelAttributes());
+
+        return $instance;
+    }
+
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Amazon_Item
@@ -290,188 +454,505 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->variationManager;
     }
 
-    public function getVariations($asObjects = false, array $filters = array())
+    /**
+     * @param bool $asObjects
+     * @param array $filters
+     * @param bool $tryToGetFromStorage
+     * @return array
+     */
+    public function getVariations($asObjects = false, array $filters = array(), $tryToGetFromStorage = true)
     {
-        return $this->getParentObject()->getVariations($asObjects,$filters);
+        return $this->getParentObject()->getVariations($asObjects,$filters,$tryToGetFromStorage);
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return Ess_M2ePro_Model_Amazon_Listing_Product_Repricing
+     */
+    public function getRepricing()
+    {
+        if (is_null($this->repricingModel)) {
+            $this->repricingModel = Mage::getModel('M2ePro/Amazon_Listing_Product_Repricing')->load($this->getId());
+        }
+
+        return $this->repricingModel;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRepricingUsed()
+    {
+        return $this->isRepricing() && $this->getRepricing()->getId();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRepricingManaged()
+    {
+        return $this->isRepricingUsed() &&
+            !$this->getRepricing()->isOnlineDisabled() && !$this->getRepricing()->isOnlineInactive();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRepricingDisabled()
+    {
+        return $this->isRepricingUsed() && $this->getRepricing()->isOnlineDisabled();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isRepricingInactive()
+    {
+        return $this->isRepricingUsed() && $this->getRepricing()->isOnlineInactive();
+    }
+
+    //########################################
+
+    /**
+     * @return int
+     */
     public function getTemplateDescriptionId()
     {
         return (int)($this->getData('template_description_id'));
     }
 
-    //----------------------------------------
+    /**
+     * @return int
+     */
+    public function getTemplateShippingId()
+    {
+        return (int)($this->getData('template_shipping_id'));
+    }
 
+    /**
+     * @return int
+     */
+    public function getTemplateProductTaxCodeId()
+    {
+        return (int)($this->getData('template_product_tax_code_id'));
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return string
+     */
     public function getSku()
     {
         return $this->getData('sku');
     }
 
+    /**
+     * @return string
+     */
     public function getGeneralId()
     {
         return $this->getData('general_id');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
-    public function getOnlinePrice()
+    /**
+     * @return float|null
+     */
+    public function getOnlineRegularPrice()
     {
-        return (float)$this->getData('online_price');
+        return $this->getData('online_regular_price');
     }
 
+    public function getOnlineRegularSalePrice()
+    {
+        return $this->getData('online_regular_sale_price');
+    }
+
+    public function getOnlineRegularSalePriceStartDate()
+    {
+        return $this->getData('online_regular_sale_price_start_date');
+    }
+
+    public function getOnlineRegularSalePriceEndDate()
+    {
+        return $this->getData('online_regular_sale_price_end_date');
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return float|null
+     */
+    public function getOnlineBusinessPrice()
+    {
+        return (float)$this->getData('online_business_price');
+    }
+
+    public function getOnlineBusinessDiscounts()
+    {
+        return $this->getSettings('online_business_discounts');
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return int
+     */
     public function getOnlineQty()
     {
         return (int)$this->getData('online_qty');
     }
 
-    public function getOnlineSalePrice()
+    /**
+     * @return int
+     */
+    public function getOnlineHandlingTime()
     {
-        return $this->getData('online_sale_price');
+        return (int)$this->getData('online_handling_time');
     }
 
-    public function getOnlineSalePriceStartDate()
+    public function getOnlineRestockDate()
     {
-        return $this->getData('online_sale_price_start_date');
+        return $this->getData('online_restock_date');
     }
 
-    public function getOnlineSalePriceEndDate()
+    // ---------------------------------------
+
+    /**
+     * @return array
+     */
+    public function getOnlineDetailsData()
     {
-        return $this->getData('online_sale_price_end_date');
+        return $this->getSettings('online_details_data');
     }
 
-    //-----------------------------------------
+    /**
+     * @return array
+     */
+    public function getOnlineImagesData()
+    {
+        return $this->getSettings('online_images_data');
+    }
 
+    // ---------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isRepricing()
+    {
+        return (int)$this->getData('is_repricing') == self::IS_REPRICING_YES;
+    }
+
+    /**
+     * @return bool
+     */
     public function isAfnChannel()
     {
         return (int)$this->getData('is_afn_channel') == self::IS_AFN_CHANNEL_YES;
     }
 
+    /**
+     * @return bool
+     */
     public function isIsbnGeneralId()
     {
         return (int)$this->getData('is_isbn_general_id') == self::IS_ISBN_GENERAL_ID_YES;
     }
 
+    /**
+     * @return bool
+     */
     public function isGeneralIdOwner()
     {
         return (int)$this->getData('is_general_id_owner') == self::IS_GENERAL_ID_OWNER_YES;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
-    public function isIgnoreNextInventorySynch()
+    public function getVariationParentAfnState()
     {
-        return (bool)$this->getData('ignore_next_inventory_synch');
+        return $this->getData('variation_parent_afn_state');
     }
 
-    // ########################################
+    public function isVariationParentAfnStateNo()
+    {
+        return (int)$this->getVariationParentAfnState() == self::VARIATION_PARENT_IS_AFN_STATE_ALL_NO;
+    }
+
+    public function isVariationParentAfnStatePartial()
+    {
+        return (int)$this->getVariationParentAfnState() == self::VARIATION_PARENT_IS_AFN_STATE_PARTIAL;
+    }
+
+    public function isVariationParentAfnStateYes()
+    {
+        return (int)$this->getVariationParentAfnState() == self::VARIATION_PARENT_IS_AFN_STATE_ALL_YES;
+    }
+
+    // ---------------------------------------
+
+    public function getVariationParentRepricingState()
+    {
+        return $this->getData('variation_parent_repricing_state');
+    }
+
+    public function isVariationParentRepricingStateNo()
+    {
+        return (int)$this->getVariationParentRepricingState() == self::VARIATION_PARENT_IS_REPRICING_STATE_ALL_NO;
+    }
+
+    public function isVariationParentRepricingStatePartial()
+    {
+        return (int)$this->getVariationParentRepricingState() == self::VARIATION_PARENT_IS_REPRICING_STATE_PARTIAL;
+    }
+
+    public function isVariationParentRepricingStateYes()
+    {
+        return (int)$this->getVariationParentRepricingState() == self::VARIATION_PARENT_IS_REPRICING_STATE_ALL_YES;
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function getDefectedMessages()
+    {
+        return $this->getSettings('defected_messages');
+    }
+
+    //########################################
 
     public function getSearchSettingsStatus()
     {
         return $this->getData('search_settings_status');
     }
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getSearchSettingsData()
     {
         return $this->getSettings('search_settings_data');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getGeneralIdSearchInfo()
     {
         return $this->getSettings('general_id_search_info');
     }
 
-    // ########################################
+    //########################################
 
-    public function getPrice()
+    public function isAllowedForRegularCustomers()
     {
-        if ($this->getVariationManager()->isPhysicalUnit() &&
-            $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
-
-            $variations = $this->getVariations(true);
-            /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
-            $variation = reset($variations);
-
-            return $variation->getChildObject()->getPrice();
-        }
-
-        $src = $this->getAmazonSellingFormatTemplate()->getPriceSource();
-
-        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
-        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
-        $calculator->setSource($src)->setProduct($this->getParentObject());
-        $calculator->setModifyByCoefficient(true);
-
-        return $calculator->getProductValue();
+        return $this->getAmazonSellingFormatTemplate()->isRegularCustomerAllowed();
     }
 
-    public function getMapPrice()
+    public function isAllowedForBusinessCustomers()
     {
-        if ($this->getVariationManager()->isPhysicalUnit() &&
-            $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
-
-            $variations = $this->getVariations(true);
-            /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
-            $variation = reset($variations);
-
-            return $variation->getChildObject()->getMapPrice();
-        }
-
-        $src = $this->getAmazonSellingFormatTemplate()->getMapPriceSource();
-
-        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
-        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
-        $calculator->setSource($src)->setProduct($this->getParentObject());
-
-        return $calculator->getProductValue();
-    }
-
-    // ----------------------------------------
-
-    public function getSalePrice()
-    {
-        if ($this->getVariationManager()->isPhysicalUnit() &&
-            $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
-
-            $variations = $this->getVariations(true);
-            /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
-            $variation = reset($variations);
-
-            return $variation->getChildObject()->getSalePrice();
-        }
-
-        $src = $this->getAmazonSellingFormatTemplate()->getSalePriceSource();
-
-        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
-        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
-        $calculator->setSource($src)->setProduct($this->getParentObject());
-        $calculator->setIsSalePrice(true)->setModifyByCoefficient(true);
-
-        return $calculator->getProductValue();
-    }
-
-    public function getSalePriceInfo()
-    {
-        $price = $this->getPrice();
-        $salePrice = $this->getSalePrice();
-
-        if ($salePrice >= $price) {
+        if (!Mage::helper('M2ePro/Component_Amazon_Business')->isEnabled()) {
             return false;
         }
 
-        $startDate = $this->getSalePriceStartDate();
-        $endDate = $this->getSalePriceEndDate();
+        if (!$this->getAmazonMarketplace()->isBusinessAvailable()) {
+            return false;
+        }
+
+        if (!$this->getAmazonSellingFormatTemplate()->isBusinessCustomerAllowed()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    //########################################
+
+    /**
+     * @param bool $magentoMode
+     * @return int
+     * @throws Ess_M2ePro_Model_Exception
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function getQty($magentoMode = false)
+    {
+        if ($this->getVariationManager()->isPhysicalUnit() &&
+            $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
+
+            $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                    array(
+                        'listing_product_id' => $this->getId()
+                    ));
+            }
+            /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
+            $variation = reset($variations);
+
+            return $variation->getChildObject()->getQty($magentoMode);
+        }
+
+        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_QtyCalculator */
+        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_QtyCalculator');
+        $calculator->setProduct($this->getParentObject());
+        $calculator->setIsMagentoMode($magentoMode);
+
+        return $calculator->getProductValue();
+    }
+
+    //########################################
+
+    /**
+     * @return float|int
+     * @throws Ess_M2ePro_Model_Exception
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function getRegularPrice()
+    {
+        if (!$this->isAllowedForRegularCustomers()) {
+            return NULL;
+        }
+
+        if ($this->getVariationManager()->isPhysicalUnit() &&
+            $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
+
+            $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                                                     array(
+                                                         'listing_product_id' => $this->getId()
+                                                     ));
+            }
+            /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
+            $variation = reset($variations);
+
+            return $variation->getChildObject()->getRegularPrice();
+        }
+
+        $src = $this->getAmazonSellingFormatTemplate()->getRegularPriceSource();
+
+        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
+        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
+        $calculator->setSource($src)->setProduct($this->getParentObject());
+        $calculator->setCoefficient($this->getAmazonSellingFormatTemplate()->getRegularPriceCoefficient());
+        $calculator->setVatPercent($this->getAmazonSellingFormatTemplate()->getRegularPriceVatPercent());
+
+        return $calculator->getProductValue();
+    }
+
+    /**
+     * @return float|int
+     * @throws Ess_M2ePro_Model_Exception
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function getRegularMapPrice()
+    {
+        if (!$this->isAllowedForRegularCustomers()) {
+            return NULL;
+        }
+
+        if ($this->getVariationManager()->isPhysicalUnit() &&
+            $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
+
+            $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                                                     array(
+                                                         'listing_product_id' => $this->getId()
+                                                     ));
+            }
+            /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
+            $variation = reset($variations);
+
+            return $variation->getChildObject()->getRegularMapPrice();
+        }
+
+        $src = $this->getAmazonSellingFormatTemplate()->getRegularMapPriceSource();
+
+        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
+        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
+        $calculator->setSource($src)->setProduct($this->getParentObject());
+
+        return $calculator->getProductValue();
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return float|int
+     * @throws Ess_M2ePro_Model_Exception
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function getRegularSalePrice()
+    {
+        if (!$this->isAllowedForRegularCustomers()) {
+            return NULL;
+        }
+
+        if ($this->getVariationManager()->isPhysicalUnit() &&
+            $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
+
+            $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                                                     array(
+                                                         'listing_product_id' => $this->getId()
+                                                     ));
+            }
+            /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
+            $variation = reset($variations);
+
+            return $variation->getChildObject()->getRegularSalePrice();
+        }
+
+        $src = $this->getAmazonSellingFormatTemplate()->getRegularSalePriceSource();
+
+        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
+        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
+        $calculator->setSource($src)->setProduct($this->getParentObject());
+        $calculator->setIsSalePrice(true);
+        $calculator->setCoefficient($this->getAmazonSellingFormatTemplate()->getRegularSalePriceCoefficient());
+        $calculator->setVatPercent($this->getAmazonSellingFormatTemplate()->getRegularPriceVatPercent());
+
+        return $calculator->getProductValue();
+    }
+
+    /**
+     * @return array|bool
+     */
+    public function getRegularSalePriceInfo()
+    {
+        $price = $this->getRegularPrice();
+        $salePrice = $this->getRegularSalePrice();
+
+        if ($salePrice <= 0 || $salePrice >= $price) {
+            return false;
+        }
+
+        $startDate = $this->getRegularSalePriceStartDate();
+        $endDate = $this->getRegularSalePriceEndDate();
+
+        if (!$startDate || !$endDate) {
+            return false;
+        }
 
         $startDateTimestamp = strtotime($startDate);
         $endDateTimestamp = strtotime($endDate);
 
         $currentTimestamp = strtotime(Mage::helper('M2ePro')->getCurrentGmtDate(false,'Y-m-d 00:00:00'));
 
-        if ($salePrice <= 0 || !$startDate || !$endDate ||
-            $currentTimestamp > $endDateTimestamp ||
+        if ($currentTimestamp > $endDateTimestamp ||
             $startDateTimestamp >= $endDateTimestamp
         ) {
             return false;
@@ -484,14 +965,14 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         );
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
-    private function getSalePriceStartDate()
+    private function getRegularSalePriceStartDate()
     {
-        if ($this->getAmazonSellingFormatTemplate()->isSalePriceModeSpecial() &&
+        if ($this->getAmazonSellingFormatTemplate()->isRegularSalePriceModeSpecial() &&
             $this->getMagentoProduct()->isGroupedType()) {
             $magentoProduct = $this->getActualMagentoProduct();
-        } else if ($this->getAmazonSellingFormatTemplate()->isPriceVariationModeParent()) {
+        } else if ($this->getAmazonSellingFormatTemplate()->isRegularPriceVariationModeParent()) {
             $magentoProduct = $this->getMagentoProduct();
         } else {
             $magentoProduct = $this->getActualMagentoProduct();
@@ -499,10 +980,10 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
 
         $date = null;
 
-        if ($this->getAmazonSellingFormatTemplate()->isSalePriceModeSpecial()) {
+        if ($this->getAmazonSellingFormatTemplate()->isRegularSalePriceModeSpecial()) {
             $date = $magentoProduct->getSpecialPriceFromDate();
         } else {
-            $src = $this->getAmazonSellingFormatTemplate()->getSalePriceStartDateSource();
+            $src = $this->getAmazonSellingFormatTemplate()->getRegularSalePriceStartDateSource();
 
             $date = $src['value'];
 
@@ -518,12 +999,12 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return Mage::helper('M2ePro')->getDate($date,false,'Y-m-d 00:00:00');
     }
 
-    private function getSalePriceEndDate()
+    private function getRegularSalePriceEndDate()
     {
-        if ($this->getAmazonSellingFormatTemplate()->isSalePriceModeSpecial() &&
+        if ($this->getAmazonSellingFormatTemplate()->isRegularSalePriceModeSpecial() &&
             $this->getMagentoProduct()->isGroupedType()) {
             $magentoProduct = $this->getActualMagentoProduct();
-        } else if ($this->getAmazonSellingFormatTemplate()->isPriceVariationModeParent()) {
+        } else if ($this->getAmazonSellingFormatTemplate()->isRegularPriceVariationModeParent()) {
             $magentoProduct = $this->getMagentoProduct();
         } else {
             $magentoProduct = $this->getActualMagentoProduct();
@@ -531,56 +1012,157 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
 
         $date = null;
 
-        if ($this->getAmazonSellingFormatTemplate()->isSalePriceModeSpecial()) {
+        if ($this->getAmazonSellingFormatTemplate()->isRegularSalePriceModeSpecial()) {
 
             $date = $magentoProduct->getSpecialPriceToDate();
 
             $tempDate = new DateTime($date, new DateTimeZone('UTC'));
             $tempDate->modify('-1 day');
-            $date = Mage::helper('M2ePro')->getDate($tempDate->format('U'),false,'Y-m-d 00:00:00');
+            $date = Mage::helper('M2ePro')->getDate($tempDate->format('U'));
 
         } else {
-            $src = $this->getAmazonSellingFormatTemplate()->getSalePriceEndDateSource();
+            $src = $this->getAmazonSellingFormatTemplate()->getRegularSalePriceEndDateSource();
 
             $date = $src['value'];
 
             if ($src['mode'] == Ess_M2ePro_Model_Amazon_Template_SellingFormat::DATE_ATTRIBUTE) {
                 $date = $magentoProduct->getAttributeValue($src['attribute']);
             }
-
-            $date = Mage::helper('M2ePro')->getDate($date,false,'Y-m-d 00:00:00');
         }
 
         if (strtotime($date) === false) {
             return false;
         }
 
-        return $date;
+        return Mage::helper('M2ePro')->getDate($date,false,'Y-m-d 00:00:00');
     }
 
-    // ########################################
+    // ---------------------------------------
 
-    public function getQty($magentoMode = false)
+    /**
+     * @return float|int
+     * @throws Ess_M2ePro_Model_Exception
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function getBusinessPrice()
     {
+        if (!$this->isAllowedForBusinessCustomers()) {
+            return NULL;
+        }
+
         if ($this->getVariationManager()->isPhysicalUnit() &&
             $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
 
             $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                    array(
+                        'listing_product_id' => $this->getId()
+                    ));
+            }
             /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
             $variation = reset($variations);
 
-            return $variation->getChildObject()->getQty($magentoMode);
+            return $variation->getChildObject()->getBusinessPrice();
         }
 
-        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_QtyCalculator */
-        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_QtyCalculator');
-        $calculator->setProduct($this->getParentObject());
-        $calculator->setIsMagentoMode($magentoMode);
+        $src = $this->getAmazonSellingFormatTemplate()->getBusinessPriceSource();
+
+        /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
+        $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
+        $calculator->setSource($src)->setProduct($this->getParentObject());
+        $calculator->setCoefficient($this->getAmazonSellingFormatTemplate()->getBusinessPriceCoefficient());
+        $calculator->setVatPercent($this->getAmazonSellingFormatTemplate()->getBusinessPriceVatPercent());
 
         return $calculator->getProductValue();
     }
 
-    // ########################################
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
+    public function getBusinessDiscounts()
+    {
+        if (!$this->isAllowedForBusinessCustomers()) {
+            return NULL;
+        }
+
+        if ($this->getAmazonSellingFormatTemplate()->isBusinessDiscountsModeNone()) {
+            return array();
+        }
+
+        if ($this->getVariationManager()->isPhysicalUnit() &&
+            $this->getVariationManager()->getTypeModel()->isVariationProductMatched()) {
+
+            $variations = $this->getVariations(true);
+            if (count($variations) <= 0) {
+                throw new Ess_M2ePro_Model_Exception_Logic('There are no variations for a variation product.',
+                    array(
+                        'listing_product_id' => $this->getId()
+                    ));
+            }
+            /* @var $variation Ess_M2ePro_Model_Listing_Product_Variation */
+            $variation = reset($variations);
+
+            return $variation->getChildObject()->getBusinessDiscounts();
+        }
+
+        if ($this->getAmazonSellingFormatTemplate()->isBusinessDiscountsModeTier()) {
+            $src = $this->getAmazonSellingFormatTemplate()->getBusinessDiscountsSource();
+
+            $storeId = $this->getListing()->getStoreId();
+            $src['tier_website_id'] = Mage::helper('M2ePro/Magento_Store')->getWebsite($storeId)->getId();
+
+            /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
+            $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
+            $calculator->setSource($src)->setProduct($this->getParentObject());
+            $calculator->setSourceModeMapping(array(
+                Ess_M2ePro_Model_Listing_Product_PriceCalculator::MODE_TIER
+                    => Ess_M2ePro_Model_Amazon_Template_SellingFormat::BUSINESS_DISCOUNTS_MODE_TIER,
+            ));
+            $calculator->setCoefficient($this->getAmazonSellingFormatTemplate()->getBusinessDiscountsTierCoefficient());
+            $calculator->setVatPercent($this->getAmazonSellingFormatTemplate()->getBusinessPriceVatPercent());
+
+            return array_slice(
+                $calculator->getProductValue(), 0, self::BUSINESS_DISCOUNTS_MAX_RULES_COUNT_ALLOWED, true
+            );
+        }
+
+        /** @var Ess_M2ePro_Model_Amazon_Template_SellingFormat_BusinessDiscount[] $businessDiscounts */
+        $businessDiscounts = $this->getAmazonSellingFormatTemplate()->getBusinessDiscounts(true);
+        if (empty($businessDiscounts)) {
+            return array();
+        }
+
+        $resultValue = array();
+
+        foreach ($businessDiscounts as $businessDiscount) {
+            /** @var $calculator Ess_M2ePro_Model_Amazon_Listing_Product_PriceCalculator */
+            $calculator = Mage::getModel('M2ePro/Amazon_Listing_Product_PriceCalculator');
+            $calculator->setSource($businessDiscount->getSource())->setProduct($this->getParentObject());
+            $calculator->setSourceModeMapping(array(
+                Ess_M2ePro_Model_Listing_Product_PriceCalculator::MODE_PRODUCT
+                    => Ess_M2ePro_Model_Amazon_Template_SellingFormat_BusinessDiscount::MODE_PRODUCT,
+                Ess_M2ePro_Model_Listing_Product_PriceCalculator::MODE_SPECIAL
+                    => Ess_M2ePro_Model_Amazon_Template_SellingFormat_BusinessDiscount::MODE_SPECIAL,
+                Ess_M2ePro_Model_Listing_Product_PriceCalculator::MODE_ATTRIBUTE
+                    => Ess_M2ePro_Model_Amazon_Template_SellingFormat_BusinessDiscount::MODE_ATTRIBUTE,
+            ));
+            $calculator->setCoefficient($businessDiscount->getCoefficient());
+            $calculator->setVatPercent($this->getAmazonSellingFormatTemplate()->getBusinessPriceVatPercent());
+
+            $resultValue[$businessDiscount->getQty()] = $calculator->getProductValue();
+
+            if (count($resultValue) >= self::BUSINESS_DISCOUNTS_MAX_RULES_COUNT_ALLOWED) {
+                break;
+            }
+        }
+
+        return $resultValue;
+    }
+
+    //########################################
 
     public function listAction(array $params = array())
     {
@@ -607,27 +1189,13 @@ class Ess_M2ePro_Model_Amazon_Listing_Product extends Ess_M2ePro_Model_Component
         return $this->processDispatcher(Ess_M2ePro_Model_Listing_Product::ACTION_DELETE, $params);
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     protected function processDispatcher($action, array $params = array())
     {
-        $dispatcherObject = Mage::getModel('M2ePro/Connector_Amazon_Product_Dispatcher');
+        $dispatcherObject = Mage::getModel('M2ePro/Amazon_Connector_Product_Dispatcher');
         return $dispatcherObject->process($action, $this->getId(), $params);
     }
 
-    // ########################################
-
-    public function getTrackingAttributes()
-    {
-        $attributes = $this->getListing()->getTrackingAttributes();
-
-        $descriptionTemplate = $this->getDescriptionTemplate();
-        if (!is_null($descriptionTemplate)) {
-            $attributes = array_merge($attributes, $descriptionTemplate->getTrackingAttributes());
-        }
-
-        return array_unique($attributes);
-    }
-
-    // ########################################
+    //########################################
 }

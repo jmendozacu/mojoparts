@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Template_Manager
@@ -13,7 +15,6 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
     const MODE_PARENT   = 0;
     const MODE_CUSTOM   = 1;
     const MODE_TEMPLATE = 2;
-    const MODE_POLICY   = 3;
 
     const COLUMN_PREFIX = 'template';
 
@@ -27,53 +28,78 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
     const TEMPLATE_SELLING_FORMAT = 'selling_format';
     const TEMPLATE_SYNCHRONIZATION = 'synchronization';
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Listing|Ess_M2ePro_Model_Ebay_Listing_Product
+     */
     public function getOwnerObject()
     {
         return $this->ownerObject;
     }
 
+    /**
+     * @param Ess_M2ePro_Model_Ebay_Listing|Ess_M2ePro_Model_Ebay_Listing_Product $object
+     * @return $this
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function setOwnerObject($object)
     {
         if (!($object instanceof Ess_M2ePro_Model_Ebay_Listing) &&
             !($object instanceof Ess_M2ePro_Model_Ebay_Listing_Product)) {
-            throw new Exception('Owner object is out of knowledge range.');
+            throw new Ess_M2ePro_Model_Exception('Owner object is out of knowledge range.');
         }
         $this->ownerObject = $object;
         return $this;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isListingOwner()
     {
         return $this->getOwnerObject() instanceof Ess_M2ePro_Model_Ebay_Listing;
     }
 
+    /**
+     * @return bool
+     */
     public function isListingProductOwner()
     {
         return $this->getOwnerObject() instanceof Ess_M2ePro_Model_Ebay_Listing_Product;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return null|string
+     */
     public function getTemplate()
     {
         return $this->templateNick;
     }
 
+    /**
+     * @param string $nick
+     * @return $this
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function setTemplate($nick)
     {
         if (!in_array(strtolower($nick),$this->getAllTemplates())) {
-            throw new Exception('Policy nick is out of knowledge range.');
+            throw new Ess_M2ePro_Model_Exception('Policy nick is out of knowledge range.');
         }
         $this->templateNick = strtolower($nick);
         return $this;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getAllTemplates()
     {
         return array(
@@ -86,29 +112,19 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         );
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
-    public function isPolicyTemplate()
-    {
-        return in_array($this->getTemplate(),$this->getPolicyTemplates());
-    }
-
-    public function getPolicyTemplates()
-    {
-        return array(
-            self::TEMPLATE_RETURN,
-            self::TEMPLATE_SHIPPING,
-            self::TEMPLATE_PAYMENT
-        );
-    }
-
-    // ----------------------------------------
-
+    /**
+     * @return bool
+     */
     public function isFlatTemplate()
     {
         return in_array($this->getTemplate(),$this->getFlatTemplates());
     }
 
+    /**
+     * @return array
+     */
     public function getFlatTemplates()
     {
         return array(
@@ -118,13 +134,19 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         );
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isHorizontalTemplate()
     {
         return in_array($this->getTemplate(),$this->getHorizontalTemplates());
     }
 
+    /**
+     * @return array
+     */
     public function getHorizontalTemplates()
     {
         return array(
@@ -134,13 +156,19 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         );
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isMarketplaceDependentTemplate()
     {
         return in_array($this->getTemplate(), $this->getMarketplaceDependentTemplates());
     }
 
+    /**
+     * @return array
+     */
     public function getMarketplaceDependentTemplates()
     {
         return array(
@@ -150,48 +178,38 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         );
     }
 
-    // ----------------------------------------
+    //########################################
 
-    public function isTrackingAttributesTemplate()
-    {
-        return in_array($this->getTemplate(),$this->getTrackingAttributesTemplates());
-    }
-
-    public function getTrackingAttributesTemplates()
-    {
-        return array(
-            self::TEMPLATE_RETURN,
-            self::TEMPLATE_SHIPPING,
-            self::TEMPLATE_PAYMENT,
-            self::TEMPLATE_DESCRIPTION,
-            self::TEMPLATE_SELLING_FORMAT
-        );
-    }
-
-    // ########################################
-
+    /**
+     * @return string
+     */
     public function getModeColumnName()
     {
         return self::COLUMN_PREFIX.'_'.$this->getTemplate().'_mode';
     }
 
+    /**
+     * @return string
+     */
     public function getCustomIdColumnName()
     {
         return self::COLUMN_PREFIX.'_'.$this->getTemplate().'_custom_id';
     }
 
+    /**
+     * @return string
+     */
     public function getTemplateIdColumnName()
     {
         return self::COLUMN_PREFIX.'_'.$this->getTemplate().'_id';
     }
 
-    public function getPolicyIdColumnName()
-    {
-        return self::COLUMN_PREFIX.'_'.$this->getTemplate().'_policy_id';
-    }
+    //########################################
 
-    // #######################################
-
+    /**
+     * @param int $mode
+     * @return null|string
+     */
     public function getIdColumnNameByMode($mode)
     {
         $name = NULL;
@@ -202,9 +220,6 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
                 break;
             case self::MODE_CUSTOM:
                 $name = $this->getCustomIdColumnName();
-                break;
-            case self::MODE_POLICY:
-                $name = $this->getPolicyIdColumnName();
                 break;
         }
 
@@ -222,7 +237,7 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         return $this->getOwnerObject()->getData($idColumnName);
     }
 
-    // #######################################
+    //########################################
 
     public function getModeValue()
     {
@@ -239,15 +254,7 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         return $this->getOwnerObject()->getData($this->getTemplateIdColumnName());
     }
 
-    public function getPolicyIdValue()
-    {
-        if (!$this->isPolicyTemplate()) {
-            return NULL;
-        }
-        return $this->getOwnerObject()->getData($this->getPolicyIdColumnName());
-    }
-
-    // ########################################
+    //########################################
 
     public function getParentResultObject()
     {
@@ -285,24 +292,7 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         return $this->makeResultObject($id);
     }
 
-    public function getPolicyResultObject()
-    {
-        if (!$this->isPolicyTemplate()) {
-            return NULL;
-        }
-
-        $id = $this->getPolicyIdValue();
-
-        if (is_null($id)) {
-            return NULL;
-        }
-
-        return $object = Mage::helper('M2ePro')->getCachedObject(
-            'Ebay_Template_Policy', $id
-        );
-    }
-
-    // --------------------------------------
+    // ---------------------------------------
 
     private function makeResultObject($id)
     {
@@ -311,8 +301,7 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
                     'SellingFormat' : ucfirst($this->getTemplate());
 
         if ($this->isHorizontalTemplate()) {
-            $object = Mage::helper('M2ePro/Component')->getCachedComponentObject(
-                Ess_M2ePro_Helper_Component_Ebay::NICK,
+            $object = Mage::helper('M2ePro/Component_Ebay')->getCachedObject(
                 $modelName, $id, NULL, array('template')
             );
         } else {
@@ -325,29 +314,33 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         return $object;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isModeParent()
     {
         return $this->getModeValue() == self::MODE_PARENT;
     }
 
+    /**
+     * @return bool
+     */
     public function isModeCustom()
     {
         return $this->getModeValue() == self::MODE_CUSTOM;
     }
 
+    /**
+     * @return bool
+     */
     public function isModeTemplate()
     {
         return $this->getModeValue() == self::MODE_TEMPLATE;
     }
 
-    public function isModePolicy()
-    {
-        return $this->getModeValue() == self::MODE_POLICY;
-    }
-
-    // ########################################
+    //########################################
 
     public function getResultObject()
     {
@@ -367,37 +360,19 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
             $this->resultObject = $this->getTemplateResultObject();
         }
 
-        if ($this->isModePolicy()) {
-            $this->resultObject = $this->getPolicyResultObject();
-        }
-
         if (is_null($this->resultObject)) {
-            throw new Exception('Unable to get result object.');
+            throw new Ess_M2ePro_Model_Exception('Unable to get result object.');
         }
 
         return $this->resultObject;
     }
 
-    // --------------------------------------
+    //########################################
 
-    public function isResultObjectTemplate()
-    {
-        if (is_null($this->resultObject)) {
-            return false;
-        }
-        return !$this->isResultObjectPolicy();
-    }
-
-    public function isResultObjectPolicy()
-    {
-        if (is_null($this->resultObject)) {
-            return false;
-        }
-        return ($this->resultObject instanceof Ess_M2ePro_Model_Ebay_Template_Policy);
-    }
-
-    // #######################################
-
+    /**
+     * @return null|string
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getTemplateModelName()
     {
         $name = NULL;
@@ -424,7 +399,7 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         }
 
         if (is_null($name)) {
-            throw new LogicException(sprintf('Template nick "%s" is unknown.', $this->getTemplate()));
+            throw new Ess_M2ePro_Model_Exception_Logic(sprintf('Template nick "%s" is unknown.', $this->getTemplate()));
         }
 
         return $name;
@@ -457,7 +432,7 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         }
 
         if (is_null($model)) {
-            throw new LogicException(sprintf('Template nick "%s" is unknown.', $this->getTemplate()));
+            throw new Ess_M2ePro_Model_Exception_Logic(sprintf('Template nick "%s" is unknown.', $this->getTemplate()));
         }
 
         return $model;
@@ -485,7 +460,7 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         }
 
         if (is_null($collection)) {
-            throw new LogicException(sprintf('Template nick "%s" is unknown.', $this->getTemplate()));
+            throw new Ess_M2ePro_Model_Exception_Logic(sprintf('Template nick "%s" is unknown.', $this->getTemplate()));
         }
 
         return $collection;
@@ -517,13 +492,13 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         }
 
         if (is_null($model)) {
-            throw new LogicException(sprintf('Template nick "%s" is unknown.', $this->getTemplate()));
+            throw new Ess_M2ePro_Model_Exception_Logic(sprintf('Template nick "%s" is unknown.', $this->getTemplate()));
         }
 
         return $model;
     }
 
-    // #######################################
+    //########################################
 
     /**
      * @param string $ownerObjectModel
@@ -573,15 +548,11 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
                 $templateId = $data[$this->getIdColumnNameByMode($templateMode)];
             }
 
-            if ($templateMode == self::MODE_POLICY) {
-                $templateModelName = 'Ebay_Template_Policy';
-            } else {
-                $templateModelName = $this->getTemplateModelName();
-            }
+            $templateModelName = $this->getTemplateModelName();
 
             if ($this->isHorizontalTemplate()) {
-                $templateModel = Mage::helper('M2ePro/Component')
-                    ->getCachedComponentObject('ebay', $templateModelName, $templateId, NULL, array('template'))
+                $templateModel = Mage::helper('M2ePro/Component_Ebay')
+                    ->getCachedObject($templateModelName, $templateId, NULL, array('template'))
                     ->getChildObject();
             } else {
                 $templateModel = Mage::helper('M2ePro')->getCachedObject(
@@ -595,5 +566,5 @@ class Ess_M2ePro_Model_Ebay_Template_Manager
         return $resultTemplates;
     }
 
-    // #######################################
+    //########################################
 }

@@ -1,143 +1,100 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Common_Listing_Search extends Mage_Adminhtml_Block_Widget_Grid_Container
 {
-    // ########################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('listingSearch');
         $this->_blockGroup = 'M2ePro';
-        $this->_controller = 'adminhtml_common_listing_search';
-        //------------------------------
+
+        $listingType = $this->getRequest()->getParam('listing_type', false);
+        $otherType   = Ess_M2ePro_Block_Adminhtml_Listing_Search_Switcher::LISTING_TYPE_LISTING_OTHER;
+
+        $this->_controller = $listingType == $otherType ? 'adminhtml_common_listing_search_other'
+                                                        : 'adminhtml_common_listing_search_m2ePro';
+        // ---------------------------------------
 
         // Set header text
-        //------------------------------
-        $this->_headerText = Mage::helper('M2ePro')->__('Search Listings Items');
-        //------------------------------
+        // ---------------------------------------
+        $this->_headerText = '';
+        // ---------------------------------------
 
         // Set buttons actions
-        //------------------------------
+        // ---------------------------------------
         $this->removeButton('back');
         $this->removeButton('reset');
         $this->removeButton('delete');
         $this->removeButton('add');
         $this->removeButton('save');
         $this->removeButton('edit');
-        //------------------------------
-
-        if (!is_null($this->getRequest()->getParam('back'))) {
-            //------------------------------
-            $url = Mage::helper('M2ePro')->getBackUrl('*/adminhtml_common_listing/search');
-            $this->_addButton('back', array(
-                'label'     => Mage::helper('M2ePro')->__('Back'),
-                'onclick'   => 'CommonHandlerObj.back_click(\''.$url.'\')',
-                'class'     => 'back'
-            ));
-            //------------------------------
-        }
-
-        $backUrl = Mage::helper('M2ePro')->makeBackUrlParam('*/adminhtml_common_listing/search');
-
-        //------------------------------
-        $url = $this->getUrl('*/adminhtml_common_listing/index', array('back' => $backUrl));
-        $this->_addButton('goto_listings', array(
-            'label'     => Mage::helper('M2ePro')->__('Listings'),
-            'onclick'   => 'setLocation(\''.$url.'\')',
-            'class'     => 'button_link'
-        ));
-        //------------------------------
-
-        //------------------------------
-        $this->_addButton('goto_templates', array(
-            'label'     => Mage::helper('M2ePro')->__('Policies'),
-            'onclick'   => '',
-            'class'     => 'button_link drop_down templates-drop-down'
-        ));
-        //------------------------------
-
-        //------------------------------
-        $url = $this->getUrl('*/adminhtml_common_log/listing');
-        $this->_addButton('view_log', array(
-            'label'     => Mage::helper('M2ePro')->__('View Log'),
-            'onclick'   => 'window.open(\''.$url.'\')',
-            'class'     => 'button_link'
-        ));
-        //------------------------------
+        // ---------------------------------------
     }
 
-    // ########################################
+    //########################################
 
     protected function _toHtml()
     {
-        return $this->getTemplatesButtonJavascript() . parent::_toHtml();
-    }
+        /** @var Ess_M2ePro_Block_Adminhtml_Common_Listing_Search_Tabs $tabsBlock */
+        $tabsBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_search_tabs');
+        $tabsIds   = $tabsBlock->getTabsIds();
 
-    public function getGridHtml()
-    {
-        $helpBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_search_help');
-        return $helpBlock->toHtml() . parent::getGridHtml();
-    }
-
-    // ########################################
-
-    protected function getTemplatesButtonJavascript()
-    {
-        $data = array(
-            'target_css_class' => 'templates-drop-down',
-            'items'            => $this->getTemplatesButtonDropDownItems()
-        );
-        $dropDownBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_widget_button_dropDown');
-        $dropDownBlock->setData($data);
-
-        return $dropDownBlock->toHtml();
-    }
-
-    protected function getTemplatesButtonDropDownItems()
-    {
-        $items = array();
-
-        //------------------------------
-        $url = $this->getUrl('*/adminhtml_common_template_sellingFormat/index');
-        $items[] = array(
-            'url' => $url,
-            'label' => Mage::helper('M2ePro')->__('Selling Format Policies'),
-            'target' => '_blank'
-        );
-        //------------------------------
-
-        //------------------------------
-        $url = $this->getUrl('*/adminhtml_common_template_synchronization/index');
-        $items[] = array(
-            'url' => $url,
-            'label' => Mage::helper('M2ePro')->__('Synchronization Policies'),
-            'target' => '_blank'
-        );
-        //------------------------------
-
-        if(Mage::helper('M2ePro/Component_Amazon')->isActive()) {
-            //------------------------------
-            $url = $this->getUrl(
-                '*/adminhtml_common_amazon_template_description/index'
-            );
-            $items[] = array(
-                'url' => $url,
-                'label' => Mage::helper('M2ePro')->__('Amazon Description Policies'),
-                'target' => '_blank'
-            );
-            //------------------------------
+        $hideChannels = '';
+        if (count($tabsIds) <= 1) {
+            $hideChannels = ' style="display: none"';
         }
 
-        return $items;
+        $helpBlock = $this->getLayout()->createBlock('M2ePro/adminhtml_common_listing_search_help');
+
+        $switcherParams = array(
+            'controller_name' => $this->getRequest()->getControllerName(),
+            'action_name'     => 'index',
+            'action_params'   => array(
+                'tab' => Ess_M2ePro_Block_Adminhtml_Common_ManageListings::TAB_ID_SEARCH,
+            )
+        );
+
+        if ($channel = $this->getRequest()->getParam('channel', false)) {
+            $switcherParams['action_params']['channel'] = $channel;
+        }
+
+        /** @var Ess_M2ePro_Block_Adminhtml_Listing_Search_Switcher $searchSwitcher */
+        $searchSwitcher = $this->getLayout()->createBlock('M2ePro/adminhtml_listing_search_switcher', '',
+                                                          $switcherParams);
+
+        if (!Mage::helper('M2ePro/View_Common')->is3rdPartyShouldBeShown(Ess_M2ePro_Helper_Component_Amazon::NICK) &&
+            !Mage::helper('M2ePro/View_Common')->is3rdPartyShouldBeShown(Ess_M2ePro_Helper_Component_Buy::NICK)) {
+
+            $searchSwitcher->showOtherOption = false;
+        }
+
+        return $helpBlock->toHtml() . <<<HTML
+<div class="content-header skip-header" {$hideChannels}>
+    <table cellspacing="0">
+        <tr>
+            <td>{$tabsBlock->toHtml()}</td>
+            <td class="form-buttons">{$this->getButtonsHtml()}</td>
+        </tr>
+    </table>
+</div>
+<div class="filter_block">
+    {$searchSwitcher->toHtml()}
+</div>
+<div id="search_tabs_container"></div>
+HTML;
+
     }
 
-    // ########################################
+    //########################################
 }

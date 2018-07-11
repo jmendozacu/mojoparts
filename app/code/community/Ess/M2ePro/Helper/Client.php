@@ -1,14 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
 {
     const API_APACHE_HANDLER = 'apache2handler';
 
-    // ########################################
+    //########################################
 
     public function getHost()
     {
@@ -16,13 +18,15 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         return $domain == '' ? $this->getIp() : $domain;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getDomain()
     {
+        $server = Mage::app()->getRequest()->getServer();
+
         $domain = Mage::helper('M2ePro/Module')->getCacheConfig()->getGroupValue('/location_info/', 'domain');
-        if (is_null($domain) && isset($_SERVER['HTTP_HOST'])) {
-            $domain = $_SERVER['HTTP_HOST'];
+        if (is_null($domain) && isset($server['HTTP_HOST'])) {
+            $domain = rtrim($server['HTTP_HOST'], '/');
         }
 
         if (!is_null($domain)) {
@@ -30,25 +34,27 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
             return strtolower(trim($domain));
         }
 
-        throw new Exception('Server domain is not defined');
+        throw new Ess_M2ePro_Model_Exception('Server domain is not defined');
     }
 
     public function getIp()
     {
+        $server = Mage::app()->getRequest()->getServer();
+
         $backupIp = Mage::helper('M2ePro/Module')->getCacheConfig()->getGroupValue('/location_info/', 'ip');
 
         if (!is_null($backupIp)) {
             return strtolower(trim($backupIp));
         }
 
-        $serverIp = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : NULL;
-        is_null($serverIp) && $serverIp = isset($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR'] : NULL;
+        $serverIp = isset($server['SERVER_ADDR']) ? $server['SERVER_ADDR'] : NULL;
+        is_null($serverIp) && $serverIp = isset($server['LOCAL_ADDR']) ? $server['LOCAL_ADDR'] : NULL;
 
         if (!is_null($serverIp)) {
             return strtolower(trim($serverIp));
         }
 
-        throw new Exception('Server IP is not defined');
+        throw new Ess_M2ePro_Model_Exception('Server IP is not defined');
     }
 
     public function getBaseDirectory()
@@ -65,16 +71,20 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
 
     public function isBrowserIE()
     {
-        if (isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false) {
+        $server = Mage::app()->getRequest()->getServer();
+
+        if (isset($server['HTTP_USER_AGENT']) && strpos($server['HTTP_USER_AGENT'], 'MSIE') !== false) {
             return true;
         }
         return false;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function updateBackupConnectionData($forceUpdate = false)
     {
+        $server = Mage::app()->getRequest()->getServer();
+
         $dateLastCheck = Mage::helper('M2ePro/Module')->getCacheConfig()
                                 ->getGroupValue('/location_info/', 'date_last_check');
 
@@ -88,13 +98,13 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
             return;
         }
 
-        $domainBackup = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : '127.0.0.1';
+        $domainBackup = isset($server['HTTP_HOST']) ? $server['HTTP_HOST'] : '127.0.0.1';
         strpos($domainBackup,'www.') === 0 && $domainBackup = substr($domainBackup,4);
         Mage::helper('M2ePro/Module')->getCacheConfig()
             ->setGroupValue('/location_info/', 'domain', $domainBackup);
 
-        $ipBackup = isset($_SERVER['SERVER_ADDR']) ? $_SERVER['SERVER_ADDR'] : NULL;
-        is_null($ipBackup) && $ipBackup = isset($_SERVER['LOCAL_ADDR']) ? $_SERVER['LOCAL_ADDR'] : '127.0.0.1';
+        $ipBackup = isset($server['SERVER_ADDR']) ? $server['SERVER_ADDR'] : NULL;
+        is_null($ipBackup) && $ipBackup = isset($server['LOCAL_ADDR']) ? $server['LOCAL_ADDR'] : '127.0.0.1';
         Mage::helper('M2ePro/Module')->getCacheConfig()
             ->setGroupValue('/location_info/', 'ip', $ipBackup);
 
@@ -107,14 +117,14 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         );
     }
 
-    // ########################################
+    //########################################
 
     public function getSystem()
     {
         return php_uname();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function getPhpVersion()
     {
@@ -126,7 +136,12 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         return @php_sapi_name();
     }
 
-    // ----------------------------------------
+    public function getPhpIniFileLoaded()
+    {
+        return @php_ini_loaded_file();
+    }
+
+    // ---------------------------------------
 
     public function isPhpApiApacheHandler()
     {
@@ -138,7 +153,7 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         return !$this->isPhpApiApacheHandler();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function getPhpSettings()
     {
@@ -151,6 +166,10 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
 
     public function getPhpInfoArray()
     {
+        if (in_array('phpinfo', $this->getDisabledFunctions())) {
+            return array();
+        }
+
         try {
 
             ob_start(); phpinfo(INFO_ALL);
@@ -201,7 +220,7 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         return $pi;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function getMysqlVersion()
     {
@@ -244,7 +263,7 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
 
         $totalRecords = 0;
         foreach ($moduleTables as $moduleTable) {
-            $moduleTable = Mage::getSingleton('core/resource')->getTableName($moduleTable);
+            $moduleTable = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix($moduleTable);
 
             if (!in_array($moduleTable, $magentoTables)) {
                 continue;
@@ -260,7 +279,7 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         );
     }
 
-    // ########################################
+    //########################################
 
     public function getMemoryLimit($inMegabytes = true)
     {
@@ -271,6 +290,8 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         }
 
         $lastMemoryLimitLetter = strtolower(substr($memoryLimit, -1));
+        $memoryLimit = (int)$memoryLimit;
+
         switch($lastMemoryLimitLetter) {
             case 'g':
                 $memoryLimit *= 1024;
@@ -280,7 +301,7 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
                 $memoryLimit *= 1024;
         }
 
-        if ($inMegabytes) {
+        if ($memoryLimit > 0 && $inMegabytes) {
             $memoryLimit /= 1024 * 1024;
         }
 
@@ -292,7 +313,7 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         $minSize = 32;
         $currentMemoryLimit = $this->getMemoryLimit();
 
-        if ($maxSize < $minSize || (int)$currentMemoryLimit >= $maxSize) {
+        if ($maxSize < $minSize || (int)$currentMemoryLimit >= $maxSize || (float)$currentMemoryLimit <= 0) {
             return false;
         }
 
@@ -310,7 +331,7 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         return true;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function updateMySqlConnection()
     {
@@ -324,5 +345,12 @@ class Ess_M2ePro_Helper_Client extends Mage_Core_Helper_Abstract
         }
     }
 
-    // ########################################
+    //########################################
+
+    public function getDisabledFunctions()
+    {
+        return array_filter(explode(',', ini_get('disable_functions')));
+    }
+
+    //########################################
 }

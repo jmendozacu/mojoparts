@@ -1,37 +1,54 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_MotorsKtypes
     extends Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_Abstract
 {
-    //####################################
+    /** @var Ess_M2ePro_Model_Marketplace */
+    protected $marketplace;
 
+    //########################################
+
+    /**
+     * @return string
+     */
     protected function getNick()
     {
         return '/motors_ktypes/';
     }
 
+    /**
+     * @return string
+     */
     protected function getTitle()
     {
-        return 'Parts Compatibility';
+        return 'Parts Compatibility [kTypes]';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     protected function getPercentsStart()
     {
         return 0;
     }
 
+    /**
+     * @return int
+     */
     protected function getPercentsEnd()
     {
         return 100;
     }
 
-    //####################################
+    //########################################
 
     protected function isPossibleToRun()
     {
@@ -41,45 +58,42 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_MotorsKtypes
 
         $params = $this->getParams();
 
-        return Mage::helper('M2ePro/Component_Ebay_Motor_Compatibility')->isMarketplaceSupportsKtype(
-            $params['marketplace_id']
+        $marketplace = Mage::helper('M2ePro/Component_Ebay')->getCachedObject(
+            'Marketplace', $params['marketplace_id']
         );
+        $this->marketplace = $marketplace;
+
+        return $marketplace->getChildObject()->isKtypeEnabled();
     }
 
     protected function performActions()
     {
-        $params = $this->getParams();
-
-        /** @var $marketplace Ess_M2ePro_Model_Marketplace **/
-        $marketplace = Mage::helper('M2ePro/Component_Ebay')
-            ->getObject('Marketplace', (int)$params['marketplace_id']);
-
         $partNumber = 1;
-        $this->deleteAllKtypesForMarketplace($marketplace);
+        $this->deleteAllKtypes();
 
         for ($i = 0; $i < 100; $i++) {
 
             $this->getActualLockItem()->setPercents($this->getPercentsStart());
 
-            $this->getActualOperationHistory()->addTimePoint(__METHOD__.'get'.$marketplace->getId(),
-                                                             'Get KTypes from eBay');
-            $response = $this->receiveFromEbay($marketplace, $partNumber);
-            $this->getActualOperationHistory()->saveTimePoint(__METHOD__.'get'.$marketplace->getId());
+            $this->getActualOperationHistory()->addTimePoint(__METHOD__.'get'.$this->marketplace->getId(),
+                                                             'Get kTypes from eBay');
+            $response = $this->receiveFromEbay($partNumber);
+            $this->getActualOperationHistory()->saveTimePoint(__METHOD__.'get'.$this->marketplace->getId());
 
             if (empty($response)) {
                 break;
             }
 
             $this->getActualLockItem()->setStatus(
-                'Processing KTypes data ('.(int)$partNumber.'/'.(int)$response['total_parts'].')'
+                'Processing kTypes data ('.(int)$partNumber.'/'.(int)$response['total_parts'].')'
             );
             $this->getActualLockItem()->setPercents($this->getPercentsStart() + $this->getPercentsInterval()/2);
             $this->getActualLockItem()->activate();
 
-            $this->getActualOperationHistory()->addTimePoint(__METHOD__.'save'.$marketplace->getId(),
-                                                             'Save KTypes to DB');
-            $this->saveKtypesToDb($marketplace, $response['data']);
-            $this->getActualOperationHistory()->saveTimePoint(__METHOD__.'save'.$marketplace->getId());
+            $this->getActualOperationHistory()->addTimePoint(__METHOD__.'save'.$this->marketplace->getId(),
+                                                             'Save kTypes to DB');
+            $this->saveKtypesToDb($response['data']);
+            $this->getActualOperationHistory()->saveTimePoint(__METHOD__.'save'.$this->marketplace->getId());
 
             $this->getActualLockItem()->setPercents($this->getPercentsEnd());
             $this->getActualLockItem()->activate();
@@ -91,55 +105,64 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_MotorsKtypes
             }
         }
 
-        $this->logSuccessfulOperation($marketplace);
+        $this->logSuccessfulOperation();
     }
 
-    //####################################
+    //########################################
 
-    protected function receiveFromEbay(Ess_M2ePro_Model_Marketplace $marketplace, $partNumber)
+    protected function receiveFromEbay($partNumber)
     {
-        $response = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher')
-                          ->processVirtual(
-                              'marketplace','get','motorsKtypes',
-                               array('part_number' => $partNumber),
-                               NULL,$marketplace->getId()
-                          );
+        $dispatcherObj = Mage::getModel('M2ePro/Ebay_Connector_Dispatcher');
+        $connectorObj = $dispatcherObj->getVirtualConnector('marketplace','get','motorsKtypes',
+                                                            array('part_number' => $partNumber),
+                                                            NULL,$this->marketplace->getId());
+
+        $dispatcherObj->process($connectorObj);
+        $response = $connectorObj->getResponseData();
 
         if (is_null($response) || empty($response['data'])) {
             $response = array();
         }
 
-        $this->getActualOperationHistory()->addText('Total received parts from eBay: '.count($response['data']));
+        $dataCount = isset($response['data']) ? count($response['data']) : 0;
+        $this->getActualOperationHistory()->addText("Total received parts from eBay: {$dataCount}");
+
         return $response;
     }
 
-    protected function deleteAllKtypesForMarketplace(Ess_M2ePro_Model_Marketplace $marketplace)
+    protected function deleteAllKtypes()
     {
         /** @var $connWrite Varien_Db_Adapter_Pdo_Mysql */
         $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
         $tableMotorsKtypes = Mage::getSingleton('core/resource')->getTableName('m2epro_ebay_dictionary_motor_ktype');
 
-        $connWrite->delete($tableMotorsKtypes,array('marketplace_id = ?'=>$marketplace->getId()));
+        $connWrite->delete($tableMotorsKtypes, '`is_custom` = 0');
     }
 
-    protected function saveKtypesToDb(Ess_M2ePro_Model_Marketplace $marketplace, array $data)
+    protected function saveKtypesToDb(array $data)
     {
+        $totalCountItems = count($data['items']);
+        if ($totalCountItems <= 0) {
+            return;
+        }
+
         /** @var $connWrite Varien_Db_Adapter_Pdo_Mysql */
         $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
         $tableMotorsKtype = Mage::getSingleton('core/resource')->getTableName('m2epro_ebay_dictionary_motor_ktype');
 
         $iteration            = 0;
         $iterationsForOneStep = 1000;
-        $totalCountItems      = count($data['items']);
         $percentsForOneStep   = ($this->getPercentsInterval()/2) / ($totalCountItems/$iterationsForOneStep);
-        $itemsForInsert       = array();
+
+        $temporaryIds   = array();
+        $itemsForInsert = array();
 
         for ($i = 0; $i < $totalCountItems; $i++) {
 
             $item = $data['items'][$i];
 
+            $temporaryIds[] = (int)$item['ktype'];
             $itemsForInsert[] = array(
-                'marketplace_id' => $marketplace->getId(),
                 'ktype'          => (int)$item['ktype'],
                 'make'           => $item['make'],
                 'model'          => $item['model'],
@@ -152,8 +175,11 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_MotorsKtypes
             );
 
             if (count($itemsForInsert) >= 100 || $i >= ($totalCountItems - 1)) {
+
                 $connWrite->insertMultiple($tableMotorsKtype, $itemsForInsert);
-                $itemsForInsert = array();
+                $connWrite->delete($tableMotorsKtype, array('is_custom = ?' => 1,
+                                                            'ktype IN (?)'  => $temporaryIds));
+                $itemsForInsert = $temporaryIds = array();
             }
 
             if (++$iteration % $iterationsForOneStep == 0) {
@@ -165,20 +191,20 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_MotorsKtypes
         }
     }
 
-    protected function logSuccessfulOperation(Ess_M2ePro_Model_Marketplace $marketplace)
+    protected function logSuccessfulOperation()
     {
         // M2ePro_TRANSLATIONS
-        // The "Parts Compatibility" Action for eBay Site: "%mrk%" has been successfully completed.
+        // The "Parts Compatibility [kTypes]" Action for eBay Site: "%mrk%" has been successfully completed.
 
         $tempString = Mage::getModel('M2ePro/Log_Abstract')->encodeDescription(
-            'The "Parts Compatibility" Action for eBay Site: "%mrk%" has been successfully completed.',
-            array('mrk'=>$marketplace->getTitle())
+            'The "Parts Compatibility [kTypes]" Action for eBay Site: "%mrk%" has been successfully completed.',
+            array('mrk' => $this->marketplace->getTitle())
         );
 
         $this->getLog()->addMessage($tempString,
-            Ess_M2ePro_Model_Log_Abstract::TYPE_SUCCESS,
-            Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW);
+                                    Ess_M2ePro_Model_Log_Abstract::TYPE_SUCCESS,
+                                    Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW);
     }
 
-    //####################################
+    //########################################
 }

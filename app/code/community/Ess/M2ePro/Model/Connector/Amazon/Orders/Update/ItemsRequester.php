@@ -1,20 +1,25 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Connector_Amazon_Orders_Update_ItemsRequester
     extends Ess_M2ePro_Model_Connector_Amazon_Requester
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getCommand()
     {
         return array('orders','update','entities');
     }
 
-    // ########################################
+    //########################################
 
     protected function getResponserParams()
     {
@@ -31,7 +36,7 @@ class Ess_M2ePro_Model_Connector_Amazon_Orders_Update_ItemsRequester
         return $params;
     }
 
-    // ########################################
+    //########################################
 
     public function eventBeforeExecuting()
     {
@@ -39,8 +44,12 @@ class Ess_M2ePro_Model_Connector_Amazon_Orders_Update_ItemsRequester
         $this->deleteProcessedChanges();
     }
 
-    // -----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @param Ess_M2ePro_Model_Processing_Request $processingRequest
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function setProcessingLocks(Ess_M2ePro_Model_Processing_Request $processingRequest)
     {
         parent::setProcessingLocks($processingRequest);
@@ -53,7 +62,7 @@ class Ess_M2ePro_Model_Connector_Amazon_Orders_Update_ItemsRequester
 
         foreach ($this->params['items'] as $update) {
             if (!isset($update['order_id'])) {
-                throw new LogicException('Order ID is not defined.');
+                throw new Ess_M2ePro_Model_Exception_Logic('Order ID is not defined.');
             }
 
             $ordersIds[] = (int)$update['order_id'];
@@ -71,12 +80,15 @@ class Ess_M2ePro_Model_Connector_Amazon_Orders_Update_ItemsRequester
         }
     }
 
-    // ########################################
+    //########################################
 
     protected function getRequestData()
     {
         if (!isset($this->params['items']) || !is_array($this->params['items'])) {
-            return array('items' => array());
+            return array(
+                'accounts' => $this->getAccountsAccessTokens(),
+                'items' => array()
+            );
         }
 
         $orders = array();
@@ -110,15 +122,30 @@ class Ess_M2ePro_Model_Connector_Amazon_Orders_Update_ItemsRequester
             $orders[] = $order;
         }
 
-        return array('items' => $orders);
+        return array(
+            'accounts' => $this->getAccountsAccessTokens(),
+            'items' => $orders
+        );
     }
 
-    // ########################################
+    // ---------------------------------------
+
+    private function getAccountsAccessTokens()
+    {
+        $accountsAccessTokens = array();
+        foreach ($this->params['accounts'] as $account) {
+            $accountsAccessTokens[] = $account->getChildObject()->getServerHash();
+        }
+
+        return $accountsAccessTokens;
+    }
+
+    //########################################
 
     private function deleteProcessedChanges()
     {
         // collect ids of processed order changes
-        //------------------------------
+        // ---------------------------------------
         $changeIds = array();
 
         foreach ($this->params['items'] as $orderUpdate) {
@@ -128,10 +155,10 @@ class Ess_M2ePro_Model_Connector_Amazon_Orders_Update_ItemsRequester
 
             $changeIds[] = $orderUpdate['change_id'];
         }
-        //------------------------------
+        // ---------------------------------------
 
         Mage::getResourceModel('M2ePro/Order_Change')->deleteByIds($changeIds);
     }
 
-    // ########################################
+    //########################################
 }

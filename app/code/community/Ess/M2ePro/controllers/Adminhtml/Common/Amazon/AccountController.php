@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
     extends Ess_M2ePro_Controller_Adminhtml_Common_MainController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
@@ -17,24 +19,29 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
 
         $this->getLayout()->getBlock('head')
              ->setCanLoadExtJs(true)
+             ->addCss('M2ePro/css/Plugin/AreaWrapper.css')
              ->addJs('M2ePro/Common/Amazon/AccountHandler.js');
+
+        $this->setPageHelpLink(NULL, NULL, "x/mIIVAQ");
+
+        $this->_initPopUp();
 
         return $this;
     }
 
     protected function _isAllowed()
     {
-        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/configuration/account');
+        return Mage::getSingleton('admin/session')->isAllowed('m2epro_common/configuration');
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
         return $this->_redirect('*/adminhtml_common_account/index');
     }
 
-    //#############################################
+    //########################################
 
     public function newAction()
     {
@@ -44,9 +51,11 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
     public function editAction()
     {
         $id = $this->getRequest()->getParam('id');
-        $model = Mage::helper('M2ePro/Component_Amazon')->getModel('Account')->load($id);
 
-        if ($id && !$model->getId()) {
+        /** @var Ess_M2ePro_Model_Account $account */
+        $account = Mage::helper('M2ePro/Component_Amazon')->getModel('Account')->load($id);
+
+        if ($id && !$account->getId()) {
             $this->_getSession()->addError(Mage::helper('M2ePro')->__('Account does not exist.'));
             return $this->indexAction();
         }
@@ -58,7 +67,11 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
             return $this->indexAction();
         }
 
-        Mage::helper('M2ePro/Data_Global')->setValue('temp_data', $model);
+        if ($id) {
+            Mage::helper('M2ePro/Data_Global')->setValue('license_message', $this->getLicenseMessage($account));
+        }
+
+        Mage::helper('M2ePro/Data_Global')->setValue('temp_data', $account);
 
         $this->_initAction()
              ->_addLeft($this->getLayout()->createBlock('M2ePro/adminhtml_common_amazon_account_edit_tabs'))
@@ -66,7 +79,96 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
              ->renderLayout();
     }
 
-    //#############################################
+    //########################################
+
+    public function beforeGetTokenAction()
+    {
+        // Get and save form data
+        // ---------------------------------------
+        $accountId = $this->getRequest()->getParam('id', 0);
+        $accountTitle = $this->getRequest()->getParam('title', '');
+        $marketplaceId = $this->getRequest()->getParam('marketplace_id', 0);
+        // ---------------------------------------
+
+        $marketplace = Mage::getModel('M2ePro/Marketplace')->load($marketplaceId);
+
+        try {
+
+            $backUrl = $this->getUrl('*/*/afterGetToken', array('_current' => true));
+
+            $dispatcherObject = Mage::getModel('M2ePro/Amazon_Connector_Dispatcher');
+            $connectorObj = $dispatcherObject->getVirtualConnector('account','get','authUrl',
+                array('back_url' => $backUrl, 'marketplace' => $marketplace->getData('native_id')));
+
+            $dispatcherObject->process($connectorObj);
+            $response = $connectorObj->getResponseData();
+
+        } catch (Exception $exception) {
+
+            Mage::helper('M2ePro/Module_Exception')->process($exception);
+            // M2ePro_TRANSLATIONS
+            // The Amazon token obtaining is currently unavailable.<br/>Reason: %error_message%
+            $error = 'The Amazon token obtaining is currently unavailable.<br/>Reason: %error_message%';
+            $error = Mage::helper('M2ePro')->__($error, $exception->getMessage());
+
+            $this->_getSession()->addError($error);
+
+            return $this->indexAction();
+        }
+
+        Mage::helper('M2ePro/Data_Session')->setValue('account_id', $accountId);
+        Mage::helper('M2ePro/Data_Session')->setValue('account_title', $accountTitle);
+        Mage::helper('M2ePro/Data_Session')->setValue('marketplace', $marketplace);
+
+        $this->_redirectUrl($response['url']);
+        // ---------------------------------------
+    }
+
+    public function afterGetTokenAction()
+    {
+        $params = $this->getRequest()->getParams();
+
+        if (empty($params)) {
+            return $this->indexAction();
+        }
+
+        $requiredFields = array(
+            'Merchant',
+            'Marketplace',
+            'MWSAuthToken',
+            'Signature',
+            'SignedString'
+        );
+
+        foreach ($requiredFields as $requiredField) {
+            if (!isset($params[$requiredField])) {
+                // M2ePro_TRANSLATIONS
+                // The Amazon token obtaining is currently unavailable.
+                $error = Mage::helper('M2ePro')->__('The Amazon token obtaining is currently unavailable.');
+                $this->_getSession()->addError($error);
+
+                return $this->indexAction();
+            }
+        }
+
+         // Goto account add or edit page
+         // ---------------------------------------
+        $accountId = (int)Mage::helper('M2ePro/Data_Session')->getValue('account_id', true);
+
+        Mage::helper('M2ePro/Data_Session')->setValue('merchant_id', $params['Merchant']);
+        Mage::helper('M2ePro/Data_Session')->setValue('mws_token', $params['MWSAuthToken']);
+
+        $params = array('wizard' => (bool)$this->getRequest()->getParam('wizard', false));
+        if ($accountId == 0) {
+            $this->_redirect('*/*/new', $params);
+        } else {
+            $params['id'] = $accountId;
+            $this->_redirect('*/*/edit', $params);
+        }
+        // ---------------------------------------
+    }
+
+    //########################################
 
     public function saveAction()
     {
@@ -77,12 +179,12 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
         $id = $this->getRequest()->getParam('id');
 
         // Base prepare
-        //--------------------
+        // ---------------------------------------
         $data = array();
-        //--------------------
+        // ---------------------------------------
 
         // tab: general
-        //--------------------
+        // ---------------------------------------
         $keys = array(
             'title',
             'marketplace_id',
@@ -94,10 +196,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data[$key] = $post[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // tab: 3rd party listings
-        //--------------------
+        // ---------------------------------------
         $keys = array(
             'related_store_id',
 
@@ -110,10 +212,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data[$key] = $post[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // Mapping
-        //--------------------
+        // ---------------------------------------
         $tempData = array();
         $keys = array(
             'mapping_general_id_mode',
@@ -170,24 +272,15 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
             $mappingSettings['title']['attribute'] = (string)$tempData['mapping_title_attribute'];
         }
 
-        $data['other_listings_mapping_settings'] = json_encode($mappingSettings);
-        //--------------------
+        $data['other_listings_mapping_settings'] = Mage::helper('M2ePro')->jsonEncode($mappingSettings);
+        // ---------------------------------------
 
         // tab: orders
-        //--------------------
-        $keys = array(
-            'orders_mode'
-        );
-        foreach ($keys as $key) {
-            if (isset($post[$key])) {
-                $data[$key] = $post[$key];
-            }
-        }
-
+        // ---------------------------------------
         $data['magento_orders_settings'] = array();
 
         // m2e orders settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'listing';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -202,10 +295,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // 3rd party orders settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'listing_other';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -221,10 +314,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // order number settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'number';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -241,10 +334,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey]['prefix'][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // qty reservation
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'qty_reservation';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -257,10 +350,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // refund & cancellation
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'refund_and_cancellation';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -273,10 +366,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // fba
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'fba';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -290,10 +383,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // tax settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'tax';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -306,10 +399,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // customer settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'customer';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -339,10 +432,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey]['notifications'][$key] = true;
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // status mapping settings
-        //--------------------
+        // ---------------------------------------
         $tempKey = 'status_mapping';
         $tempSettings = !empty($post['magento_orders_settings'][$tempKey])
             ? $post['magento_orders_settings'][$tempKey] : array();
@@ -357,10 +450,10 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings'][$tempKey][$key] = $tempSettings[$key];
             }
         }
-        //--------------------
+        // ---------------------------------------
 
         // invoice/shipment settings
-        //--------------------
+        // ---------------------------------------
         $temp = Ess_M2ePro_Model_Amazon_Account::MAGENTO_ORDERS_INVOICE_MODE_YES;
         $data['magento_orders_settings']['invoice_mode'] = $temp;
         $temp = Ess_M2ePro_Model_Amazon_Account::MAGENTO_ORDERS_SHIPMENT_MODE_YES;
@@ -379,44 +472,89 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                 $data['magento_orders_settings']['shipment_mode'] = $temp;
             }
         }
-        //--------------------
+        // ---------------------------------------
 
-        //--------------------
-        $data['magento_orders_settings'] = json_encode($data['magento_orders_settings']);
-        //--------------------
+        // ---------------------------------------
+        $data['magento_orders_settings'] = Mage::helper('M2ePro')->jsonEncode($data['magento_orders_settings']);
+        // ---------------------------------------
 
         $isEdit = !is_null($id);
 
+        // tab: shipping settings
+        // ---------------------------------------
+        $keys = array(
+            'shipping_mode'
+        );
+        foreach ($keys as $key) {
+            if (isset($post[$key])) {
+                $data[$key] = $post[$key];
+            }
+        }
+        // ---------------------------------------
+
+        // tab: vat calculation service
+        // ---------------------------------------
+        $keys = array(
+            'is_vat_calculation_service_enabled',
+            'is_magento_invoice_creation_disabled',
+        );
+        foreach ($keys as $key) {
+            if (isset($post[$key])) {
+                $data[$key] = $post[$key];
+            }
+        }
+
+        if (empty($data['is_vat_calculation_service_enabled'])) {
+            $data['is_magento_invoice_creation_disabled'] = false;
+        }
+        // ---------------------------------------
+
         // Add or update model
-        //--------------------
+        // ---------------------------------------
         $model = Mage::helper('M2ePro/Component_Amazon')->getModel('Account');
         is_null($id) && $model->setData($data);
         !is_null($id) && $model->loadInstance($id)->addData($data);
         $oldData = $model->getOrigData();
         $id = $model->save()->getId();
-        //--------------------
+        // ---------------------------------------
 
         $model->getChildObject()->setSetting('other_listings_move_settings',
                                              array('synch'),
                                              $post['other_listings_move_synch']);
         $model->getChildObject()->save();
 
+        // Repricing
+        // ---------------------------------------
+        if (!empty($post['repricing']) && $model->getChildObject()->isRepricing()) {
+
+            /** @var Ess_M2ePro_Model_Amazon_Account_Repricing $repricingModel */
+            $repricingModel = $model->getChildObject()->getRepricing();
+
+            $repricingOldData = $repricingModel->getData();
+
+            $repricingModel->addData($post['repricing']);
+            $repricingModel->save();
+
+            $repricingNewData = $repricingModel->getData();
+
+            $repricingModel->setProcessRequired($repricingNewData, $repricingOldData);
+        }
+        // ---------------------------------------
+
         try {
 
             // Add or update server
-            //--------------------
+            // ---------------------------------------
 
             /** @var $accountObj Ess_M2ePro_Model_Account */
             $accountObj = $model;
 
-            if (!$accountObj->isLockedObject('server_synchronize')) {
+            if (!$accountObj->isSetProcessingLock('server_synchronize')) {
 
-                /** @var $dispatcherObject Ess_M2ePro_Model_Connector_Amazon_Dispatcher */
-                $dispatcherObject = Mage::getModel('M2ePro/Connector_Amazon_Dispatcher');
+                /** @var $dispatcherObject Ess_M2ePro_Model_Amazon_Connector_Dispatcher */
+                $dispatcherObject = Mage::getModel('M2ePro/Amazon_Connector_Dispatcher');
 
                 if (!$isEdit) {
-
-                    Mage::helper('M2ePro/Module_License')->setTrial(Ess_M2ePro_Helper_Component_Amazon::NICK);
 
                     $params = array(
                         'title'            => $post['title'],
@@ -426,7 +564,9 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                         'related_store_id' => (int)$post['related_store_id']
                     );
 
-                    $dispatcherObject->processConnector('account', 'add' ,'entityRequester', $params, $id);
+                    $connectorObj = $dispatcherObject->getConnector('account', 'add' ,'entityRequester',
+                                                                    $params, $id);
+                    $dispatcherObject->process($connectorObj);
 
                 } else {
 
@@ -441,11 +581,13 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
                     $params = array_diff_assoc($newData, $oldData);
 
                     if (!empty($params)) {
-                        $dispatcherObject->processConnector('account', 'update' ,'entityRequester', $params, $id);
+                        $connectorObj = $dispatcherObject->getConnector('account', 'update' ,'entityRequester',
+                                                                        $params, $id);
+                        $dispatcherObject->process($connectorObj);
                     }
                 }
             }
-            //--------------------
+            // ---------------------------------------
 
         } catch (Exception $exception) {
 
@@ -482,7 +624,7 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
         $this->_forward('delete','adminhtml_common_account');
     }
 
-    //#############################################
+    //########################################
 
     public function checkAuthAction()
     {
@@ -509,10 +651,14 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
 
             try {
 
-                $dispatcherObject = Mage::getModel('M2ePro/Connector_Amazon_Dispatcher');
-                $response = $dispatcherObject->processVirtual('account','check','access',$params);
+                $dispatcherObject = Mage::getModel('M2ePro/Amazon_Connector_Dispatcher');
+                $connectorObj = $dispatcherObject->getVirtualConnector('account','check','access',$params);
+                $dispatcherObject->process($connectorObj);
 
-                $result['result'] = isset($response['status']) ? $response['status'] : null;
+                $response = $connectorObj->getResponseData();
+
+                $result['result'] = isset($response['status']) ? $response['status']
+                                                               : null;
                 if (isset($response['reason'])) {
                     $result['reason'] = Mage::helper('M2ePro')->escapeJs($response['reason']);
                 }
@@ -523,8 +669,44 @@ class Ess_M2ePro_Adminhtml_Common_Amazon_AccountController
             }
         }
 
-        return $this->getResponse()->setBody(json_encode($result));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($result));
     }
 
-    //#############################################
+    //########################################
+
+    private function getLicenseMessage(Ess_M2ePro_Model_Account $account)
+    {
+        try {
+            $dispatcherObject = Mage::getModel('M2ePro/M2ePro_Connector_Dispatcher');
+            $connectorObj = $dispatcherObject->getVirtualConnector('account','get','info', array(
+                'account' => $account->getChildObject()->getServerHash(),
+                'channel' => Ess_M2ePro_Helper_Component_Amazon::NICK,
+            ));
+
+            $dispatcherObject->process($connectorObj);
+            $response = $connectorObj->getResponseData();
+        } catch (Exception $e) {
+            return '';
+        }
+
+        if (!isset($response['info']['status']) || empty($response['info']['note'])) {
+            return '';
+        }
+
+        $status = (bool)$response['info']['status'];
+        $note   = $response['info']['note'];
+
+        if ($status) {
+            return 'MagentoMessageObj.addNotice(\''.$note.'\');';
+        }
+
+        $errorMessage = Mage::helper('M2ePro')->__(
+            'Work with this Account is currently unavailable for the following reason: <br/> %error_message%',
+            array('error_message' => $note)
+        );
+
+        return 'MagentoMessageObj.addError(\''.$errorMessage.'\');';
+    }
+
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProducts
@@ -11,41 +13,48 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
     const EBAY_STATUS_ENDED = 'Ended';
     const EBAY_STATUS_COMPLETED = 'Completed';
 
-    private $sinceTime = NULL;
-    private $toTime = NULL;
-
     private $logsActionId = NULL;
 
-    //####################################
+    //########################################
 
+    /**
+     * @return string
+     */
     protected function getNick()
     {
         return '/update_listings_products/';
     }
 
+    /**
+     * @return string
+     */
     protected function getTitle()
     {
         return 'Update Listings Products';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     protected function getPercentsStart()
     {
         return 20;
     }
 
+    /**
+     * @return int
+     */
     protected function getPercentsEnd()
     {
         return 80;
     }
 
-    //####################################
+    //########################################
 
     protected function performActions()
     {
-        $this->initSinceTime();
-
         $accounts = Mage::helper('M2ePro/Component_Ebay')->getCollection('Account')->getItems();
 
         if (count($accounts) <= 0) {
@@ -85,15 +94,26 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
 
             $iteration++;
         }
-
-        $this->updateSinceTime();
     }
 
-    // ----------------------------------
+    // ---------------------------------------
 
     private function processAccount(Ess_M2ePro_Model_Account $account)
     {
-        foreach ($this->getChangesByAccount($account) as $change) {
+        $sinceTime = $this->prepareSinceTime($account->getData('defaults_last_synchronization'));
+        $changesByAccount = $this->getChangesByAccount($account, $sinceTime);
+
+        if (!isset($changesByAccount['items']) || !isset($changesByAccount['to_time'])) {
+            return;
+        }
+
+        $account->getChildObject()->setData('defaults_last_synchronization', $changesByAccount['to_time'])->save();
+
+        Mage::helper('M2ePro/Data_Cache_Session')->setValue(
+            'item_get_changes_data_' . $account->getId(), $changesByAccount
+        );
+
+        foreach ($changesByAccount['items'] as $change) {
 
             /* @var $listingProduct Ess_M2ePro_Model_Listing_Product */
 
@@ -108,6 +128,16 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
             // Listing product isn't listed and it child must have another item_id
             if ($listingProduct->getStatus() != Ess_M2ePro_Model_Listing_Product::STATUS_LISTED &&
                 $listingProduct->getStatus() != Ess_M2ePro_Model_Listing_Product::STATUS_HIDDEN) {
+                continue;
+            }
+
+            /** @var Ess_M2ePro_Model_Ebay_Listing_Product $ebayListingProduct */
+            $ebayListingProduct = $listingProduct->getChildObject();
+
+            $isVariationOnChannel = !empty($change['variations']);
+            $isVariationInMagento = $ebayListingProduct->isVariationsReady();
+
+            if ($isVariationOnChannel != $isVariationInMagento) {
                 continue;
             }
 
@@ -129,12 +159,14 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
                 return;
             }
 
-            $this->processListingProductVariation($variationsSnapshot,$change['variations']);
+            $this->processListingProductVariation($variationsSnapshot,$change['variations'], $listingProduct);
         }
     }
 
     private function processListingProduct(Ess_M2ePro_Model_Listing_Product $listingProduct, array $change)
     {
+        $oldStatus = $listingProduct->getStatus();
+
         $updateData = array_merge(
             $this->getProductPriceChanges($listingProduct, $change),
             $this->getProductQtyChanges($listingProduct, $change),
@@ -144,26 +176,19 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
 
         $listingProduct->addData($updateData)->save();
 
-        foreach ($listingProduct->getVariations(true) as $variation) {
-
-            if ($listingProduct->getStatus() != Ess_M2ePro_Model_Listing_Product::STATUS_LISTED &&
-                $listingProduct->getStatus() != Ess_M2ePro_Model_Listing_Product::STATUS_FINISHED) {
-                $variation->setData('status',$listingProduct->getStatus())->save();
-            }
-
-            if ($listingProduct->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_FINISHED &&
-                $listingProduct->getStatus() == Ess_M2ePro_Model_Listing_Product::STATUS_LISTED) {
-                $variation->setData('status',Ess_M2ePro_Model_Listing_Product::STATUS_FINISHED)->save();
-            }
+        if ($oldStatus !== $updateData['status']) {
+            $listingProduct->getChildObject()->updateVariationsStatus();
         }
     }
 
-    private function processListingProductVariation(array $variationsSnapshot, array $changeVariations)
+    private function processListingProductVariation(array $variationsSnapshot,
+                                                    array $changeVariations,
+                                                    Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
         foreach ($changeVariations as $changeVariation) {
             foreach ($variationsSnapshot as $variationSnapshot) {
 
-                if (!$this->isVariationEqualWithChange($changeVariation,$variationSnapshot)) {
+                if (!$this->isVariationEqualWithChange($listingProduct,$changeVariation,$variationSnapshot)) {
                     continue;
                 }
 
@@ -174,32 +199,33 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
                                                                 0 : (int)$changeVariation['quantitySold']
                 );
 
-                if ($updateData['online_qty'] <= $updateData['online_qty_sold']) {
-                    $updateData['status'] = Ess_M2ePro_Model_Listing_Product::STATUS_SOLD;
-                }
-                if ($updateData['online_qty'] <= 0) {
-                    $updateData['status'] = Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED;
-                }
+                /** @var Ess_M2ePro_Model_Ebay_Listing_Product_Variation $ebayVariationObj */
+                $ebayVariationObj = $variationSnapshot['variation']->getChildObject();
 
-                $variationSnapshot['variation']->addData($updateData)->save();
+                if ($ebayVariationObj->getOnlinePrice() != $updateData['online_price'] ||
+                    $ebayVariationObj->getOnlineQty() != $updateData['online_qty'] ||
+                    $ebayVariationObj->getOnlineQtySold() != $updateData['online_qty_sold']) {
 
+                    $variationSnapshot['variation']->addData($updateData)->save();
+                    $variationSnapshot['variation']->getChildObject()->setStatus($listingProduct->getStatus());
+                }
                 break;
             }
         }
     }
 
-    //####################################
+    //########################################
 
-    private function getChangesByAccount(Ess_M2ePro_Model_Account $account)
+    private function getChangesByAccount(Ess_M2ePro_Model_Account $account, $sinceTime)
     {
-        $nextSinceTime = new DateTime($this->getSinceTime(), new DateTimeZone('UTC'));
+        $nextSinceTime = new DateTime($sinceTime, new DateTimeZone('UTC'));
 
-        // from stored value
-        $response = $this->receiveFromEbay($account, array('since_time' => $nextSinceTime->format('Y-m-d H:i:s')));
+        $response = $this->receiveChangesFromEbay(
+            $account, array('since_time' => $nextSinceTime->format('Y-m-d H:i:s'))
+        );
 
         if ($response) {
-            $this->toTime = (string)$response['to_time'];
-            return (array)$response['items'];
+            return (array)$response;
         }
 
         $previousSinceTime = $nextSinceTime;
@@ -210,11 +236,12 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
         if ($previousSinceTime->format('U') < $nextSinceTime->format('U')) {
 
             // from day behind now
-            $response = $this->receiveFromEbay($account, array('since_time' => $nextSinceTime->format('Y-m-d H:i:s')));
+            $response = $this->receiveChangesFromEbay(
+                $account, array('since_time' => $nextSinceTime->format('Y-m-d H:i:s'))
+            );
 
             if ($response) {
-                $this->toTime = (string)$response['to_time'];
-                return (array)$response['items'];
+                return (array)$response;
             }
 
             $previousSinceTime = $nextSinceTime;
@@ -225,23 +252,27 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
         if ($previousSinceTime->format('U') < $nextSinceTime->format('U')) {
 
             // from now
-            $response = $this->receiveFromEbay($account, array('since_time' => $nextSinceTime->format('Y-m-d H:i:s')));
+            $response = $this->receiveChangesFromEbay(
+                $account, array('since_time' => $nextSinceTime->format('Y-m-d H:i:s'))
+            );
 
             if ($response) {
-                $this->toTime = (string)$response['to_time'];
-                return (array)$response['items'];
+                return (array)$response;
             }
         }
 
         return array();
     }
 
-    private function receiveFromEbay(Ess_M2ePro_Model_Account $account, array $paramsConnector = array())
+    private function receiveChangesFromEbay(Ess_M2ePro_Model_Account $account, array $paramsConnector = array())
     {
-        $response = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher')
-                                    ->processVirtual('item','get','changes',
-                                                     $paramsConnector,NULL,
-                                                     NULL,$account->getId(),NULL);
+        $dispatcherObj = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher');
+        $connectorObj = $dispatcherObj->getVirtualConnector('item','get','changes',
+                                                            $paramsConnector,NULL,
+                                                            NULL,$account->getId(),NULL);
+
+        $response = $dispatcherObj->process($connectorObj);
+        $this->processResponseMessages($connectorObj);
 
         if (!isset($response['items']) || !isset($response['to_time'])) {
             return NULL;
@@ -250,30 +281,57 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
         return $response;
     }
 
-    //####################################
+    private function processResponseMessages(Ess_M2ePro_Model_Connector_Protocol $connectorObj)
+    {
+        foreach ($connectorObj->getErrorMessages() as $message) {
+
+            if ($message[Ess_M2ePro_Model_Connector_Protocol::MESSAGE_CODE_KEY] == 21917062) {
+                continue;
+            }
+
+            if (!$connectorObj->isMessageError($message) && !$connectorObj->isMessageWarning($message)) {
+                continue;
+            }
+
+            $logType = $connectorObj->isMessageError($message) ? Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR
+                                                               : Ess_M2ePro_Model_Log_Abstract::TYPE_WARNING;
+
+            $this->getLog()->addMessage(
+                Mage::helper('M2ePro')->__($message[Ess_M2ePro_Model_Connector_Protocol::MESSAGE_TEXT_KEY]),
+                $logType,
+                Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH
+            );
+        }
+    }
+
+    //########################################
 
     private function getProductPriceChanges(Ess_M2ePro_Model_Listing_Product $listingProduct, array $change)
     {
         $data = array();
 
+        $data['online_current_price'] = (float)$change['currentPrice'] < 0 ? 0 : (float)$change['currentPrice'];
+
         $listingType = $this->getActualListingType($listingProduct, $change);
 
         if ($listingType == Ess_M2ePro_Model_Ebay_Template_SellingFormat::LISTING_TYPE_FIXED) {
 
-            $data['online_buyitnow_price'] = (float)$change['currentPrice'] < 0 ? 0 : (float)$change['currentPrice'];
-
             /** @var Ess_M2ePro_Model_Ebay_Listing_Product $ebayListingProduct */
             $ebayListingProduct = $listingProduct->getChildObject();
 
-            if ($ebayListingProduct->getOnlineBuyItNowPrice() != $data['online_buyitnow_price']) {
+            if ($ebayListingProduct->getOnlineCurrentPrice() != $data['online_current_price']) {
+                // M2ePro_TRANSLATIONS
+                // Item Price was successfully changed from %from% to %to% .
+                $this->logReportChange($listingProduct, Mage::helper('M2ePro')->__(
+                    'Item Price was successfully changed from %from% to %to% .',
+                    $ebayListingProduct->getOnlineCurrentPrice(),
+                    $data['online_current_price']
+                ));
+
                 Mage::getModel('M2ePro/ProductChange')->addUpdateAction(
                     $listingProduct->getProductId(), Ess_M2ePro_Model_ProductChange::INITIATOR_SYNCHRONIZATION
                 );
             }
-        }
-
-        if ($listingType == Ess_M2ePro_Model_Ebay_Template_SellingFormat::LISTING_TYPE_AUCTION) {
-            $data['online_start_price'] = (float)$change['currentPrice'] < 0 ? 0 : (float)$change['currentPrice'];
         }
 
         return $data;
@@ -298,6 +356,14 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
 
         if ($ebayListingProduct->getOnlineQty() != $data['online_qty'] ||
             $ebayListingProduct->getOnlineQtySold() != $data['online_qty_sold']) {
+            // M2ePro_TRANSLATIONS
+            // Item QTY was successfully changed from %from% to %to% .
+            $this->logReportChange($listingProduct, Mage::helper('M2ePro')->__(
+                'Item QTY was successfully changed from %from% to %to% .',
+                ($ebayListingProduct->getOnlineQty() - $ebayListingProduct->getOnlineQtySold()),
+                ($data['online_qty'] - $data['online_qty_sold'])
+            ));
+
             Mage::getModel('M2ePro/ProductChange')->addUpdateAction(
                 $listingProduct->getProductId(), Ess_M2ePro_Model_ProductChange::INITIATOR_SYNCHRONIZATION
             );
@@ -314,7 +380,7 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
         );
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     private function getProductStatusChanges(Ess_M2ePro_Model_Listing_Product $listingProduct, array $change)
     {
@@ -325,6 +391,7 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
 
         if (($change['listingStatus'] == self::EBAY_STATUS_COMPLETED ||
              $change['listingStatus'] == self::EBAY_STATUS_ENDED) &&
+             $listingProduct->getStatus() != Ess_M2ePro_Model_Listing_Product::STATUS_HIDDEN &&
              $qty == $qtySold) {
 
             $data['status'] = Ess_M2ePro_Model_Listing_Product::STATUS_SOLD;
@@ -351,65 +418,31 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
             return $data;
         }
 
+        $data['status_changer'] = Ess_M2ePro_Model_Listing_Product::STATUS_CHANGER_COMPONENT;
+
+        $statusChangedFrom = Mage::helper('M2ePro/Component_Ebay')
+            ->getHumanTitleByListingProductStatus($listingProduct->getStatus());
+        $statusChangedTo = Mage::helper('M2ePro/Component_Ebay')
+            ->getHumanTitleByListingProductStatus($data['status']);
+
+        if (!empty($statusChangedFrom) && !empty($statusChangedTo)) {
+            // M2ePro_TRANSLATIONS
+            // Item Status was successfully changed from "%from%" to "%to%" .
+            $this->logReportChange($listingProduct, Mage::helper('M2ePro')->__(
+                'Item Status was successfully changed from "%from%" to "%to%" .',
+                $statusChangedFrom,
+                $statusChangedTo
+            ));
+        }
+
         Mage::getModel('M2ePro/ProductChange')->addUpdateAction(
             $listingProduct->getProductId(), Ess_M2ePro_Model_ProductChange::INITIATOR_SYNCHRONIZATION
         );
 
-        $data['status_changer'] = Ess_M2ePro_Model_Listing_Product::STATUS_CHANGER_COMPONENT;
-        $this->logChangeOfStatus($listingProduct, $data['status']);
-
         return $data;
     }
 
-    private function logChangeOfStatus(Ess_M2ePro_Model_Listing_Product $listingProduct, $status)
-    {
-        $message = '';
-
-        switch ($status) {
-            case Ess_M2ePro_Model_Listing_Product::STATUS_LISTED:
-                // M2ePro_TRANSLATIONS
-                // Item status was successfully changed to "Listed".
-                $message = 'Item status was successfully changed to "Listed".';
-                break;
-            case Ess_M2ePro_Model_Listing_Product::STATUS_HIDDEN:
-                // M2ePro_TRANSLATIONS
-                // Item status was successfully changed to "Listed(Hidden)".
-                $message = 'Item status was successfully changed to "Listed(Hidden)".';
-                break;
-            case Ess_M2ePro_Model_Listing_Product::STATUS_SOLD:
-                // M2ePro_TRANSLATIONS
-                // Item status was successfully changed to "Sold".
-                $message = 'Item status was successfully changed to "Sold".';
-                break;
-            case Ess_M2ePro_Model_Listing_Product::STATUS_STOPPED:
-                // M2ePro_TRANSLATIONS
-                // Item status was successfully changed to "Stopped".
-                $message = 'Item status was successfully changed to "Stopped".';
-                break;
-            case Ess_M2ePro_Model_Listing_Product::STATUS_FINISHED:
-                // M2ePro_TRANSLATIONS
-                // Item status was successfully changed to "Finished".
-                $message = 'Item status was successfully changed to "Finished".';
-                break;
-        }
-
-        $log = Mage::getModel('M2ePro/Listing_Log');
-        $log->setComponentMode(Ess_M2ePro_Helper_Component_Ebay::NICK);
-
-        $log->addProductMessage(
-            $listingProduct->getListingId(),
-            $listingProduct->getProductId(),
-            $listingProduct->getId(),
-            Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION,
-            $this->getLogsActionId(),
-            Ess_M2ePro_Model_Listing_Log::ACTION_CHANGE_STATUS_ON_CHANNEL,
-            $message,
-            Ess_M2ePro_Model_Log_Abstract::TYPE_SUCCESS,
-            Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW
-        );
-    }
-
-    //####################################
+    //########################################
 
     private function getVariationsSnapshot(array $variations)
     {
@@ -434,20 +467,35 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
         return $snapshot;
     }
 
-    private function isVariationEqualWithChange(array $changeVariation, array $variationSnapshot)
+    private function isVariationEqualWithChange(Ess_M2ePro_Model_Listing_Product $listingProduct,
+                                                array $changeVariation, array $variationSnapshot)
     {
         if (count($variationSnapshot['options']) != count($changeVariation['specifics'])) {
             return false;
         }
 
+        $specificsReplacements = $listingProduct->getSetting(
+            'additional_data', 'variations_specifics_replacements', array()
+        );
+
         foreach ($variationSnapshot['options'] as $variationSnapshotOption) {
+
+            /** @var Ess_M2ePro_Model_Listing_Product_Variation_Option $variationSnapshotOption */
+
+            $variationSnapshotOptionName  = $variationSnapshotOption->getData('attribute');
+            $variationSnapshotOptionValue = $variationSnapshotOption->getData('option');
+
+            if (array_key_exists($variationSnapshotOptionName, $specificsReplacements)) {
+                $variationSnapshotOptionName = $specificsReplacements[$variationSnapshotOptionName];
+            }
 
             $haveOption = false;
 
             foreach ($changeVariation['specifics'] as $changeVariationOption=>$changeVariationValue) {
 
-                if ($variationSnapshotOption->getData('attribute') == $changeVariationOption &&
-                    $variationSnapshotOption->getData('option') == $changeVariationValue) {
+                if ($variationSnapshotOptionName == $changeVariationOption &&
+                    $variationSnapshotOptionValue == $changeVariationValue)
+                {
                     $haveOption = true;
                     break;
                 }
@@ -461,46 +509,22 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
         return true;
     }
 
-    //####################################
+    //########################################
 
-    private function initSinceTime()
+    private function prepareSinceTime($sinceTime)
     {
-        $sinceTime = $this->getSinceTime();
-
         $minTime = new DateTime('now', new DateTimeZone('UTC'));
         $minTime->modify("-1 month");
 
         if (empty($sinceTime) || strtotime($sinceTime) < (int)$minTime->format('U')) {
-
             $sinceTime = new DateTime('now', new DateTimeZone('UTC'));
-            $sinceTime->modify("-10 days");
             $sinceTime = $sinceTime->format('Y-m-d H:i:s');
-
-            $this->setSinceTime($sinceTime);
         }
 
-        $this->sinceTime = $sinceTime;
-        $this->toTime = $sinceTime;
+        return $sinceTime;
     }
 
-    private function updateSinceTime()
-    {
-        $this->setSinceTime($this->toTime);
-    }
-
-    // ----------------------------------
-
-    private function getSinceTime()
-    {
-        return $this->getConfigValue($this->getFullSettingsPath(), 'since_time');
-    }
-
-    private function setSinceTime($time)
-    {
-        $this->setConfigValue($this->getFullSettingsPath(), 'since_time', $time);
-    }
-
-    //####################################
+    // ---------------------------------------
 
     private function getLogsActionId()
     {
@@ -535,5 +559,29 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Defaults_UpdateListingsProduct
         return $result;
     }
 
-    //####################################
+    //########################################
+
+    private function logReportChange(Ess_M2ePro_Model_Listing_Product $listingProduct, $logMessage)
+    {
+        if (empty($logMessage)) {
+            return;
+        }
+
+        $log = Mage::getModel('M2ePro/Listing_Log');
+        $log->setComponentMode(Ess_M2ePro_Helper_Component_Ebay::NICK);
+
+        $log->addProductMessage(
+            $listingProduct->getListingId(),
+            $listingProduct->getProductId(),
+            $listingProduct->getId(),
+            Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION,
+            $this->getLogsActionId(),
+            Ess_M2ePro_Model_Listing_Log::ACTION_CHANNEL_CHANGE,
+            $logMessage,
+            Ess_M2ePro_Model_Log_Abstract::TYPE_SUCCESS,
+            Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW
+        );
+    }
+
+    //########################################
 }

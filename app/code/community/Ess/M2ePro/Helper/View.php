@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
@@ -12,18 +14,18 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
     const LISTING_CREATION_MODE_FULL = 0;
     const LISTING_CREATION_MODE_LISTING_ONLY = 1;
 
-    // ########################################
+    //########################################
 
     public function isBaseControllerLoaded()
     {
         return (bool)Mage::helper('M2ePro/Data_Global')->getValue('is_base_controller_loaded');
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param string $viewNick
-     * @return Ess_M2ePro_Helper_View_Common|Ess_M2ePro_Helper_View_Ebay
+     * @return Ess_M2ePro_Helper_View_Amazon|Ess_M2ePro_Helper_View_Ebay
      */
     public function getHelper($viewNick = null)
     {
@@ -36,9 +38,9 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
                 $helper = Mage::helper('M2ePro/View_Ebay');
                 break;
 
-            case Ess_M2ePro_Helper_View_Common::NICK:
+            case Ess_M2ePro_Helper_View_Amazon::NICK:
             default:
-                $helper = Mage::helper('M2ePro/View_Common');
+                $helper = Mage::helper('M2ePro/View_Amazon');
                 break;
         }
 
@@ -47,7 +49,7 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
 
     /**
      * @param string $viewNick
-     * @return Ess_M2ePro_Helper_View_Common_Component|Ess_M2ePro_Helper_View_Ebay_Component
+     * @return Ess_M2ePro_Helper_View_Amazon_Component|Ess_M2ePro_Helper_View_Ebay_Component
      */
     public function getComponentHelper($viewNick = null)
     {
@@ -60,9 +62,9 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
                 $helper = Mage::helper('M2ePro/View_Ebay_Component');
                 break;
 
-            case Ess_M2ePro_Helper_View_Common::NICK:
+            case Ess_M2ePro_Helper_View_Amazon::NICK:
             default:
-                $helper = Mage::helper('M2ePro/View_Common_Component');
+                $helper = Mage::helper('M2ePro/View_Amazon_Component');
                 break;
         }
 
@@ -71,7 +73,7 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
 
     /**
      * @param string $viewNick
-     * @return Ess_M2ePro_Helper_View_Ebay_Controller|Ess_M2ePro_Helper_View_Common_Controller
+     * @return Ess_M2ePro_Helper_View_Ebay_Controller|Ess_M2ePro_Helper_View_Amazon_Controller
      */
     public function getControllerHelper($viewNick = null)
     {
@@ -84,16 +86,16 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
                 $helper = Mage::helper('M2ePro/View_Ebay_Controller');
                 break;
 
-            case Ess_M2ePro_Helper_View_Common::NICK:
+            case Ess_M2ePro_Helper_View_Amazon::NICK:
             default:
-                $helper = Mage::helper('M2ePro/View_Common_Controller');
+                $helper = Mage::helper('M2ePro/View_Amazon_Controller');
                 break;
         }
 
         return $helper;
     }
 
-    // ########################################
+    //########################################
 
     public function getCurrentView()
     {
@@ -108,8 +110,8 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
             return Ess_M2ePro_Helper_View_Ebay::NICK;
         }
 
-        if (stripos($controller, 'adminhtml_common') !== false) {
-            return Ess_M2ePro_Helper_View_Common::NICK;
+        if (stripos($controller, 'adminhtml_amazon') !== false) {
+            return Ess_M2ePro_Helper_View_Amazon::NICK;
         }
 
         if (stripos($controller, 'adminhtml_development') !== false) {
@@ -123,16 +125,16 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
         return NULL;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function isCurrentViewEbay()
     {
         return $this->getCurrentView() == Ess_M2ePro_Helper_View_Ebay::NICK;
     }
 
-    public function isCurrentViewCommon()
+    public function isCurrentViewAmazon()
     {
-        return $this->getCurrentView() == Ess_M2ePro_Helper_View_Common::NICK;
+        return $this->getCurrentView() == Ess_M2ePro_Helper_View_Amazon::NICK;
     }
 
     public function isCurrentViewDevelopment()
@@ -145,46 +147,46 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
         return $this->getCurrentView() == Ess_M2ePro_Helper_View_Configuration::NICK;
     }
 
-    // ########################################
+    //########################################
 
     public function getUrl($row, $controller, $action, array $params = array())
     {
         $component = strtolower($row->getData('component_mode'));
-
-        if ($component != Ess_M2ePro_Helper_Component_Ebay::NICK) {
-            $component = Ess_M2ePro_Helper_View_Common::NICK . '_' . $component;
-        }
-
         return Mage::helper('adminhtml')->getUrl("*/adminhtml_{$component}_{$controller}/{$action}", $params);
     }
 
-    // ----------------------------------------
-
     public function getModifiedLogMessage($logMessage)
     {
-        return $this->appendLinksToLogMessage($this->decodeLogMessage($logMessage));
-    }
+        $description = Mage::helper('M2ePro/Module_Log')->decodeDescription($logMessage);
 
-    public function decodeLogMessage($logMessage)
-    {
-        $fullDescription = Mage::getModel('M2ePro/Log_Abstract')->decodeDescription($logMessage);
-        return Mage::helper('M2ePro')->escapeHtml($fullDescription, array(), ENT_NOQUOTES);
-    }
-
-    public function appendLinksToLogMessage($logMessage)
-    {
-        preg_match_all('/(http|https)\:\/\/[a-z0-9\-\._\/+\?\&\%=;]+/i', $logMessage, $matches);
+        preg_match_all('/[^(href=")](http|https)\:\/\/[a-z0-9\-\._\/+\?\&\%=;\(\)]+/i', $description, $matches);
         $matches = array_unique($matches[0]);
 
+        foreach ($matches as &$url) {
+            $url = trim($url, '.()[] ');
+        }
+        unset($url);
+
         foreach ($matches as $url) {
-            $url = rtrim($url, '.() ');
-            $logMessage = str_replace($url, "<a target=\"_blank\" href=\"{$url}\">{$url}</a>", $logMessage);
+
+            $nestingLinks = 0;
+            foreach ($matches as $value) {
+                if (strpos($value, $url) !== false) {
+                    $nestingLinks++;
+                }
+            }
+
+            if ($nestingLinks > 1) {
+                continue;
+            }
+
+            $description = str_replace($url, "<a target=\"_blank\" href=\"{$url}\">{$url}</a>", $description);
         }
 
-        return $logMessage;
+        return Mage::helper('M2ePro')->escapeHtml($description, array('a'), ENT_NOQUOTES);
     }
 
-    // ########################################
+    //########################################
 
     public function getMenuPath(SimpleXMLElement $parentNode, $pathNick, $rootMenuLabel = '')
     {
@@ -204,7 +206,7 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
         }
 
         if (count($resultLabels) > 1) {
-            throw new Exception('More than one menu path found');
+            throw new Ess_M2ePro_Model_Exception('More than one menu path found');
         }
 
         return array_shift($resultLabels);
@@ -241,5 +243,5 @@ class Ess_M2ePro_Helper_View extends Mage_Core_Helper_Abstract
         return $paths;
     }
 
-    // ########################################
+    //########################################
 }

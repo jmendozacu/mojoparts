@@ -17,19 +17,36 @@
 
     $formData = array_merge($default, $formData);
 
+    foreach (array('local', 'international') as $type) {
+        $key = $type . '_shipping_rate_table';
+        foreach ($default[$key] as $id => $data) {
+            if (isset($formData[$key][$id])) {
+                continue;
+            }
+
+            $formData[$key][$id] = $data;
+        }
+    }
+
     // checking what mode need to show (simple or advanced)
     $defaultStrictSettingsForSimpleMode = $default;
 
     // removing ignored options for mode checking
-    $ignoredOptions = array('country', 'postal_code', 'address', 'local_shipping_mode',
-                            'dispatch_time', 'international_shipping_mode', 'services', 'excluded_locations');
+    $ignoredOptions = array('country_mode', 'country_custom_value', 'country_custom_attribute',
+        'postal_code_mode', 'postal_code_custom_value', 'postal_code_custom_attribute',
+        'address_mode', 'address_custom_value', 'address_custom_attribute',
+        'local_shipping_mode', 'dispatch_time_mode', 'international_shipping_mode', 'services', 'excluded_locations',
+        'local_shipping_rate_table', 'international_shipping_rate_table');
 
     foreach($ignoredOptions as $val) {
         unset($defaultStrictSettingsForSimpleMode[$val]);
     }
 
     $settingsOnlyForAdvancedMode = array(
-        'local_shipping_mode' =>  Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_TYPE_CALCULATED
+        'local_shipping_mode' =>  Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_TYPE_CALCULATED,
+        'country_mode' => Ess_M2ePro_Model_Ebay_Template_Shipping::COUNTRY_MODE_CUSTOM_ATTRIBUTE,
+        'postal_code_mode' => Ess_M2ePro_Model_Ebay_Template_Shipping::POSTAL_CODE_MODE_CUSTOM_ATTRIBUTE,
+        'address_mode' => Ess_M2ePro_Model_Ebay_Template_Shipping::ADDRESS_MODE_CUSTOM_ATTRIBUTE
     );
 
     $showSimpleModeSettings = array(
@@ -55,7 +72,10 @@
     }
 
     $showAdvancedMode = (!Mage::helper('M2ePro/View_Ebay')->isSimpleMode() || (Mage::helper('M2ePro/View_Ebay')->isSimpleMode() && $showBlockedAdvancedMode));
-
+    
+    $isLocalRateTableEnabled = $showAdvancedMode && $this->canDisplayLocalShippingRateTable();
+    $isInternationalRateTableEnabled = $showAdvancedMode && $this->canDisplayInternationalShippingRateTable();
+    
     $marketplaceData = $this->getMarketplaceData();
 
     $missingAttributes = $this->getMissingAttributes();
@@ -74,7 +94,20 @@
 
         'Excluded Shipping Locations' => Mage::helper('M2ePro')->__('Excluded Shipping Locations'),
         'No Locations are currently excluded.' => Mage::helper('M2ePro')->__('No Locations are currently excluded.'),
-        'selected' => Mage::helper('M2ePro')->__('selected')
+        'selected' => Mage::helper('M2ePro')->__('selected'),
+        'Refresh Rate Tables' => Mage::helper('M2ePro')->__('Refresh Rate Tables'),
+        'Download Shipping Rate Tables' => Mage::helper('M2ePro')->__('Download Shipping Rate Tables'),
+        'sell_api_popup_text' => Mage::helper('M2ePro')->__('To download the Shipping Rate Tables, you should grant M2E Pro access to your eBay data.
+        If you consent, click <strong>Confirm</strong>. You will be redirected to M2E Pro eBay Account page. Under the <strong>Sell API Details</strong> section,
+        click <strong>Get Token</strong> (the instructions can be found <a href="%url%" target="_blank">here</a>).
+        After an eBay token is obtained, <strong>Save</strong> the changes to Account configuration.<br><br>
+        The Rate Tables will be downloaded to M2E Pro Shipping Policy automatically. Select one which should be applied to your Items.<br><br>
+        <strong>Note</strong>, you need to repeat the procedure above for each eBay Account separately.',
+            Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/wRhPAQ')
+        ),
+        'You are submitting different Shipping Rate Table modes for the domestic and international shipping. It contradicts eBay requirements. Please edit the settings.' => Mage::helper('M2ePro')->__(
+            'You are submitting different Shipping Rate Table modes for the domestic and international shipping. It contradicts eBay requirements. Please edit the settings.'
+        )
 
     )); ?>);
 
@@ -86,7 +119,9 @@
         'adminhtml_ebay_template_shipping/updateDiscountProfiles' => $this->getUrl('*/adminhtml_ebay_template_shipping/updateDiscountProfiles', array(
             'marketplace_id' => $marketplaceData['id'],
             'account_id' => $this->getAccountId()
-        ))
+        )),
+        'adminhtml_ebay_template_shipping/getRateTableData' => $this->getUrl('*/adminhtml_ebay_template_shipping/getRateTableData'),
+        'adminhtml_ebay_account/edit' => $this->getUrl('*/adminhtml_ebay_account/edit', $this->getRequest()->getParam('wizard') ? array('wizard' => 1) : array()),
     )); ?>);
 </script>
 
@@ -103,6 +138,63 @@
         AttributeHandlerObj.attrData = '<?php echo $this->getAttributesJsHtml() ?>';
 
         EbayTemplateShippingHandlerObj = new EbayTemplateShippingHandler();
+
+        var rateTablesIds =[];
+        <?php if (!is_null($this->getAccountId())): ?>
+            <?php if ($isLocalRateTableEnabled): ?>
+                EbayTemplateShippingHandlerObj.renderRateTables({
+                    accountId: <?php echo $this->getAccountId(); ?>,
+                    marketplaceId: <?php echo $this->getMarketplace()->getId(); ?>,
+                    elementId: "local_shipping_rate_table_value_<?php echo $this->getAccountId();?>",
+                    data: <?php echo json_encode($this->getLocalShippingRateTables($this->getAccount())); ?>,
+                    value: <?php echo json_encode($formData['local_shipping_rate_table'][$this->getAccountId()]['value']); ?>,
+                    type: "local"
+                });
+                rateTablesIds.push("local_shipping_rate_table_value_<?php echo $this->getAccountId();?>");
+            <?php endif;?>
+
+            <?php if($isInternationalRateTableEnabled): ?>
+                EbayTemplateShippingHandlerObj.renderRateTables({
+                    accountId: <?php echo $this->getAccountId(); ?>,
+                    marketplaceId: <?php echo $this->getMarketplace()->getId(); ?>,
+                    elementId: "international_shipping_rate_table_value_<?php echo $this->getAccountId();?>",
+                    data: <?php echo json_encode($this->getInternationalShippingRateTables($this->getAccount())); ?>,
+                    value: <?php echo json_encode($formData['international_shipping_rate_table'][$this->getAccountId()]['value']); ?>,
+                    type: "international"
+                });
+                rateTablesIds.push("international_shipping_rate_table_value_<?php echo $this->getAccountId();?>");
+            <?php endif;?>
+        <?php else:?>
+            <?php if ($this->getAccounts()->getSize()): ?>
+                <?php foreach ($this->getAccounts() as $account) : ?>
+
+                    <?php if ($isLocalRateTableEnabled): ?>
+                        EbayTemplateShippingHandlerObj.renderRateTables({
+                            accountId: <?php echo $account->getId(); ?>,
+                            marketplaceId: <?php echo $this->getMarketplace()->getId(); ?>,
+                            elementId: "local_shipping_rate_table_value_<?php echo $account->getId();?>",
+                            data: <?php echo json_encode($this->getLocalShippingRateTables($account)); ?>,
+                            value: <?php echo json_encode($formData['local_shipping_rate_table'][$account->getId()]['value']); ?>,
+                            type: "local"
+                        });
+                        rateTablesIds.push("local_shipping_rate_table_value_<?php echo $account->getId();?>");
+                    <?php endif;?>
+
+
+                    <?php if($isInternationalRateTableEnabled): ?>
+                        EbayTemplateShippingHandlerObj.renderRateTables({
+                            accountId: <?php echo $account->getId(); ?>,
+                            marketplaceId: <?php echo $this->getMarketplace()->getId(); ?>,
+                            elementId: "international_shipping_rate_table_value_<?php echo $account->getId();?>",
+                            data: <?php echo json_encode($this->getInternationalShippingRateTables($account)); ?>,
+                            value: <?php echo json_encode($formData['international_shipping_rate_table'][$account->getId()]['value']); ?>,
+                            type: "international"
+                        });
+                        rateTablesIds.push("international_shipping_rate_table_value_<?php echo $account->getId();?>");
+                    <?php endif;?>
+                <?php endforeach;?>
+            <?php endif;?>
+        <?php endif;?>
 
         EbayTemplateShippingHandlerObj.counter = {
             local: 0,
@@ -133,23 +225,25 @@
             EbayTemplateShippingHandlerObj.simple_mode_disallowed_hide();
         }
 
+        $('country_mode')
+            .observe('change', EbayTemplateShippingHandlerObj.countryModeChange)
+            .simulate('change');
+
+        $('postal_code_mode')
+            .observe('change', EbayTemplateShippingHandlerObj.postalCodeModeChange)
+            .simulate('change');
+
+        $('address_mode')
+            .observe('change', EbayTemplateShippingHandlerObj.addressModeChange)
+            .simulate('change');
+
         $('local_shipping_mode')
             .observe('change', EbayTemplateShippingHandlerObj.localShippingModeChange)
             .simulate('change');
 
-        if ($('local_shipping_rate_table_mode')) {
-            $('local_shipping_rate_table_mode')
-                .observe('change', EbayTemplateShippingHandlerObj.rateTableModeChange);
-        }
-
-        if ($('international_shipping_rate_table_mode')) {
-            $('international_shipping_rate_table_mode')
-                .observe('change', EbayTemplateShippingHandlerObj.rateTableModeChange);
-        }
-
         EbayTemplateShippingHandlerObj.prepareMeasurementObservers('local');
 
-        $('dispatch_time')
+        $('dispatch_time_mode')
             .observe('change', EbayTemplateShippingHandlerObj.dispatchTimeChange)
             .simulate('change');
 
@@ -169,6 +263,11 @@
             .observe('change', EbayTemplateShippingHandlerObj.internationalShippingModeChange)
             .simulate('change');
 
+        rateTablesIds.forEach(function(id) {
+            $(id).observe('change', EbayTemplateShippingHandlerObj.rateTableModeChange)
+                 .simulate('change')
+        });
+
         $$('.shipping_excluded_location_region_link').each(function(el){
             el.observe('click', EbayTemplateShippingHandlerObj.checkExcludeLocationsRegionsSelection)
               .observe('mouseover', function(event){ this.down('label').style.textDecoration = 'underline'; })
@@ -181,9 +280,12 @@
 
         EbayTemplateShippingHandlerObj.renderShippingMethods(M2ePro.formData.shippingMethods);
 
+        EbayTemplateShippingHandlerObj.checkMessages('local');
+        EbayTemplateShippingHandlerObj.checkMessages('international');
+
         <?php if($showBlockedAdvancedMode): ?>
-        var ShippingFormWrapper = new AreaWrapper('template_shipping_data_container');
-        ShippingFormWrapper.lock();
+            var ShippingFormWrapper = new AreaWrapper('template_shipping_data_container');
+            ShippingFormWrapper.lock();
         <?php endif; ?>
     };
 
@@ -228,6 +330,8 @@
         padding: 2px 4px 2px 4px !important;
     }
 
+    .local-shipping-table,
+    .international-shipping-table,
     .shipping-discount-profile-table {
         border-collapse: collapse;
         border: 1px solid #d1cfcf !important;
@@ -237,12 +341,17 @@
         padding: 5px;
     }
 
-    .shipping-discount-profile-table tr.headings th{
+    .local-shipping-table tr.headings th,
+    .international-shipping-table tr.headings th,
+    .shipping-discount-profile-table tr.headings th {
         border: 1px solid #d1cfcf !important;
         border-right-color: #d1cfcf !important;
     }
 
-    .local-discount-profile-account-tr, .international-discount-profile-account-tr{
+    .local-shipping-rate-table-account-tr,
+    .international-shipping-rate-table-account-tr,
+    .local-discount-profile-account-tr,
+    .international-discount-profile-account-tr{
         border: 1px #d1cfcf solid !important;
     }
 
@@ -292,9 +401,9 @@
 
 <?php if($showBlockedAdvancedMode): ?>
     <p style="font-size: 15px; font-weight: bolder; color: red;">
-        <?php $menuPath = Mage::helper('M2ePro/View_Ebay')->getMenuPath('configuration');
+        <?php $menuPath = Mage::helper('M2ePro/View_Ebay')->getPageNavigationPath('configuration', 'General', 'Mode > Advanced');
         echo Mage::helper('M2ePro')->__(
-            'This set of Options cannot be edited in Simple Mode because it was set in Advanced Mode.<br/> To make the necessary changes you should switch to Advanced Mode (%menu_path% > General > Mode > Advanced).', $menuPath);
+            'This set of Options cannot be edited in Simple Mode because it was set in Advanced Mode.<br/> To make the necessary changes you should switch to Advanced Mode (%menu_path%).', $menuPath);
         ?>
     </p>
 <?php endif; ?>
@@ -315,11 +424,25 @@
                         <label for="country"><?php echo Mage::helper('M2ePro')->__('Country'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
-                        <select id="country" name="shipping[country]" class="required-entry">
-                            <?php foreach (Mage::helper('M2ePro/Magento')->getCountries() as $country): ?>
-                                <option value="<?php echo $country['country_id']; ?>" <?php if ($formData['country'] == $country['country_id']): ?>selected="selected"<?php endif; ?> ><?php echo $country['name'] ?></option>
-                            <?php endforeach; ?>
+                        <input type="hidden" id="country_custom_value" name="shipping[country_custom_value]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['country_custom_value']); ?>" />
+                        <input type="hidden" id="country_custom_attribute" name="shipping[country_custom_attribute]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['country_custom_attribute']); ?>" />
+
+                        <select id="country_mode" name="shipping[country_mode]" class="required-entry M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,select">
+                            <optgroup label="Custom Value">
+                                <?php foreach (Mage::helper('M2ePro/Magento')->getCountries() as $country): ?>
+                                    <option attribute_code="<?php echo $country['country_id']; ?>" value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::COUNTRY_MODE_CUSTOM_VALUE; ?>" <?php if ($formData['country_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::COUNTRY_MODE_CUSTOM_VALUE && $country['country_id'] == $formData['country_custom_value']): ?>selected="selected"<?php endif; ?>><?php echo $country['name'] ?></option>
+                                <?php endforeach; ?>
+                            </optgroup>
+
+                            <optgroup class="simple_mode_disallowed M2ePro-custom-attribute-optgroup" label="Magento Attribute">
+                                <?php foreach ($this->attributes as $attribute) : ?>
+                                    <option class="simple_mode_disallowed" attribute_code="<?php echo $attribute['code']; ?>" value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::COUNTRY_MODE_CUSTOM_ATTRIBUTE; ?>" <?php if ($formData['country_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::COUNTRY_MODE_CUSTOM_ATTRIBUTE && $attribute['code'] == $formData['country_custom_attribute']): ?>selected="selected"<?php endif; ?>>
+                                        <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </optgroup>
                         </select>
+
                         <p class="note">
                             <span><?php echo Mage::helper('M2ePro')->__('The Country your Product will be shipped from.'); ?></span>
                         </p>
@@ -331,10 +454,33 @@
                         <label for="postal_code"><?php echo Mage::helper('M2ePro')->__('Zip/Postal Code'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
-                        <input id="postal_code" name="shipping[postal_code]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['postal_code']); ?>" type="text" class="M2ePro-location-or-postal-required M2ePro-required-if-calculated input-text" />
+                        <input type="hidden" id="postal_code_custom_attribute" name="shipping[postal_code_custom_attribute]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['postal_code_custom_attribute']); ?>" />
+
+                        <select id="postal_code_mode" name="shipping[postal_code_mode]" class="M2ePro-location-or-postal-required M2ePro-required-if-calculated M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text">
+                            <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::POSTAL_CODE_MODE_NONE; ?>" <?php if ($formData['postal_code_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::POSTAL_CODE_MODE_NONE): ?>selected="selected"<?php endif; ?>><?php echo Mage::helper('M2ePro')->__('None'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::POSTAL_CODE_MODE_CUSTOM_VALUE; ?>" <?php if ($formData['postal_code_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::POSTAL_CODE_MODE_CUSTOM_VALUE): ?>selected="selected"<?php endif; ?>><?php echo Mage::helper('M2ePro')->__('Custom Value'); ?></option>
+
+                            <optgroup class="simple_mode_disallowed M2ePro-custom-attribute-optgroup" label="Magento Attribute">
+                                <?php foreach ($this->attributes as $attribute) : ?>
+                                    <option class="simple_mode_disallowed" attribute_code="<?php echo $attribute['code']; ?>" value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::POSTAL_CODE_MODE_CUSTOM_ATTRIBUTE; ?>" <?php if ($formData['postal_code_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::POSTAL_CODE_MODE_CUSTOM_ATTRIBUTE && $attribute['code'] == $formData['postal_code_custom_attribute']): ?>selected="selected"<?php endif; ?>>
+                                        <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </optgroup>
+                        </select>
+
                         <p class="note">
                             <span><?php echo Mage::helper('M2ePro')->__('Zip/postal code of the Item Location. Especially useful for \'Collection Only\' Items.'); ?></span>
                         </p>
+                    </td>
+                </tr>
+
+                <tr id="postal_code_custom_value_tr" style="display: none;">
+                    <td class="label">
+                        <label for="postal_code_custom_value"><?php echo Mage::helper('M2ePro')->__('Zip/Postal Code Value'); ?>:<span class="required">*</span></label>
+                    </td>
+                    <td class="value">
+                        <input id="postal_code_custom_value" name="shipping[postal_code_custom_value]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['postal_code_custom_value']); ?>" type="text" class="M2ePro-required-when-visible input-text" />
                     </td>
                 </tr>
 
@@ -343,10 +489,33 @@
                         <label for="address"><?php echo Mage::helper('M2ePro')->__('City, State'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
-                        <input id="address" name="shipping[address]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['address']); ?>" type="text" class="M2ePro-location-or-postal-required input-text" />
+                        <input type="hidden" id="address_custom_attribute" name="shipping[address_custom_attribute]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['address_custom_attribute']); ?>" />
+
+                        <select id="address_mode" name="shipping[address_mode]" class="M2ePro-location-or-postal-required M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text">
+                            <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::ADDRESS_MODE_NONE; ?>" <?php if ($formData['address_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::ADDRESS_MODE_NONE) :?>selected="selected"<?php endif; ?>><?php echo Mage::helper('M2ePro')->__('None'); ?></option>
+                            <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::ADDRESS_MODE_CUSTOM_VALUE; ?>" <?php if ($formData['address_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::ADDRESS_MODE_CUSTOM_VALUE) :?>selected="selected"<?php endif; ?>><?php echo Mage::helper('M2ePro')->__('Custom Value'); ?></option>
+
+                            <optgroup class="simple_mode_disallowed M2ePro-custom-attribute-optgroup" label="<?php echo Mage::helper('M2ePro')->__('Magento Attributes'); ?>">
+                                <?php foreach ($this->attributes as $attribute) : ?>
+                                    <option class="simple_mode_disallowed" attribute_code="<?php echo $attribute['code']; ?>" value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::ADDRESS_MODE_CUSTOM_ATTRIBUTE; ?>" <?php if ($formData['address_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::ADDRESS_MODE_CUSTOM_ATTRIBUTE && $attribute['code'] == $formData['address_custom_attribute']): ?>selected="selected"<?php endif; ?>>
+                                        <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </optgroup>
+                        </select>
+
                         <p class="note">
                             <span><?php echo Mage::helper('M2ePro')->__('City, State of the Item Location.'); ?></span>
                         </p>
+                    </td>
+                </tr>
+
+                <tr id="address_custom_value_tr" style="display: none;">
+                    <td class="label">
+                        <label for="address_custom_value"><?php echo Mage::helper('M2ePro')->__('City, State Value'); ?>:<span class="required">*</span></label>
+                    </td>
+                    <td class="value">
+                        <input id="address_custom_value" name="shipping[address_custom_value]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['address_custom_value']); ?>" type="text" class="M2ePro-required-when-visible input-text" />
                     </td>
                 </tr>
 
@@ -400,29 +569,130 @@
 
             </table>
 
-            <?php if ($showAdvancedMode && $this->canDisplayLocalShippingRateTable()): ?>
+            <?php if ($isLocalRateTableEnabled): ?>
+
                 <table class="form-list" cellspacing="0" cellpadding="0">
+
+                <?php if (!is_null($this->getAccountId())): ?>
+
+                        <?php $isSellApiEnabled = (bool)$this->getAccount()->getChildObject()->getSellApiTokenSession(); ?>
+
+                        <tr id="local_shipping_rate_table_mode_tr" class="local-shipping-tr">
+                            <td class="label">
+                                <label><?php echo Mage::helper('M2ePro')->__('Use eBay Shipping Rate Table'); ?>:</label>
+                            </td>
+                            <td class="value" style="width: auto;">
+                                <input type="hidden" id="local_shipping_rate_table_mode_<?php echo $this->getAccountId();?>" name="shipping[local_shipping_rate_table][<?php echo $this->getAccountId();?>][mode]" value="<?php echo $formData['local_shipping_rate_table'][$this->getAccountId()]['mode'];?>">
+                                <select id="local_shipping_rate_table_value_<?php echo $this->getAccountId();?>" name="shipping[local_shipping_rate_table][<?php echo $this->getAccountId();?>][value]" data-current-mode="<?php echo $formData['local_shipping_rate_table'][$this->getAccountId()]['mode'];?>" class="M2ePro-validate-rate-table">
+
+                                </select>
+                                <p class="note">
+                                    <span class="shipping_rate_table_note_accepted" <?php if ($formData['local_shipping_rate_table'][$this->getAccountId()]['mode'] != Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_RATE_TABLE_ACCEPT_MODE) echo "style='display: none;'" ?> >
+                                         <?php echo Mage::helper('M2ePro')->__(
+                                             'Choose whether you want to apply <a href="http://pages.ebay.com/help/pay/shipping-costs.html#tables" target="_blank">eBay Shipping Rate Tables</a> to M2E Pro Items.'
+                                         ); ?>
+                                    </span>
+                                    <span class="shipping_rate_table_note_identifier" <?php if ($formData['local_shipping_rate_table'][$this->getAccountId()]['mode'] != Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_RATE_TABLE_IDENTIFIER_MODE) echo "style='display: none;'" ?>>
+                                         <?php echo Mage::helper('M2ePro')->__(
+                                             'Select which Shipping Rate Table mode to use:<br>
+                                              <strong>Yes/No</strong> - allows you to apply or disable a <a target="_blank" href="http://pages.ebay.com/help/pay/shipping-costs.html#tables">default</a> Shipping Rate Table;<br>
+                                              <strong>Rate Table</strong> -  allows you to apply a <a target="_blank" href="http://pages.ebay.com/seller-center/seller-updates/2017spring/shipping-tools.html">certain</a> Shipping Rate Table from the list you have created to the current eBay Seller Account.<br><br>
+                                              
+                                              Click <strong>Refresh</strong> to download the latest Shipping Rate Tables from eBay.'
+                                         ); ?>
+                                    </span>
+                                </p>
+                            </td>
+                            <td class="value">
+                                <a href="javascript:void(0);" onclick='EbayTemplateShippingHandlerObj.updateRateTablesData({
+                                        accountId: <?php echo $this->getAccountId(); ?>,
+                                        marketplaceId: <?php echo $this->getMarketplace()->getId(); ?>,
+                                        elementId: "local_shipping_rate_table_value_<?php echo $this->getAccountId();?>",
+                                        value: <?php echo json_encode($formData['local_shipping_rate_table'][$this->getAccountId()]['value']); ?>,
+                                        type: "local"
+                                })'><?php echo Mage::helper('M2ePro')->__($isSellApiEnabled ? 'Refresh Rate Tables' : 'Download Rate Tables'); ?></a>
+                            </td>
+                        </tr>
+
+                <?php else: ?>
+
                     <tr id="local_shipping_rate_table_mode_tr" class="local-shipping-tr">
-                        <td class="label">
-                            <label><?php echo Mage::helper('M2ePro')->__('Use eBay Shipping Rate Table'); ?>:</label>
-                        </td>
-                        <td class="value" style="width: auto;">
-                            <select id="local_shipping_rate_table_mode" name="shipping[local_shipping_rate_table_mode]">
-                                <option value="0" <?php if (!$formData['local_shipping_rate_table_mode']): ?>selected="selected"<?php endif; ?> ><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
-                                <option value="1" <?php if ($formData['local_shipping_rate_table_mode']): ?>selected="selected"<?php endif; ?> ><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
-                            </select>
-                            <p class="note">
-                                <span>
-                                     <?php echo Mage::helper('M2ePro')->__(
-                                         'You can set up Shipping Rate Tables in eBay to set the amount you charge for postage by delivery method and destination and use them in your M2E Pro Listings. Shipping Rate Tables are set up directly on eBay, not in M2E Pro.
-                                         To set up or edit Shipping Rate Tables, Log in to your Seller Account on eBay.'
-                                     ); ?>
-                                </span>
-                            </p>
+                        <td class="grid">
+                            <table id="local_shipping_rate_table_mode_table" class="local-shipping-table">
+                                <thead>
+                                    <tr class="headings">
+                                        <th style="width: 130px">
+                                            <?php echo Mage::helper('M2ePro')->__('Account'); ?>
+                                        </th>
+                                        <th colspan="3" style="width: 250px">
+                                            <?php echo Mage::helper('M2ePro')->__('eBay Shipping Rate Table'); ?>
+                                        </th>
+                                    </tr>
+                                </thead>
+
+                    <?php if ($this->getAccounts()->getSize()): ?>
+                        <?php foreach ($this->getAccounts() as $account) : ?>
+
+                            <?php $isSellApiEnabled = (bool)$account->getChildObject()->getSellApiTokenSession();?>
+
+                            <tr class="local-shipping-rate-table-account-tr">
+                                <td class="label">
+                                    <label for="local_shipping_rate_table_value_<?php echo $account->getId();?>"><?php echo $account->getTitle(); ?></label>
+                                </td>
+
+                                <td class="value">
+                                    <input type="hidden" id="local_shipping_rate_table_mode_<?php echo $account->getId();?>" name="shipping[local_shipping_rate_table][<?php echo $account->getId();?>][mode]" value="<?php echo $formData['local_shipping_rate_table'][$account->getId()]['mode'];?>">
+                                    <select name="shipping[local_shipping_rate_table][<?php echo $account->getId() ?>][value]" id="local_shipping_rate_table_value_<?php echo $account->getId();?>" data-current-mode="<?php echo $formData['local_shipping_rate_table'][$account->getId()]['mode'];?>" class="M2ePro-validate-rate-table">
+
+                                    </select>
+
+                                    <p class="note">
+                                        <span class="shipping_rate_table_note_accepted" <?php if ($formData['local_shipping_rate_table'][$account->getId()]['mode'] != Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_RATE_TABLE_ACCEPT_MODE) echo "style='display: none;'" ?> >
+                                             <?php echo Mage::helper('M2ePro')->__(
+                                                 'Choose whether you want to apply <a href="http://pages.ebay.com/help/pay/shipping-costs.html#tables" target="_blank">eBay Shipping Rate Tables</a> to M2E Pro Items.'
+                                             ); ?>
+                                        </span>
+                                        <span class="shipping_rate_table_note_identifier" <?php if ($formData['local_shipping_rate_table'][$account->getId()]['mode'] != Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_RATE_TABLE_IDENTIFIER_MODE) echo "style='display: none;'" ?>>
+                                             <?php echo Mage::helper('M2ePro')->__(
+                                                 'Select which Shipping Rate Table mode to use:<br>
+                                                  <strong>Yes/No</strong> - allows you to apply or disable a <a target="_blank" href="http://pages.ebay.com/help/pay/shipping-costs.html#tables">default</a> Shipping Rate Table;<br>
+                                                  <strong>Rate Table</strong> -  allows you to apply a <a target="_blank" href="http://pages.ebay.com/seller-center/seller-updates/2017spring/shipping-tools.html">certain</a> Shipping Rate Table from the list you have created to the current eBay Seller Account.<br><br>
+                                                  
+                                                  Click <strong>Refresh</strong> to download the latest Shipping Rate Tables from eBay.'
+                                             ); ?>
+                                        </span>
+                                    </p>
+                                </td>
+                                <td class="value">
+                                    <a href="javascript:void(0);" onclick='EbayTemplateShippingHandlerObj.updateRateTablesData({
+                                        accountId: <?php echo $account->getId(); ?>,
+                                        marketplaceId: <?php echo $this->getMarketplace()->getId(); ?>,
+                                        elementId: "local_shipping_rate_table_value_<?php echo $account->getId();?>",
+                                        value: <?php echo json_encode($formData['local_shipping_rate_table'][$account->getId()]['value']); ?>,
+                                        type: "local"
+                                    })'><?php echo Mage::helper('M2ePro')->__($isSellApiEnabled ? 'Refresh Rate Tables' : 'Download Rate Tables'); ?></a>
+                                </td>
+                            </tr>
+                        <?php endforeach; ?>
+                    <?php else: ?>
+                                <tr>
+                                    <td colspan="4" style="text-align: center">
+                                        <?php echo Mage::helper('M2ePro')->__('You do not have eBay Accounts added to M2E Pro.')?>
+                                    </td>
+                                </tr>
+                    <?php endif;?>
+
+                            </table>
                         </td>
                     </tr>
+
+                <?php endif; ?>
+
                 </table>
+
             <?php endif; ?>
+
+            <div id="shipping_local_table_messages"></div>
 
             <table class="form-list" cellspacing="0" cellpadding="0">
 
@@ -435,7 +705,7 @@
                             <thead>
                                 <tr class="headings">
                                     <th style="width: 260px"><?php echo Mage::helper('M2ePro')->__('Service'); ?><span class="required">*</span></th>
-                                    <th style="width: 130px"><?php echo Mage::helper('M2ePro')->__('Mode'); ?><span class="required">*</span></th>
+                                    <th style="width: 130px"><?php echo Mage::helper('M2ePro')->__('Mode'); ?></th>
                                     <th style="width: 155px"><?php echo Mage::helper('M2ePro')->__('Cost'); ?><span class="required">*</span></th>
                                     <th style="width: 155px"><?php echo Mage::helper('M2ePro')->__('Additional Cost'); ?><span class="required">*</span></th>
                                     <th><?php echo Mage::helper('M2ePro')->__('Currency'); ?></th>
@@ -494,10 +764,13 @@
 
                 <tr class="local-shipping-tr local-shipping-always-visible-tr">
                     <td class="label">
-                        <label for="dispatch_time"><?php echo Mage::helper('M2ePro')->__('Dispatch Time'); ?>:</label>
+                        <label for="dispatch_time_mode"><?php echo Mage::helper('M2ePro')->__('Dispatch Time'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
-                        <select id="dispatch_time" name="shipping[dispatch_time]" class="M2ePro-required-when-visible">
+                        <input type="hidden" id="dispatch_time_value" name="shipping[dispatch_time_value]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['dispatch_time_value']); ?>" />
+                        <input type="hidden" id="dispatch_time_attribute" name="shipping[dispatch_time_attribute]" value="<?php echo Mage::helper('M2ePro')->escapeHtml($formData['dispatch_time_attribute']); ?>" />
+
+                        <select id="dispatch_time_mode" name="shipping[dispatch_time_mode]" class="M2ePro-required-when-visible M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,select">
 
                             <option class="empty"></option>
 
@@ -506,11 +779,11 @@
                             foreach ($marketplaceData['dispatch'] as $index => $dispatchOption) : ?>
 
                                 <?php if($dispatchOption['ebay_id'] > 3 && !$isExceptionHandlingTimes) : ?>
-                                    <optgroup label="<?php echo Mage::helper('M2ePro')->__('Exception handling times'); ?>">
+                                    <optgroup label="<?php echo Mage::helper('M2ePro')->__('Exception Handling Times'); ?>">
                                     <?php $isExceptionHandlingTimes = true; ?>
                                 <?php endif; ?>
 
-                                <option value="<?php echo $dispatchOption['ebay_id']; ?>" <?php if ($formData['dispatch_time'] == $dispatchOption['ebay_id']): ?>selected="selected"<?php endif; ?>><?php if ($dispatchOption['ebay_id'] == 0) { echo Mage::helper('M2ePro')->__('Same Business Day'); } else { echo Mage::helper('M2ePro')->__(str_replace('Day','Business Day',$dispatchOption['title'])); } ?></option>
+                                <option attribute_code="<?php echo $dispatchOption['ebay_id']; ?>" value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::DISPATCH_TIME_MODE_VALUE; ?>" <?php if ($formData['dispatch_time_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::DISPATCH_TIME_MODE_VALUE && $dispatchOption['ebay_id'] == $formData['dispatch_time_value']): ?>selected="selected"<?php endif; ?>><?php if ($dispatchOption['ebay_id'] == 0) { echo Mage::helper('M2ePro')->__('Same Business Day'); } else { echo Mage::helper('M2ePro')->__(str_replace('Day','Business Day', $dispatchOption['title'])); } ?></option>
 
                                 <?php if($dispatchOption['ebay_id'] > 3 && $index == count($dispatchOption) - 1) : ?>
                                     </optgroup>
@@ -518,13 +791,19 @@
 
                             <?php endforeach; ?>
 
+                            <optgroup class="simple_mode_disallowed M2ePro-custom-attribute-optgroup" label="Magento Attribute">
+                                <?php foreach ($this->attributes as $attribute) : ?>
+                                    <option class="simple_mode_disallowed" attribute_code="<?php echo $attribute['code']; ?>" value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping::DISPATCH_TIME_MODE_ATTRIBUTE; ?>" <?php if ($formData['dispatch_time_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::DISPATCH_TIME_MODE_ATTRIBUTE && $attribute['code'] == $formData['dispatch_time_attribute']): ?>selected="selected"<?php endif; ?>>
+                                        <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
+                                    </option>
+                                <?php endforeach; ?>
+                            </optgroup>
+
                         </select>
                         <p class="note">
                             <span>
                                 <?php echo Mage::helper('M2ePro')->__(
-                                    'Dispatch (or handling) time is the time between when the Buyer\'s payment clears and when you send the Item.
-                                    Buyer dissatisfaction increases significantly when dispatch times are more than 3 days.
-                                    We strongly encourage dispatch times of 3 days or less. If possible, dispatch the same day you get the Buyer\'s payment.'
+                                    'The dispatch (or handling) time is the number of working days during which seller will take the item to carrier after buyer\'s payment is credited to seller\'s account.'
                                 ); ?>
                             </span>
                         </p>
@@ -544,8 +823,12 @@
                             <p class="note">
                                 <span>
                                     <?php echo Mage::helper('M2ePro')->__(
-                                        'Click & Collect at Argos enables your Buyers to collect Items at a time that suits them from over 650 Argos Stores across the UK.
-                                         <br/>For more details please read <a href="http://sellercentre.ebay.co.uk/click-and-collect" target="_blank">this documentation</a>.'
+                                        'Select "No" to enable the Click & Collect option for your Products in M2E Pro Listing.
+                                         Details about the Click & Collect delivery option can be found on
+                                         <a href="%url_uk%" target="_blank">eBay UK</a>, 
+                                         <a href="%url_au%" target="_blank">eBay Australia</a> sites.',
+                                        'http://pages.ebay.co.uk/sell/click-and-collect/',
+                                        'http://sellercentre.ebay.com.au/click-and-collect/'
                                     ) ;?>
                                 </span>
                             </p>
@@ -570,10 +853,10 @@
                 <?php if (!is_null($this->getAccountId())) : ?>
                     <tr class="local-shipping-tr">
                         <td class="label local-discount-profile-account-tr" account_id="<?php echo $this->getAccountId(); ?>">
-                            <label for="local_shipping_discount_profile_id_<?php echo $this->getAccountId(); ?>"><?php echo Mage::helper('M2ePro')->__('Combined Shipping Profile') ?>:</label>
+                            <label for="local_shipping_discount_combined_profile_id_<?php echo $this->getAccountId(); ?>"><?php echo Mage::helper('M2ePro')->__('Combined Shipping Profile') ?>:</label>
                         </td>
                         <td class="value">
-                            <select name="shipping[local_shipping_discount_profile_id][<?php echo $this->getAccountId(); ?>]" id="local_shipping_discount_profile_id_<?php echo $this->getAccountId(); ?>"></select>
+                            <select name="shipping[local_shipping_discount_combined_profile_id][<?php echo $this->getAccountId(); ?>]" id="local_shipping_discount_combined_profile_id_<?php echo $this->getAccountId(); ?>"></select>
                             <p class="note">
                                 <span><?php echo Mage::helper('M2ePro')->__(
                                     'If you have Flat Shipping Rules or Calculated Shipping Rules set up in eBay, you can choose to use them here.<br/><br/>
@@ -603,11 +886,11 @@
                                         <?php foreach ($this->getDiscountProfiles() as $accountId=>$value) : ?>
                                             <tr class="local-discount-profile-account-tr" account_id="<?php echo $accountId;?>">
                                                 <td class="label">
-                                                    <label for="local_shipping_discount_profile_id_<?php echo $accountId;?>"><?php echo $value['account_name']; ?></label>
+                                                    <label for="local_shipping_discount_combined_profile_id_<?php echo $accountId;?>"><?php echo $value['account_name']; ?></label>
                                                 </td>
 
                                                 <td class="value">
-                                                    <select name="shipping[local_shipping_discount_profile_id][<?php echo $accountId ?>]" id="local_shipping_discount_profile_id_<?php echo $accountId;?>">
+                                                    <select name="shipping[local_shipping_discount_combined_profile_id][<?php echo $accountId ?>]" id="local_shipping_discount_combined_profile_id_<?php echo $accountId;?>">
 
                                                     </select>
 
@@ -639,12 +922,12 @@
             <table class="form-list" cellspacing="0" cellpadding="0">
                 <tr class="local-shipping-tr">
                     <td class="label">
-                        <label for="local_shipping_discount_mode"><?php echo Mage::helper('M2ePro')->__('Promotional Shipping Rule'); ?>:</label>
+                        <label for="local_shipping_discount_promotional_mode"><?php echo Mage::helper('M2ePro')->__('Promotional Shipping Rule'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
-                        <select id="local_shipping_discount_mode" name="shipping[local_shipping_discount_mode]" class="M2ePro-required-when-visible">
-                            <option value="0" <?php if (!$formData['local_shipping_discount_mode']): ?>selected="selected"<?php endif; ?> ><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
-                            <option value="1" <?php if ($formData['local_shipping_discount_mode']): ?>selected="selected"<?php endif; ?> ><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
+                        <select id="local_shipping_discount_promotional_mode" name="shipping[local_shipping_discount_promotional_mode]" class="M2ePro-required-when-visible">
+                            <option value="0" <?php if (!$formData['local_shipping_discount_promotional_mode']): ?>selected="selected"<?php endif; ?> ><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
+                            <option value="1" <?php if ($formData['local_shipping_discount_promotional_mode']): ?>selected="selected"<?php endif; ?> ><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
                         </select>
                         <p class="note">
                             <span><?php echo Mage::helper('M2ePro')->__(
@@ -798,7 +1081,136 @@
                     </td>
                 </tr>
 
+                <?php if ($isInternationalRateTableEnabled): ?>
+                    <table class="form-list" cellspacing="0" cellpadding="0">
+
+                        <?php if (!is_null($this->getAccountId())): ?>
+
+                            <?php $isSellApiEnabled = (bool)$this->getAccount()->getChildObject()->getSellApiTokenSession(); ?>
+
+                            <tr id="international_shipping_rate_table_mode_tr" class="international-shipping-tr">
+                                <td class="label">
+                                    <label><?php echo Mage::helper('M2ePro')->__('Use eBay Shipping Rate Table'); ?>:</label>
+                                </td>
+                                <td class="value" style="width: auto;">
+                                    <input type="hidden" id="international_shipping_rate_table_mode_<?php echo $this->getAccountId();?>" name="shipping[international_shipping_rate_table][<?php echo $this->getAccountId();?>][mode]" value="<?php echo $formData['international_shipping_rate_table'][$this->getAccountId()]['mode'];?>">
+                                    <select id="international_shipping_rate_table_value_<?php echo $this->getAccountId();?>" name="shipping[international_shipping_rate_table][<?php echo $this->getAccountId();?>][value]" data-current-mode="<?php echo $formData['international_shipping_rate_table'][$this->getAccountId()]['mode'];?>" class="M2ePro-validate-rate-table">
+
+                                    </select>
+                                    <p class="note">
+                                <span>
+                                     <span class="shipping_rate_table_note_accepted" <?php if ($formData['local_shipping_rate_table'][$this->getAccountId()]['mode'] != Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_RATE_TABLE_ACCEPT_MODE) echo "style='display: none;'" ?> >
+                                         <?php echo Mage::helper('M2ePro')->__(
+                                             'Choose whether you want to apply <a href="http://pages.ebay.com/help/pay/shipping-costs.html#tables" target="_blank">eBay Shipping Rate Tables</a> to M2E Pro Items.'
+                                         ); ?>
+                                    </span>
+                                    <span class="shipping_rate_table_note_identifier" <?php if ($formData['local_shipping_rate_table'][$this->getAccountId()]['mode'] != Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_RATE_TABLE_IDENTIFIER_MODE) echo "style='display: none;'" ?>>
+                                         <?php echo Mage::helper('M2ePro')->__(
+                                             'Select which Shipping Rate Table mode to use:<br>
+                                              <strong>Yes/No</strong> - allows you to apply or disable a <a target="_blank" href="http://pages.ebay.com/help/pay/shipping-costs.html#tables">default</a> Shipping Rate Table;<br>
+                                              <strong>Rate Table</strong> -  allows you to apply a <a target="_blank" href="http://pages.ebay.com/seller-center/seller-updates/2017spring/shipping-tools.html">certain</a> Shipping Rate Table from the list you have created to the current eBay Seller Account.<br><br>
+                                              
+                                              Click <strong>Refresh</strong> to download the latest Shipping Rate Tables from eBay.'
+                                         ); ?>
+                                    </span>
+                                </span>
+                                    </p>
+                                </td>
+                                <td class="value">
+                                    <a href="javascript:void(0);" onclick='EbayTemplateShippingHandlerObj.updateRateTablesData({
+                                        accountId: <?php echo $this->getAccountId(); ?>,
+                                        marketplaceId: <?php echo $this->getMarketplace()->getId(); ?>,
+                                        elementId: "international_shipping_rate_table_value_<?php echo $this->getAccountId();?>",
+                                        value: <?php echo json_encode($formData['international_shipping_rate_table'][$this->getAccountId()]['value']); ?>,
+                                        type: "international"
+                                    })'><?php echo Mage::helper('M2ePro')->__($isSellApiEnabled ? 'Refresh Rate Tables' : 'Download Rate Tables'); ?></a>
+                                </td>
+                            </tr>
+
+                        <?php else: ?>
+
+                            <tr id="international_shipping_rate_table_mode_tr" class="international-shipping-tr">
+                                <td class="grid">
+                                    <table id="international_shipping_rate_table_mode_table" class="international-shipping-table">
+                                        <thead>
+                                            <tr class="headings">
+                                                <th style="width: 130px">
+                                                    <?php echo Mage::helper('M2ePro')->__('Account'); ?>
+                                                </th>
+                                                <th colspan="3" style="width: 250px">
+                                                    <?php echo Mage::helper('M2ePro')->__('eBay Shipping Rate Table'); ?>
+                                                </th>
+                                            </tr>
+                                        </thead>
+
+                            <?php if ($this->getAccounts()->getSize()): ?>
+
+                                <?php foreach ($this->getAccounts() as $account) : ?>
+
+                                    <?php $isSellApiEnabled = (bool)$account->getChildObject()->getSellApiTokenSession(); ?>
+
+                                    <tr class="international-shipping-rate-table-account-tr">
+                                        <td class="label">
+                                            <label for="international_shipping_rate_table_value_<?php echo $account->getId();?>"><?php echo $account->getTitle(); ?></label>
+                                        </td>
+
+                                        <td class="value">
+                                            <input type="hidden" id="international_shipping_rate_table_mode_<?php echo $account->getId();?>" name="shipping[international_shipping_rate_table][<?php echo $account->getId();?>][mode]" value="<?php echo $formData['international_shipping_rate_table'][$account->getId()]['mode'];?>">
+                                            <select name="shipping[international_shipping_rate_table][<?php echo $account->getId() ?>][value]" id="international_shipping_rate_table_value_<?php echo $account->getId();?>" data-current-mode="<?php echo $formData['international_shipping_rate_table'][$account->getId()]['mode'];?>" class="M2ePro-validate-rate-table">
+
+                                            </select>
+
+                                            <p class="note">
+                                                <span class="shipping_rate_table_note_accepted" <?php if ($formData['local_shipping_rate_table'][$account->getId()]['mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_RATE_TABLE_ACCEPT_MODE) echo "style='display: none;'" ?> >
+                                                     <?php echo Mage::helper('M2ePro')->__(
+                                                         'Choose whether you want to apply <a href="http://pages.ebay.com/help/pay/shipping-costs.html#tables" target="_blank">eBay Shipping Rate Tables</a> to M2E Pro Items.'
+                                                     ); ?>
+                                                </span>
+                                                <span class="shipping_rate_table_note_identifier" <?php if ($formData['local_shipping_rate_table'][$account->getId()]['mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_RATE_TABLE_IDENTIFIER_MODE) echo "style='display: none;'" ?>>
+                                                     <?php echo Mage::helper('M2ePro')->__(
+                                                         'Select which Shipping Rate Table mode to use:<br>
+                                                          <strong>Yes/No</strong> - allows you to apply or disable a <a target="_blank" href="http://pages.ebay.com/help/pay/shipping-costs.html#tables">default</a> Shipping Rate Table;<br>
+                                                          <strong>Rate Table</strong> -  allows you to apply a <a target="_blank" href="http://pages.ebay.com/seller-center/seller-updates/2017spring/shipping-tools.html">certain</a> Shipping Rate Table from the list you have created to the current eBay Seller Account.<br><br>
+                                                          
+                                                          Click <strong>Refresh</strong> to download the latest Shipping Rate Tables from eBay.'
+                                                     ); ?>
+                                                </span>
+                                            </p>
+                                        </td>
+                                        <td class="value">
+                                            <a href="javascript:void(0);" onclick='EbayTemplateShippingHandlerObj.updateRateTablesData({
+                                                accountId: <?php echo $account->getId(); ?>,
+                                                marketplaceId: <?php echo $this->getMarketplace()->getId(); ?>,
+                                                elementId: "international_shipping_rate_table_value_<?php echo $account->getId();?>",
+                                                value: <?php echo json_encode($formData['international_shipping_rate_table'][$account->getId()]['value']); ?>,
+                                                type: "international"
+                                            })'><?php echo Mage::helper('M2ePro')->__($isSellApiEnabled ? 'Refresh Rate Tables' : 'Download Rate Tables'); ?></a>
+                                        </td>
+                                    </tr>
+                                <?php endforeach; ?>
+
+                            <?php else: ?>
+
+                                <tr>
+                                    <td colspan="4" style="text-align: center">
+                                        <?php echo Mage::helper('M2ePro')->__('You do not have eBay Accounts added to M2E Pro.')?>
+                                    </td>
+                                </tr>
+
+                            <?php endif;?>
+
+                                    </table>
+                                </td>
+                            </tr>
+
+                        <?php endif; ?>
+
+                    </table>
+                <?php endif; ?>
+
             </table>
+
+            <div id="shipping_international_table_messages"></div>
 
             <table class="form-list" cellspacing="0" cellpadding="0">
 
@@ -811,7 +1223,7 @@
                             <thead>
                                 <tr class="headings">
                                     <th style="width: 260px"><?php echo Mage::helper('M2ePro')->__('Service'); ?><span class="required">*</span></th>
-                                    <th style="width: 130px;"><?php echo Mage::helper('M2ePro')->__('Mode'); ?><span class="required">*</span></th>
+                                    <th style="width: 130px;"><?php echo Mage::helper('M2ePro')->__('Mode'); ?></th>
                                     <th style="width: 155px;"><?php echo Mage::helper('M2ePro')->__('Cost'); ?><span class="required">*</span></th>
                                     <th style="width: 155px;"><?php echo Mage::helper('M2ePro')->__('Additional Cost'); ?><span class="required">*</span></th>
                                     <th><?php echo Mage::helper('M2ePro')->__('Currency'); ?></th>
@@ -852,28 +1264,6 @@
 
             <table class="form-list" cellspacing="0" cellpadding="0">
 
-                <?php if ($showAdvancedMode && $this->canDisplayInternationalShippingRateTable()): ?>
-                    <tr class="international-shipping-tr">
-                        <td class="label">
-                            <label><?php echo Mage::helper('M2ePro')->__('Use eBay Shipping Rate Table'); ?>:</label>
-                        </td>
-                        <td class="value" style="width: auto;">
-                            <select id="international_shipping_rate_table_mode" name="shipping[international_shipping_rate_table_mode]">
-                                <option value="0" <?php if (!$formData['international_shipping_rate_table_mode']): ?>selected="selected"<?php endif; ?> ><?php echo Mage::helper('M2ePro')->__('No'); ?></option>
-                                <option value="1" <?php if ($formData['international_shipping_rate_table_mode']): ?>selected="selected"<?php endif; ?> ><?php echo Mage::helper('M2ePro')->__('Yes'); ?></option>
-                            </select>
-                            <p class="note">
-                                <span>
-                                    <?php echo Mage::helper('M2ePro')->__(
-                                        'You can set up Shipping Rate Tables in eBay to set the amount you charge for postage by delivery method and destination and use them in your M2E Pro Listings. Shipping Rate Tables are set up directly on eBay, not in M2E Pro.
-                                        To set up or edit Shipping Rate Tables, Log in to your Seller Account on eBay.'
-                                    ); ?>
-                                </span>
-                            </p>
-                        </td>
-                    </tr>
-                <?php endif; ?>
-
                 <tr id="international_handling_cost_cv_tr" class="international-shipping-tr">
                     <td class="label">
                         <label for="international_handling_cost"><?php echo Mage::helper('M2ePro')->__('Handling Cost'); ?>:</label>
@@ -891,10 +1281,10 @@
                 <?php if (!is_null($this->getAccountId())) : ?>
                     <tr class="international-shipping-tr">
                         <td class="label international-discount-profile-account-tr" account_id="<?php echo $this->getAccountId(); ?>">
-                            <label for="international_shipping_discount_profile_id_<?php echo $this->getAccountId(); ?>"><?php echo Mage::helper('M2ePro')->__('Combined Shipping Profile') ?>:</label>
+                            <label for="international_shipping_discount_combined_profile_id_<?php echo $this->getAccountId(); ?>"><?php echo Mage::helper('M2ePro')->__('Combined Shipping Profile') ?>:</label>
                         </td>
                         <td class="value">
-                            <select name="shipping[international_shipping_discount_profile_id][<?php echo $this->getAccountId(); ?>]" id="international_shipping_discount_profile_id_<?php echo $this->getAccountId(); ?>"></select>
+                            <select name="shipping[international_shipping_discount_combined_profile_id][<?php echo $this->getAccountId(); ?>]" id="international_shipping_discount_combined_profile_id_<?php echo $this->getAccountId(); ?>"></select>
                             <p class="note">
                                 <span><?php echo Mage::helper('M2ePro')->__('Use the Flat Shipping Rule and Calculated Shipping Rule Profiles, which were created on eBay.
                                                                             <br/><br/><b>Note:</b> Press "Refresh Profiles" Button for upload new or refreshes eBay Shipping Profiles.'); ?></span>
@@ -922,11 +1312,11 @@
                                     <?php foreach ($this->getDiscountProfiles() as $accountId=>$value) : ?>
                                         <tr class="international-discount-profile-account-tr" account_id="<?php echo $accountId;?>">
                                             <td class="label">
-                                                <label for="international_shipping_discount_profile_id_<?php echo $accountId;?>"><?php echo $value['account_name']; ?></label>
+                                                <label for="international_shipping_discount_combined_profile_id_<?php echo $accountId;?>"><?php echo $value['account_name']; ?></label>
                                             </td>
 
                                             <td class="value">
-                                                <select name="shipping[international_shipping_discount_profile_id][<?php echo $accountId ?>]" id="international_shipping_discount_profile_id_<?php echo $accountId;?>">
+                                                <select name="shipping[international_shipping_discount_combined_profile_id][<?php echo $accountId ?>]" id="international_shipping_discount_combined_profile_id_<?php echo $accountId;?>">
 
                                                 </select>
 
@@ -956,14 +1346,14 @@
             <table class="form-list" cellspacing="0" cellpadding="0">
                 <tr class="international-shipping-tr">
                     <td class="label">
-                        <label for="international_shipping_discount_mode"><?php echo Mage::helper('M2ePro')->__('Promotional Shipping Rule:'); ?></label>
+                        <label for="international_shipping_discount_promotional_mode"><?php echo Mage::helper('M2ePro')->__('Promotional Shipping Rule:'); ?></label>
                     </td>
                     <td class="value" style="width: auto;">
-                        <select id="international_shipping_discount_mode" name="shipping[international_shipping_discount_mode]" class="M2ePro-required-when-visible">
-                            <option value="0" <?php if (!$formData['international_shipping_discount_mode']): ?>selected="selected"<?php endif; ?> >
+                        <select id="international_shipping_discount_promotional_mode" name="shipping[international_shipping_discount_promotional_mode]" class="M2ePro-required-when-visible">
+                            <option value="0" <?php if (!$formData['international_shipping_discount_promotional_mode']): ?>selected="selected"<?php endif; ?> >
                                 <?php echo Mage::helper('M2ePro')->__('No'); ?>
                             </option>
-                            <option value="1" <?php if ($formData['international_shipping_discount_mode']): ?>selected="selected"<?php endif; ?> >
+                            <option value="1" <?php if ($formData['international_shipping_discount_promotional_mode']): ?>selected="selected"<?php endif; ?> >
                                 <?php echo Mage::helper('M2ePro')->__('Yes'); ?>
                             </option>
                         </select>
@@ -1014,32 +1404,36 @@
                         </td>
                     </tr>
 
-                    <input type="hidden" id="package_size_mode" name="shipping[package_size_mode]" value="<?php echo $formData['package_size_mode']; ?>">
-                    <input type="hidden" id="package_size_value" name="shipping[package_size_value]" value="<?php echo $formData['package_size_value']; ?>">
-                    <input type="hidden" id="package_size_attribute" name="shipping[package_size_attribute]" value="<?php echo $formData['package_size_attribute']; ?>">
+                    <tr style="display: none;">
+                        <td style="display: none;">
+                            <input type="hidden" id="package_size_mode" name="shipping[package_size_mode]" value="<?php echo $formData['package_size_mode']; ?>">
+                            <input type="hidden" id="package_size_value" name="shipping[package_size_value]" value="<?php echo $formData['package_size_value']; ?>">
+                            <input type="hidden" id="package_size_attribute" name="shipping[package_size_attribute]" value="<?php echo $formData['package_size_attribute']; ?>">
+                        </td>
+                    </tr>
 
                     <tr id="package_size_tr" class="visible-for-calculated-by-default">
                         <td class="label">
                             <label for="package_size"><?php echo Mage::helper('M2ePro')->__('Package Size Source'); ?>:</label>
                         </td>
                         <td class="value">
-                            <select id="package_size" class="select">
-                                <optgroup label="<?php echo Mage::helper('M2ePro')->__('eBay Values'); ?>" package_size_mode="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::PACKAGE_SIZE_CUSTOM_VALUE; ?>">
+                            <select id="package_size" class="select M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,select">
+                                <optgroup label="<?php echo Mage::helper('M2ePro')->__('eBay Values'); ?>">
                                     <?php foreach ($marketplaceData['packages'] as $package): ?>
-                                        <option value="<?php echo Mage::helper('M2ePro')->escapeHtml($package['ebay_id']) ?>"
+                                        <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::PACKAGE_SIZE_CUSTOM_VALUE; ?>" attribute_code="<?php echo Mage::helper('M2ePro')->escapeHtml($package['ebay_id']) ?>"
                                                 dimensions_supported="<?php echo (int)$package['dimensions_supported'] ?>"
                                                 <?php if ($formData['package_size_value'] == $package['ebay_id'] && $formData['package_size_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::PACKAGE_SIZE_CUSTOM_VALUE): ?>selected="selected"<?php endif; ?> >
                                             <?php echo $package['title']; ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </optgroup>
-                                <optgroup label="<?php echo Mage::helper('M2ePro')->__('Magento Attributes'); ?>" package_size_mode="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::PACKAGE_SIZE_CUSTOM_ATTRIBUTE; ?>">
+                                <optgroup class="M2ePro-custom-attribute-optgroup" label="<?php echo Mage::helper('M2ePro')->__('Magento Attributes'); ?>">
                                     <?php if (isset($missingAttributes['package_size_attribute'])): ?>
-                                        <option value="<?php echo $formData['package_size_attribute'] ?>" selected="selected"><?php echo $missingAttributes['package_size_attribute']; ?></option>
+                                        <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::PACKAGE_SIZE_CUSTOM_ATTRIBUTE; ?>" attribute_code="<?php echo $formData['package_size_attribute'] ?>" selected="selected"><?php echo Mage::helper('M2ePro')->escapeHtml($missingAttributes['package_size_attribute']); ?></option>
                                     <?php endif; ?>
                                     <?php foreach ($attributesByInputTypes['text_select'] as $attribute): ?>
-                                        <option value="<?php echo $attribute['code'] ?>" <?php if ($formData['package_size_attribute'] == $attribute['code'] && $formData['package_size_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::PACKAGE_SIZE_CUSTOM_ATTRIBUTE): ?>selected="selected"<?php endif; ?> >
-                                            <?php echo $attribute['label']; ?>
+                                        <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::PACKAGE_SIZE_CUSTOM_ATTRIBUTE; ?>" attribute_code="<?php echo $attribute['code'] ?>" <?php if ($formData['package_size_attribute'] == $attribute['code'] && $formData['package_size_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::PACKAGE_SIZE_CUSTOM_ATTRIBUTE): ?>selected="selected"<?php endif; ?> >
+                                            <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
                                         </option>
                                     <?php endforeach; ?>
                                 </optgroup>
@@ -1075,45 +1469,45 @@
                         </td>
                         <td class="value">
                                 <span id="dimension_width_attribute_span">
-                                    <select name="shipping[dimension_width_attribute]" id="dimension_width_attribute" class="M2ePro-required-when-visible">
+                                    <select name="shipping[dimension_width_attribute]" id="dimension_width_attribute" class="M2ePro-required-when-visible M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text">
                                         <option value="" class="empty-option"></option>
                                         <?php $attributeCode = 'dimension_width_attribute'; ?>
                                         <?php if (isset($missingAttributes[$attributeCode])): ?>
-                                            <option value="<?php echo $formData[$attributeCode] ?>" selected="selected"><?php echo $missingAttributes[$attributeCode]; ?></option>
+                                            <option value="<?php echo $formData[$attributeCode] ?>" selected="selected"><?php echo Mage::helper('M2ePro')->escapeHtml($missingAttributes[$attributeCode]); ?></option>
                                         <?php endif; ?>
                                         <?php foreach ($attributesByInputTypes['text'] as $attribute): ?>
                                             <option value="<?php echo $attribute['code'] ?>" <?php if ($formData[$attributeCode] == $attribute['code']): ?>selected="selected"<?php endif; ?> >
-                                                <?php echo $attribute['label']; ?>
+                                                <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </span>
                             x
                                 <span id="dimension_length_attribute_span">
-                                    <select name="shipping[dimension_length_attribute]" id="dimension_length_attribute" class="M2ePro-required-when-visible">
+                                    <select name="shipping[dimension_length_attribute]" id="dimension_length_attribute" class="M2ePro-required-when-visible M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text">
                                         <option value="" class="empty-option"></option>
                                         <?php $attributeCode = 'dimension_length_attribute'; ?>
                                         <?php if (isset($missingAttributes[$attributeCode])): ?>
-                                            <option value="<?php echo $formData[$attributeCode] ?>" selected="selected"><?php echo $missingAttributes[$attributeCode]; ?></option>
+                                            <option value="<?php echo $formData[$attributeCode] ?>" selected="selected"><?php echo Mage::helper('M2ePro')->escapeHtml($missingAttributes[$attributeCode]); ?></option>
                                         <?php endif; ?>
                                         <?php foreach ($attributesByInputTypes['text'] as $attribute): ?>
                                             <option value="<?php echo $attribute['code'] ?>" <?php if ($formData[$attributeCode] == $attribute['code']): ?>selected="selected"<?php endif; ?> >
-                                                <?php echo $attribute['label']; ?>
+                                                <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
                                 </span>
                             x
                                 <span id="dimension_depth_attribute_span">
-                                    <select name="shipping[dimension_depth_attribute]" id="dimension_depth_attribute" class="M2ePro-required-when-visible">
+                                    <select name="shipping[dimension_depth_attribute]" id="dimension_depth_attribute" class="M2ePro-required-when-visible M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text">
                                         <option value="" class="empty-option"></option>
                                         <?php $attributeCode = 'dimension_depth_attribute'; ?>
                                         <?php if (isset($missingAttributes[$attributeCode])): ?>
-                                            <option value="<?php echo $formData[$attributeCode] ?>" selected="selected"><?php echo $missingAttributes[$attributeCode]; ?></option>
+                                            <option value="<?php echo $formData[$attributeCode] ?>" selected="selected"><?php echo Mage::helper('M2ePro')->escapeHtml($missingAttributes[$attributeCode]); ?></option>
                                         <?php endif; ?>
                                         <?php foreach ($attributesByInputTypes['text'] as $attribute): ?>
                                             <option value="<?php echo $attribute['code'] ?>" <?php if ($formData[$attributeCode] == $attribute['code']): ?>selected="selected"<?php endif; ?> >
-                                                <?php echo $attribute['label']; ?>
+                                                <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
                                             </option>
                                         <?php endforeach; ?>
                                     </select>
@@ -1140,15 +1534,19 @@
                         </td>
                     </tr>
 
-                    <input type="hidden" id="weight_mode" name="shipping[weight_mode]" value="<?php echo $formData['weight_mode']; ?>">
-                    <input type="hidden" id="weight_attribute" name="shipping[weight_attribute]" value="<?php echo $formData['weight_attribute']; ?>">
+                    <tr style="display: none;">
+                        <td style="display: none;">
+                            <input type="hidden" id="weight_mode" name="shipping[weight_mode]" value="<?php echo $formData['weight_mode']; ?>">
+                            <input type="hidden" id="weight_attribute" name="shipping[weight_attribute]" value="<?php echo $formData['weight_attribute']; ?>">
+                        </td>
+                    </tr>
 
                     <tr id="weight_tr" class="visible-for-flat-by-default visible-for-calculated-by-default">
                         <td class="label">
                             <label for="weight"><?php echo Mage::helper('M2ePro')->__('Weight Source'); ?>:</label>
                         </td>
                         <td class="value">
-                            <select id="weight" class="select">
+                            <select id="weight" class="select M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text">
                                 <option id="weight_mode_none" value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::WEIGHT_NONE; ?>"
                                         <?php if ($formData['weight_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::WEIGHT_NONE): ?>selected="selected"<?php endif; ?> >
                                     <?php echo Mage::helper('M2ePro')->__('None'); ?>
@@ -1157,16 +1555,16 @@
                                         <?php if ($formData['weight_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::WEIGHT_CUSTOM_VALUE): ?>selected="selected"<?php endif; ?> >
                                     <?php echo Mage::helper('M2ePro')->__('Custom Value'); ?>
                                 </option>
-                                <optgroup label="<?php echo Mage::helper('M2ePro')->__('Magento Attributes'); ?>" weight_mode="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::WEIGHT_CUSTOM_ATTRIBUTE; ?>">
+                                    <optgroup class="M2ePro-custom-attribute-optgroup" label="<?php echo Mage::helper('M2ePro')->__('Magento Attributes'); ?>">
                                     <?php if (isset($missingAttributes['weight_attribute'])): ?>
-                                        <option value="<?php echo $formData['weight_attribute'] ?>" selected="selected"><?php echo $missingAttributes['weight_attribute']; ?></option>
+                                        <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::WEIGHT_CUSTOM_ATTRIBUTE; ?>" attribute_code="<?php echo $formData['weight_attribute'] ?>" selected="selected"><?php echo Mage::helper('M2ePro')->escapeHtml($missingAttributes['weight_attribute']); ?></option>
                                     <?php endif; ?>
                                     <?php foreach ($attributesByInputTypes['text_weight'] as $attribute): ?>
-                                        <option value="<?php echo $attribute['code'] ?>" <?php if ($formData['weight_attribute'] == $attribute['code'] && $formData['weight_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::WEIGHT_CUSTOM_ATTRIBUTE): ?>selected="selected"<?php endif; ?> >
-                                            <?php echo $attribute['label']; ?>
+                                        <option value="<?php echo Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::WEIGHT_CUSTOM_ATTRIBUTE; ?>" attribute_code="<?php echo $attribute['code'] ?>" <?php if ($formData['weight_attribute'] == $attribute['code'] && $formData['weight_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping_Calculated::WEIGHT_CUSTOM_ATTRIBUTE): ?>selected="selected"<?php endif; ?> >
+                                            <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
                                         </option>
                                     <?php endforeach; ?>
-                                </optgroup>
+                                    </optgroup>
                             </select>
                             <p class="note">
                                 <span><?php echo Mage::helper('M2ePro')->__('The Weight Attribute must have the weight of the Item.'); ?></span>
@@ -1219,7 +1617,7 @@
                         <label><?php echo Mage::helper('M2ePro')->__('Locations'); ?>:</label>
                     </td>
                     <td class="value" style="width: auto;">
-                        <input type="hidden" id="excluded_locations_hidden" name="shipping[excluded_locations]" value='<?php echo json_encode($formData['excluded_locations']); ?>' />
+                        <input type="hidden" id="excluded_locations_hidden" name="shipping[excluded_locations]" value="<?php echo Mage::helper('M2ePro')->escapeHtml(json_encode($formData['excluded_locations'])); ?>" />
                         <?php $excludedLocationTitles = Mage::helper('M2ePro')->__('No Locations are currently excluded.');
                         if (!empty($formData['excluded_locations'])) {
                             $excludedLocationTitles = array();
@@ -1422,4 +1820,9 @@
         </div>
 
     </div>
+</div>
+
+
+<div id="confirm_popup" style="display: none;">
+    <?php echo $this->getChildHtml('confirm_popup'); ?>
 </div>

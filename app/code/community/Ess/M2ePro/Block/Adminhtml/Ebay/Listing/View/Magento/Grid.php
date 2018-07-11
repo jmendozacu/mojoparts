@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
     extends Ess_M2ePro_Block_Adminhtml_Magento_Product_Grid_Abstract
 {
-    // ####################################
+    //########################################
 
     public function __construct()
     {
@@ -16,16 +18,16 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
         $listing = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayListingViewGridMagento'.$listing->getId());
-        //------------------------------
+        // ---------------------------------------
 
         $this->hideMassactionColumn = true;
         $this->hideMassactionDropDown = true;
         $this->showAdvancedFilterProductsOption = false;
     }
 
-    // ####################################
+    //########################################
 
     public function getMainButtonsHtml()
     {
@@ -38,7 +40,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
         return $viewModeSwitcherBlock->toHtml() . parent::getMainButtonsHtml();
     }
 
-    // ####################################
+    //########################################
 
     public function getAdvancedFilterButtonHtml()
     {
@@ -49,7 +51,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
         return parent::getAdvancedFilterButtonHtml();
     }
 
-    // ####################################
+    //########################################
 
     protected function isShowRuleBlock()
     {
@@ -60,7 +62,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
         return parent::isShowRuleBlock();
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareCollection()
     {
@@ -68,24 +70,24 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
         $listing = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
         // Get collection
-        //----------------------------
-        /* @var $collection Mage_Catalog_Model_Resource_Product_Collection */
-        $collection = Mage::getModel('catalog/product')->getCollection();
+        // ---------------------------------------
+        /* @var $collection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                          Mage::getModel('catalog/product')->getResource());
+        $collection->getSelect()->group('e.entity_id');
+        $collection->setListing($listing);
+        $collection->setStoreId($listing->getStoreId());
+
         $collection
             ->addAttributeToSelect('sku')
             ->addAttributeToSelect('name')
             ->addAttributeToSelect('type_id')
-            ->joinTable(
-                array('cisi' => 'cataloginventory/stock_item'),
-                'product_id=entity_id',
-                array('qty' => 'qty',
-                      'is_in_stock' => 'is_in_stock'),
-                '{{table}}.stock_id=1',
-                'left'
-            );
-        //----------------------------
+            ->joinStockItem(array('qty' => 'qty', 'is_in_stock' => 'is_in_stock'));
 
-        //----------------------------
+        if ($this->isFilterOrSortByPriceIsUsed(null, 'ebay_online_current_price')) {
+            $collection->setIsNeedToUseIndexerParent(true);
+        }
+
         $collection->joinTable(
             array('lp' => 'M2ePro/Listing_Product'),
             'product_id=entity_id',
@@ -106,8 +108,11 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
                 'online_sku'            => 'online_sku',
                 'available_qty'         => new Zend_Db_Expr('(online_qty - online_qty_sold)'),
                 'ebay_item_id'          => 'ebay_item_id',
-                'online_category'       => 'online_category',
+                'online_main_category'  => 'online_main_category',
                 'online_qty_sold'       => 'online_qty_sold',
+                'online_start_price'    => 'online_start_price',
+                'online_current_price'  => 'online_current_price',
+                'online_reserve_price'  => 'online_reserve_price',
                 'online_buyitnow_price' => 'online_buyitnow_price',
             ),
             NULL,
@@ -122,24 +127,27 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
             NULL,
             'left'
         );
-        //----------------------------
+        // ---------------------------------------
 
         // Set filter store
-        //----------------------------
+        // ---------------------------------------
         $store = $this->_getStore();
 
         if ($store->getId()) {
             $collection->joinAttribute(
-                'price', 'catalog_product/price', 'entity_id', NULL, 'left', $store->getId()
+                'name', 'catalog_product/name', 'entity_id', NULL, 'left', $store->getId()
             );
             $collection->joinAttribute(
-                'status', 'catalog_product/status', 'entity_id', NULL, 'inner',$store->getId()
+                'magento_price', 'catalog_product/price', 'entity_id', NULL, 'left', $store->getId()
             );
             $collection->joinAttribute(
-                'visibility', 'catalog_product/visibility', 'entity_id', NULL, 'inner',$store->getId()
+                'status', 'catalog_product/status', 'entity_id', NULL, 'inner', $store->getId()
             );
             $collection->joinAttribute(
-                'thumbnail', 'catalog_product/thumbnail', 'entity_id', NULL, 'left',$store->getId()
+                'visibility', 'catalog_product/visibility', 'entity_id', NULL, 'inner', $store->getId()
+            );
+            $collection->joinAttribute(
+                'thumbnail', 'catalog_product/thumbnail', 'entity_id', NULL, 'left', $store->getId()
             );
         } else {
             $collection->addAttributeToSelect('price');
@@ -147,18 +155,18 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
             $collection->addAttributeToSelect('visibility');
             $collection->addAttributeToSelect('thumbnail');
         }
-        //----------------------------
+        // ---------------------------------------
 
-//        exit($collection->getSelect()->__toString());
+        if ($collection->isNeedUseIndexerParent()) {
+            $collection->joinIndexerParent();
+        }
 
-        // Set collection to grid
         $this->setCollection($collection);
-
-        parent::_prepareCollection();
+        $result = parent::_prepareCollection();
 
         $this->getCollection()->addWebsiteNamesToResult();
 
-        return $this;
+        return $result;
     }
 
     protected function _prepareColumns()
@@ -170,13 +178,12 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
             'type'      => 'number',
             'index'     => 'entity_id',
             'filter_index' => 'entity_id',
-            'frame_callback' => array($this, 'callbackColumnProductId')
+            'frame_callback' => array($this, 'callbackColumnListingProductId')
         ));
 
         $this->addColumn('name', array(
             'header'    => Mage::helper('M2ePro')->__('Title'),
             'align'     => 'left',
-            //'width'     => '100px',
             'type'      => 'text',
             'index'     => 'name',
             'filter_index' => 'name',
@@ -223,14 +230,19 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
 
         $store = $this->_getStore();
 
-        $this->addColumn('price', array(
+        $priceAttributeAlias = 'price';
+        if ($store->getId()) {
+            $priceAttributeAlias = 'magento_price';
+        }
+
+        $this->addColumn($priceAttributeAlias, array(
             'header'    => Mage::helper('M2ePro')->__('Price'),
             'align'     => 'right',
             'width'     => '100px',
             'type'      => 'price',
             'currency_code' => $store->getBaseCurrency()->getCode(),
-            'index'     => 'price',
-            'filter_index' => 'price',
+            'index'     => $priceAttributeAlias,
+            'filter_index' => $priceAttributeAlias,
             'frame_callback' => array($this, 'callbackColumnPrice')
         ));
 
@@ -284,7 +296,28 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
         return parent::_prepareColumns();
     }
 
-    // ####################################
+    //########################################
+
+    public function callbackColumnPrice($value, $row, $column, $isExport)
+    {
+        $rowVal = $row->getData();
+
+        if ($column->getId() == 'magento_price' &&
+            (!isset($rowVal['magento_price']) || (float)$rowVal['magento_price'] <= 0)
+        ) {
+            $value = '<span style="color: red;">0</span>';
+        }
+
+        if ($column->getId() == 'price' &&
+            (!isset($rowVal['price']) || (float)$rowVal['price'] <= 0)
+        ) {
+            $value = '<span style="color: red;">0</span>';
+        }
+
+        return $value;
+    }
+
+    //########################################
 
     protected function _addColumnFilterToCollection($column)
     {
@@ -301,16 +334,16 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
         return parent::_addColumnFilterToCollection($column);
     }
 
-    // ####################################
+    //########################################
 
     protected function _getStore()
     {
         $listing = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
         // Get store filter
-        //----------------------------
+        // ---------------------------------------
         $storeId = $listing['store_id'];
-        //----------------------------
+        // ---------------------------------------
 
         return Mage::app()->getStore((int)$storeId);
     }
@@ -325,5 +358,5 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Magento_Grid
         return false;
     }
 
-    // ####################################
+    //########################################
 }

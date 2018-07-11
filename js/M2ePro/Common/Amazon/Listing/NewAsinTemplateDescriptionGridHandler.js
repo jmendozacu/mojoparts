@@ -1,27 +1,26 @@
-NewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
+CommonAmazonListingNewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     getComponent: function()
     {
         return 'amazon';
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
-    // todo getSelectedItemsParts
     getMaxProductsInPart: function()
     {
         return 1000;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     prepareActions: function($super)
     {
         $super();
-        this.actionHandler = new AmazonListingActionHandler(this);
-        this.templateDescriptionHandler = new AmazonListingTemplateDescriptionHandler(this);
+        this.actionHandler = new CommonAmazonListingActionHandler(this);
+        this.templateDescriptionHandler = new CommonAmazonListingTemplateDescriptionHandler(this);
 
         this.actions = Object.extend(this.actions, {
 
@@ -33,7 +32,7 @@ NewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     parseResponse: function(response)
     {
@@ -44,7 +43,7 @@ NewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
         return response.responseText.evalJSON();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     afterInitPage: function($super)
     {
@@ -61,7 +60,7 @@ NewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
         this.unmapFromNewAsin(id);
     },
 
-    //-----------------------------------
+    // ---------------------------------------
 
     setDescriptionTemplateByCategoryRowAction: function(id)
     {
@@ -73,7 +72,7 @@ NewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
         this.unmapFromNewAsin(this.getSelectedProductsStringFromCategory(id));
     },
 
-    //-----------------------------------
+    // ---------------------------------------
 
     getSelectedProductsStringFromCategory: function(categoryIds)
     {
@@ -93,7 +92,7 @@ NewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
         return productsIdsStr;
     },
 
-    //-----------------------------------
+    // ---------------------------------------
 
     mapToNewAsin: function(listingProductIds)
     {
@@ -151,7 +150,7 @@ NewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
                 var response = transport.responseText.evalJSON();
 
                 if (response.type == 'success') {
-                    self.templateDescriptionHandler.unassignFromTemplateDescrition(productsIds);
+                    self.templateDescriptionHandler.unassignFromTemplateDescription(productsIds);
                 }
             }
         });
@@ -247,5 +246,5 @@ NewAsinTemplateDescriptionGridHandler = Class.create(CommonListingGridHandler, {
         });
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

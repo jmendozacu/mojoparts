@@ -1,10 +1,10 @@
-DatabaseGridHandler = Class.create(GridHandler, {
+DevelopmentDatabaseGridHandler = Class.create(GridHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     mergeModeCookieKey: 'database_tables_merge_mode_cookie_key',
 
-    //----------------------------------
+    // ---------------------------------------
 
     prepareActions: function()
     {
@@ -14,7 +14,7 @@ DatabaseGridHandler = Class.create(GridHandler, {
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     switchMergeMode: function()
     {
@@ -25,7 +25,7 @@ DatabaseGridHandler = Class.create(GridHandler, {
     isMergeModeEnabled: function()
     {
         var cookieValue = getCookie(this.mergeModeCookieKey);
-        return cookieValue != null && cookieValue != '0';
+        return cookieValue != null && cookieValue != '' && cookieValue != '0';
     },
 
     setMergeMode: function(value)
@@ -33,7 +33,7 @@ DatabaseGridHandler = Class.create(GridHandler, {
         setCookie(this.mergeModeCookieKey, value, 3*365, '/');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     mergeParentTable: function(component)
     {
@@ -41,7 +41,7 @@ DatabaseGridHandler = Class.create(GridHandler, {
         window.location = M2ePro.url.get('adminhtml_development_database/manageTable', {component: component});
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     deleteTableRows: function(id)
     {
@@ -112,7 +112,7 @@ DatabaseGridHandler = Class.create(GridHandler, {
             asynchronous: false,
             parameters: Form.serialize($('development_tabs_database_table_cells_popup_form')),
             onSuccess: function(transport) {
-                DevelopmentDatabaseGridHandlerObj.getGridObj().reload();
+                DevelopmentDatabaseGridHandlerObj.unselectAllAndReload();
                 Windows.getFocusedWindow().close();
             }
         });
@@ -136,7 +136,7 @@ DatabaseGridHandler = Class.create(GridHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     mouseOverCell: function(cellId)
     {
@@ -160,7 +160,7 @@ DatabaseGridHandler = Class.create(GridHandler, {
         $(cellId + '_save_link').hide();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     switchCellToView: function(cellId)
     {
@@ -203,7 +203,17 @@ DatabaseGridHandler = Class.create(GridHandler, {
         });
     },
 
-    //----------------------------------
+    onKeyDownEdit: function(rowId, columnName, event)
+    {
+        if (event.keyCode != 13) {
+            return false;
+        }
+
+        DevelopmentDatabaseGridHandlerObj.saveTableCell(rowId, columnName);
+        return false;
+    },
+
+    // ---------------------------------------
 
     switcherStateChange: function()
     {
@@ -231,5 +241,5 @@ DatabaseGridHandler = Class.create(GridHandler, {
         return result;
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

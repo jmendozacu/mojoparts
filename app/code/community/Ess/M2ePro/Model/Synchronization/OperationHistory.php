@@ -1,18 +1,18 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model_OperationHistory
 {
-    //#########################################
-
     private $timePoints = array();
     private $leftPadding = 0;
     private $bufferString = '';
 
-    // ########################################
+    //########################################
 
     public function addEol()
     {
@@ -25,7 +25,7 @@ class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model
         $this->appendText();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function addLine($char = '-')
     {
@@ -38,7 +38,7 @@ class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model
         $this->appendText(str_repeat($char, 30));
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function addText($text = NULL)
     {
@@ -52,7 +52,7 @@ class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model
         $this->bufferString .= (string)$text.PHP_EOL;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public function saveBufferString()
     {
@@ -61,7 +61,7 @@ class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model
         $this->bufferString = '';
     }
 
-    // ########################################
+    //########################################
 
     public function addTimePoint($id, $title)
     {
@@ -113,7 +113,7 @@ class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model
         return false;
     }
 
-    // ########################################
+    //########################################
 
     public function increaseLeftPadding($count = 5)
     {
@@ -126,7 +126,7 @@ class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model
         $this->leftPadding < 0 && $this->leftPadding = 0;
     }
 
-    //####################################
+    //########################################
 
     public function getProfilerInfo($nestingLevel = 0)
     {
@@ -142,7 +142,7 @@ class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model
 
         $profilerData = preg_replace('/^/m', "{$offset}", $this->getContentData('profiler'));
 
-        return <<<INFO
+        $info = <<<INFO
 {$offset}{$nick}
 {$offset}Start Date: {$this->getObject()->getData('start_date')}
 {$offset}End Date: {$this->getObject()->getData('end_date')}
@@ -150,6 +150,32 @@ class Ess_M2ePro_Model_Synchronization_OperationHistory extends Ess_M2ePro_Model
 
 {$offset}{$separationLine}
 {$profilerData}
+INFO;
+
+        if ($fatalInfo = $this->getContentData('fatal_error')) {
+
+            $info .= <<<INFO
+
+{$offset}<span style="color: red; font-weight: bold;">Fatal: {$fatalInfo['message']}</span>
+{$offset}<span style="color: red; font-weight: bold;">File: {$fatalInfo['file']}::{$fatalInfo['line']}</span>
+
+INFO;
+        }
+
+        if ($exceptions = $this->getContentData('exceptions')) {
+
+            foreach ($exceptions as $exception) {
+                $info .= <<<INFO
+
+{$offset}<span style="color: red; font-weight: bold;">Exception: {$exception['message']}</span>
+{$offset}<span style="color: red; font-weight: bold;">File: {$exception['file']}::{$exception['line']}</span>
+
+INFO;
+            }
+        }
+
+        return <<<INFO
+{$info}
 {$offset}{$separationLine}
 
 INFO;
@@ -180,5 +206,5 @@ INFO;
         return $profilerInfo;
     }
 
-    //####################################
+    //########################################
 }

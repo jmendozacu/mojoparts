@@ -1,31 +1,54 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Module_Logger extends Mage_Core_Helper_Abstract
 {
-    // ########################################
+    //########################################
 
-    public function process($logData, $type = 'undefined', $overrideExistsLog = false)
+    public function process($logData, $type = NULL, $sendToServer = true)
     {
         try {
 
-            $logData = $this->prepareLogMessage($logData, $type);
-            $this->log($logData, $type, $overrideExistsLog);
+            $info  = $this->getLogMessage($logData, $type);
+            $info .= $this->getStackTraceInfo();
+            $info .= $this->getCurrentUserActionInfo();
 
-            $logData .= $this->getCurrentUserActionInfo();
-            $logData .= Mage::helper('M2ePro/Module_Support_Form')->getSummaryInfo();
+            $this->log($info, $type);
 
-            $this->send($logData, $type);
+            if (!$sendToServer || !(bool)(int)Mage::helper('M2ePro/Module')->getConfig()
+                                                  ->getGroupValue('/debug/logging/', 'send_to_server')) {
+                return;
+            }
+
+            $type = is_null($type) ? 'undefined' : $type;
+            $info .= Mage::helper('M2ePro/Module_Support_Form')->getSummaryInfo();
+
+            $this->send($info, $type);
 
         } catch (Exception $exceptionTemp) {}
     }
 
-    // ########################################
+    //########################################
 
-    private function prepareLogMessage($logData, $type)
+    private function log($info, $type)
+    {
+        /** @var Ess_M2ePro_Model_Log_System $log */
+        $log = Mage::getModel('M2ePro/Log_System');
+
+        $log->setType(is_null($type) ? 'Logging' : "{$type} Logging");
+        $log->setDescription($info);
+
+        $log->save();
+    }
+
+    //########################################
+
+    private function getLogMessage($logData, $type)
     {
         !is_string($logData) && $logData = print_r($logData, true);
 
@@ -37,25 +60,24 @@ class Ess_M2ePro_Helper_Module_Logger extends Mage_Core_Helper_Abstract
         return $logData;
     }
 
-    private function log($logMessage, $type, $overrideExistsLog = false)
+    private function getStackTraceInfo()
     {
-        $varDir = new Ess_M2ePro_Model_VariablesDir(array('child_folder' => 'logs'));
-        $varDir->create();
+        $exception = new Exception('');
+        $stackTraceInfo = <<<TRACE
+-------------------------------- STACK TRACE INFO --------------------------------
+{$exception->getTraceAsString()}
 
-        $fileName = $varDir->getPath().$type.'.log';
 
-        $overrideExistsLog
-            ? file_put_contents($fileName, $logMessage)
-            : file_put_contents($fileName, $logMessage, FILE_APPEND);
+TRACE;
+
+        return $stackTraceInfo;
     }
-
-    // ########################################
 
     private function getCurrentUserActionInfo()
     {
-        $server = isset($_SERVER) ? print_r($_SERVER, true) : '';
-        $get = isset($_GET) ? print_r($_GET, true) : '';
-        $post = isset($_POST) ? print_r($_POST, true) : '';
+        $server = print_r(Mage::app()->getRequest()->getServer(), true);
+        $get = print_r(Mage::app()->getRequest()->getQuery(), true);
+        $post = print_r(Mage::app()->getRequest()->getPost(), true);
 
         $actionInfo = <<<ACTION
 -------------------------------- ACTION INFO -------------------------------------
@@ -68,13 +90,16 @@ ACTION;
         return $actionInfo;
     }
 
-    // ########################################
+    //########################################
 
     private function send($logData, $type)
     {
-        Mage::getModel('M2ePro/Connector_M2ePro_Dispatcher')
-                ->processVirtual('logger','add','entity', array('info' => $logData, 'type' => $type));
+        $dispatcherObject = Mage::getModel('M2ePro/M2ePro_Connector_Dispatcher');
+        $connectorObj = $dispatcherObject->getVirtualConnector('logger', 'add', 'entity',
+                                                               array('info' => $logData,
+                                                                     'type' => $type));
+        $dispatcherObject->process($connectorObj);
     }
 
-    // ########################################
+    //########################################
 }

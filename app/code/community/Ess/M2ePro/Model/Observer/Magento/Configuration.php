@@ -1,12 +1,14 @@
 <?php
 
 /*
-* @copyright  Copyright (c) 2015 by  ESS-UA.
-*/
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
+ */
 
 class Ess_M2ePro_Model_Observer_Magento_Configuration extends Ess_M2ePro_Model_Observer_Abstract
 {
-    //####################################
+    //########################################
 
     public function process()
     {
@@ -28,14 +30,19 @@ class Ess_M2ePro_Model_Observer_Magento_Configuration extends Ess_M2ePro_Model_O
                 $action = 'save';
                 break;
 
-            case Ess_M2ePro_Helper_View_Configuration::CONFIG_SECTION_LOGS_CLEANING;
-                $controllerName = 'adminhtml_configuration_logsCleaning';
+            case Ess_M2ePro_Helper_View_Configuration::CONFIG_SECTION_LOGS_CLEARING;
+                $controllerName = 'adminhtml_configuration_logsClearing';
                 $action = 'save';
                 break;
 
             case Ess_M2ePro_Helper_View_Configuration::CONFIG_SECTION_LICENSE;
                 $controllerName = 'adminhtml_configuration_license';
                 $action = 'confirmKey';
+                break;
+
+            case Ess_M2ePro_Helper_View_Configuration::CONFIG_SECTION_ADVANCED;
+                $controllerName = 'adminhtml_configuration_advanced';
+                $action = 'save';
                 break;
 
             default:
@@ -50,5 +57,5 @@ class Ess_M2ePro_Model_Observer_Magento_Configuration extends Ess_M2ePro_Model_O
                 ->setDispatched(false);
     }
 
-    //####################################
+    //########################################
 }

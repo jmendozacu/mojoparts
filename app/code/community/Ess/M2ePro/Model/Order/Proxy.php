@@ -1,19 +1,17 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Order_Proxy
 {
-    // ########################################
-
     const CHECKOUT_GUEST    = 'guest';
     const CHECKOUT_REGISTER = 'register';
 
-    // ########################################
-
-    /** @var $order Ess_M2ePro_Model_Ebay_Order|Ess_M2ePro_Model_Amazon_Order|Ess_M2ePro_Model_Buy_Order */
+    /** @var $order Ess_M2ePro_Model_Ebay_Order|Ess_M2ePro_Model_Amazon_Order */
     protected $order = NULL;
 
     protected $items = NULL;
@@ -23,14 +21,14 @@ abstract class Ess_M2ePro_Model_Order_Proxy
 
     protected $addressData = array();
 
-    // ########################################
+    //########################################
 
     public function __construct(Ess_M2ePro_Model_Component_Child_Abstract $order)
     {
         $this->order = $order;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Order_Item_Proxy[]
@@ -93,33 +91,44 @@ abstract class Ess_M2ePro_Model_Order_Proxy
         return $items;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param Mage_Core_Model_Store $store
+     * @return $this
+     */
     public function setStore(Mage_Core_Model_Store $store)
     {
         $this->store = $store;
         return $this;
     }
 
+    /**
+     * @return Mage_Core_Model_Store
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function getStore()
     {
         if (is_null($this->store)) {
-            throw new Exception('Store is not set.');
+            throw new Ess_M2ePro_Model_Exception('Store is not set.');
         }
 
         return $this->store;
     }
 
-    // ########################################
+    //########################################
 
     abstract public function getCheckoutMethod();
 
+    /**
+     * @return bool
+     */
     public function isCheckoutMethodGuest()
     {
         return $this->getCheckoutMethod() == self::CHECKOUT_GUEST;
     }
 
-    // ########################################
+    //########################################
 
     abstract public function isOrderNumberPrefixSourceMagento();
 
@@ -129,11 +138,7 @@ abstract class Ess_M2ePro_Model_Order_Proxy
 
     abstract public function getOrderNumberPrefix();
 
-    // ########################################
-
-    abstract public function getBuyerEmail();
-
-    // ########################################
+    //########################################
 
     /**
      * @return Mage_Customer_Model_Customer
@@ -154,8 +159,21 @@ abstract class Ess_M2ePro_Model_Order_Proxy
         return $addressData['lastname'];
     }
 
-    // ########################################
+    /**
+     * @return string
+     */
+    public function getBuyerEmail()
+    {
+        $addressData = $this->getAddressData();
 
+        return $addressData['email'];
+    }
+
+    //########################################
+
+    /**
+     * @return array
+     */
     public function getAddressData()
     {
         if (empty($this->addressData)) {
@@ -164,10 +182,12 @@ abstract class Ess_M2ePro_Model_Order_Proxy
             $recipientNameParts = $this->getNameParts($rawAddressData['recipient_name']);
             $this->addressData['firstname'] = $recipientNameParts['firstname'];
             $this->addressData['lastname'] = $recipientNameParts['lastname'];
+            $this->addressData['middlename'] = $recipientNameParts['middlename'];
 
             $customerNameParts = $this->getNameParts($rawAddressData['buyer_name']);
             $this->addressData['customer_firstname'] = $customerNameParts['firstname'];
             $this->addressData['customer_lastname'] = $customerNameParts['lastname'];
+            $this->addressData['customer_middlename'] = $customerNameParts['middlename'];
 
             $this->addressData['email'] = $rawAddressData['email'];
             $this->addressData['country_id'] = $rawAddressData['country_id'];
@@ -184,35 +204,53 @@ abstract class Ess_M2ePro_Model_Order_Proxy
         return $this->addressData;
     }
 
+    /**
+     * @return array
+     */
     public function getBillingAddressData()
     {
         return $this->getAddressData();
     }
 
+    /**
+     * @return bool
+     */
     public function shouldIgnoreBillingAddressValidation()
     {
         return false;
     }
 
-    // ########################################
+    //########################################
 
     protected function getNameParts($fullName)
     {
         $fullName = trim($fullName);
 
-        $spacePosition = strpos($fullName, ' ');
-        $spacePosition === false && $spacePosition = strlen($fullName);
+        $parts      = explode(' ', $fullName);
+        $partsCount = count($parts);
 
-        $firstName = trim(substr($fullName, 0, $spacePosition));
-        $lastName = trim(substr($fullName, $spacePosition + 1));
+        $firstName  = '';
+        $middleName = '';
+        $lastName   = '';
+
+        if ($partsCount > 1) {
+            $firstName = array_shift($parts);
+            $lastName  = array_pop($parts);
+            if (!empty($parts)) {
+                $middleName = implode(' ', $parts);
+            }
+        } else {
+            $firstName = $fullName;
+        }
 
         return array(
-            'firstname' => $firstName ? $firstName : 'N/A',
-            'lastname'  => $lastName ? $lastName : 'N/A'
+            'firstname'  => $firstName ? $firstName : 'N/A',
+            'middlename' => $middleName ? trim($middleName) : '',
+            'lastname'   => $lastName ? $lastName : 'N/A'
         );
     }
 
-    // ########################################
+    //########################################
 
     abstract public function getCurrency();
 
@@ -228,11 +266,11 @@ abstract class Ess_M2ePro_Model_Order_Proxy
             ->convertPriceToBaseCurrency($price, $this->getCurrency(), $this->getStore());
     }
 
-    // ########################################
+    //########################################
 
     abstract public function getPaymentData();
 
-    // ########################################
+    //########################################
 
     abstract public function getShippingData();
 
@@ -243,18 +281,28 @@ abstract class Ess_M2ePro_Model_Order_Proxy
         return $this->convertPriceToBase($this->getShippingPrice());
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getComments()
     {
         return array_merge($this->getGeneralComments(), $this->getChannelComments());
     }
 
+    /**
+     * @return array
+     */
     public function getChannelComments()
     {
         return array();
     }
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function getGeneralComments()
     {
         $store = $this->getStore();
@@ -294,7 +342,7 @@ COMMENT;
         return $comments;
     }
 
-    // ########################################
+    //########################################
 
     abstract public function hasTax();
 
@@ -302,19 +350,19 @@ COMMENT;
 
     abstract public function isVatTax();
 
-    // -----------------------------------------
+    // ---------------------------------------
 
     abstract public function getProductPriceTaxRate();
 
     abstract public function getShippingPriceTaxRate();
 
-    // -----------------------------------------
+    // ---------------------------------------
 
     abstract public function isProductPriceIncludeTax();
 
     abstract public function isShippingPriceIncludeTax();
 
-    // -----------------------------------------
+    // ---------------------------------------
 
     abstract public function isTaxModeNone();
 
@@ -322,6 +370,9 @@ COMMENT;
 
     abstract public function isTaxModeMagento();
 
+    /**
+     * @return bool
+     */
     public function isTaxModeMixed()
     {
         return !$this->isTaxModeNone() &&
@@ -329,5 +380,18 @@ COMMENT;
                !$this->isTaxModeMagento();
     }
 
-    // ########################################
+    //########################################
+
+    public function getWasteRecyclingFee()
+    {
+        $resultFee = 0.0;
+
+        foreach ($this->getItems() as $item) {
+            $resultFee += $item->getWasteRecyclingFee();
+        }
+
+        return $resultFee;
+    }
+
+    //########################################
 }

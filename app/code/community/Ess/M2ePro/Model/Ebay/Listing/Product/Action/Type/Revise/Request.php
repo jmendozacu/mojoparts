@@ -1,63 +1,103 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
     extends Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Request
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getActionData()
     {
         $data = array_merge(
+
             array(
                 'item_id' => $this->getEbayListingProduct()->getEbayItemIdReal()
             ),
-            $this->getRequestVariations()->getData()
+
+            $this->getGeneralData(),
+
+            $this->getQtyData(),
+            $this->getPriceData(),
+
+            $this->getTitleData(),
+            $this->getSubtitleData(),
+            $this->getDescriptionData(),
+            $this->getImagesData(),
+
+            $this->getCategoriesData(),
+            $this->getPaymentData(),
+            $this->getReturnData(),
+            $this->getShippingData(),
+
+            $this->getVariationsData(),
+
+            $this->getOtherData()
         );
 
-        if ($this->getConfigurator()->isGeneral()) {
-
-            $data['sku'] = $this->getEbayListingProduct()->getSku();
-
-            $data = array_merge(
-
-                $data,
-
-                $this->getRequestCategories()->getData(),
-
-                $this->getRequestPayment()->getData(),
-                $this->getRequestReturn()->getData(),
-                $this->getRequestShipping()->getData()
-            );
+        if ($this->getConfigurator()->isGeneralAllowed()) {
+            $data['sku'] = $this->getSku();
         }
 
-        return array_merge(
-            $data,
-            $this->getRequestSelling()->getData(),
-            $this->getRequestDescription()->getData()
-        );
+        return $data;
     }
 
+    /**
+     * @param array $data
+     * @return array
+     */
     protected function prepareFinalData(array $data)
     {
         $data = $this->processingReplacedAction($data);
 
         $data = $this->insertHasSaleFlagToVariations($data);
-        $data = $this->removeImagesIfThereAreNoChanges($data);
         $data = $this->removeNodesIfItemHasTheSaleOrBid($data);
-        $data = $this->removeDurationByBestOfferMode($data);
+        $data = $this->removeDurationIfItCanNotBeChanged($data);
+
+        $data = $this->removePriceFromVariationsIfNotAllowed($data);
 
         return parent::prepareFinalData($data);
     }
 
-    // ########################################
+    //########################################
+
+    protected function insertOutOfStockControl(array $data)
+    {
+        $params = $this->getParams();
+
+        $outOfStockControlCurrentState = $this->getEbayListingProduct()->getOutOfStockControl();
+        $outOfStockControlTemplateState = $this->getEbayListingProduct()
+                                               ->getEbaySellingFormatTemplate()
+                                               ->getOutOfStockControl();
+
+        if ($outOfStockControlCurrentState && !$outOfStockControlTemplateState) {
+
+            // M2ePro_TRANSLATIONS
+            // Although the Out of Stock Control option is disabled in Price, Quantity and Format Policy settings, for this eBay Item it is remain enabled. Disabling of the Out of Stock Control during the Revise action is not supported by eBay. That is why the Out of Stock Control option will still be enabled for this Item on eBay.
+            $this->addWarningMessage(
+                'Although the Out of Stock Control option is disabled in Price, Quantity and Format Policy settings,
+                for this eBay Item it is remain enabled. Disabling of the Out of Stock Control during the Revise action
+                is not supported by eBay. That is why the Out of Stock Control option will still be enabled for
+                this Item on eBay.'
+            );
+        }
+
+        $data['out_of_stock_control'] = $params['out_of_stock_control_current_state'];
+        $data['out_of_stock_control_result'] = $params['out_of_stock_control_result'];
+
+        return $data;
+    }
 
     private function processingReplacedAction($data)
     {
-        $params = $this->getParams();
+        $params = $this->getConfigurator()->getParams();
 
         if (!isset($params['replaced_action'])) {
             return $data;
@@ -77,7 +117,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
 
                 $this->addWarningMessage(
                     'Revise was executed instead of Relist because \'Out Of Stock Control\' Option is enabled '.
-                    'in the \'Price, Quantity and Format\' Policy'
+                    'for this item.'
                 );
 
             break;
@@ -86,7 +126,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
 
                 $this->addWarningMessage(
                     'Revise was executed instead of Stop because \'Out Of Stock Control\' Option is enabled '.
-                    'in the \'Price, Quantity and Format\' Policy'
+                    'for this item.'
                 );
 
             break;
@@ -101,9 +141,6 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
             return $data;
         }
 
-        $data['out_of_stock_control'] = $this->getEbayListingProduct()
-                                             ->getEbaySellingFormatTemplate()->getOutOfStockControl();
-
         if (!$this->getIsVariationItem()) {
             $data['qty'] = 0;
             return $data;
@@ -114,14 +151,13 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
         }
 
         foreach ($data['variation'] as &$variation) {
-            $variation['not_real_qty'] = true;
             $variation['qty'] = 0;
         }
 
         return $data;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     private function insertHasSaleFlagToVariations(array $data)
     {
@@ -130,7 +166,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
         }
 
         foreach ($data['variation'] as &$variation) {
-            if (!isset($variation['not_real_qty']) && isset($variation['qty']) && (int)$variation['qty'] <= 0) {
+            if (!empty($variation['delete']) && isset($variation['qty']) && (int)$variation['qty'] <= 0) {
 
                 /** @var Ess_M2ePro_Model_Ebay_Listing_Product_Variation $ebayVariation */
                 $ebayVariation = $variation['_instance_']->getChildObject();
@@ -139,25 +175,6 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
                     $variation['has_sales'] = true;
                 }
             }
-        }
-
-        return $data;
-    }
-
-    private function removeImagesIfThereAreNoChanges(array $data)
-    {
-        $additionalData = $this->getListingProduct()->getAdditionalData();
-
-        $key = 'ebay_product_images_hash';
-        if (!empty($additionalData[$key]) && isset($data['images']['images']) &&
-            $additionalData[$key] == Mage::helper('M2ePro/Component_Ebay')->getImagesHash($data['images']['images'])) {
-            unset($data['images']['images']);
-        }
-
-        $key = 'ebay_product_variation_images_hash';
-        if (!empty($additionalData[$key]) && isset($data['variation_image']) &&
-            $additionalData[$key] == Mage::helper('M2ePro/Component_Ebay')->getImagesHash($data['variation_image'])) {
-            unset($data['variation_image']);
         }
 
         return $data;
@@ -209,9 +226,9 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
         return $data;
     }
 
-    private function removeDurationByBestOfferMode(array $data)
+    private function removeDurationIfItCanNotBeChanged(array $data)
     {
-        if (isset($data['bestoffer_mode']) && $data['bestoffer_mode']) {
+        if (isset($data['duration']) && isset($data['bestoffer_mode']) && $data['bestoffer_mode']) {
 
             // M2ePro_TRANSLATIONS
             // Duration field(s) was ignored because eBay doesn't allow Revise the Item if Best Offer is enabled.
@@ -224,8 +241,21 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Type_Revise_Request
             unset($data['duration']);
         }
 
+        if (isset($data['duration']) && $data['duration'] == Ess_M2ePro_Helper_Component_Ebay::LISTING_DURATION_GTC &&
+            $this->getEbayListingProduct()->getOnlineDuration() &&
+            !$this->getEbayListingProduct()->isOnlineDurationGtc()) {
+
+            $this->addWarningMessage(
+                Mage::helper('M2ePro')->__(
+                    'Duration value was not sent to eBay, because you are trying to change the Duration of your
+                    Listing to \'Goot Till Cancelled\' which is not allowed by eBay.'
+                )
+            );
+            unset($data['duration']);
+        }
+
         return $data;
     }
 
-    // ########################################
+    //########################################
 }

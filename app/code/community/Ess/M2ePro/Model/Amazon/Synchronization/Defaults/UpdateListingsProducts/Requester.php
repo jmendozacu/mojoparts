@@ -1,14 +1,20 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Synchronization_Defaults_UpdateListingsProducts_Requester
     extends Ess_M2ePro_Model_Connector_Amazon_Inventory_Get_ItemsRequester
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @param Ess_M2ePro_Model_Processing_Request $processingRequest
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function setProcessingLocks(Ess_M2ePro_Model_Processing_Request $processingRequest)
     {
         parent::setProcessingLocks($processingRequest);
@@ -33,15 +39,18 @@ class Ess_M2ePro_Model_Amazon_Synchronization_Defaults_UpdateListingsProducts_Re
         );
     }
 
-    // ########################################
+    //########################################
 
     protected function getResponserParams()
     {
         return array_merge(
             parent::getResponserParams(),
-            array('processed_inventory_hash' => Mage::helper('M2ePro')->generateUniqueHash())
+            array(
+                'processed_inventory_hash' => Mage::helper('M2ePro')->generateUniqueHash(),
+                'request_date'             => Mage::helper('M2ePro')->getCurrentGmtDate(),
+            )
         );
     }
 
-    // ########################################
+    //########################################
 }

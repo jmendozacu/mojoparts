@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Common_Listing_Other_Log_Grid extends Ess_M2ePro_Block_Adminhtml_Listing_Other_Log_Grid
 {
-    // ########################################
+    //########################################
 
     protected function getColumnTitles()
     {
@@ -21,28 +23,5 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Other_Log_Grid extends Ess_M2ePr
         );
     }
 
-    // ########################################
-
-    protected function getActionTitles()
-    {
-        $allActions = Mage::getModel('M2ePro/Listing_Other_Log')->getActionsTitles();
-        $excludeActions = array(
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_REVISE_PRODUCT => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_RELIST_PRODUCT => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_STOP_PRODUCT => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_CUSTOM_ATTRIBUTE => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_PRICE => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_QTY => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_SPECIAL_PRICE => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_SPECIAL_PRICE_FROM_DATE => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_SPECIAL_PRICE_TO_DATE => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_STATUS => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_PRODUCT_STOCK_AVAILABILITY => '',
-            Ess_M2ePro_Model_Listing_Other_Log::ACTION_CHANGE_STATUS_ON_CHANNEL => '',
-        );
-
-        return array_diff_key($allActions, $excludeActions);
-    }
-
-    // ########################################
+    //########################################
 }

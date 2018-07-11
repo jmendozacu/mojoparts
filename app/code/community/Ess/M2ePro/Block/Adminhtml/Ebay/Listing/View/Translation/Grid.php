@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
     extends Ess_M2ePro_Block_Adminhtml_Magento_Product_Grid_Abstract
 {
-    // ####################################
+    //########################################
 
     public function __construct()
     {
@@ -16,14 +18,14 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
         $listing = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayListingViewGridTranslation'.$listing->getId());
-        //------------------------------
+        // ---------------------------------------
 
         $this->showAdvancedFilterProductsOption = false;
     }
 
-    // ####################################
+    //########################################
 
     public function getMainButtonsHtml()
     {
@@ -36,7 +38,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
         return $viewModeSwitcherBlock->toHtml() . parent::getMainButtonsHtml();
     }
 
-    // ####################################
+    //########################################
 
     public function getAdvancedFilterButtonHtml()
     {
@@ -47,7 +49,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
         return parent::getAdvancedFilterButtonHtml();
     }
 
-    // ####################################
+    //########################################
 
     protected function isShowRuleBlock()
     {
@@ -58,7 +60,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
         return parent::isShowRuleBlock();
     }
 
-    // ####################################
+    //########################################
 
     protected function _setCollectionOrder($column)
     {
@@ -71,23 +73,28 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
         return $this;
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareCollection()
     {
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data')->getData();
 
-        //--------------------------------
+        // ---------------------------------------
         // Get collection
-        //----------------------------
-        /** @var Mage_Catalog_Model_Resource_Product_Collection $collection */
-        $collection = Mage::getModel('catalog/product')->getCollection();
-        $collection->addAttributeToSelect('sku');
-        $collection->addAttributeToSelect('name');
-        //--------------------------------
+        // ---------------------------------------
+        /* @var $collection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                          Mage::getModel('catalog/product')->getResource());
+
+        $collection
+            ->setListing($listingData['id'])
+            ->setStoreId($listingData['store_id'])
+            ->addAttributeToSelect('name')
+            ->addAttributeToSelect('sku');
+        // ---------------------------------------
 
         // Join listing product tables
-        //----------------------------
+        // ---------------------------------------
         $collection->joinTable(
             array('lp' => 'M2ePro/Listing_Product'),
             'product_id=entity_id',
@@ -119,14 +126,14 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
             NULL,
             'left'
         );
-        //----------------------------
+        // ---------------------------------------
 
         // Set collection filters
-        //----------------------------
+        // ---------------------------------------
         $collection->addFieldToFilter('translation_status', array('neq' =>
             Ess_M2ePro_Model_Ebay_Listing_Product::TRANSLATION_STATUS_NONE
         ));
-        //----------------------------
+        // ---------------------------------------
 
         // Set collection to grid
         $this->setCollection($collection);
@@ -142,13 +149,12 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
             'width'     => '100px',
             'type'      => 'number',
             'index'     => 'entity_id',
-            'frame_callback' => array($this, 'callbackColumnProductId'),
+            'frame_callback' => array($this, 'callbackColumnListingProductId'),
         ));
 
         $this->addColumn('name', array(
             'header'    => Mage::helper('M2ePro')->__('Product Title / Product SKU'),
             'align'     => 'left',
-            //'width'     => '300px',
             'type'      => 'text',
             'index'     => 'online_title',
             'frame_callback' => array($this, 'callbackColumnTitle'),
@@ -216,7 +222,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
         $this->setMassactionIdFieldOnlyIndexValue(true);
 
         // Set mass-action
-        //--------------------------------
+        // ---------------------------------------
 
         if (Mage::helper('M2ePro/View_Ebay')->isAdvancedMode()) {
             $this->getMassactionBlock()->addItem('startTranslate', array(
@@ -232,12 +238,12 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
             ));
         }
 
-        //--------------------------------
+        // ---------------------------------------
 
         return parent::_prepareMassaction();
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnTitle($value, $row, $column, $isExport)
     {
@@ -289,7 +295,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_View_Translation_Grid
 
     public function callbackColumnSourceLanguage($value, $row, $column, $isExport)
     {
-        $additionalData = json_decode($row->getData('additional_data'), true);
+        $additionalData = Mage::helper('M2ePro')->jsonDecode($row->getData('additional_data'));
         if (empty($additionalData['translation_service'])) {
             return 'N/A';
         }
@@ -327,7 +333,7 @@ HTML;
         return $value;
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
     protected function callbackFilterTitle($collection, $column)
     {
@@ -347,14 +353,14 @@ HTML;
         );
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
     public function getViewLogIconHtml($listingProductId)
     {
         $listingProductId = (int)$listingProductId;
 
         // Get last messages
-        //--------------------------
+        // ---------------------------------------
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
 
@@ -372,10 +378,10 @@ HTML;
             ->limit(30);
 
         $logRows = $connRead->fetchAll($dbSelect);
-        //--------------------------
+        // ---------------------------------------
 
         // Get grouped messages by action_id
-        //--------------------------
+        // ---------------------------------------
         $actionsRows = array();
         $tempActionRows = array();
         $lastActionId = false;
@@ -383,7 +389,7 @@ HTML;
         foreach ($logRows as $row) {
 
             $row['description'] = Mage::helper('M2ePro')->escapeHtml($row['description']);
-            $row['description'] = Mage::getModel('M2ePro/Log_Abstract')->decodeDescription($row['description']);
+            $row['description'] = Mage::helper('M2ePro/Module_Log')->decodeDescription($row['description']);
 
             if ($row['action_id'] !== $lastActionId) {
                 if (count($tempActionRows) > 0) {
@@ -494,7 +500,7 @@ HTML;
         return Mage::app()->getLocale()->date(strtotime($actionRows[0]['create_date']))->toString($format);
     }
 
-    // ####################################
+    //########################################
 
     public function getGridUrl()
     {
@@ -506,7 +512,7 @@ HTML;
         return false;
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
@@ -521,8 +527,6 @@ HTML;
 HTML;
             return parent::_toHtml().$javascriptsMain;
         }
-
-        // todo next (change)
 
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
@@ -544,10 +548,10 @@ HTML;
                 'listing_id' => $listingData['id']
             ));
 
-        $urls = json_encode($urls);
+        $urls = Mage::helper('M2ePro')->jsonEncode($urls);
 
         $gridId = $component . 'ListingViewGrid' . $listingData['id'];
-        $ignoreListings = json_encode(array($listingData['id']));
+        $ignoreListings = Mage::helper('M2ePro')->jsonEncode(array($listingData['id']));
 
         $logViewUrl = $this->getUrl('*/adminhtml_ebay_log/listing',array(
             'id'=>$listingData['id'],
@@ -600,7 +604,7 @@ HTML;
         $errorWord = $helper->escapeJs($helper->__('Error'));
         $closeWord = $helper->escapeJs($helper->__('Close'));
 
-        $translations = json_encode(array(
+        $translations = Mage::helper('M2ePro')->jsonEncode(array(
             'Payment for Translation Service' => $helper->__('Payment for Translation Service'),
             'Payment for Translation Service. Help' => $helper->__('Payment for Translation Service'),
             'Specify a sum to be credited to an Account.' =>
@@ -608,7 +612,9 @@ HTML;
                         .' If you are planning to order more Items for Translation in future,'
                         .' you can credit the sum greater than the one needed for current Translation.'
                         .' Click <a href="%url%" target="_blank">here</a> to find out more.',
-                    'http://docs.m2epro.com/display/eBayMagentoV6/Translation#Translation-Account.1'),
+                Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL,
+                    'x/BQAJAQ#SellonanothereBaySite-Account')
+                ),
             'Amount to Pay.' => $helper->__('Amount to Pay'),
             'Insert amount to be credited to an Account' => $helper->__('Insert amount to be credited to an Account.'),
             'Confirm' => $helper->__('Confirm'),
@@ -663,7 +669,6 @@ HTML;
         EbayListingTranslationGridHandlerObj.afterInitPage();
         EbayListingTranslationGridHandlerObj.getGridMassActionObj().setGridIds('{$this->getGridIdsJson()}');
 
-        // todo next (temp solution)
         EbayListingTranslationGridHandlerObj.actionHandler.setOptions(M2ePro);
 
         ListingProgressBarObj = new ProgressBar('listing_view_progress_bar');
@@ -683,7 +688,7 @@ HTML;
         return parent::_toHtml().$javascriptsMain;
     }
 
-    // ####################################
+    //########################################
 
     private function getGridIdsJson()
     {
@@ -701,7 +706,7 @@ HTML;
         return implode(',',$connRead->fetchCol($select));
     }
 
-    // ####################################
+    //########################################
 
     private function getTranslationInfoHtml($row, $sourceData, $targetData)
     {
@@ -833,5 +838,5 @@ HTML;
 HTML;
     }
 
-    // ####################################
+    //########################################
 }

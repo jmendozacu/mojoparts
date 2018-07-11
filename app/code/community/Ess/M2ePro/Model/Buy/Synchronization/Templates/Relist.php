@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Buy_Synchronization_Templates_Relist
     extends Ess_M2ePro_Model_Buy_Synchronization_Templates_Abstract
 {
-    //####################################
+    //########################################
 
     protected function getNick()
     {
@@ -19,7 +21,7 @@ final class Ess_M2ePro_Model_Buy_Synchronization_Templates_Relist
         return 'Relist';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function getPercentsStart()
     {
@@ -31,14 +33,14 @@ final class Ess_M2ePro_Model_Buy_Synchronization_Templates_Relist
         return 35;
     }
 
-    //####################################
+    //########################################
 
     protected function performActions()
     {
         $this->immediatelyChangedProducts();
     }
 
-    //####################################
+    //########################################
 
     private function immediatelyChangedProducts()
     {
@@ -51,12 +53,10 @@ final class Ess_M2ePro_Model_Buy_Synchronization_Templates_Relist
 
         foreach ($changedListingsProducts as $listingProduct) {
 
-            $actionParams = array('only_data'=>array('selling'=>true));
+            $configurator = Mage::getModel('M2ePro/Buy_Listing_Product_Action_Configurator');
 
             $isExistInRunner = $this->getRunner()->isExistProduct(
-                $listingProduct,
-                Ess_M2ePro_Model_Listing_Product::ACTION_RELIST,
-                $actionParams
+                $listingProduct, Ess_M2ePro_Model_Listing_Product::ACTION_RELIST, $configurator
             );
 
             if ($isExistInRunner) {
@@ -68,14 +68,12 @@ final class Ess_M2ePro_Model_Buy_Synchronization_Templates_Relist
             }
 
             $this->getRunner()->addProduct(
-                $listingProduct,
-                Ess_M2ePro_Model_Listing_Product::ACTION_RELIST,
-                $actionParams
+                $listingProduct, Ess_M2ePro_Model_Listing_Product::ACTION_RELIST, $configurator
             );
         }
 
         $this->getActualOperationHistory()->saveTimePoint(__METHOD__);
     }
 
-    //####################################
+    //########################################
 }

@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Development_InspectionController
     extends Ess_M2ePro_Controller_Adminhtml_Development_CommandController
 {
-    //#############################################
+    //########################################
 
     public function phpInfoAction()
     {
@@ -16,17 +18,35 @@ class Ess_M2ePro_Adminhtml_Development_InspectionController
 
     public function cacheSettingsAction()
     {
-        echo '<pre>'.print_r(Mage::app()->getCache(), true);
+        return $this->getResponse()->setBody('<pre>'.print_r(Mage::app()->getCache(), true).'</pre>');
     }
 
     public function resourcesSettingsAction()
     {
         $resourcesConfig = Mage::getConfig()->getNode('global/resources');
-        $resourcesConfig = json_decode(json_encode((array)$resourcesConfig), true);
-        echo '<pre>'.print_r($resourcesConfig, true).'</pre>';
+        $resourcesConfig = Mage::helper('M2ePro')->jsonDecode(
+            Mage::helper('M2ePro')->jsonEncode((array)$resourcesConfig)
+        );
+
+        $secureKeys = array('host', 'username', 'password');
+        foreach ($resourcesConfig as &$configItem) {
+            if (!isset($configItem['connection']) || !is_array($configItem['connection'])) {
+                continue;
+            }
+
+            foreach ($secureKeys as $key) {
+                if (!isset($configItem['connection'][$key])) {
+                    continue;
+                }
+
+                $configItem['connection'][$key] = str_repeat('*', strlen($configItem['connection'][$key]));
+            }
+        }
+
+        return $this->getResponse()->setBody('<pre>'.print_r($resourcesConfig, true).'</pre>');
     }
 
-    //#############################################
+    //########################################
 
     public function cronScheduleTableAction()
     {
@@ -53,7 +73,7 @@ class Ess_M2ePro_Adminhtml_Development_InspectionController
         return $this->getResponse()->setBody(Mage::getModel('cron/schedule')->load($id)->getMessages());
     }
 
-    //---------------------------------------------
+    // ---------------------------------------
 
     public function repairCrashedTableAction()
     {
@@ -62,12 +82,20 @@ class Ess_M2ePro_Adminhtml_Development_InspectionController
             return $this->_redirectUrl(Mage::helper('M2ePro/View_Development')->getPageInspectionTabUrl());
         }
 
-        $resultMessage = Mage::helper('M2ePro/Module_Database_Repair')->repairCrashedTable($tableName);
-        $resultMessage == 'OK' ? $this->_getSession()->addSuccess('Successfully repaired.')
-                               : $this->_getSession()->addError($resultMessage);
+        Mage::helper('M2ePro/Module_Database_Repair')->repairCrashedTable($tableName)
+            ? $this->_getSession()->addSuccess('Successfully repaired.')
+            : $this->_getSession()->addError('Error.');
 
         return $this->_redirectUrl(Mage::helper('M2ePro/View_Development')->getPageInspectionTabUrl());
     }
 
-    //#############################################
+    //########################################
+
+    public function mainChecksAction()
+    {
+        $block = $this->getLayout()->createBlock('M2ePro/adminhtml_development_inspection_mainChecks');
+        return $this->getResponse()->setBody($block->toHtml());
+    }
+
+    //########################################
 }

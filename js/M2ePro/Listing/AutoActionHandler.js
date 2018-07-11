@@ -1,15 +1,22 @@
 ListingAutoActionHandler = Class.create(CommonHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
-    controller: 'adminhtml_common_listing_autoAction',
+    controller: 'adminhtml_amazon_listing_autoAction',
 
     internalData: {},
 
     magentoCategoryIdsFromOtherGroups: {},
     magentoCategoryTreeChangeEventInProgress: false,
 
-    //----------------------------------
+    // ---------------------------------------
+
+    getController: function()
+    {
+        throw Error('Method should be overrided and return controller')
+    },
+
+    // ---------------------------------------
 
     initialize: function()
     {
@@ -21,7 +28,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
 
             var unique = true;
 
-            new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.controller + '/isCategoryGroupTitleUnique'), {
+            new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.getController() + '/isCategoryGroupTitleUnique'), {
                 method: 'get',
                 asynchronous: false,
                 parameters: {
@@ -43,11 +50,11 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         this.magentoCategoryTreeChangeEventInProgress = false;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     loadAutoActionHtml: function(mode, callback)
     {
-        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.controller + '/index'), {
+        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.getController() + '/index'), {
             method: 'get',
             asynchronous: true,
             parameters: {
@@ -68,7 +75,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     openPopUp: function(title, content)
     {
@@ -106,19 +113,26 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         }, 50);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     addingModeChange: function()
     {
         $('continue_button').hide();
         $('confirm_button').show();
+
+        if (this.value != M2ePro.php.constant('Ess_M2ePro_Model_Listing::ADDING_MODE_NONE')) {
+            $$('[id$="adding_add_not_visible_field"]')[0].show();
+        } else {
+            $$('[id$="adding_add_not_visible"]')[0].value = M2ePro.php.constant('Ess_M2ePro_Model_Listing::AUTO_ADDING_ADD_NOT_VISIBLE_YES');
+            $$('[id$="adding_add_not_visible_field"]')[0].hide();
+        }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     loadAutoCategoryForm: function(groupId, callback)
     {
-        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.controller + '/getAutoCategoryFormHtml'), {
+        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.getController() + '/getAutoCategoryFormHtml'), {
             method: 'get',
             asynchronous: true,
             parameters: {
@@ -171,7 +185,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
             showEffect: Element.show,
             id: "selected-category-already-used",
             ok: function() {
-                new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.controller + '/deleteCategory'), {
+                new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.getController() + '/deleteCategory'), {
                     method: 'post',
                     asynchronous: true,
                     parameters: {
@@ -194,7 +208,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     highlightBreadcrumbStep: function(step)
     {
@@ -203,7 +217,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         $('step_' + step).addClassName('selected');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     globalStepTwo: function()
     {
@@ -238,7 +252,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         ListingAutoActionHandlerObj.loadSpecific(callback);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     websiteStepTwo: function()
     {
@@ -273,7 +287,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         ListingAutoActionHandlerObj.loadSpecific(callback);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     isCategoryAlreadyUsed: function(categoryId)
     {
@@ -330,7 +344,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         };
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     categoryDeleteGroup: function(groupId)
     {
@@ -338,7 +352,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
             return;
         }
 
-        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.controller + '/deleteCategoryGroup'), {
+        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.getController() + '/deleteCategoryGroup'), {
             method: 'post',
             asynchronous: true,
             parameters: {
@@ -351,7 +365,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     validate: function()
     {
@@ -404,7 +418,8 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
                 case M2ePro.php.constant('Ess_M2ePro_Model_Listing::AUTO_MODE_GLOBAL'):
                     ListingAutoActionHandlerObj.internalData = {
                         auto_mode: $('auto_mode').value,
-                        auto_global_adding_mode: $('auto_global_adding_mode').value
+                        auto_global_adding_mode: $('auto_global_adding_mode').value,
+                        auto_global_adding_add_not_visible: $('auto_global_adding_add_not_visible').value,
                     };
                     break;
 
@@ -412,6 +427,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
                     ListingAutoActionHandlerObj.internalData = {
                         auto_mode: $('auto_mode').value,
                         auto_website_adding_mode: $('auto_website_adding_mode').value,
+                        auto_website_adding_add_not_visible: $('auto_website_adding_add_not_visible').value,
                         auto_website_deleting_mode: $('auto_website_deleting_mode').value
                     };
                     break;
@@ -422,6 +438,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
                         title: $('group_title').value,
                         auto_mode: $('auto_mode').value,
                         adding_mode: $('adding_mode').value,
+                        adding_add_not_visible: $('adding_add_not_visible').value,
                         deleting_mode: $('deleting_mode').value,
                         categories: categories_selected_items
                     };
@@ -434,7 +451,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
     {
         var data = this.internalData;
 
-        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.controller + '/save'), {
+        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.getController() + '/save'), {
             method: 'post',
             asynchronous: true,
             parameters: {
@@ -456,7 +473,7 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
             return;
         }
 
-        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.controller + '/reset'), {
+        new Ajax.Request(M2ePro.url.get(ListingAutoActionHandlerObj.getController() + '/reset'), {
             method: 'post',
             asynchronous: true,
             parameters: {},
@@ -466,5 +483,5 @@ ListingAutoActionHandler = Class.create(CommonHandler, {
         });
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Marketplace extends Ess_M2ePro_Model_Component_Child_Amazon_Abstract
 {
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -14,26 +16,38 @@ class Ess_M2ePro_Model_Amazon_Marketplace extends Ess_M2ePro_Model_Component_Chi
         $this->_init('M2ePro/Amazon_Marketplace');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param bool $asObjects
+     * @param array $filters
+     * @return array|Ess_M2ePro_Model_Abstract[]
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getAmazonItems($asObjects = false, array $filters = array())
     {
         return $this->getRelatedSimpleItems('Amazon_Item','marketplace_id',$asObjects,$filters);
     }
 
+    /**
+     * @param bool $asObjects
+     * @param array $filters
+     * @return array|Ess_M2ePro_Model_Abstract[]
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getDescriptionTemplates($asObjects = false, array $filters = array())
     {
         return $this->getRelatedSimpleItems('Amazon_Template_Description','marketplace_id',$asObjects,$filters);
     }
 
-    // ########################################
+    //########################################
 
     public function getCurrency()
     {
         return $this->getData('default_currency');
     }
 
-    // ########################################
+    //########################################
 
     public function getDeveloperKey()
     {
@@ -45,41 +59,55 @@ class Ess_M2ePro_Model_Amazon_Marketplace extends Ess_M2ePro_Model_Component_Chi
         return $this->getData('default_currency');
     }
 
-    public function isAsinAvailable()
-    {
-        return (bool)$this->getData('is_asin_available');
-    }
-
-    // ########################################
-
+    /**
+     * @return bool
+     */
     public function isNewAsinAvailable()
     {
-        $newAsinNotImplementedMarketplaces = array(
-            Ess_M2ePro_Helper_Component_Amazon::MARKETPLACE_CA,
-            Ess_M2ePro_Helper_Component_Amazon::MARKETPLACE_JP,
-            Ess_M2ePro_Helper_Component_Amazon::MARKETPLACE_CN,
-        );
-
-        return !in_array((int)$this->getId(),$newAsinNotImplementedMarketplaces);
+        return (bool)$this->getData('is_new_asin_available');
     }
 
-    // ########################################
-
-    public function isSynchronized()
+    /**
+     * @return bool
+     */
+    public function isMerchantFulfillmentAvailable()
     {
-        /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
-        $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $table = Mage::getSingleton('core/resource')->getTableName('m2epro_amazon_dictionary_marketplace');
-
-        $count = (int)$connRead->select()->from($table,'COUNT(*)')
-                               ->where('marketplace_id=?',$this->getId())
-                               ->query()
-                               ->fetchColumn();
-
-        return (int)($count > 0);
+        return (bool)$this->getData('is_merchant_fulfillment_available');
     }
 
-    // ########################################
+    /**
+     * @return bool
+     */
+    public function isBusinessAvailable()
+    {
+        return (bool)$this->getData('is_business_available');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isVatCalculationServiceAvailable()
+    {
+        return (bool)$this->getData('is_vat_calculation_service_available');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isProductTaxCodePolicyAvailable()
+    {
+        return (bool)$this->getData('is_product_tax_code_policy_available');
+    }
+
+    /**
+     * @return bool
+     */
+    public function isAutomaticTokenRetrievingAvailable()
+    {
+        return (bool)$this->getData('is_automatic_token_retrieving_available');
+    }
+
+    //########################################
 
     public function save()
     {
@@ -93,5 +121,5 @@ class Ess_M2ePro_Model_Amazon_Marketplace extends Ess_M2ePro_Model_Component_Chi
         return parent::delete();
     }
 
-    // ########################################
+    //########################################
 }

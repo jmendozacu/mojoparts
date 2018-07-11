@@ -1,32 +1,36 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Support_ContactForm extends Mage_Adminhtml_Block_Widget_Form
 {
-    // ########################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('supportContactForm');
-        //------------------------------
+        // ---------------------------------------
 
         $this->setTemplate('M2ePro/support/contact_form.phtml');
     }
 
-    // ########################################
+    //########################################
 
     protected function _prepareForm()
     {
         $form = new Varien_Data_Form(array(
             'id'      => 'edit_form',
-            'action'  => $this->getUrl('*/adminhtml_support/save'),
+            'action'  => $this->getUrl('*/adminhtml_support/save', array(
+                'referrer' => $this->getRequest()->getParam('referrer', NULl)
+            )),
             'method'  => 'post',
             'enctype' => 'multipart/form-data'
         ));
@@ -39,7 +43,7 @@ class Ess_M2ePro_Block_Adminhtml_Support_ContactForm extends Mage_Adminhtml_Bloc
 
     protected function _beforeToHtml()
     {
-        //-------------------------------
+        // ---------------------------------------
         $data = array(
             'label'   => Mage::helper('M2ePro')->__('Attach Another File'),
             'onclick' => 'SupportHandlerObj.moreAttachments();',
@@ -47,9 +51,9 @@ class Ess_M2ePro_Block_Adminhtml_Support_ContactForm extends Mage_Adminhtml_Bloc
         );
         $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
         $this->setChild('more_attachments',$buttonBlock);
-        //-------------------------------
+        // ---------------------------------------
 
-        //-------------------------------
+        // ---------------------------------------
         $data = array(
             'label'   => ' ' . Mage::helper('M2ePro')->__('Send Message') . ' ',
             'onclick' => 'SupportHandlerObj.save_click();',
@@ -57,10 +61,10 @@ class Ess_M2ePro_Block_Adminhtml_Support_ContactForm extends Mage_Adminhtml_Bloc
         );
         $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
         $this->setChild('send_form',$buttonBlock);
-        //-------------------------------
+        // ---------------------------------------
 
         return parent::_beforeToHtml();
     }
 
-    // ########################################
+    //########################################
 }

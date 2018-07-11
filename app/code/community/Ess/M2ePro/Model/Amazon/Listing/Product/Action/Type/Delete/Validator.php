@@ -1,23 +1,25 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Delete_Validator
     extends Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Validator
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function validate()
     {
         $params = $this->getParams();
 
         if (empty($params['remove']) && !$this->validateBlocked()) {
-            return false;
-        }
-
-        if (!$this->validateLockedObject()) {
             return false;
         }
 
@@ -38,20 +40,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Delete_Validator
                 $this->addMessage('Item is not Listed or not available');
 
             } else {
-                if ($this->getVariationManager()->isRelationChildType() &&
-                    $this->getVariationManager()->getTypeModel()->isVariationProductMatched()
-                ) {
-                    $parentAmazonListingProduct = $this->getVariationManager()
-                        ->getTypeModel()
-                        ->getAmazonParentListingProduct();
-
-                    $parentAmazonListingProduct->getVariationManager()->getTypeModel()->addRemovedProductOptions(
-                        $this->getVariationManager()->getTypeModel()->getProductOptions()
-                    );
-                }
-
-                $this->getListingProduct()->deleteInstance();
-                $this->getListingProduct()->isDeleted(true);
+                $removeHandler = Mage::getModel(
+                    'M2ePro/Amazon_Listing_Product_RemoveHandler',
+                    array('listing_product' => $this->getListingProduct())
+                );
+                $removeHandler->process();
             }
 
             return false;
@@ -64,5 +57,5 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Delete_Validator
         return true;
     }
 
-    // ########################################
+    //########################################
 }

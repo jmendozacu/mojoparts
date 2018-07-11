@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
     extends Ess_M2ePro_Model_Ebay_Template_Builder_Abstract
 {
-    // ########################################
+    //########################################
 
     public function build(array $data)
     {
@@ -15,18 +17,10 @@ class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
             return NULL;
         }
 
-        // validate input data
-        //------------------------------
         $this->validate($data);
-        //------------------------------
 
-        // prepare input data
-        //------------------------------
         $data = $this->prepareData($data);
-        //------------------------------
 
-        // create template
-        //------------------------------
         $template = Mage::helper('M2ePro/Component_Ebay')->getModel('Template_Synchronization');
 
         if (isset($data['id'])) {
@@ -35,43 +29,36 @@ class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
 
         $template->addData($data);
         $template->save();
-        //------------------------------
 
         return $template;
     }
 
-    // ########################################
+    //########################################
 
     protected function prepareData(array &$data)
     {
         $prepared = parent::prepareData($data);
 
-        //------------------------------
         $isSimpleMode = Mage::helper('M2ePro/View_Ebay')->isSimpleMode();
 
         $defaultData = $isSimpleMode
             ? Mage::getSingleton('M2ePro/Ebay_Template_Synchronization')->getDefaultSettingsSimpleMode()
             : Mage::getSingleton('M2ePro/Ebay_Template_Synchronization')->getDefaultSettingsAdvancedMode();
 
-        $defaultData['schedule_interval_settings'] = json_decode($defaultData['schedule_interval_settings'], true);
-        $defaultData['schedule_week_settings'] = json_decode($defaultData['schedule_week_settings'], true);
-
         $data = Mage::helper('M2ePro')->arrayReplaceRecursive($defaultData, $data);
-        //------------------------------
 
         $prepared = array_merge(
             $prepared,
             $this->prepareListData($data),
             $this->prepareReviseData($data),
             $this->prepareRelistData($data),
-            $this->prepareStopData($data),
-            $this->prepareScheduleData($data)
+            $this->prepareStopData($data)
         );
 
         return $prepared;
     }
 
-    //------------------------------
+    // ---------------------------------------
 
     private function prepareListData(array $data)
     {
@@ -118,11 +105,9 @@ class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
 
     private function prepareReviseData(array $data)
     {
-        $prepared = array();
-
-        if (isset($data['revise_update_qty'])) {
-            $prepared['revise_update_qty'] = (int)$data['revise_update_qty'];
-        }
+        $prepared = array(
+            'revise_update_qty' => 1,
+        );
 
         $key = 'revise_update_qty_max_applied_value_mode';
         if (isset($data[$key])) {
@@ -135,6 +120,16 @@ class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
 
         if (isset($data['revise_update_price'])) {
             $prepared['revise_update_price'] = (int)$data['revise_update_price'];
+        }
+
+        $key = 'revise_update_price_max_allowed_deviation_mode';
+        if (isset($data[$key])) {
+            $prepared[$key] = (int)$data[$key];
+        }
+
+        $key = 'revise_update_price_max_allowed_deviation';
+        if (isset($data[$key])) {
+            $prepared[$key] = (int)$data[$key];
         }
 
         if (isset($data['revise_update_title'])) {
@@ -153,30 +148,24 @@ class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
             $prepared['revise_update_images'] = (int)$data['revise_update_images'];
         }
 
-        //------------------------------
-
-        if (isset($data['revise_change_selling_format_template'])) {
-            $prepared['revise_change_selling_format_template'] = (int)$data['revise_change_selling_format_template'];
+        if (isset($data['revise_update_categories'])) {
+            $prepared['revise_update_categories'] = (int)$data['revise_update_categories'];
         }
 
-        if (isset($data['revise_change_description_template'])) {
-            $prepared['revise_change_description_template'] = (int)$data['revise_change_description_template'];
+        if (isset($data['revise_update_shipping'])) {
+            $prepared['revise_update_shipping'] = (int)$data['revise_update_shipping'];
         }
 
-        if (isset($data['revise_change_category_template'])) {
-            $prepared['revise_change_category_template'] = (int)$data['revise_change_category_template'];
+        if (isset($data['revise_update_payment'])) {
+            $prepared['revise_update_payment'] = (int)$data['revise_update_payment'];
         }
 
-        if (isset($data['revise_change_payment_template'])) {
-            $prepared['revise_change_payment_template'] = (int)$data['revise_change_payment_template'];
+        if (isset($data['revise_update_return'])) {
+            $prepared['revise_update_return'] = (int)$data['revise_update_return'];
         }
 
-        if (isset($data['revise_change_shipping_template'])) {
-            $prepared['revise_change_shipping_template'] = (int)$data['revise_change_shipping_template'];
-        }
-
-        if (isset($data['revise_change_return_template'])) {
-            $prepared['revise_change_return_template'] = (int)$data['revise_change_return_template'];
+        if (isset($data['revise_update_other'])) {
+            $prepared['revise_update_other'] = (int)$data['revise_update_other'];
         }
 
         return $prepared;
@@ -192,10 +181,6 @@ class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
 
         if (isset($data['relist_filter_user_lock'])) {
             $prepared['relist_filter_user_lock'] = (int)$data['relist_filter_user_lock'];
-        }
-
-        if (isset($data['relist_send_data'])) {
-            $prepared['relist_send_data'] = (int)$data['relist_send_data'];
         }
 
         if (isset($data['relist_status_enabled'])) {
@@ -237,6 +222,10 @@ class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
     {
         $prepared = array();
 
+        if (isset($data['stop_mode'])) {
+            $prepared['stop_mode'] = (int)$data['stop_mode'];
+        }
+
         if (isset($data['stop_status_disabled'])) {
             $prepared['stop_status_disabled'] = (int)$data['stop_status_disabled'];
         }
@@ -272,65 +261,5 @@ class Ess_M2ePro_Model_Ebay_Template_Synchronization_Builder
         return $prepared;
     }
 
-    private function prepareScheduleData(array $data)
-    {
-        $prepared = array();
-
-        if (isset($data['schedule_mode'])) {
-            $prepared['schedule_mode'] = (int)$data['schedule_mode'];
-        }
-
-        //--
-        $intervalSettings = array(
-            'mode'      => 0,
-            'date_from' => null,
-            'date_to'   => null
-        );
-
-        if ($prepared['schedule_mode'] && isset($data['schedule_interval_settings']['mode'])) {
-            $intervalSettings['mode'] = (int)$data['schedule_interval_settings']['mode'];
-        }
-
-        if ($intervalSettings['mode'] &&
-            isset($data['schedule_interval_settings']['date_from']) &&
-            isset($data['schedule_interval_settings']['date_to'])) {
-
-            $intervalSettings['date_from'] = Mage::helper('M2ePro')->timezoneDateToGmt(
-                $data['schedule_interval_settings']['date_from'].' 00:00:00'
-            );
-
-            $intervalSettings['date_to'] = Mage::helper('M2ePro')->timezoneDateToGmt(
-                $data['schedule_interval_settings']['date_to'].' 23:59:59'
-            );
-        }
-
-        $prepared['schedule_interval_settings'] = json_encode($intervalSettings);
-        //--
-
-        //--
-        $weekSettings = array();
-        if (isset($data['schedule_week_days']) && $prepared['schedule_mode']) {
-
-            foreach ($data['schedule_week_days'] as $weekDay) {
-
-                if (!empty($data['schedule_week_settings'][$weekDay]['time_from']) &&
-                    !empty($data['schedule_week_settings'][$weekDay]['time_to'])) {
-
-                    $timeInfo = $data['schedule_week_settings'][$weekDay];
-
-                    $weekSettings[$weekDay] = array(
-                        'time_from' => date('H:i:s', strtotime($timeInfo['time_from'])),
-                        'time_to'   => date('H:i:s', strtotime($timeInfo['time_to']))
-                    );
-                }
-            }
-        }
-
-        $prepared['schedule_week_settings'] = json_encode($weekSettings);
-        //--
-
-        return $prepared;
-    }
-
-    // ########################################
+    //########################################
 }

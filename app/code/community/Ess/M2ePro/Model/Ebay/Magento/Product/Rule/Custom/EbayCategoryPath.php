@@ -1,19 +1,27 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Magento_Product_Rule_Custom_EbayCategoryPath
     extends Ess_M2ePro_Model_Magento_Product_Rule_Custom_Abstract
 {
-    // #################################################
+    //########################################
 
+    /**
+     * @return string
+     */
     public function getAttributeCode()
     {
         return 'ebay_online_category_path';
     }
 
+    /**
+     * @return string
+     */
     public function getLabel()
     {
         return Mage::helper('M2ePro')->__('Category Path');
@@ -21,7 +29,7 @@ class Ess_M2ePro_Model_Ebay_Magento_Product_Rule_Custom_EbayCategoryPath
 
     public function getValueByProductInstance(Mage_Catalog_Model_Product $product)
     {
-        $onlineCategory = $product->getData('online_category');
+        $onlineCategory = $product->getData('online_main_category');
         if (empty($onlineCategory)) {
             return null;
         }
@@ -35,5 +43,5 @@ class Ess_M2ePro_Model_Ebay_Magento_Product_Rule_Custom_EbayCategoryPath
         return trim($matches[1]);
     }
 
-    // #################################################
+    //########################################
 }

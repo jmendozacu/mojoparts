@@ -1,33 +1,33 @@
-AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonListingGridHandler, {
+CommonAmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonListingGridHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     getComponent: function()
     {
         return 'amazon';
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     getMaxProductsInPart: function()
     {
         return 1000;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     prepareActions: function($super)
     {
         $super();
-        this.actionHandler = new AmazonListingActionHandler(this);
-        this.templateDescriptionHandler = new AmazonListingTemplateDescriptionHandler(this);
+        this.actionHandler = new CommonAmazonListingActionHandler(this);
+        this.templateDescriptionHandler = new CommonAmazonListingTemplateDescriptionHandler(this);
 
         this.actions = Object.extend(this.actions, {
             deleteAndRemoveAction: this.actionHandler.deleteAndRemoveAction.bind(this.actionHandler)
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     parseResponse: function(response)
     {
@@ -38,7 +38,7 @@ AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonLi
         return response.responseText.evalJSON();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     afterInitPage: function($super)
     {
@@ -231,7 +231,13 @@ AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonLi
                 onSuccess: function(transport) {
 
                     var response = self.parseResponse(transport);
-                    if(response.success) {
+
+                    if (response['vocabulary_attribute_options']) {
+                        window.parent.ListingGridHandlerObj.variationProductManageHandler.openVocabularyOptionsPopUp(response['vocabulary_attribute_options']);
+                        return;
+                    }
+
+                    if (response.success) {
                         self.actionHandler.gridHandler.unselectAllAndReload();
                         $('loading-mask').hide();
 
@@ -306,7 +312,7 @@ AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonLi
             }
         });
 
-        if (oldValue) {
+        if (oldValue && variation.get(attr)[oldValue]) {
             index++;
             valid = this.validateAttributeOptions(el, variation.get(attr)[oldValue], index);
         }
@@ -314,7 +320,7 @@ AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonLi
         return valid;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     showNewChildForm: function(createNewAsin)
     {
@@ -349,7 +355,7 @@ AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonLi
         $('add_new_child_button').show();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     validateNewChildAttributeOptions: function(type, variations, i)
     {
@@ -441,7 +447,7 @@ AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonLi
         return valid;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     addNewChildProduct: function()
     {
@@ -459,16 +465,22 @@ AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonLi
             parameters: data,
             onSuccess: function(transport) {
                 var response = self.parseResponse(transport);
-                if(response.msg) {
+                if (response.msg) {
                     MagentoMessageObj.clearAll();
                     MagentoMessageObj['add' + response.type[0].toUpperCase() + response.type.slice(1)](response.msg);
                 }
+
+                if (response['vocabulary_attribute_options']) {
+                    window.parent.ListingGridHandlerObj.variationProductManageHandler.openVocabularyOptionsPopUp(response['vocabulary_attribute_options']);
+                    return;
+                }
+
                 self.actionHandler.gridHandler.unselectAllAndReload();
             }
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     createNewAsinBtn: function()
     {
@@ -509,14 +521,15 @@ AmazonListingVariationProductManageVariationsGridHandler = Class.create(CommonLi
         ListingGridHandlerObj.validateNewChildAttributeOptions('channel');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     unselectAllAndReload: function($super)
     {
         $super();
 
         window.parent.ListingGridHandlerObj.variationProductManageHandler.reloadSettings(null, true);
+        window.parent.ListingGridHandlerObj.variationProductManageHandler.reloadVocabulary(null, true);
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

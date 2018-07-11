@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 // move from listing to listing
@@ -9,7 +11,7 @@
 class Ess_M2ePro_Adminhtml_Ebay_Listing_Settings_MovingController
     extends Ess_M2ePro_Controller_Adminhtml_BaseController
 {
-    //#############################################
+    //########################################
 
     public function moveToListingGridAction()
     {
@@ -23,7 +25,7 @@ class Ess_M2ePro_Adminhtml_Ebay_Listing_Settings_MovingController
             'marketplaceId', $this->getRequest()->getParam('marketplaceId')
         );
         Mage::helper('M2ePro/Data_Global')->setValue(
-            'ignoreListings', json_decode($this->getRequest()->getParam('ignoreListings'))
+            'ignoreListings', Mage::helper('M2ePro')->jsonDecode($this->getRequest()->getParam('ignoreListings'))
         );
 
         $block = $this->loadLayout()->getLayout()->createBlock(
@@ -38,5 +40,5 @@ class Ess_M2ePro_Adminhtml_Ebay_Listing_Settings_MovingController
         $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 }

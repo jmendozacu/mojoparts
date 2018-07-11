@@ -1,21 +1,24 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
-class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Same_Specific extends Mage_Adminhtml_Block_Widget_Container
+class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Same_Specific
+    extends Ess_M2ePro_Block_Adminhtml_Widget_Container
 {
-    // ####################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayListingCategorySameSpecific');
-        //------------------------------
+        // ---------------------------------------
 
         $this->_headerText = Mage::helper('M2ePro')->__('eBay Same Categories');
 
@@ -39,25 +42,20 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Same_Specific extends Mag
         ));
     }
 
-    // ####################################
-
-    public function getHeaderCssClass()
-    {
-        return 'icon-head ' . parent::getHeaderCssClass();
-    }
+    //########################################
 
     public function getHeaderWidth()
     {
         return 'width:50%;';
     }
 
-    // ####################################
+    //########################################
 
     protected function _beforeToHtml()
     {
         parent::_beforeToHtml();
 
-        // --------------------------------------
+        // ---------------------------------------
         $listing = Mage::helper('M2ePro/Component_Ebay')->getCachedObject(
             'Listing', $this->getRequest()->getParam('listing_id')
         );
@@ -66,9 +64,9 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Same_Specific extends Mag
             array('listing' => $listing)
         );
         $this->setChild('view_header', $viewHeaderBlock);
-        // --------------------------------------
+        // ---------------------------------------
 
-        // --------------------------------------
+        // ---------------------------------------
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
         $categoryMode = $this->getData('category_mode');
         $categoryValue = $this->getData('category_value');
@@ -89,9 +87,9 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Same_Specific extends Mag
         }
 
         $this->setChild('category_specific', $specificBlock);
-        // --------------------------------------
+        // ---------------------------------------
 
-        // --------------------------------------
+        // ---------------------------------------
         if ($categoryMode == Ess_M2ePro_Model_Ebay_Template_Category::CATEGORY_MODE_EBAY) {
             $this->_selectedCategoryPath = Mage::helper('M2ePro/Component_Ebay_Category_Ebay')->getPath(
                 $categoryValue, $listingData['marketplace_id']
@@ -100,8 +98,8 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Same_Specific extends Mag
             $attributeLabel = Mage::helper('M2ePro/Magento_Attribute')->getAttributeLabel($categoryValue);
             $this->_selectedCategoryPath = Mage::helper('M2ePro')->__('Magento Attribute') . ' > ' . $attributeLabel;
         }
-        // --------------------------------------
+        // ---------------------------------------
     }
 
-    // ####################################
+    //########################################
 }

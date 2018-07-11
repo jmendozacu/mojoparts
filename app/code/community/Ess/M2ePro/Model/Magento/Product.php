@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Magento_Product
@@ -45,8 +47,6 @@ class Ess_M2ePro_Model_Magento_Product
 
     private $statisticId;
 
-    // ########################################
-
     private $_productId = 0;
 
     private $_storeId = Mage_Core_Model_App::ADMIN_STORE_ID;
@@ -59,19 +59,30 @@ class Ess_M2ePro_Model_Magento_Product
     /** @var Ess_M2ePro_Model_Magento_Product_Variation */
     protected $_variationInstance = NULL;
 
-    // ########################################
+    // applied only for standard variations type
+    protected $variationVirtualAttributes = array();
+
+    protected $isIgnoreVariationVirtualAttributes = false;
+
+    // applied only for standard variations type
+    protected $variationFilterAttributes = array();
+
+    protected $isIgnoreVariationFilterAttributes = false;
 
     public $notFoundAttributes = array();
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function exists()
     {
         if (is_null($this->_productId)) {
             return false;
         }
 
-        $table = Mage::getSingleton('core/resource')->getTableName('catalog_product_entity');
+        $table = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('catalog_product_entity');
         $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
              ->select()
              ->from($table, new Zend_Db_Expr('COUNT(*)'))
@@ -85,7 +96,7 @@ class Ess_M2ePro_Model_Magento_Product
     /**
      * @param int|null $productId
      * @param int|null $storeId
-     * @throws Exception
+     * @throws Ess_M2ePro_Model_Exception
      * @return Ess_M2ePro_Model_Magento_Product | Ess_M2ePro_Model_Magento_Product_Cache
      */
     public function loadProduct($productId = NULL, $storeId = NULL)
@@ -94,7 +105,7 @@ class Ess_M2ePro_Model_Magento_Product
         $storeId = (is_null($storeId)) ? $this->_storeId : $storeId;
 
         if ($productId <= 0) {
-            throw new Exception('The Product ID is not set.');
+            throw new Ess_M2ePro_Model_Exception('The Product ID is not set.');
         }
 
         try {
@@ -104,7 +115,8 @@ class Ess_M2ePro_Model_Magento_Product
                  ->load($productId);
 
         } catch(Mage_Core_Model_Store_Exception $e) {
-            throw new Exception(Mage::helper('M2ePro')->__("Store ID '%store_id%' doesn't exist.", $storeId));
+            throw new Ess_M2ePro_Model_Exception(Mage::helper('M2ePro')->__("Store ID '%store_id%' doesn't exist.",
+                $storeId));
         }
 
         $this->setProductId($productId);
@@ -113,7 +125,7 @@ class Ess_M2ePro_Model_Magento_Product
         return $this;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param int $productId
@@ -125,12 +137,15 @@ class Ess_M2ePro_Model_Magento_Product
         return $this;
     }
 
+    /**
+     * @return int
+     */
     public function getProductId()
     {
         return $this->_productId;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @param int $storeId
@@ -142,13 +157,19 @@ class Ess_M2ePro_Model_Magento_Product
         return $this;
     }
 
+    /**
+     * @return int
+     */
     public function getStoreId()
     {
         return $this->_storeId;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getStoreIds()
     {
         $storeIds = array();
@@ -163,21 +184,29 @@ class Ess_M2ePro_Model_Magento_Product
         return $storeIds;
     }
 
+    /**
+     * @return array
+     */
     public function getWebsiteIds()
     {
         $resource = Mage::getSingleton('core/resource');
         $select = $resource->getConnection('core_read')
             ->select()
-            ->from($resource->getTableName('catalog/product_website'), 'website_id')
+            ->from(
+                Mage::helper('M2ePro/Module_Database_Structure')
+                    ->getTableNameWithPrefix('catalog/product_website'),
+                'website_id'
+            )
             ->where('product_id = ?', (int)$this->getProductId());
 
         $websiteIds = $resource->getConnection('core_read')->fetchCol($select);
         return $websiteIds ? $websiteIds : array();
     }
 
-    // ########################################
+    //########################################
 
     /**
+     * @throws Ess_M2ePro_Model_Exception
      * @return Mage_Catalog_Model_Product
      */
     public function getProduct()
@@ -191,7 +220,7 @@ class Ess_M2ePro_Model_Magento_Product
             return $this->_productModel;
         }
 
-        throw new Exception('Load instance first');
+        throw new Ess_M2ePro_Model_Exception('Load instance first');
     }
 
     /**
@@ -208,16 +237,16 @@ class Ess_M2ePro_Model_Magento_Product
         return $this;
     }
 
-    // --------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Mage_Catalog_Model_Product_Type_Abstract
-     * @throws Exception
+     * @throws Ess_M2ePro_Model_Exception
      */
     public function getTypeInstance()
     {
         if (is_null($this->_productModel) && $this->_productId < 0) {
-            throw new Exception('Load instance first');
+            throw new Ess_M2ePro_Model_Exception('Load instance first');
         }
 
         /** @var Mage_Catalog_Model_Product_Type_Abstract $typeInstance */
@@ -244,12 +273,12 @@ class Ess_M2ePro_Model_Magento_Product
 
     /**
      * @return Mage_CatalogInventory_Model_Stock_Item
-     * @throws Exception
+     * @throws Ess_M2ePro_Model_Exception
      */
     public function getStockItem()
     {
         if (is_null($this->_productModel) && $this->_productId < 0) {
-            throw new Exception('Load instance first');
+            throw new Ess_M2ePro_Model_Exception('Load instance first');
         }
 
         $productId = !is_null($this->_productModel) ?
@@ -257,10 +286,87 @@ class Ess_M2ePro_Model_Magento_Product
                               $this->_productId;
 
         return Mage::getModel('cataloginventory/stock_item')
-                    ->loadByProduct($productId);
+            ->setStockId(Mage::helper('M2ePro/Magento_Store')->getStockId($this->getStoreId()))
+            ->loadByProduct($productId);
     }
 
-    // ########################################
+    //########################################
+
+    /**
+     * @return array
+     */
+    public function getVariationVirtualAttributes()
+    {
+        return $this->variationVirtualAttributes;
+    }
+
+    /**
+     * @param array $attributes
+     * @return $this
+     */
+    public function setVariationVirtualAttributes(array $attributes)
+    {
+        $this->variationVirtualAttributes = $attributes;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isIgnoreVariationVirtualAttributes()
+    {
+        return $this->isIgnoreVariationVirtualAttributes;
+    }
+
+    /**
+     * @param bool $isIgnore
+     * @return $this
+     */
+    public function setIgnoreVariationVirtualAttributes($isIgnore = true)
+    {
+        $this->isIgnoreVariationVirtualAttributes = $isIgnore;
+        return $this;
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return array
+     */
+    public function getVariationFilterAttributes()
+    {
+        return $this->variationFilterAttributes;
+    }
+
+    /**
+     * @param array $attributes
+     * @return $this
+     */
+    public function setVariationFilterAttributes(array $attributes)
+    {
+        $this->variationFilterAttributes = $attributes;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isIgnoreVariationFilterAttributes()
+    {
+        return $this->isIgnoreVariationFilterAttributes;
+    }
+
+    /**
+     * @param bool $isIgnore
+     * @return $this
+     */
+    public function setIgnoreVariationFilterAttributes($isIgnore = true)
+    {
+        $this->isIgnoreVariationFilterAttributes = $isIgnore;
+        return $this;
+    }
+
+    //########################################
 
     public static function getTypeIdByProductId($productId)
     {
@@ -270,97 +376,78 @@ class Ess_M2ePro_Model_Magento_Product
             return $typeId;
         }
 
-        $productId = (int)$productId;
-        $table  = Mage::getSingleton('core/resource')->getTableName('catalog_product_entity');
+        $resource = Mage::getSingleton('core/resource');
 
-        $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
-                             ->select()
-                             ->from($table,'type_id')
-                             ->where('`entity_id` = ?',(int)$productId);
+        $typeId = $resource->getConnection('core_read')
+             ->select()
+             ->from(
+                 Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('catalog_product_entity'),
+                 array('type_id')
+             )
+             ->where('`entity_id` = ?',(int)$productId)
+             ->query()
+             ->fetchColumn();
 
-        $typeId = Mage::getResourceModel('core/config')
-                        ->getReadConnection()
-                        ->fetchOne($dbSelect);
-
-        Mage::helper('M2ePro/Data_Global')->setValue($tempKey,$typeId);
-
+        Mage::helper('M2ePro/Data_Global')->setValue($tempKey, $typeId);
         return $typeId;
     }
 
     public static function getNameByProductId($productId, $storeId = Mage_Core_Model_App::ADMIN_STORE_ID)
     {
-        $tempKey = 'product_id_' . (int)$productId . '_' . (int)$storeId . '_name';
+        $nameCacheKey = 'product_id_' . (int)$productId . '_' . (int)$storeId . '_name';
 
-        if (!is_null($name = Mage::helper('M2ePro/Data_Global')->getValue($tempKey))) {
+        if (!is_null($name = Mage::helper('M2ePro/Data_Global')->getValue($nameCacheKey))) {
             return $name;
         }
 
-        // Prepare tables names
-        //-----------------------------
-        $catalogProductEntityVarCharTable  = Mage::getSingleton('core/resource')->getTableName(
-            'catalog_product_entity_varchar'
-        );
-        $eavAttributeTable  = Mage::getSingleton('core/resource')->getTableName('eav_attribute');
-        //-----------------------------
+        $resource = Mage::getSingleton('core/resource');
 
-        // Make query for select
-        //-----------------------------
-        $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
-            ->select()->from(array('cpev'=>$catalogProductEntityVarCharTable),array('name'=>'value'))
-            ->join(
-                array('ea'=>$eavAttributeTable),
-                '`cpev`.`attribute_id` = `ea`.`attribute_id` AND `ea`.`attribute_code` = \'name\'',
-                array()
-            )
-            ->where('`cpev`.`entity_id` = ?',(int)$productId)->where('`cpev`.`store_id` = ?',(int)$storeId);
-        //-----------------------------
+        $cacheHelper = Mage::helper('M2ePro/Data_Cache_Permanent');
+        $attributeCacheKey = '_name_attribute_id_';
 
-        // Get row of product name
-        //-----------------------------
-        $name = Mage::getResourceModel('core/config')
-                        ->getReadConnection()
-                        ->fetchOne($dbSelect);
-        //-----------------------------
+        if (($attributeId = $cacheHelper->getValue($attributeCacheKey)) === false) {
 
-        if ($name) {
-            Mage::helper('M2ePro/Data_Global')->setValue($tempKey,$name);
-            return $name;
+            $attributeId = $resource->getConnection('core_read')
+                ->select()
+                ->from(
+                    Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('eav_attribute'),
+                    array('attribute_id')
+                )
+                ->where('attribute_code = ?', 'name')
+                ->where('entity_type_id = ?', Mage::getModel('catalog/product')->getResource()->getTypeId())
+                ->query()
+                ->fetchColumn();
+
+            $cacheHelper->setValue($attributeCacheKey, $attributeId);
         }
 
-        if ($storeId == Mage_Core_Model_App::ADMIN_STORE_ID) {
-            Mage::helper('M2ePro/Data_Global')->setValue($tempKey,'');
-            return '';
+        $storeIds = array((int)$storeId, Mage_Core_Model_App::ADMIN_STORE_ID);
+        $storeIds = array_unique($storeIds);
+
+        $queryStmt = $resource->getConnection('core_read')
+              ->select()
+              ->from(
+                  Mage::helper('M2ePro/Module_Database_Structure')
+                      ->getTableNameWithPrefix('catalog_product_entity_varchar'),
+                  array('value')
+              )
+              ->where('store_id IN (?)', $storeIds)
+              ->where('entity_id = ?', (int)$productId)
+              ->where('attribute_id = ?', (int)$attributeId)
+              ->order('store_id DESC')
+              ->query();
+
+        $nameValue = '';
+        while ($tempValue = $queryStmt->fetchColumn()) {
+
+            if (!empty($tempValue)) {
+                $nameValue = $tempValue;
+                break;
+            }
         }
 
-        // Make query for select
-        //-----------------------------
-        $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
-            ->select()
-            ->from(array('cpev'=>$catalogProductEntityVarCharTable),array('name'=>'value'))
-            ->join(
-                array('ea'=>$eavAttributeTable),
-                '`cpev`.`attribute_id` = `ea`.`attribute_id` AND `ea`.`attribute_code` = \'name\'',
-                array()
-            )
-            ->where('`cpev`.`entity_id` = ?',(int)$productId)
-            ->where('`cpev`.`store_id` = '.Mage_Core_Model_App::ADMIN_STORE_ID);
-        //-----------------------------
-
-        // Get row of product name
-        //-----------------------------
-        $name = Mage::getResourceModel('core/config')
-                        ->getReadConnection()
-                        ->fetchOne($dbSelect);
-        //-----------------------------
-
-        if ($name) {
-            Mage::helper('M2ePro/Data_Global')->setValue($tempKey,$name);
-            return $name;
-        }
-
-        Mage::helper('M2ePro/Data_Global')->setValue($tempKey,'');
-
-        return '';
+        Mage::helper('M2ePro/Data_Global')->setValue($nameCacheKey, (string)$nameValue);
+        return (string)$nameValue;
     }
 
     public static function getSkuByProductId($productId)
@@ -371,32 +458,23 @@ class Ess_M2ePro_Model_Magento_Product
             return $sku;
         }
 
-        // Prepare tables names
-        //-----------------------------
-        $catalogProductEntityTable  = Mage::getSingleton('core/resource')->getTableName('catalog_product_entity');
-        //-----------------------------
+        $resource = Mage::getSingleton('core/resource');
 
-        // Make query for select
-        //-----------------------------
-        $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
-                             ->select()
-                             ->from($catalogProductEntityTable,'sku')
-                             ->where('`entity_id` = ?',(int)$productId);
-        //-----------------------------
+        $sku = $resource->getConnection('core_read')
+             ->select()
+             ->from(
+                 Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('catalog_product_entity'),
+                 array('sku')
+             )
+             ->where('`entity_id` = ?',(int)$productId)
+             ->query()
+             ->fetchColumn();
 
-        // Get row of product sku
-        //-----------------------------
-        $sku = Mage::getResourceModel('core/config')
-                        ->getReadConnection()
-                        ->fetchOne($dbSelect);
-        //-----------------------------
-
-        Mage::helper('M2ePro/Data_Global')->setValue($tempKey,$sku);
-
+        Mage::helper('M2ePro/Data_Global')->setValue($tempKey, $sku);
         return $sku;
     }
 
-    // ########################################
+    //########################################
 
     public function getTypeId()
     {
@@ -410,30 +488,39 @@ class Ess_M2ePro_Model_Magento_Product
         return $typeId;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isSimpleType()
     {
         return $this->getTypeId() == self::TYPE_SIMPLE;
     }
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function isSimpleTypeWithCustomOptions()
     {
         if (!$this->isSimpleType()) {
             return false;
         }
 
-        $hasOptions = false;
         foreach ($this->getProduct()->getOptions() as $option) {
-            if ((int)$option->getData('is_require')) {
-                $hasOptions = true;
-                break;
+            if ((int)$option->getData('is_require') &&
+                in_array($option->getData('type'), array('drop_down', 'radio', 'multiple', 'checkbox'))) {
+                return true;
             }
         }
 
-        return $hasOptions;
+        return false;
     }
 
+    /**
+     * @return bool
+     */
     public function isSimpleTypeWithoutCustomOptions()
     {
         if (!$this->isSimpleType()) {
@@ -443,70 +530,134 @@ class Ess_M2ePro_Model_Magento_Product
         return !$this->isSimpleTypeWithCustomOptions();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isConfigurableType()
     {
         return $this->getTypeId() == self::TYPE_CONFIGURABLE;
     }
 
+    /**
+     * @return bool
+     */
     public function isBundleType()
     {
         return $this->getTypeId() == self::TYPE_BUNDLE;
     }
 
+    /**
+     * @return bool
+     */
     public function isGroupedType()
     {
         return $this->getTypeId() == self::TYPE_GROUPED;
     }
 
+    // ---------------------------------------
+
+    /**
+     * @return bool
+     */
     public function isDownloadableType()
     {
         return $this->getTypeId() == self::TYPE_DOWNLOADABLE;
     }
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     */
+    public function isDownloadableTypeWithSeparatedLinks()
+    {
+        if (!$this->isDownloadableType()) {
+            return false;
+        }
+
+        return (bool)$this->getProduct()->getData('links_purchased_separately');
+    }
+
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     */
+    public function isDownloadableTypeWithoutSeparatedLinks()
+    {
+        if (!$this->isDownloadableType()) {
+            return false;
+        }
+
+        return !$this->isDownloadableTypeWithSeparatedLinks();
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return bool
+     */
     public function isVirtualType()
     {
         return $this->getTypeId() == self::TYPE_VIRTUAL;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return int
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function getBundlePriceType()
     {
         return (int)$this->getProduct()->getPriceType();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isBundlePriceTypeDynamic()
     {
         return $this->getBundlePriceType() == self::BUNDLE_PRICE_TYPE_DYNAMIC;
     }
 
+    /**
+     * @return bool
+     */
     public function isBundlePriceTypeFixed()
     {
         return $this->getBundlePriceType() == self::BUNDLE_PRICE_TYPE_FIXED;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isProductWithVariations()
     {
         return !$this->isProductWithoutVariations();
     }
 
+    /**
+     * @return bool
+     */
     public function isProductWithoutVariations()
     {
-        return $this->isSimpleTypeWithoutCustomOptions();
+        return $this->isSimpleTypeWithoutCustomOptions() || $this->isDownloadableTypeWithoutSeparatedLinks();
     }
 
+    /**
+     * @return bool
+     */
     public function isStrictVariationProduct()
     {
         return $this->isConfigurableType() || $this->isBundleType() || $this->isGroupedType();
     }
 
-    // ########################################
+    //########################################
 
     public function getSku()
     {
@@ -527,8 +678,12 @@ class Ess_M2ePro_Model_Magento_Product
         return $this->getProduct()->getName();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function isStatusEnabled()
     {
         if (!$this->_productModel && $this->_productId > 0) {
@@ -549,6 +704,10 @@ class Ess_M2ePro_Model_Magento_Product
         return (int)$this->getProduct()->getStatus() == Mage_Catalog_Model_Product_Status::STATUS_ENABLED;
     }
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function isStockAvailability()
     {
         return self::calculateStockAvailability(
@@ -561,13 +720,13 @@ class Ess_M2ePro_Model_Magento_Product
     public static function calculateStockAvailability($isInStock, $manageStock, $useConfigManageStock)
     {
         $manageStockGlobal = Mage::getStoreConfigFlag('cataloginventory/item_options/manage_stock');
-        if(($useConfigManageStock && !$manageStockGlobal) || (!$useConfigManageStock && !$manageStock)){
+        if (($useConfigManageStock && !$manageStockGlobal) || (!$useConfigManageStock && !$manageStock)) {
             return true;
         }
         return (bool)$isInStock;
     }
 
-    // ########################################
+    //########################################
 
     public function getPrice()
     {
@@ -582,7 +741,7 @@ class Ess_M2ePro_Model_Magento_Product
         return $this->getProduct()->setPrice($value);
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getSpecialPrice()
     {
@@ -614,27 +773,33 @@ class Ess_M2ePro_Model_Magento_Product
         return $this->getProduct()->setSpecialPrice($value);
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function isSpecialPriceActual()
     {
         $fromDate = strtotime($this->getSpecialPriceFromDate());
         $toDate = strtotime($this->getSpecialPriceToDate());
         $currentTimeStamp = Mage::helper('M2ePro')->getCurrentGmtDate(true);
 
-        return $currentTimeStamp >= $fromDate && $currentTimeStamp <= $toDate &&
+        return $currentTimeStamp >= $fromDate && $currentTimeStamp < $toDate &&
                (float)$this->getProduct()->getSpecialPrice() > 0;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getSpecialPriceFromDate()
     {
         $fromDate = $this->getProduct()->getSpecialFromDate();
 
         if (is_null($fromDate) || $fromDate === false || $fromDate == '') {
-            $currentTimeStamp = Mage::helper('M2ePro')->getCurrentGmtDate(true);
-            $fromDate = Mage::helper('M2ePro')->getDate($currentTimeStamp - 60*60*24*30*12);
+            $currentDateTime = Mage::helper('M2ePro')->getCurrentGmtDate();
+            $fromDate = Mage::helper('M2ePro')->getDate($currentDateTime,false,'Y-01-01 00:00:00');
+        } else {
+            $fromDate = Mage::helper('M2ePro')->getDate($fromDate,false,'Y-m-d 00:00:00');
         }
 
         return $fromDate;
@@ -645,18 +810,62 @@ class Ess_M2ePro_Model_Magento_Product
         $toDate = $this->getProduct()->getSpecialToDate();
 
         if (is_null($toDate) || $toDate === false || $toDate == '') {
-            $currentTimeStamp = Mage::helper('M2ePro')->getCurrentGmtDate(true);
-            $toDate = Mage::helper('M2ePro')->getDate($currentTimeStamp + 60*60*24*30*12);
+
+            $currentDateTime = Mage::helper('M2ePro')->getCurrentGmtDate();
+
+            $toDate = new DateTime($currentDateTime, new DateTimeZone('UTC'));
+            $toDate->modify('+1 year');
+            $toDate = Mage::helper('M2ePro')->getDate($toDate->format('U'),false,'Y-01-01 00:00:00');
+
         } else {
+
+            $toDate = Mage::helper('M2ePro')->getDate($toDate,false,'Y-m-d 00:00:00');
+
             $toDate = new DateTime($toDate, new DateTimeZone('UTC'));
             $toDate->modify('+1 day');
-            $toDate = Mage::helper('M2ePro')->getDate($toDate->format('U'));
+            $toDate = Mage::helper('M2ePro')->getDate($toDate->format('U'),false,'Y-m-d 00:00:00');
         }
 
         return $toDate;
     }
 
-    // ########################################
+    // ---------------------------------------
+
+    /**
+     * @param null $websiteId
+     * @param null $customerGroupId
+     * @return array
+     */
+    public function getTierPrice($websiteId = NULL, $customerGroupId = NULL)
+    {
+        $attribute = $this->getProduct()->getResource()->getAttribute('tier_price');
+        $attribute->getBackend()->afterLoad($this->getProduct());
+
+        $prices = $this->getProduct()->getData('tier_price');
+        if (empty($prices)) {
+            return array();
+        }
+
+        $resultPrices = array();
+
+        foreach ($prices as $priceValue) {
+            if (!is_null($websiteId) && !empty($priceValue['website_id']) && $websiteId != $priceValue['website_id']) {
+                continue;
+            }
+
+            if (!is_null($customerGroupId) && $priceValue['cust_group'] != Mage_Customer_Model_Group::CUST_GROUP_ALL &&
+                $customerGroupId != $priceValue['cust_group']
+            ) {
+                continue;
+            }
+
+            $resultPrices[(int)$priceValue['price_qty']] = $priceValue['website_price'];
+        }
+
+        return $resultPrices;
+    }
+
+    //########################################
 
     public function getQty($lifeMode = false)
     {
@@ -691,7 +900,7 @@ class Ess_M2ePro_Model_Magento_Product
         $this->getStockItem()->setQty($value)->save();
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     protected function calculateQty($qty,
                                     $manageStock, $useConfigManageStock,
@@ -722,7 +931,7 @@ class Ess_M2ePro_Model_Magento_Product
         $backOrdersGlobal = Mage::getStoreConfig('cataloginventory/item_options/backorders');
         if (($useConfigBackorders && $backOrdersGlobal != Mage_CatalogInventory_Model_Stock::BACKORDERS_NO) ||
            (!$useConfigBackorders && $backorders != Mage_CatalogInventory_Model_Stock::BACKORDERS_NO)) {
-            if($forceQtyValue > $qty){
+            if ($forceQtyValue > $qty) {
                 self::$statistics[$this->getStatisticId()]
                                  [$this->getProductId()]
                                  [$this->getStoreId()]
@@ -735,7 +944,7 @@ class Ess_M2ePro_Model_Magento_Product
         return $qty;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     protected function getConfigurableQty($lifeMode = false)
     {
@@ -743,7 +952,9 @@ class Ess_M2ePro_Model_Magento_Product
 
         foreach ($this->getTypeInstance()->getUsedProducts() as $childProduct) {
 
-            $stockItem = Mage::getModel('cataloginventory/stock_item')->loadByProduct($childProduct);
+            $stockItem = Mage::getModel('cataloginventory/stock_item')
+                ->setStockId(Mage::helper('M2ePro/Magento_Store')->getStockId($this->getStoreId()))
+                ->loadByProduct($childProduct);
 
             $isInStock = self::calculateStockAvailability(
                 $stockItem->getData('is_in_stock'),
@@ -776,7 +987,9 @@ class Ess_M2ePro_Model_Magento_Product
 
         foreach ($this->getTypeInstance()->getAssociatedProducts() as $childProduct) {
 
-            $stockItem = Mage::getModel('cataloginventory/stock_item')->loadByProduct($childProduct);
+            $stockItem = Mage::getModel('cataloginventory/stock_item')
+                ->setStockId(Mage::helper('M2ePro/Magento_Store')->getStockId($this->getStoreId()))
+                ->loadByProduct($childProduct);
 
             $isInStock = self::calculateStockAvailability(
                 $stockItem->getData('is_in_stock'),
@@ -854,8 +1067,8 @@ class Ess_M2ePro_Model_Magento_Product
             $bundleOptionsQtyArray[$itemInfoAsArray['product_id']][$itemInfoAsArray['option_id']] = $qty;
         }
 
-        foreach($bundleOptionsQtyArray as $optionQty) {
-            foreach($optionQty as $optionId => $val) {
+        foreach ($bundleOptionsQtyArray as $optionQty) {
+            foreach ($optionQty as $optionId => $val) {
                 $bundleOptionsArray[$optionId] += floor($val/count($optionQty));
             }
         }
@@ -871,7 +1084,7 @@ class Ess_M2ePro_Model_Magento_Product
         return $minQty;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function setStatisticId($id)
     {
@@ -884,7 +1097,7 @@ class Ess_M2ePro_Model_Magento_Product
         return $this->statisticId;
     }
 
-    // ########################################
+    //########################################
 
     public function getAttributeFrontendInput($attributeCode)
     {
@@ -926,7 +1139,16 @@ class Ess_M2ePro_Model_Magento_Product
         $value = $productObject->getData($attributeCode);
 
         if ($attributeCode == 'media_gallery') {
-            return implode(',',$this->getGalleryImagesLinks(100));
+
+            $links = array();
+            foreach ($this->getGalleryImages(100) as $image) {
+
+                if (!$image->getUrl()) {
+                    continue;
+                }
+                $links[] = $image->getUrl();
+            }
+            return implode(',', $links);
         }
 
         if (is_null($value) || is_bool($value) || is_array($value) || $value === '') {
@@ -936,23 +1158,13 @@ class Ess_M2ePro_Model_Magento_Product
         // SELECT and MULTISELECT
         if ($attribute->getFrontendInput() === 'select' || $attribute->getFrontendInput() === 'multiselect') {
 
-            // User Attribute
-            if ((int)$attribute->getData('is_user_defined') == 1) {
+            if ($attribute->getSource() instanceof Mage_Eav_Model_Entity_Attribute_Source_Interface &&
+                $attribute->getSource()->getAllOptions()) {
 
-                $valueNew = '';
-                $optionIds = (array)explode(',',$value);
+                $attribute->setStoreId($this->getStoreId());
 
-                foreach ($optionIds as $optionId) {
-                    $attributeOption = Mage::getResourceModel('eav/entity_attribute_option_collection')
-                                                    ->addFieldToFilter('main_table.option_id', array('in' => $optionId))
-                                                    //->setIdFilter($optionId)
-                                                    ->setStoreFilter($this->getStoreId())
-                                                    ->load()->getFirstItem();
-                    $valueNew != '' && $valueNew .= ', ';
-                    $valueNew .= $attributeOption->getData('value');
-                }
-
-                $value = (string)$valueNew;
+                $value = $attribute->getSource()->getOptionText($value);
+                $value = is_array($value) ? implode(',', $value) : (string)$value;
             }
 
         // DATE
@@ -967,7 +1179,7 @@ class Ess_M2ePro_Model_Magento_Product
 
         // PRICE
         }  else if ($attribute->getFrontendInput() == 'price') {
-            $value = (string)round($value, 2);
+            $value = (string)number_format($value, 2, '.', '');
 
         // MEDIA IMAGE
         }  else if ($attribute->getFrontendInput() == 'media_image') {
@@ -975,10 +1187,12 @@ class Ess_M2ePro_Model_Magento_Product
                 $value = '';
             } else {
                 if (!preg_match('((mailto\:|(news|(ht|f)tp(s?))\://){1}\S+)',$value)) {
+
                     $value = Mage::app()->getStore($this->getStoreId())
-                                        ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA, false).
-                                        'catalog/product/'.ltrim($value,'/');
-                    $value = str_replace('https://','http://',$value);
+                            ->getBaseUrl(
+                                Mage_Core_Model_Store::URL_TYPE_MEDIA,
+                                Mage::helper('M2ePro/Component_Ebay_Images')->shouldBeUrlsSecure()
+                            ) . 'catalog/product/'.ltrim($value,'/');
                 }
             }
         }
@@ -988,7 +1202,7 @@ class Ess_M2ePro_Model_Magento_Product
 
     public function setAttributeValue($attributeCode, $value)
     {
-        //supports only string values
+        // supports only string values
         if (is_string($value)) {
             $productObject = $this->getProduct();
 
@@ -1000,67 +1214,104 @@ class Ess_M2ePro_Model_Magento_Product
         return $this;
     }
 
-    // ########################################
+    //########################################
 
-    public function getThumbnailImageLink()
+    /**
+     * @return Ess_M2ePro_Model_Magento_Product_Image|null
+     */
+    public function getThumbnailImage()
     {
-        $eaTable = Mage::getSingleton('core/resource')->getTableName('eav_attribute');
-        $cpevTable = Mage::getSingleton('core/resource')->getTableName('catalog_product_entity_varchar');
+        $resource = Mage::getSingleton('core/resource');
 
-        $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
-                              ->select()
-                              ->from(array('cpev'=>$cpevTable),'value')
-                              ->joinInner(array('ea'=>$eaTable),'`ea`.`attribute_id` = `cpev`.`attribute_id`',array())
-                              ->where('`cpev`.`store_id` = ?',(int)$this->getStoreId())
-                              ->where('`cpev`.`entity_id` = ?',(int)$this->getProductId())
-                              ->where('`ea`.`attribute_code` = \'thumbnail\'');
+        $cacheHelper = Mage::helper('M2ePro/Data_Cache_Permanent');
+        $cacheKey = '_thumbnail_attribute_id_';
 
-        $tempPath = (string)Mage::getResourceModel('core/config')->getReadConnection()->fetchOne($dbSelect);
+        if (($attributeId = $cacheHelper->getValue($cacheKey)) === false) {
 
-        if ($tempPath == '' || $tempPath == 'no_selection' || $tempPath == '/') {
+            $attributeId = $resource->getConnection('core_read')
+                   ->select()
+                   ->from(
+                       Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('eav_attribute'),
+                       array('attribute_id')
+                   )
+                   ->where('attribute_code = ?', 'thumbnail')
+                   ->where('entity_type_id = ?', Mage::getModel('catalog/product')->getResource()->getTypeId())
+                   ->query()
+                   ->fetchColumn();
 
-            $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
-                ->select()
-                ->from(array('cpev'=>$cpevTable),'value')
-                ->joinInner(array('ea'=>$eaTable),'`ea`.`attribute_id` = `cpev`.`attribute_id`',array())
-                ->where('`cpev`.`store_id` = ?',Mage_Core_Model_App::ADMIN_STORE_ID)
-                ->where('`cpev`.`entity_id` = ?',(int)$this->getProductId())
-                ->where('`ea`.`attribute_code` = \'thumbnail\'');
+            $cacheHelper->setValue($cacheKey, $attributeId);
+        }
 
-            $tempPath = (string)Mage::getResourceModel('core/config')->getReadConnection()->fetchOne($dbSelect);
+        $storeIds = array((int)$this->getStoreId(), Mage_Core_Model_App::ADMIN_STORE_ID);
+        $storeIds = array_unique($storeIds);
 
-            if ($tempPath == '' || $tempPath == 'no_selection' || $tempPath == '/') {
-                return NULL;
+        $queryStmt = $resource->getConnection('core_read')
+              ->select()
+              ->from(
+                  Mage::helper('M2ePro/Module_Database_Structure')
+                      ->getTableNameWithPrefix('catalog_product_entity_varchar'),
+                  array('value')
+              )
+              ->where('store_id IN (?)', $storeIds)
+              ->where('entity_id = ?', (int)$this->getProductId())
+              ->where('attribute_id = ?', (int)$attributeId)
+              ->order('store_id DESC')
+              ->query();
+
+        $thumbnailTempPath = null;
+        while ($tempPath = $queryStmt->fetchColumn()) {
+
+            if ($tempPath != '' && $tempPath != 'no_selection' && $tempPath != '/') {
+                $thumbnailTempPath = $tempPath;
+                break;
             }
         }
 
-        $imagePathOriginal = Mage::getBaseDir('media').DS.'catalog/product'.$tempPath;
-
-        if (!is_file($imagePathOriginal)) {
-            return NULL;
+        if (is_null($thumbnailTempPath)) {
+            return null;
         }
 
-        $width = 100;
+        $thumbnailTempUrl = 'catalog/product/' . ltrim($thumbnailTempPath, '/');
+        $thumbnailTempUrl = Mage::app()->getStore($this->getStoreId())
+                ->getBaseUrl(
+                    Mage_Core_Model_Store::URL_TYPE_MEDIA, NULL
+                ) . $thumbnailTempUrl;
+
+        $thumbnailTempUrl = $this->prepareImageUrl($thumbnailTempUrl);
+
+        $image = new Ess_M2ePro_Model_Magento_Product_Image($thumbnailTempUrl);
+        $image->setArea(Mage_Core_Model_App_Area::AREA_ADMIN);
+        $image->setStoreId($this->getStoreId());
+
+        if (!$image->isSelfHosted()) {
+            return null;
+        }
+
+        $width  = 100;
         $height = 100;
 
-        $prefixResizedImage = 'resized-'.$width.'px-'.$height.'px-';
-        $imagePathResized = dirname($imagePathOriginal).DS.$prefixResizedImage.basename($imagePathOriginal);
+        $prefixResizedImage = "resized-{$width}px-{$height}px-";
+        $imagePathResized   = dirname($image->getPath()).DS.$prefixResizedImage.basename($image->getPath());
 
         if (is_file($imagePathResized)) {
+
             $currentTime = Mage::helper('M2ePro')->getCurrentGmtDate(true);
+
             if (filemtime($imagePathResized) + self::THUMBNAIL_IMAGE_CACHE_TIME > $currentTime) {
-                $tempValue = str_replace(basename($imagePathOriginal),$prefixResizedImage.basename($imagePathOriginal),
-                                         $tempPath);
-                return Mage::app()->getStore($this->getStoreId())
-                                        ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA, false).
-                                        'catalog/product/'.ltrim($tempValue,'/');
+
+                $image->setPath($imagePathResized)
+                      ->setUrl($image->getUrlByPath())
+                      ->resetHash();
+
+                return $image;
             }
+
             @unlink($imagePathResized);
         }
 
         try {
 
-            $imageObj = new Varien_Image($imagePathOriginal);
+            $imageObj = new Varien_Image($image->getPath());
             $imageObj->constrainOnly(TRUE);
             $imageObj->keepAspectRatio(TRUE);
             $imageObj->keepFrame(FALSE);
@@ -1068,70 +1319,48 @@ class Ess_M2ePro_Model_Magento_Product
             $imageObj->save($imagePathResized);
 
         } catch (Exception $exception) {
-            return NULL;
+            return null;
         }
 
         if (!is_file($imagePathResized)) {
-            return NULL;
+            return null;
         }
 
-        $tempValue = str_replace(basename($imagePathOriginal),$prefixResizedImage.basename($imagePathOriginal),
-                                 $tempPath);
+        $image->setPath($imagePathResized)
+              ->setUrl($image->getUrlByPath())
+              ->resetHash();
 
-        return Mage::app()->getStore($this->getStoreId())
-                                        ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA, false).
-                                        'catalog/product/'.ltrim($tempValue,'/');
+        return $image;
     }
 
-    public function getImageLink($attribute = 'image')
+    /**
+     * @param string $attribute
+     * @return Ess_M2ePro_Model_Magento_Product_Image|null
+     */
+    public function getImage($attribute = 'image')
     {
-        if ($attribute == '') {
-            return '';
+        if (empty($attribute)) {
+            return null;
         }
 
         $imageUrl = $this->getAttributeValue($attribute);
-        return $this->prepareImageUrl($imageUrl);
+        $imageUrl = $this->prepareImageUrl($imageUrl);
+
+        if (empty($imageUrl)) {
+            return null;
+        }
+
+        $image = new Ess_M2ePro_Model_Magento_Product_Image($imageUrl);
+        $image->setStoreId($this->getStoreId());
+
+        return $image;
     }
 
-    public function getGalleryImageLink($position = 1)
-    {
-        $position = (int)$position;
-
-        if ($position <= 0) {
-            return '';
-        }
-
-        // need for correct sampling of the array
-        $position--;
-
-        $galleryImages = $this->getProduct()->getData('media_gallery');
-
-        if (!isset($galleryImages['images']) || !is_array($galleryImages['images'])) {
-            return '';
-        }
-
-        if (!isset($galleryImages['images'][$position])) {
-            return '';
-        }
-
-        $galleryImage = $galleryImages['images'][$position];
-
-        if (isset($galleryImage['disabled']) && (bool)$galleryImage['disabled']) {
-            return '';
-        }
-
-        if (!isset($galleryImage['file'])) {
-            return '';
-        }
-
-        $imageUrl = Mage::app()->getStore($this->getStoreId())
-                        ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA, false).
-                        'catalog/product/'.ltrim($galleryImage['file'],'/');
-
-        return $this->prepareImageUrl($imageUrl);
-    }
-
-    public function getGalleryImagesLinks($limitImages = 0)
+    /**
+     * @param int $limitImages
+     * @return Ess_M2ePro_Model_Magento_Product_Image[]
+     */
+    public function getGalleryImages($limitImages = 0)
     {
         $limitImages = (int)$limitImages;
 
@@ -1145,9 +1374,9 @@ class Ess_M2ePro_Model_Magento_Product
             return array();
         }
 
+        $i = 0;
         $images = array();
 
-        $i = 0;
         foreach ($galleryImages['images'] as $galleryImage) {
 
             if ($i >= $limitImages) {
@@ -1162,21 +1391,77 @@ class Ess_M2ePro_Model_Magento_Product
                 continue;
             }
 
+            $imagePath = 'catalog/product/' . ltrim($galleryImage['file'], '/');
             $imageUrl = Mage::app()->getStore($this->getStoreId())
-                            ->getBaseUrl(Mage_Core_Model_Store::URL_TYPE_MEDIA, false).
-                            'catalog/product/'.ltrim($galleryImage['file'],'/');
+                    ->getBaseUrl(
+                        Mage_Core_Model_Store::URL_TYPE_MEDIA,
+                        Mage::helper('M2ePro/Component_Ebay_Images')->shouldBeUrlsSecure()
+                    ) . $imagePath;
 
-            $imageUrl = $this->prepareImageUrl($imageUrl);
+            $imageUrl  = $this->prepareImageUrl($imageUrl);
 
             if (empty($imageUrl)) {
                 continue;
             }
 
-            $images[] = $imageUrl;
+            $image = new Ess_M2ePro_Model_Magento_Product_Image($imageUrl);
+            $image->setStoreId($this->getStoreId());
+
+            $images[] = $image;
             $i++;
         }
 
         return $images;
+    }
+
+    /**
+     * @param int $position
+     * @return Ess_M2ePro_Model_Magento_Product_Image|null
+     */
+    public function getGalleryImageByPosition($position = 1)
+    {
+        $position = (int)$position;
+
+        if ($position <= 0) {
+            return null;
+        }
+
+        // need for correct sampling of the array
+        $position--;
+
+        $galleryImages = $this->getProduct()->getData('media_gallery');
+
+        if (!isset($galleryImages['images']) || !is_array($galleryImages['images'])) {
+            return null;
+        }
+
+        if (!isset($galleryImages['images'][$position])) {
+            return null;
+        }
+
+        $galleryImage = $galleryImages['images'][$position];
+
+        if (isset($galleryImage['disabled']) && (bool)$galleryImage['disabled']) {
+            return null;
+        }
+
+        if (!isset($galleryImage['file'])) {
+            return null;
+        }
+
+        $imagePath = 'catalog/product/' . ltrim($galleryImage['file'], '/');
+        $imageUrl = Mage::app()->getStore($this->getStoreId())
+                ->getBaseUrl(
+                    Mage_Core_Model_Store::URL_TYPE_MEDIA,
+                    Mage::helper('M2ePro/Component_Ebay_Images')->shouldBeUrlsSecure()
+                ) . $imagePath;
+
+        $imageUrl = $this->prepareImageUrl($imageUrl);
+
+        $image = new Ess_M2ePro_Model_Magento_Product_Image($imageUrl);
+        $image->setStoreId($this->getStoreId());
+
+        return $image;
     }
 
     private function prepareImageUrl($url)
@@ -1185,39 +1470,24 @@ class Ess_M2ePro_Model_Magento_Product
             return '';
         }
 
-        return str_replace(array('https://', ' '), array('http://', '%20'), $url);
+        return str_replace(' ', '%20', $url);
     }
 
-    // ########################################
+    //########################################
 
-    public function hasRequiredOptions()
-    {
-        if ($this->isDownloadableType() || $this->isVirtualType()) {
-            return false;
-        }
-
-        if ($this->isGroupedType()) {
-            return true;
-        }
-
-        $product = $this->getProduct();
-
-        return $this->getTypeInstance()->hasRequiredOptions($product);
-    }
-
-    //-----------------------------------------
-
+    /**
+     * @return Ess_M2ePro_Model_Magento_Product_Variation
+     */
     public function getVariationInstance()
     {
-        if (!is_null($this->_variationInstance)) {
-            return $this->_variationInstance;
+        if (is_null($this->_variationInstance)) {
+            $this->_variationInstance = Mage::getModel('M2ePro/Magento_Product_Variation')->setMagentoProduct($this);
         }
 
-        $this->_variationInstance = Mage::getModel('M2ePro/Magento_Product_Variation')->setMagentoProduct($this);
         return $this->_variationInstance;
     }
 
-    // ########################################
+    //########################################
 
     private function addNotFoundAttributes($attributeCode)
     {
@@ -1225,8 +1495,11 @@ class Ess_M2ePro_Model_Magento_Product
         $this->notFoundAttributes = array_unique($this->notFoundAttributes);
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     */
     public function getNotFoundAttributes()
     {
         return $this->notFoundAttributes;
@@ -1237,5 +1510,5 @@ class Ess_M2ePro_Model_Magento_Product
         $this->notFoundAttributes = array();
     }
 
-    // ########################################
+    //########################################
 }

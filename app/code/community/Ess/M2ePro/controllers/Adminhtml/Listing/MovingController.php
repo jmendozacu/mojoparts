@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 // move from listing to listing
@@ -9,7 +11,7 @@
 class Ess_M2ePro_Adminhtml_Listing_MovingController
     extends Ess_M2ePro_Controller_Adminhtml_BaseController
 {
-    //#############################################
+    //########################################
 
     public function moveToListingGridAction()
     {
@@ -23,7 +25,7 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
             'marketplaceId', $this->getRequest()->getParam('marketplaceId')
         );
         Mage::helper('M2ePro/Data_Global')->setValue(
-            'ignoreListings', json_decode($this->getRequest()->getParam('ignoreListings'))
+            'ignoreListings', Mage::helper('M2ePro')->jsonDecode($this->getRequest()->getParam('ignoreListings'))
         );
 
         $block = $this->loadLayout()->getLayout()->createBlock(
@@ -36,7 +38,7 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
         $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function getFailedProductsGridAction()
     {
@@ -60,12 +62,14 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
         $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function prepareMoveToListingAction()
     {
         $componentMode = $this->getRequest()->getParam('componentMode');
-        $selectedProducts = (array)json_decode($this->getRequest()->getParam('selectedProducts'));
+        $selectedProducts = (array)Mage::helper('M2ePro')->jsonDecode(
+            $this->getRequest()->getParam('selectedProducts')
+        );
 
         $listingProductCollection = Mage::helper('M2ePro/Component')
             ->getComponentModel($componentMode, 'Listing_Product')
@@ -74,28 +78,40 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
         $listingProductCollection->addFieldToFilter('main_table.id', array('in' => $selectedProducts));
         $tempData = $listingProductCollection
             ->getSelect()
-            ->join( array('listing'=>Mage::getSingleton('core/resource')->getTableName('m2epro_listing')),
-                    '`main_table`.`listing_id` = `listing`.`id`' )
-            ->join( array('cpe'=>Mage::getSingleton('core/resource')->getTableName('catalog_product_entity')),
-                    '`main_table`.`product_id` = `cpe`.`entity_id`' )
+            ->join(
+                array(
+                    'listing'=>Mage::helper('M2ePro/Module_Database_Structure')
+                        ->getTableNameWithPrefix('m2epro_listing')
+                ),
+                '`main_table`.`listing_id` = `listing`.`id`'
+            )
+            ->join(
+                array(
+                    'cpe'=>Mage::helper('M2ePro/Module_Database_Structure')
+                        ->getTableNameWithPrefix('catalog_product_entity')
+                ),
+                '`main_table`.`product_id` = `cpe`.`entity_id`'
+            )
             ->group(array('listing.account_id','listing.marketplace_id'))
             ->reset(Zend_Db_Select::COLUMNS)
             ->columns(array('marketplace_id', 'account_id'), 'listing')
             ->query()
             ->fetchAll();
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'accountId' => $tempData[0]['account_id'],
             'marketplaceId' => $tempData[0]['marketplace_id'],
         )));
     }
 
-    //#############################################
+    //########################################
 
     public function tryToMoveToListingAction()
     {
         $componentMode = $this->getRequest()->getParam('componentMode');
-        $selectedProducts = (array)json_decode($this->getRequest()->getParam('selectedProducts'));
+        $selectedProducts = (array)Mage::helper('M2ePro')->jsonDecode(
+            $this->getRequest()->getParam('selectedProducts')
+        );
         $listingId = (int)$this->getRequest()->getParam('listingId');
 
         $listingInstance = Mage::helper('M2ePro/Component')->getCachedComponentObject(
@@ -114,22 +130,24 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
         }
 
         if (count($failedProducts) == 0) {
-            return $this->getResponse()->setBody(json_encode(array('result' => 'success')));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('result' => 'success')));
         }
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'result' => 'fail',
             'failed_products' => $failedProducts
         )));
     }
 
-    //#############################################
+    //########################################
 
     public function moveToListingAction()
     {
         $componentMode = $this->getRequest()->getParam('componentMode');
 
-        $selectedProducts = (array)json_decode($this->getRequest()->getParam('selectedProducts'));
+        $selectedProducts = (array)Mage::helper('M2ePro')->jsonDecode(
+            $this->getRequest()->getParam('selectedProducts')
+        );
         $listingId = (int)$this->getRequest()->getParam('listingId');
 
         /** @var Ess_M2ePro_Model_Listing $listingInstance */
@@ -154,8 +172,8 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
             $listingProductInstance = Mage::helper('M2ePro/Component')
                 ->getComponentObject($componentMode,'Listing_Product',$listingProductId);
 
-            if ($listingProductInstance->isLockedObject() ||
-                $listingProductInstance->isLockedObject('in_action')) {
+            if ($listingProductInstance->isSetProcessingLock() ||
+                $listingProductInstance->isSetProcessingLock('in_action')) {
 
                 $logModel->addProductMessage(
                     $listingProductInstance->getListingId(),
@@ -251,18 +269,30 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
             if ($isStoresDifferent) {
                 $variationUpdaterObject->process($listingProductInstance);
             }
+
+            $instruction = Mage::getModel('M2ePro/Listing_Product_Instruction');
+            $instruction->setData(array(
+                'listing_product_id' => $listingProductInstance->getId(),
+                'component'          => $listingProductInstance->getComponentMode(),
+                'type'               => Ess_M2ePro_Model_Listing::INSTRUCTION_TYPE_PRODUCT_MOVED_FROM_LISTING,
+                'initiator'          => Ess_M2ePro_Model_Listing::INSTRUCTION_INITIATOR_MOVING_PRODUCT_FROM_LISTING,
+                'priority'           => 20,
+            ));
+            $instruction->save();
         }
 
         $variationUpdaterObject->afterMassProcessEvent();
 
         if ($errors == 0) {
-            return $this->getResponse()->setBody(json_encode(array('result'=>'success')));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('result'=>'success')));
         } else {
-            return $this->getResponse()->setBody(json_encode(array('result'=>'error', 'errors'=>$errors)));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(
+                array('result'=>'error', 'errors'=>$errors)
+            ));
         }
     }
 
-    //#############################################
+    //########################################
 
     private function productCanBeMoved($productId, $listing) {
 
@@ -271,8 +301,8 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
         }
 
         // Add attribute set filter
-        //----------------------------
-        $table = Mage::getSingleton('core/resource')->getTableName('catalog_product_entity');
+        // ---------------------------------------
+        $table = Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix('catalog_product_entity');
         $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
             ->select()
             ->from($table,new Zend_Db_Expr('DISTINCT `entity_id`'))
@@ -289,7 +319,7 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
         return true;
     }
 
-    //#############################################
+    //########################################
 
     private function moveChildrenToListing($parentListingProductId, $listing)
     {
@@ -300,7 +330,7 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
         $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
 
         // Get child products ids
-        //--------------------------
+        // ---------------------------------------
         $dbSelect = $connRead->select()
             ->from(
                 Mage::getResourceModel('M2ePro/Amazon_Listing_Product')->getMainTable(),
@@ -309,7 +339,7 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
             ->where('`variation_parent_id` = ?',$parentListingProductId);
         $products = $connRead->fetchPairs($dbSelect);
 
-        if(!empty($products)) {
+        if (!empty($products)) {
             $connWrite->update(
                 Mage::getResourceModel('M2ePro/Listing_Product')->getMainTable(),
                 array(
@@ -329,7 +359,7 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
             ->where('`sku` IN (?)', implode(',', array_values($products)));
         $items = $connRead->fetchCol($dbSelect);
 
-        if(!empty($items)) {
+        if (!empty($items)) {
             $connWrite->update(
                 Mage::getResourceModel('M2ePro/Amazon_Item')->getMainTable(),
                 array(
@@ -340,5 +370,5 @@ class Ess_M2ePro_Adminhtml_Listing_MovingController
         }
     }
 
-    //#############################################
+    //########################################
 }

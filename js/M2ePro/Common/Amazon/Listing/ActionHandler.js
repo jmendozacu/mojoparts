@@ -1,6 +1,6 @@
-AmazonListingActionHandler = Class.create(ListingActionHandler, {
+CommonAmazonListingActionHandler = Class.create(ListingActionHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     deleteAndRemoveAction: function()
     {
@@ -15,5 +15,5 @@ AmazonListingActionHandler = Class.create(ListingActionHandler, {
         );
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

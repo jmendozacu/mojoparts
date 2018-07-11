@@ -1,16 +1,18 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Development_Module_SynchronizationController
     extends Ess_M2ePro_Controller_Adminhtml_Development_CommandController
 {
-    //#############################################
+    //########################################
 
     /**
-     * @title "Cron Tasks"
+     * @title "Run All"
      * @description "Run all cron synchronization tasks as developer mode"
      * @confirm "Are you sure?"
      * @components
@@ -19,31 +21,74 @@ class Ess_M2ePro_Adminhtml_Development_Module_SynchronizationController
     public function synchCronTasksAction()
     {
         $this->processSynchTasks(array(
-            Ess_M2ePro_Model_Synchronization_Task::DEFAULTS,
-            Ess_M2ePro_Model_Synchronization_Task::TEMPLATES,
-            Ess_M2ePro_Model_Synchronization_Task::ORDERS,
-            Ess_M2ePro_Model_Synchronization_Task::FEEDBACKS,
-            Ess_M2ePro_Model_Synchronization_Task::OTHER_LISTINGS,
-            Ess_M2ePro_Model_Synchronization_Task::POLICIES
+            Ess_M2ePro_Model_Synchronization_Task_Global_Abstract::PROCESSING,
+            Ess_M2ePro_Model_Synchronization_Task_Global_Abstract::MAGENTO_PRODUCTS,
+            Ess_M2ePro_Model_Synchronization_Task_Global_Abstract::STOP_QUEUE,
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::GENERAL,
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::LISTINGS_PRODUCTS,
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::TEMPLATES,
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::ORDERS,
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::OTHER_LISTINGS,
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::POLICIES
         ));
     }
 
-    //----------------------------------------------
+    //########################################
 
     /**
-     * @title "Defaults"
-     * @description "Run only defaults synchronization as developer mode"
+     * @title "General"
+     * @description "Run only general synchronization as developer mode"
      * @confirm "Are you sure?"
      * @components
      */
-    public function synchDefaultsAction()
+    public function generalAction()
     {
         $this->processSynchTasks(array(
-             Ess_M2ePro_Model_Synchronization_Task::DEFAULTS
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::GENERAL
         ));
     }
 
-    //#############################################
+    /**
+     * @title "Processing"
+     * @description "Run only defaults synchronization as developer mode"
+     * @confirm "Are you sure?"
+     */
+    public function synchProcessingAction()
+    {
+        $this->processSynchTasks(array(
+            Ess_M2ePro_Model_Synchronization_Task_Global_Abstract::PROCESSING
+        ));
+    }
+
+    //########################################
+
+    /**
+     * @title "Listings Products"
+     * @description "Run only listings products synchronization as developer mode"
+     * @confirm "Are you sure?"
+     * @components
+     */
+    public function synchListingsProductsAction()
+    {
+        $this->processSynchTasks(array(
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::LISTINGS_PRODUCTS
+        ));
+    }
+
+    /**
+     * @title "Other Listings"
+     * @description "Run only Other listings synchronization as developer mode"
+     * @confirm "Are you sure?"
+     * @components
+     */
+    public function synchOtherListingsAction()
+    {
+        $this->processSynchTasks(array(
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::OTHER_LISTINGS
+        ));
+    }
+
+    //########################################
 
     /**
      * @title "Templates"
@@ -54,35 +99,11 @@ class Ess_M2ePro_Adminhtml_Development_Module_SynchronizationController
     public function synchTemplatesAction()
     {
         $this->processSynchTasks(array(
-             Ess_M2ePro_Model_Synchronization_Task::TEMPLATES
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::TEMPLATES
         ));
     }
 
-    /**
-     * @title "Orders"
-     * @description "Run only orders synchronization as developer mode"
-     * @confirm "Are you sure?"
-     * @components
-     */
-    public function synchOrdersAction()
-    {
-        $this->processSynchTasks(array(
-             Ess_M2ePro_Model_Synchronization_Task::ORDERS
-        ));
-    }
-
-    /**
-     * @title "Feedbacks"
-     * @description "Run only feedbacks synchronization as developer mode"
-     * @confirm "Are you sure?"
-     * @components ebay
-     */
-    public function synchFeedbacksAction()
-    {
-        $this->processSynchTasks(array(
-             Ess_M2ePro_Model_Synchronization_Task::FEEDBACKS
-        ));
-    }
+    //########################################
 
     /**
      * @title "Marketplaces"
@@ -96,29 +117,45 @@ class Ess_M2ePro_Adminhtml_Development_Module_SynchronizationController
         $params = array();
 
         $marketplaceId = (int)$this->getRequest()->getParam('marketplace_id');
-        if(!empty($marketplaceId)) {
+        if (!empty($marketplaceId)) {
             $params['marketplace_id'] = $marketplaceId;
         }
 
         $this->processSynchTasks(array(
-             Ess_M2ePro_Model_Synchronization_Task::MARKETPLACES
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::MARKETPLACES
         ), $params);
     }
 
+    //########################################
+
     /**
-     * @title "3rd Party Listings"
-     * @description "Run only 3rd party listings synchronization as developer mode"
+     * @title "Orders"
+     * @description "Run only orders synchronization as developer mode"
      * @confirm "Are you sure?"
      * @components
      */
-    public function synchOtherListingsAction()
+    public function synchOrdersAction()
     {
         $this->processSynchTasks(array(
-             Ess_M2ePro_Model_Synchronization_Task::OTHER_LISTINGS
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::ORDERS
         ));
     }
 
-    //#############################################
+    //########################################
+
+    /**
+     * @title "Magento Products"
+     * @description "Run only magento products synchronization as developer mode"
+     * @confirm "Are you sure?"
+     */
+    public function synchMagentoProductsAction()
+    {
+        $this->processSynchTasks(array(
+            Ess_M2ePro_Model_Synchronization_Task_Global_Abstract::MAGENTO_PRODUCTS
+        ));
+    }
+
+    //########################################
 
     private function processSynchTasks($tasks, $params = array())
     {
@@ -143,5 +180,5 @@ class Ess_M2ePro_Adminhtml_Development_Module_SynchronizationController
         echo '<pre>'.$dispatcher->getOperationHistory()->getFullProfilerInfo().'</pre>';
     }
 
-    //#############################################
+    //########################################
 }

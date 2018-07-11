@@ -1,37 +1,51 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_Details
     extends Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_Abstract
 {
-    //####################################
+    //########################################
 
+    /**
+     * @return string
+     */
     protected function getNick()
     {
         return '/details/';
     }
 
+    /**
+     * @return string
+     */
     protected function getTitle()
     {
         return 'Details';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     protected function getPercentsStart()
     {
         return 0;
     }
 
+    /**
+     * @return int
+     */
     protected function getPercentsEnd()
     {
         return 25;
     }
 
-    //####################################
+    //########################################
 
     protected function performActions()
     {
@@ -58,14 +72,17 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_Details
         $this->logSuccessfulOperation($marketplace);
     }
 
-    //####################################
+    //########################################
 
     protected function receiveFromEbay(Ess_M2ePro_Model_Marketplace $marketplace)
     {
-        $details = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher')
-                            ->processVirtual('marketplace','get','info',
-                                             array('include_details'=>1),'info',
-                                             $marketplace->getId(),NULL,NULL);
+        $dispatcherObj = Mage::getModel('M2ePro/Ebay_Connector_Dispatcher');
+        $connectorObj = $dispatcherObj->getVirtualConnector('marketplace','get','info',
+                                                            array('include_details' => 1),'info',
+                                                            $marketplace->getId(),NULL);
+
+        $dispatcherObj->process($connectorObj);
+        $details = $connectorObj->getResponseData();
 
         if (is_null($details)) {
             return array();
@@ -83,34 +100,38 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_Details
 
         $tableMarketplaces = $coreResourceModel->getTableName('m2epro_ebay_dictionary_marketplace');
         $tableShipping = $coreResourceModel->getTableName('m2epro_ebay_dictionary_shipping');
-        $tableShippingCategories = $coreResourceModel->getTableName('m2epro_ebay_dictionary_shipping_category');
 
         // Save marketplaces
-        //-----------------------
+        // ---------------------------------------
         $connWrite->delete($tableMarketplaces, array('marketplace_id = ?' => $marketplace->getId()));
+
+        $helper = Mage::helper('M2ePro/Data');
 
         $insertData = array(
             'marketplace_id'                  => $marketplace->getId(),
             'client_details_last_update_date' => isset($details['last_update']) ? $details['last_update'] : NULL,
             'server_details_last_update_date' => isset($details['last_update']) ? $details['last_update'] : NULL,
-            'dispatch'                        => json_encode($details['dispatch']),
-            'packages'                        => json_encode($details['packages']),
-            'return_policy'                   => json_encode($details['return_policy']),
-            'listing_features'                => json_encode($details['listing_features']),
-            'payments'                        => json_encode($details['payments']),
-            'shipping_locations'              => json_encode($details['shipping_locations']),
-            'shipping_locations_exclude'      => json_encode($details['shipping_locations_exclude']),
-            'categories_features_defaults'    => json_encode($details['categories_features_defaults']),
-            'tax_categories'                  => json_encode($details['tax_categories']),
-            'charities'                       => json_encode($details['charities']),
+            'dispatch'                        => $helper->jsonEncode($details['dispatch']),
+            'packages'                        => $helper->jsonEncode($details['packages']),
+            'return_policy'                   => $helper->jsonEncode($details['return_policy']),
+            'listing_features'                => $helper->jsonEncode($details['listing_features']),
+            'payments'                        => $helper->jsonEncode($details['payments']),
+            'shipping_locations'              => $helper->jsonEncode($details['shipping_locations']),
+            'shipping_locations_exclude'      => $helper->jsonEncode($details['shipping_locations_exclude']),
+            'tax_categories'                  => $helper->jsonEncode($details['tax_categories']),
+            'charities'                       => $helper->jsonEncode($details['charities']),
         );
+
+        if (isset($details['additional_data'])) {
+            $insertData['additional_data'] = $helper->jsonEncode($details['additional_data']);
+        }
 
         unset($details['categories_version']);
         $connWrite->insert($tableMarketplaces, $insertData);
-        //-----------------------
+        // ---------------------------------------
 
         // Save shipping
-        //-----------------------
+        // ---------------------------------------
         $connWrite->delete($tableShipping, array('marketplace_id = ?' => $marketplace->getId()));
 
         foreach ($details['shipping'] as $data) {
@@ -118,29 +139,15 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_Details
                 'marketplace_id'   => $marketplace->getId(),
                 'ebay_id'          => $data['ebay_id'],
                 'title'            => $data['title'],
-                'category'         => $data['category'],
+                'category'         => $helper->jsonEncode($data['category']),
                 'is_flat'          => $data['is_flat'],
                 'is_calculated'    => $data['is_calculated'],
                 'is_international' => $data['is_international'],
-                'data'             => $data['data']
+                'data'             => $helper->jsonEncode($data['data']),
             );
             $connWrite->insert($tableShipping, $insertData);
         }
-        //-----------------------
-
-        // Save shipping categories
-        //-----------------------
-        $connWrite->delete($tableShippingCategories, array('marketplace_id = ?' => $marketplace->getId()));
-
-        foreach ($details['shipping_categories'] as $data) {
-            $insertData = array(
-                'marketplace_id' => $marketplace->getId(),
-                'ebay_id'        => $data['ebay_id'],
-                'title'          => $data['title']
-            );
-            $connWrite->insert($tableShippingCategories, $insertData);
-        }
-        //-----------------------
+        // ---------------------------------------
     }
 
     protected function logSuccessfulOperation(Ess_M2ePro_Model_Marketplace $marketplace)
@@ -150,7 +157,7 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_Details
 
         $tempString = Mage::getModel('M2ePro/Log_Abstract')->encodeDescription(
             'The "Details" Action for eBay Site: "%mrk%" has been successfully completed.',
-            array('mrk'=>$marketplace->getTitle())
+            array('mrk' => $marketplace->getTitle())
         );
 
         $this->getLog()->addMessage($tempString,
@@ -158,5 +165,5 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Marketplaces_Details
                                     Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW);
     }
 
-    //####################################
+    //########################################
 }

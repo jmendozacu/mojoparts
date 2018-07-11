@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
@@ -19,13 +21,16 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
      */
     private $sellingFormatTemplate = NULL;
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getData()
     {
         $data = array();
 
-        if ($this->getConfigurator()->isGeneral()) {
+        if ($this->getConfigurator()->isGeneralAllowed()) {
 
             $data = array_merge(
                 $this->getGeneralData(),
@@ -44,15 +49,17 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         );
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getGeneralData()
     {
         $data = array(
             'duration' => $this->getSellingFormatSource()->getDuration(),
             'is_private' => $this->getEbaySellingFormatTemplate()->isPrivateListing(),
-            'currency' => $this->getEbayMarketplace()->getCurrency(),
-            'out_of_stock_control' => $this->getEbaySellingFormatTemplate()->getOutOfStockControl()
+            'currency' => $this->getEbayMarketplace()->getCurrency()
         );
 
         if ($this->getEbayListingProduct()->isListingTypeFixed()) {
@@ -64,6 +71,9 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         return $data;
     }
 
+    /**
+     * @return array
+     */
     public function getVatTaxData()
     {
         $data = array(
@@ -81,6 +91,9 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         return $data;
     }
 
+    /**
+     * @return array
+     */
     public function getRestrictedToBusinessData()
     {
         $data = array();
@@ -93,6 +106,9 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         return $data;
     }
 
+    /**
+     * @return array
+     */
     public function getCharityData()
     {
         $charity = $this->getEbaySellingFormatTemplate()->getCharity();
@@ -107,11 +123,14 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         );
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     */
     public function getQtyData()
     {
-        if (!$this->getConfigurator()->isQty() ||
+        if (!$this->getConfigurator()->isQtyAllowed() ||
             $this->getIsVariationItem()) {
             return array();
         }
@@ -120,14 +139,21 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
             'qty' => $this->getEbayListingProduct()->getQty()
         );
 
+        $this->getConfigurator()->tryToIncreasePriority(
+            Ess_M2ePro_Model_Ebay_Listing_Product_Action_Configurator::PRIORITY_QTY
+        );
+
         $this->checkQtyWarnings();
 
         return $data;
     }
 
+    /**
+     * @return array
+     */
     public function getPriceData()
     {
-        if (!$this->getConfigurator()->isPrice() ||
+        if (!$this->getConfigurator()->isPriceAllowed() ||
             $this->getIsVariationItem()) {
             return array();
         }
@@ -136,7 +162,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
 
         if ($this->getEbayListingProduct()->isListingTypeFixed()) {
 
-            $data['price_fixed'] = $this->getEbayListingProduct()->getBuyItNowPrice();
+            $data['price_fixed'] = $this->getEbayListingProduct()->getFixedPrice();
 
             $data['bestoffer_mode'] = $this->getEbaySellingFormatTemplate()->isBestOfferEnabled();
 
@@ -151,12 +177,19 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
             $data['price_buyitnow'] = $this->getEbayListingProduct()->getBuyItNowPrice();
         }
 
+        $this->getConfigurator()->tryToIncreasePriority(
+            Ess_M2ePro_Model_Ebay_Listing_Product_Action_Configurator::PRIORITY_PRICE
+        );
+
         return $data;
     }
 
+    /**
+     * @return array
+     */
     public function getPriceDiscountStpData()
     {
-        if (!$this->getConfigurator()->isPrice() ||
+        if (!$this->getConfigurator()->isPriceAllowed() ||
             $this->getIsVariationItem()) {
             return array();
         }
@@ -180,9 +213,12 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         return array('price_discount_stp' => $data);
     }
 
+    /**
+     * @return array
+     */
     public function getPriceDiscountMapData()
     {
-        if (!$this->getConfigurator()->isPrice() ||
+        if (!$this->getConfigurator()->isPriceAllowed() ||
             $this->getIsVariationItem()) {
             return array();
         }
@@ -221,7 +257,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         }
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Template_SellingFormat
@@ -252,7 +288,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         return $this->getEbayListingProduct()->getSellingFormatTemplateSource();
     }
 
-    // ########################################
+    //########################################
 
     public function checkQtyWarnings()
     {
@@ -264,7 +300,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
             $productId = $this->getListingProduct()->getProductId();
             $storeId = $this->getListingProduct()->getListing()->getStoreId();
 
-            if(!empty(Ess_M2ePro_Model_Magento_Product::$statistics[$listingProductId][$productId][$storeId]['qty'])) {
+            if (!empty(Ess_M2ePro_Model_Magento_Product::$statistics[$listingProductId][$productId][$storeId]['qty'])) {
 
                 $qtys = Ess_M2ePro_Model_Magento_Product::$statistics[$listingProductId][$productId][$storeId]['qty'];
                 foreach ($qtys as $type => $override) {
@@ -274,6 +310,9 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         }
     }
 
+    /**
+     * @param int $type
+     */
     public function addQtyWarnings($type)
     {
         if ($type === Ess_M2ePro_Model_Magento_Product::FORCING_QTY_TYPE_MANAGE_STOCK_NO) {
@@ -291,5 +330,5 @@ class Ess_M2ePro_Model_Ebay_Listing_Product_Action_Request_Selling
         }
     }
 
-    // ########################################
+    //########################################
 }

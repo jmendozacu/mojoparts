@@ -1,17 +1,17 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Mysql4_Ebay_Listing_Product
     extends Ess_M2ePro_Model_Mysql4_Component_Child_Abstract
 {
-    // ########################################
-
     protected $_isPkAutoIncrement = false;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -19,7 +19,7 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Listing_Product
         $this->_isPkAutoIncrement = false;
     }
 
-    // ########################################
+    //########################################
 
     public function getTemplateCategoryIds(array $listingProductIds)
     {
@@ -51,7 +51,7 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Listing_Product
         return array_unique($ids);
     }
 
-    // ########################################
+    //########################################
 
     public function getChangedItems(array $attributes,
                                     $withStoreFilter = false)
@@ -83,73 +83,5 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Listing_Product
         );
     }
 
-    // ########################################
-
-    public function setSynchStatusNeedByCategoryTemplate($newData, $oldData, $listingProduct)
-    {
-        $newTemplateSnapshot = array();
-
-        try {
-            $newTemplateSnapshot = Mage::helper('M2ePro')
-                ->getCachedObject('Ebay_Template_Category',
-                                  $newData['template_category_id'],
-                                  NULL,array('template'))
-                ->getDataSnapshot();
-        } catch (Exception $exception) {}
-
-        $oldTemplateSnapshot = array();
-
-        try {
-            $oldTemplateSnapshot = Mage::helper('M2ePro')
-                ->getCachedObject('Ebay_Template_Category',
-                                  $oldData['template_category_id'],
-                                  NULL,array('template'))
-                ->getDataSnapshot();
-        } catch (Exception $exception) {}
-
-        if (!$newTemplateSnapshot && !$oldTemplateSnapshot) {
-            return;
-        }
-
-        Mage::getResourceModel('M2ePro/Ebay_Template_Category')->setSynchStatusNeed(
-            $newTemplateSnapshot,
-            $oldTemplateSnapshot,
-            array($listingProduct)
-        );
-    }
-
-    public function setSynchStatusNeedByOtherCategoryTemplate($newData, $oldData, $listingProduct)
-    {
-        $newTemplateSnapshot = array();
-
-        try {
-            $newTemplateSnapshot = Mage::helper('M2ePro')
-                ->getCachedObject('Ebay_Template_OtherCategory',
-                                  $newData['template_other_category_id'],
-                                  NULL,array('template'))
-                ->getDataSnapshot();
-        } catch (Exception $exception) {}
-
-        $oldTemplateSnapshot = array();
-
-        try {
-            $oldTemplateSnapshot = Mage::helper('M2ePro')
-                ->getCachedObject('Ebay_Template_OtherCategory',
-                                  $oldData['template_other_category_id'],
-                                  NULL, array('template'))
-                ->getDataSnapshot();
-        } catch (Exception $exception) {}
-
-        if (!$newTemplateSnapshot && !$oldTemplateSnapshot) {
-            return;
-        }
-
-        Mage::getResourceModel('M2ePro/Ebay_Template_OtherCategory')->setSynchStatusNeed(
-            $newTemplateSnapshot,
-            $oldTemplateSnapshot,
-            array($listingProduct)
-        );
-    }
-
-    // ########################################
+    //########################################
 }

@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
     extends Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Abstract
 {
-    //####################################
+    //########################################
 
     protected function getNick()
     {
@@ -19,7 +21,7 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
         return 'Specifics';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function getPercentsStart()
     {
@@ -31,7 +33,7 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
         return 100;
     }
 
-    //####################################
+    //########################################
 
     protected function performActions()
     {
@@ -39,9 +41,8 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
         $params     = $this->getParams();
 
         /** @var $marketplace Ess_M2ePro_Model_Marketplace **/
-        $marketplace = Mage::helper('M2ePro/Component_Amazon')->getObject(
-            'Marketplace', (int)$params['marketplace_id']
-        );
+        $marketplace = Mage::helper('M2ePro/Component_Amazon')
+                            ->getObject('Marketplace', (int)$params['marketplace_id']);
 
         $this->deleteAllSpecifics($marketplace);
 
@@ -83,18 +84,17 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
         $this->logSuccessfulOperation($marketplace);
     }
 
-    //####################################
+    //########################################
 
     protected function receiveFromAmazon(Ess_M2ePro_Model_Marketplace $marketplace, $partNumber)
     {
-        $response = Mage::getModel('M2ePro/Connector_Amazon_Dispatcher')
-                          ->processVirtual(
-                              'marketplace', 'get', 'specifics',
-                               array(
-                                   'part_number' => $partNumber,
-                                   'marketplace' => $marketplace->getNativeId()
-                               )
-                          );
+        $dispatcherObject = Mage::getModel('M2ePro/Amazon_Connector_Dispatcher');
+        $connectorObj     = $dispatcherObject->getVirtualConnector('marketplace', 'get', 'specifics',
+                                                                   array('part_number' => $partNumber,
+                                                                         'marketplace' => $marketplace->getNativeId()));
+
+        $dispatcherObject->process($connectorObj);
+        $response = $connectorObj->getResponseData();
 
         if (is_null($response) || empty($response['data'])) {
             $response = array();
@@ -102,24 +102,36 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
 
         $dataCount = isset($response['data']) ? count($response['data']) : 0;
         $this->getActualOperationHistory()->addText("Total received specifics from Amazon: {$dataCount}");
+
         return $response;
     }
 
-    protected function saveSpecificsToDb(Ess_M2ePro_Model_Marketplace $marketplace, array $specifics)
+    protected function deleteAllSpecifics(Ess_M2ePro_Model_Marketplace $marketplace)
     {
         /** @var $connWrite Varien_Db_Adapter_Pdo_Mysql */
         $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
         $tableSpecifics = Mage::getSingleton('core/resource')->getTableName('m2epro_amazon_dictionary_specific');
 
-        if (!count($specifics)) {
+        $connWrite->delete($tableSpecifics, array('marketplace_id = ?' => $marketplace->getId()));
+    }
+
+    protected function saveSpecificsToDb(Ess_M2ePro_Model_Marketplace $marketplace, array $specifics)
+    {
+        $totalCountItems = count($specifics);
+        if ($totalCountItems <= 0) {
             return;
         }
 
+        /** @var $connWrite Varien_Db_Adapter_Pdo_Mysql */
+        $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
+        $tableSpecifics = Mage::getSingleton('core/resource')->getTableName('m2epro_amazon_dictionary_specific');
+
         $iteration            = 0;
         $iterationsForOneStep = 1000;
-        $totalCountItems      = count($specifics);
         $percentsForOneStep   = ($this->getPercentsInterval()/2) / ($totalCountItems/$iterationsForOneStep);
         $insertData           = array();
+
+        $helper = Mage::helper('M2ePro/Data');
 
         for ($i = 0; $i < $totalCountItems; $i++) {
 
@@ -134,10 +146,10 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
                 'xml_tag'            => $data['xml_tag'],
                 'xpath'              => $data['xpath'],
                 'type'               => (int)$data['type'],
-                'values'             => $data['values'],
-                'recommended_values' => $data['recommended_values'],
-                'params'             => $data['params'],
-                'data_definition'    => $data['data_definition'],
+                'values'             => $helper->jsonEncode($data['values']),
+                'recommended_values' => $helper->jsonEncode($data['recommended_values']),
+                'params'             => $helper->jsonEncode($data['params']),
+                'data_definition'    => $helper->jsonEncode($data['data_definition']),
                 'min_occurs'         => (int)$data['min_occurs'],
                 'max_occurs'         => (int)$data['max_occurs']
             );
@@ -156,26 +168,14 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
         }
     }
 
-    protected function deleteAllSpecifics(Ess_M2ePro_Model_Marketplace $marketplace)
-    {
-        /** @var $connWrite Varien_Db_Adapter_Pdo_Mysql */
-        $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
-        $tableMotorsSpecifics = Mage::getSingleton('core/resource')
-            ->getTableName('m2epro_amazon_dictionary_specific');
-
-        $connWrite->delete(
-            $tableMotorsSpecifics,
-            array('marketplace_id = ?' => $marketplace->getId())
-        );
-    }
-
     protected function logSuccessfulOperation(Ess_M2ePro_Model_Marketplace $marketplace)
     {
-        // ->__('The "Specifics" Action for Amazon Marketplace: "%mrk%" has been successfully completed.');
+        //->__('The "Specifics" Action for %amazon% Marketplace: "%mrk%" has been successfully completed.');
 
         $tempString = Mage::getModel('M2ePro/Log_Abstract')->encodeDescription(
-            'The "Specifics" Action for Amazon Marketplace: "%mrk%" has been successfully completed.',
-            array('mrk' => $marketplace->getTitle())
+            'The "Specifics" Action for %amazon% Marketplace: "%mrk%" has been successfully completed.',
+            array('!amazon' => Mage::helper('M2ePro/Component_Amazon')->getTitle(),
+                  'mrk'     => $marketplace->getTitle())
         );
 
         $this->getLog()->addMessage($tempString,
@@ -183,5 +183,5 @@ final class Ess_M2ePro_Model_Amazon_Synchronization_Marketplaces_Specifics
                                     Ess_M2ePro_Model_Log_Abstract::PRIORITY_LOW);
     }
 
-    //####################################
+    //########################################
 }

@@ -1,17 +1,19 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Buy_Synchronization_Marketplaces
     extends Ess_M2ePro_Model_Buy_Synchronization_Abstract
 {
-    //####################################
+    //########################################
 
     protected function getType()
     {
-        return Ess_M2ePro_Model_Synchronization_Task_Abstract::MARKETPLACES;
+        return Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::MARKETPLACES;
     }
 
     protected function getNick()
@@ -19,7 +21,7 @@ final class Ess_M2ePro_Model_Buy_Synchronization_Marketplaces
         return NULL;
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function getPercentsStart()
     {
@@ -31,7 +33,7 @@ final class Ess_M2ePro_Model_Buy_Synchronization_Marketplaces
         return 100;
     }
 
-    //####################################
+    //########################################
 
     protected function isPossibleToRun()
     {
@@ -76,10 +78,8 @@ final class Ess_M2ePro_Model_Buy_Synchronization_Marketplaces
 
     public function performActions()
     {
-        $result = $this->processTask('Marketplaces_Categories');
-        Mage::helper('M2ePro/Data_Cache_Permanent')->removeTagValues('marketplace');
-        return $result;
+        return true;
     }
 
-    //####################################
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_ProductChange extends Ess_M2ePro_Model_Abstract
@@ -14,10 +16,12 @@ class Ess_M2ePro_Model_ProductChange extends Ess_M2ePro_Model_Abstract
     const INITIATOR_OBSERVER        = 1;
     const INITIATOR_SYNCHRONIZATION = 2;
     const INITIATOR_INSPECTOR       = 3;
+    const INITIATOR_DEVELOPER       = 4;
+    const INITIATOR_MAGMI_PLUGIN    = 5;
 
     const UPDATE_ATTRIBUTE_CODE = '__INSTANCE__';
 
-    //####################################
+    //########################################
 
     public function _construct()
     {
@@ -25,7 +29,7 @@ class Ess_M2ePro_Model_ProductChange extends Ess_M2ePro_Model_Abstract
         $this->_init('M2ePro/ProductChange');
     }
 
-    //####################################
+    //########################################
 
     public function addCreateAction($productId, $initiator = self::INITIATOR_UNKNOWN)
     {
@@ -126,7 +130,7 @@ class Ess_M2ePro_Model_ProductChange extends Ess_M2ePro_Model_Abstract
         return false;
     }
 
-    //-----------------------------------
+    // ---------------------------------------
 
     public function updateAttribute($productId, $attribute,
                                     $valueOld, $valueNew,
@@ -197,7 +201,7 @@ class Ess_M2ePro_Model_ProductChange extends Ess_M2ePro_Model_Abstract
         return false;
     }
 
-    //####################################
+    //########################################
 
     public function removeDeletedProduct($product)
     {
@@ -214,73 +218,5 @@ class Ess_M2ePro_Model_ProductChange extends Ess_M2ePro_Model_Abstract
         }
     }
 
-    //####################################
-
-    public function clearLastProcessed($date, $maxPerOneTime)
-    {
-        $stmt = $this->getResource()->getReadConnection()
-            ->select()
-            ->from(array('pc' => $this->getResource()->getMainTable()),'id')
-            ->order(array('id ASC'))
-            ->limit($maxPerOneTime)
-            ->query();
-
-        $ids = array();
-        while ($ids[] = (int)$stmt->fetchColumn());
-        $ids = array_values(array_unique(array_filter($ids)));
-
-        if (empty($ids)) {
-            return;
-        }
-
-        $ids = implode(',',$ids);
-        $initiator = self::INITIATOR_OBSERVER;
-
-        $this->clear("id IN ({$ids}) AND (update_date <= '{$date}' OR initiators NOT LIKE '%{$initiator}%')");
-    }
-
-    public function clearOutdated($maxLifeTime)
-    {
-        /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
-        $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-
-        $tempDate = new DateTime('now', new DateTimeZone('UTC'));
-        $tempDate->modify('-'.$maxLifeTime.' seconds');
-        $tempDate = Mage::helper('M2ePro')->getDate($tempDate->format('U'));
-
-        Mage::getModel('M2ePro/ProductChange')->clear(
-            'update_date <= ' . $connRead->quote($tempDate)
-        );
-    }
-
-    public function clearExcessive($maxProductsChanges)
-    {
-        $countOfProductChanges = Mage::getModel('M2ePro/ProductChange')->getCollection()->getSize();
-
-        if (($countOfProductChangesToDelete = $countOfProductChanges - $maxProductsChanges) > 0) {
-            Mage::getModel('M2ePro/ProductChange')->clear(NULL, $countOfProductChangesToDelete);
-        }
-    }
-
-    //####################################
-
-    public function clear($where = NULL, $limit = NULL)
-    {
-        if ($limit < 0) {
-            $limit = NULL;
-        }
-
-        /** @var $connWrite Varien_Db_Adapter_Pdo_Mysql */
-        $connWrite = Mage::getSingleton('core/resource')->getConnection('core_write');
-        $tableName = $this->getResource()->getMainTable();
-
-        $where && $where = "AND {$where}";
-        $limit && $limit = "LIMIT {$limit}";
-
-        $sql = "DELETE FROM {$tableName} WHERE 1 {$where} ORDER BY id ASC {$limit}";
-
-        $connWrite->query($sql);
-    }
-
-    //####################################
+    //########################################
 }

@@ -1,21 +1,24 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Marketplace_Details
 {
-    // ##########################################################
-
     private $marketplaceId = null;
 
     private $productData = array();
 
-    private $vocabularyData = array();
+    //########################################
 
-    // ##########################################################
-
+    /**
+     * @param $marketplaceId
+     * @return $this
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function setMarketplaceId($marketplaceId)
     {
         if ($this->marketplaceId === $marketplaceId) {
@@ -28,41 +31,20 @@ class Ess_M2ePro_Model_Amazon_Marketplace_Details
         return $this;
     }
 
-    // ##########################################################
+    //########################################
 
-    public function getVocabularyAttributeNames($attribute)
+    /**
+     * @return array
+     */
+    public function getProductData()
     {
-        if (empty($this->vocabularyData[$attribute])) {
-            return array();
-        }
-
-        return $this->vocabularyData[$attribute]['names'];
+       return $this->productData;
     }
 
-    public function getVocabularyOptionNames($attribute, $option)
-    {
-        if (empty($this->vocabularyData[$attribute]['options'])) {
-            return array();
-        }
-
-        $resultNames = array();
-
-        foreach ($this->vocabularyData[$attribute]['options'] as $optionNames) {
-            $preparedOption      = strtolower($option);
-            $preparedOptionNames = array_map('strtolower', $optionNames);
-
-            if (!in_array($preparedOption, $preparedOptionNames)) {
-                continue;
-            }
-
-            $resultNames = array_merge($resultNames, $optionNames);
-        }
-
-        return $resultNames;
-    }
-
-    // ##########################################################
-
+    /**
+     * @param $productDataNick
+     * @return array
+     */
     public function getVariationThemes($productDataNick)
     {
         if (!isset($this->productData[$productDataNick])) {
@@ -72,23 +54,29 @@ class Ess_M2ePro_Model_Amazon_Marketplace_Details
         return (array)$this->productData[$productDataNick]['variation_themes'];
     }
 
+    /**
+     * @param $productDataNick
+     * @param $theme
+     * @return array
+     */
     public function getVariationThemeAttributes($productDataNick, $theme)
     {
         $themes = $this->getVariationThemes($productDataNick);
         return !empty($themes[$theme]['attributes']) ? $themes[$theme]['attributes'] : array();
     }
 
-    // ##########################################################
+    //########################################
 
     private function load()
     {
         if (is_null($this->marketplaceId)) {
-            throw new Exception('Marketplace was not set.');
+            throw new Ess_M2ePro_Model_Exception('Marketplace was not set.');
         }
 
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $table    = Mage::getSingleton('core/resource')->getTableName('m2epro_amazon_dictionary_marketplace');
+        $table    = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('m2epro_amazon_dictionary_marketplace');
 
         $data = $connRead->select()
             ->from($table)
@@ -97,12 +85,11 @@ class Ess_M2ePro_Model_Amazon_Marketplace_Details
             ->fetch();
 
         if ($data === false) {
-            throw new Exception('Marketplace not found or not synchronized');
+            throw new Ess_M2ePro_Model_Exception('Marketplace not found or not synchronized');
         }
 
-        $this->productData    = json_decode($data['product_data'], true);
-        $this->vocabularyData = json_decode($data['vocabulary'], true);
+        $this->productData    = Mage::helper('M2ePro')->jsonDecode($data['product_data']);
     }
 
-    // ##########################################################
+    //########################################
 }

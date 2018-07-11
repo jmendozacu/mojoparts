@@ -66,15 +66,12 @@
 
 <div id="block_notice_amazon_accounts_other_listings" class="block_notices_module" title="<?php echo Mage::helper('M2ePro')->__('3rd Party Listings'); ?>">
     <?php
-    $menuOtherListingsPath = Mage::helper('M2ePro/View_Common')->getMenuPath('listings/listing_other');
-    $menuSynchronizationPath = Mage::helper('M2ePro/View_Common')->getMenuPath('configuration/synchronization');
+    $menuOtherListingsPath = Mage::helper('M2ePro/View_Common')->getPageNavigationPath('listings', '3rd Party', 'amazon');
     echo Mage::helper('M2ePro')->__('
         The 3rd Party Listings are the Items, which were Listed on Amazon without using M2E Pro Extension. <br/><br/>
 
         To allow importing of these Listings for the current Amazon Account, set <strong>Import 3rd Party Listings</strong> to <i>Yes</i>.<br/>
         Imported Listings can be found in (%menu_other_listings_path%).<br/><br/>
-
-        <b>Note:</b> The 3rd Party Listings Synchronization must be enabled in (%menu_synchronization_path%).<br/><br/>
 
         To Map the Products of the 3rd Party Listings with existing Products in Magento by ASIN, ISBN, SKU or Title, set <strong>Product Mapping</strong> to <i>Yes</i> and choose appropriate Attribute(s).
         A Magento Product will be Mapped if at least one of the chosen Attributes meets the same value in Amazon Listing as it has in Magento.
@@ -82,8 +79,11 @@
         After Mapping the Amazon Listing can be automatically Moved from the 3rd Party Listings to M2E Pro Listings for further management.<br/><br/>
 
         <b>Note:</b> Auto Mapping and Moving Actions are performed only once during the first 3rd Party Listings Synchronization.
-        Afterwards, it can be performed manually on the 3rd Party Listings Page (%menu_other_listings_path%).',
-        $menuOtherListingsPath, $menuSynchronizationPath);
+        Afterwards, it can be performed manually on the 3rd Party Listings Page (%menu_other_listings_path%).<br/><br/>
+        More detailed information about ability to work with this Page you can find <a href="%url%" target="_blank">here</a>.',
+        $menuOtherListingsPath,
+        Mage::helper('M2ePro/Module_Support')->getDocumentationUrl(NULL, NULL, 'x/u4IVAQ')
+    );
     ?>
 </div>
 
@@ -116,7 +116,7 @@
                 <tbody id="other_listings_store_view_tr">
                     <tr id="marketplaces_related_store_id_container" <?php if (!$isEdit) echo ' style="display:none;"'; ?>>
                         <td class="label">
-                            <label><?php echo Mage::helper('M2ePro')->__('Related Store View'); ?>: <span class="required">*</span></label>
+                            <label><?php echo Mage::helper('M2ePro')->__('Related Store View'); ?>:</label>
                         </td>
                         <td class="value" style="width: auto;">
                             <?php
@@ -182,15 +182,15 @@
                         <?php $tempAttributeValue = isset($mappingSettings['sku']['attribute']) ? $mappingSettings['sku']['attribute'] : ''; ?>
                         <input type="hidden" name="mapping_sku_attribute" id="mapping_sku_attribute" value="<?php echo $tempAttributeValue; ?>"/>
 
-                        <select id="mapping_sku_mode" name="mapping_sku_mode" class="attribute-mode-select">
+                        <select id="mapping_sku_mode" name="mapping_sku_mode" class="attribute-mode-select M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,textarea,select">
                             <option value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_SKU_MODE_NONE ?>" <?php if (isset($mappingSettings['sku']['mode']) && $mappingSettings['sku']['mode'] == Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_SKU_MODE_NONE) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('None') ?></option>
                             <option value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_SKU_MODE_DEFAULT ?>" <?php if (isset($mappingSettings['sku']['mode']) && $mappingSettings['sku']['mode'] == Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_SKU_MODE_DEFAULT) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Product SKU') ?></option>
                             <option value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_SKU_MODE_PRODUCT_ID ?>" <?php if (isset($mappingSettings['sku']['mode']) && $mappingSettings['sku']['mode'] == Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_SKU_MODE_PRODUCT_ID) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Product ID') ?></option>
 
-                            <optgroup label="Magento Attributes">
+                            <optgroup class="M2ePro-custom-attribute-optgroup" label="Magento Attributes">
                                 <?php foreach ($this->attributes as $attribute) { ?>
                                     <option attribute_code="<?php echo $attribute['code'] ?>" value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_SKU_MODE_CUSTOM_ATTRIBUTE?>" <?php if ($tempAttributeValue == $attribute['code']) echo 'selected="selected"' ?>>
-                                        <?php echo Mage::helper('M2ePro')->__($attribute['label']) ?>
+                                        <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
                                     </option>
                                 <?php } ?>
                             </optgroup>
@@ -215,13 +215,13 @@
                         <?php $tempAttributeValue = isset($mappingSettings['general_id']['attribute']) ? $mappingSettings['general_id']['attribute'] : ''; ?>
                         <input type="hidden" name="mapping_general_id_attribute" id="mapping_general_id_attribute" value="<?php echo $tempAttributeValue; ?>"/>
 
-                        <select id="mapping_general_id_mode" name="mapping_general_id_mode" class="attribute-mode-select">
+                        <select id="mapping_general_id_mode" name="mapping_general_id_mode" class="attribute-mode-select M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,textarea,select">
                             <option value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_GENERAL_ID_MODE_NONE ?>" <?php if (isset($mappingSettings['general_id']['mode']) && $mappingSettings['general_id']['mode'] == Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_GENERAL_ID_MODE_NONE) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('None') ?></option>
 
-                            <optgroup label="Magento Attribute">
+                            <optgroup class="M2ePro-custom-attribute-optgroup" label="Magento Attribute">
                                 <?php foreach ($this->attributes as $attribute) { ?>
                                     <option attribute_code="<?php echo $attribute['code'] ?>" value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_GENERAL_ID_MODE_CUSTOM_ATTRIBUTE?>" <?php if ($tempAttributeValue == $attribute['code']) echo 'selected="selected"' ?>>
-                                        <?php echo Mage::helper('M2ePro')->__($attribute['label']) ?>
+                                        <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
                                     </option>
                                 <?php } ?>
                             </optgroup>
@@ -246,14 +246,14 @@
                         <?php $tempAttributeValue = isset($mappingSettings['title']['attribute']) ? $mappingSettings['title']['attribute'] : ''; ?>
                         <input type="hidden" name="mapping_title_attribute" id="mapping_title_attribute" value="<?php echo $tempAttributeValue; ?>"/>
 
-                        <select id="mapping_title_mode" name="mapping_title_mode" class="attribute-mode-select">
+                        <select id="mapping_title_mode" name="mapping_title_mode" class="attribute-mode-select M2ePro-custom-attribute-can-be-created" allowed_attribute_types="text,textarea,select">
                             <option value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_NONE ?>" <?php if (isset($mappingSettings['title']['mode']) && $mappingSettings['title']['mode'] == Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_NONE) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('None') ?></option>
                             <option value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_DEFAULT ?>" <?php if (isset($mappingSettings['title']['mode']) && $mappingSettings['title']['mode'] == Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_DEFAULT) echo 'selected="selected"' ?>><?php echo Mage::helper('M2ePro')->__('Product Name') ?></option>
 
-                            <optgroup label="Magento Attribute">
+                            <optgroup class="M2ePro-custom-attribute-optgroup" label="Magento Attribute">
                                     <?php foreach ($this->attributes as $attribute) { ?>
                                         <option attribute_code="<?php echo $attribute['code'] ?>" value="<?php echo Ess_M2ePro_Model_Amazon_Account::OTHER_LISTINGS_MAPPING_TITLE_MODE_CUSTOM_ATTRIBUTE?>" <?php if ($tempAttributeValue == $attribute['code']) echo 'selected="selected"' ?>>
-                                            <?php echo Mage::helper('M2ePro')->__($attribute['label']) ?>
+                                            <?php echo Mage::helper('M2ePro')->escapeHtml($attribute['label']); ?>
                                         </option>
                                     <?php } ?>
                             </optgroup>

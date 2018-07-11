@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Category_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
-    // ####################################
+    //########################################
 
     public function getStoreId()
     {
@@ -19,7 +21,7 @@ class Ess_M2ePro_Block_Adminhtml_Category_Grid extends Mage_Adminhtml_Block_Widg
         return $this;
     }
 
-    // ####################################
+    //########################################
 
     public function setCollection($collection)
     {
@@ -50,7 +52,10 @@ class Ess_M2ePro_Block_Adminhtml_Category_Grid extends Mage_Adminhtml_Block_Widg
 
         $dbSelect1 = $connRead
             ->select()
-            ->from(Mage::getSingleton('core/resource')->getTableName($tableName), new Zend_Db_Expr('MAX(`store_id`)'))
+            ->from(
+                Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix($tableName),
+                new Zend_Db_Expr('MAX(`store_id`)')
+            )
             ->where("`entity_id` = `ccev`.`entity_id`")
             ->where("`attribute_id` = `ccev`.`attribute_id`")
             ->where("`store_id` = 0 OR `store_id` = ?",$this->getStoreId());
@@ -58,7 +63,7 @@ class Ess_M2ePro_Block_Adminhtml_Category_Grid extends Mage_Adminhtml_Block_Widg
         $dbSelect2 = $connRead
             ->select()
             ->from(
-                array('ccev' => Mage::getSingleton('core/resource')->getTableName($tableName)),
+                array('ccev' => Mage::helper('M2ePro/Module_Database_Structure')->getTableNameWithPrefix($tableName)),
                 array('name' => 'value','category_id' => 'entity_id')
             )
             ->where('ccev.entity_id IN ('.implode(',',$ids).')')
@@ -74,7 +79,7 @@ class Ess_M2ePro_Block_Adminhtml_Category_Grid extends Mage_Adminhtml_Block_Widg
         $this->setData('categories_cache', $cacheData);
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnMagentoCategory($value, $row, $column, $isExport)
     {
@@ -93,12 +98,12 @@ class Ess_M2ePro_Block_Adminhtml_Category_Grid extends Mage_Adminhtml_Block_Widg
         return Mage::helper('M2ePro')->escapeHtml($path);
     }
 
-    // ####################################
+    //########################################
 
     public function getMultipleRows($item)
     {
         return false;
     }
 
-    // ####################################
+    //########################################
 }

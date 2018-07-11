@@ -1,17 +1,17 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Mysql4_Ebay_Order
     extends Ess_M2ePro_Model_Mysql4_Component_Child_Abstract
 {
-    // ########################################
-
     protected $_isPkAutoIncrement = false;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -19,12 +19,12 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Order
         $this->_isPkAutoIncrement = false;
     }
 
-    // ########################################
+    //########################################
 
     public function getOrdersContainingItemsFromOrder($accountId, array $items)
     {
         // Prepare item_id-transaction_id pairs for sql
-        // -------------
+        // ---------------------------------------
         $readConnection = $this->_getReadAdapter();
 
         $whereSql = array();
@@ -35,10 +35,10 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Order
             $whereSql[] = "(item_id = {$itemIdSql} AND transaction_id = {$transactionIdSql})";
         }
         $whereSql = implode(' OR ', $whereSql);
-        // -------------
+        // ---------------------------------------
 
         // Find orders which contains at least one order item from current order
-        // -------------
+        // ---------------------------------------
         /** @var $collection Mage_Core_Model_Mysql4_Collection_Abstract */
         $collection = Mage::helper('M2ePro/Component_Ebay')->getCollection('Order');
         $collection
@@ -57,12 +57,12 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Order
                 ->where($whereSql)
                 ->where('`main_table`.`account_id` = ?', $accountId)
                 ->order(array('main_table.id ASC'));
-        // -------------
+        // ---------------------------------------
 
         return $collection->getItems();
     }
 
-    // ########################################
+    //########################################
 
     public function getCancellationCandidatesChannelIds($accountId, DateTime $startDate, DateTime $endDate)
     {
@@ -75,8 +75,8 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Order
         ));
 
         $collection->addFieldToFilter('purchase_create_date', array(
-            'from' => $startDate->format('Y-m-d 00:00:00'),
-            'to'   => $endDate->format('Y-m-d 23:59:59')
+            'from' => $startDate->format('Y-m-d H:i:s'),
+            'to'   => $endDate->format('Y-m-d H:i:s')
         ));
 
         $collection->setOrder('id', Varien_Data_Collection::SORT_ORDER_ASC);
@@ -84,5 +84,5 @@ class Ess_M2ePro_Model_Mysql4_Ebay_Order
         return $collection->getColumnValues('ebay_order_id');
     }
 
-    // ########################################
+    //########################################
 }

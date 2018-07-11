@@ -1,7 +1,7 @@
 ListingOtherMappingHandler = Class.create();
 ListingOtherMappingHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function(gridHandler,component)
     {
@@ -11,7 +11,7 @@ ListingOtherMappingHandler.prototype = Object.extend(new CommonHandler(), {
         this.attachEvents();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     openPopUp: function(productTitle, otherProductId)
     {
@@ -26,7 +26,7 @@ ListingOtherMappingHandler.prototype = Object.extend(new CommonHandler(), {
             windowClassName: "popup-window",
             title: M2ePro.translator.translate('Mapping Product') + ' "' + productTitle + '"',
             top: 100,
-            width: 750,
+            width: 900,
             height: 500,
             zIndex: 100,
             hideEffect: Element.hide,
@@ -39,7 +39,7 @@ ListingOtherMappingHandler.prototype = Object.extend(new CommonHandler(), {
         $('other_product_id').value = otherProductId;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     attachEvents: function()
     {
@@ -56,7 +56,7 @@ ListingOtherMappingHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     map: function()
     {
@@ -116,5 +116,5 @@ ListingOtherMappingHandler.prototype = Object.extend(new CommonHandler(), {
         });
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

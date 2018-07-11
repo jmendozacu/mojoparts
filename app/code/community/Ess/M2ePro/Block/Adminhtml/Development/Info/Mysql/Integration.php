@@ -1,26 +1,28 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Development_Info_Mysql_Integration extends Mage_Adminhtml_Block_Widget
 {
-    // ########################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('developmentDatabaseIntegration');
-        //------------------------------
+        // ---------------------------------------
 
         $this->setTemplate('M2ePro/development/info/mysql/integration.phtml');
     }
 
-    // ########################################
+    //########################################
 
     public function getInfoTables()
     {
@@ -52,14 +54,16 @@ class Ess_M2ePro_Block_Adminhtml_Development_Info_Mysql_Integration extends Mage
         return $tablesInfo;
     }
 
-    // ########################################
+    //########################################
 
     private function getGeneralTables()
     {
         return array(
             'General' => array(
+                'm2epro_account',
                 'm2epro_listing',
                 'm2epro_listing_product',
+                'm2epro_listing_other'
             )
         );
     }
@@ -72,6 +76,7 @@ class Ess_M2ePro_Block_Adminhtml_Development_Info_Mysql_Integration extends Mage
                 'm2epro_amazon_item',
                 'm2epro_amazon_listing',
                 'm2epro_amazon_listing_product',
+                'm2epro_amazon_listing_other'
             )
         );
     }
@@ -84,9 +89,10 @@ class Ess_M2ePro_Block_Adminhtml_Development_Info_Mysql_Integration extends Mage
                 'm2epro_ebay_item',
                 'm2epro_ebay_listing',
                 'm2epro_ebay_listing_product',
+                'm2epro_ebay_listing_other'
             )
         );
     }
 
-    // ########################################
+    //########################################
 }

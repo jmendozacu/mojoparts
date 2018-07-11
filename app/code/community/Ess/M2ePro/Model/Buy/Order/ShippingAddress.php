@@ -1,11 +1,18 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Buy_Order_ShippingAddress extends Ess_M2ePro_Model_Order_ShippingAddress
 {
+    //########################################
+
+    /**
+     * @return array
+     */
     public function getRawData()
     {
         return array(
@@ -28,6 +35,7 @@ class Ess_M2ePro_Model_Buy_Order_ShippingAddress extends Ess_M2ePro_Model_Order_
 
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $email = str_replace(' ', '-', strtolower($this->order->getChildObject()->getBuyerName()));
+            $email = mb_convert_encoding($email, "ASCII");
             $email .= Ess_M2ePro_Model_Magento_Customer::FAKE_EMAIL_POSTFIX;
         }
 
@@ -55,4 +63,6 @@ class Ess_M2ePro_Model_Buy_Order_ShippingAddress extends Ess_M2ePro_Model_Order_
 
         return $phone;
     }
+
+    //########################################
 }

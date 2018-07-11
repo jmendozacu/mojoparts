@@ -1,110 +1,193 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Ebay_Listing_Action_Configurator
+    extends Ess_M2ePro_Model_Listing_Product_Action_Configurator
 {
-    const ALL_DATA_KEY     = 'all_data';
-    const ONLY_DATA_KEY    = 'only_data';
+    const DATA_TYPE_GENERAL     = 'general';
+    const DATA_TYPE_QTY         = 'qty';
+    const DATA_TYPE_PRICE       = 'price';
+    const DATA_TYPE_TITLE       = 'title';
+    const DATA_TYPE_SUBTITLE    = 'subtitle';
+    const DATA_TYPE_DESCRIPTION = 'description';
 
-    const TYPE_GENERAL     = 'general';
-
-    const TYPE_QTY         = 'qty';
-    const TYPE_PRICE       = 'price';
-
-    const TYPE_TITLE       = 'title';
-    const TYPE_SUBTITLE    = 'subtitle';
-    const TYPE_DESCRIPTION = 'description';
+    //########################################
 
     /**
-     * @var array
+     * @return array
      */
-    private $params = array();
-
-    // ########################################
-
-    public function setParams(array $params = array())
+    public function getAllDataTypes()
     {
-        $this->params = $params;
+        return array(
+            self::DATA_TYPE_GENERAL,
+            self::DATA_TYPE_QTY,
+            self::DATA_TYPE_PRICE,
+            self::DATA_TYPE_TITLE,
+            self::DATA_TYPE_SUBTITLE,
+            self::DATA_TYPE_DESCRIPTION,
+        );
     }
 
-    public function getParams()
+    //########################################
+
+    /**
+     * @return bool
+     */
+    public function isGeneralAllowed()
     {
-        return $this->params;
+        return $this->isAllowed(self::DATA_TYPE_GENERAL);
     }
 
-    // ########################################
-
-    public function isAll()
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Listing_Action_Configurator
+     */
+    public function allowGeneral()
     {
-        return isset($this->params[self::ALL_DATA_KEY]) &&
-               (bool)$this->params[self::ALL_DATA_KEY];
+        return $this->allow(self::DATA_TYPE_GENERAL);
     }
 
-    public function isOnly()
+    /**
+     * @return $this
+     */
+    public function disallowGeneral()
     {
-        return isset($this->params[self::ONLY_DATA_KEY]) &&
-               is_array($this->params[self::ONLY_DATA_KEY]) &&
-               count($this->params[self::ONLY_DATA_KEY]) > 0;
+        return $this->disallow(self::DATA_TYPE_GENERAL);
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
-    abstract public function isAllPermitted();
-
-    // ########################################
-
-    public function isGeneral()
+    /**
+     * @return bool
+     */
+    public function isQtyAllowed()
     {
-        return $this->isAllowed(self::TYPE_GENERAL);
+        return $this->isAllowed(self::DATA_TYPE_QTY);
     }
 
-    // -----------------------------------------
-
-    public function isQty()
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Listing_Action_Configurator
+     */
+    public function allowQty()
     {
-        return $this->isAllowed(self::TYPE_QTY);
+        return $this->allow(self::DATA_TYPE_QTY);
     }
 
-    public function isPrice()
+    /**
+     * @return $this
+     */
+    public function disallowQty()
     {
-        return $this->isAllowed(self::TYPE_PRICE);
+        return $this->disallow(self::DATA_TYPE_QTY);
     }
 
-    // -----------------------------------------
+    // ---------------------------------------
 
-    public function isTitle()
+    /**
+     * @return bool
+     */
+    public function isPriceAllowed()
     {
-        return $this->isAllowed(self::TYPE_TITLE);
+        return $this->isAllowed(self::DATA_TYPE_PRICE);
     }
 
-    public function isSubtitle()
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Listing_Action_Configurator
+     */
+    public function allowPrice()
     {
-        return $this->isAllowed(self::TYPE_SUBTITLE);
+        return $this->allow(self::DATA_TYPE_PRICE);
     }
 
-    public function isDescription()
+    /**
+     * @return $this
+     */
+    public function disallowPrice()
     {
-        return $this->isAllowed(self::TYPE_DESCRIPTION);
+        return $this->disallow(self::DATA_TYPE_PRICE);
     }
 
-    // ########################################
+    // ---------------------------------------
 
-    public function isAllowed($type)
+    /**
+     * @return bool
+     */
+    public function isTitleAllowed()
     {
-        if ($this->isAll()) {
-            return true;
-        }
-
-        if (!$this->isOnly()) {
-            return true;
-        }
-
-        return isset($this->params[self::ONLY_DATA_KEY][$type]) &&
-               (bool)$this->params[self::ONLY_DATA_KEY][$type];
+        return $this->isAllowed(self::DATA_TYPE_TITLE);
     }
 
-    // ########################################
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Listing_Action_Configurator
+     */
+    public function allowTitle()
+    {
+        return $this->allow(self::DATA_TYPE_TITLE);
+    }
+
+    /**
+     * @return $this
+     */
+    public function disallowTitle()
+    {
+        return $this->disallow(self::DATA_TYPE_TITLE);
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isSubtitleAllowed()
+    {
+        return $this->isAllowed(self::DATA_TYPE_SUBTITLE);
+    }
+
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Listing_Action_Configurator
+     */
+    public function allowSubtitle()
+    {
+        return $this->allow(self::DATA_TYPE_SUBTITLE);
+    }
+
+    /**
+     * @return $this
+     */
+    public function disallowSubtitle()
+    {
+        return $this->disallow(self::DATA_TYPE_SUBTITLE);
+    }
+
+    // ---------------------------------------
+
+    /**
+     * @return bool
+     */
+    public function isDescriptionAllowed()
+    {
+        return $this->isAllowed(self::DATA_TYPE_DESCRIPTION);
+    }
+
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Listing_Action_Configurator
+     */
+    public function allowDescription()
+    {
+        return $this->allow(self::DATA_TYPE_DESCRIPTION);
+    }
+
+    /**
+     * @return $this
+     */
+    public function disallowDescription()
+    {
+        return $this->disallow(self::DATA_TYPE_DESCRIPTION);
+    }
+
+    //########################################
 }

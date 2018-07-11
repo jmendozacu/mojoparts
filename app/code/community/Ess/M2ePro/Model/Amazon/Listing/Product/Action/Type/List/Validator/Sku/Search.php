@@ -1,34 +1,22 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Search
     extends Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_Validator
 {
-    // ########################################
+    private $skusInProcessing = NULL;
 
-    private $requestSkus = array();
+    //########################################
 
-    private $queueOfSkus = array();
-
-    // ########################################
-
-    public function setRequestSkus(array $skus)
-    {
-        $this->requestSkus = $skus;
-        return $this;
-    }
-
-    public function setQueueOfSkus(array $skus)
-    {
-        $this->queueOfSkus = $skus;
-        return $this;
-    }
-
-    // ########################################
-
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception
+     */
     public function validate()
     {
         $sku = $this->getSku();
@@ -71,17 +59,19 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Sea
             return true;
         }
 
+        // M2ePro_TRANSLATIONS
+        // SKU generating is not successful.
         $this->addMessage('SKU generating is not successful.');
 
         return false;
     }
 
-    // ########################################
+    //########################################
 
     private function getSku()
     {
         if (empty($this->data['sku'])) {
-            throw new Exception('SKU is not defined.');
+            throw new Ess_M2ePro_Model_Exception('SKU is not defined.');
         }
 
         return $this->data['sku'];
@@ -98,11 +88,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Sea
         return $this->getUnifiedSku().'_'.substr($hash, 0, 10);
     }
 
-    // ########################################
+    //########################################
 
     private function checkSkuRequirements($sku)
     {
-        if ($sku > Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_General::SKU_MAX_LENGTH) {
+        if ($sku > Ess_M2ePro_Helper_Component_Amazon::SKU_MAX_LENGTH) {
             return false;
         }
 
@@ -113,20 +103,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Sea
         return true;
     }
 
-    // ########################################
+    //########################################
 
     private function isExistInM2ePro($sku, $addMessages = false)
     {
-        if ($this->isExistInRequestSkus($sku)) {
-// M2ePro_TRANSLATIONS
-// During the Listing Process there was an Item found with the same SKU that is being Listed. Please change the SKU or enable the Option Generate Merchant SKU.
-            $addMessages && $this->addMessage('During the Listing Process there was an Item found with
-                                               the same SKU that is being Listed. Please change the SKU or enable
-                                               the Option Generate Merchant SKU.');
-            return true;
-        }
-
-        if ($this->isExistInQueueOfSkus($sku)) {
+        if ($this->isAlreadyInProcessing($sku)) {
 // M2ePro_TRANSLATIONS
 // Another Product with the same SKU is being Listed simultaneously with this one. Please change the SKU or enable the Option Generate Merchant SKU.
             $addMessages && $this->addMessage('Another Product with the same SKU is being Listed simultaneously
@@ -136,10 +117,10 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Sea
 
         if ($this->isExistInM2eProListings($sku)) {
 // M2ePro_TRANSLATIONS
-// Product with the same SKU is found in other M2E Pro Listing that is created from the same Seller ID for the same Marketplace.
+// Product with the same SKU is found in other M2E Pro Listing that is created from the same Merchant ID for the same Marketplace.
             $addMessages && $this->addMessage(
                 'Product with the same SKU is found in other M2E Pro Listing that is created
-                 from the same Seller ID for the same Marketplace.'
+                 from the same Merchant ID for the same Marketplace.'
             );
             return true;
         }
@@ -155,16 +136,11 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Sea
         return false;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
-    private function isExistInRequestSkus($sku)
+    private function isAlreadyInProcessing($sku)
     {
-        return in_array($sku, $this->requestSkus);
-    }
-
-    private function isExistInQueueOfSkus($sku)
-    {
-        return in_array($sku, $this->queueOfSkus);
+        return in_array($sku, $this->getSkusInProcessing());
     }
 
     private function isExistInM2eProListings($sku)
@@ -196,5 +172,21 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Action_Type_List_Validator_Sku_Sea
         return $collection->getSize() > 0;
     }
 
-    // ########################################
+    //########################################
+
+    private function getSkusInProcessing()
+    {
+        if (!is_null($this->skusInProcessing)) {
+            return $this->skusInProcessing;
+        }
+
+        $processingActionListSkuCollection = Mage::getResourceModel(
+            'M2ePro/Amazon_Listing_Product_Action_ProcessingListSku_Collection'
+        );
+        $processingActionListSkuCollection->addFieldToFilter('account_id', $this->getListing()->getAccountId());
+
+        return $this->skusInProcessing = $processingActionListSkuCollection->getColumnValues('sku');
+    }
+
+    //########################################
 }

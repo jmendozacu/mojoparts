@@ -1,38 +1,40 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Category_Grid extends Ess_M2ePro_Block_Adminhtml_Category_Grid
 {
-    // ####################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayListingCategoryGrid');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('id');
         $this->setDefaultDir('DESC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
 
         $this->listing = Mage::helper('M2ePro/Component_Ebay')->getCachedObject(
             'Listing', $this->getRequest()->getParam('listing_id')
         );
 
-        //------------------------------
+        // ---------------------------------------
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareCollection()
     {
@@ -49,7 +51,7 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Category_Grid extends Ess
         return parent::_prepareCollection();
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareColumns()
     {
@@ -92,14 +94,14 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Category_Grid extends Ess
         return parent::_prepareColumns();
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareMassaction()
     {
         $this->setMassactionIdField('entity_id');
 
         // Set mass-action
-        //--------------------------------
+        // ---------------------------------------
         $this->getMassactionBlock()->addItem('editCategories', array(
             'label'    => Mage::helper('M2ePro')->__('Edit All Categories'),
         ));
@@ -115,19 +117,19 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_Listing_Category_Category_Grid extends Ess
                 'url'   => '',
             ));
         }
-        //--------------------------------
+        // ---------------------------------------
 
         return parent::_prepareMassaction();
     }
 
-    // ####################################
+    //########################################
 
     public function getRowUrl($row)
     {
         return false;
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnEbayCategories($value, $row, $column, $isExport)
     {
@@ -172,7 +174,7 @@ HTML;
         return $html;
     }
 
-    // ####################################
+    //########################################
 
     protected function callbackFilterEbayCategories($collection, $column)
     {
@@ -200,7 +202,7 @@ HTML;
         }
     }
 
-    // ####################################
+    //########################################
 
     protected function renderEbayCategoryInfo($title, $data, $key)
     {
@@ -259,7 +261,7 @@ HTML;
 
     }
 
-    // ####################################
+    //########################################
 
     protected function getColumnActionsItems()
     {
@@ -291,11 +293,11 @@ HTML;
         return $actions;
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
-        //------------------------------
+        // ---------------------------------------
         $urls = Mage::helper('M2ePro')
             ->getControllerActions(
                 'adminhtml_ebay_listing_categorySettings',
@@ -310,10 +312,10 @@ HTML;
             '_current' => true
         ));
 
-        $urls = json_encode($urls);
-        //------------------------------
+        $urls = Mage::helper('M2ePro')->jsonEncode($urls);
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $translations = array();
 
         // M2ePro_TRANSLATIONS
@@ -329,12 +331,12 @@ HTML;
         $text = 'Set eBay Categories';
         $translations[$text] = Mage::helper('M2ePro')->__($text);
 
-        $translations = json_encode($translations);
-        //------------------------------
+        $translations = Mage::helper('M2ePro')->jsonEncode($translations);
+        // ---------------------------------------
 
-        //------------------------------
+        // ---------------------------------------
         $constants = Mage::helper('M2ePro')->getClassConstantAsJson('Ess_M2ePro_Helper_Component_Ebay_Category');
-        //------------------------------
+        // ---------------------------------------
 
         $commonJs = <<<HTML
 <script type="text/javascript">
@@ -371,5 +373,5 @@ HTML;
         return parent::_toHtml() . $additionalJs . $commonJs;
     }
 
-    // ####################################
+    //########################################
 }

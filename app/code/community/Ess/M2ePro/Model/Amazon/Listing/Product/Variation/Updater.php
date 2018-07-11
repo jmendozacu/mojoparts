@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
@@ -9,7 +11,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
 {
     private $parentListingsProductsForProcessing = array();
 
-    // ########################################
+    //########################################
 
     public function process(Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
@@ -40,7 +42,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
         }
     }
 
-    // ########################################
+    //########################################
 
     private function checkChangeAsVariationProduct(Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
@@ -52,7 +54,10 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
             return false;
         }
 
-        if ($magentoProduct->isSimpleTypeWithCustomOptions() || $magentoProduct->isBundleType()) {
+        if ($magentoProduct->isSimpleTypeWithCustomOptions() ||
+            $magentoProduct->isBundleType() ||
+            $magentoProduct->isDownloadableTypeWithSeparatedLinks()
+        ) {
             $listingProduct->setData(
                 'is_general_id_owner', Ess_M2ePro_Model_Amazon_Listing_Product::IS_GENERAL_ID_OWNER_NO
             );
@@ -60,9 +65,8 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
         }
 
         $listingProduct->setData('is_variation_product', 1);
-        $variationManager->setRelationParentType();
-        $variationManager->getTypeModel()->resetProductAttributes(false);
-        $variationManager->getTypeModel()->getProcessor()->process();
+        $variationManager->setIndividualType();
+        $variationManager->getTypeModel()->resetProductVariation();
 
         return true;
     }
@@ -87,6 +91,7 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
             $listingProduct->setData('status', Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED);
 
             $listingProduct->deleteInstance();
+            $listingProduct->isDeleted(true);
         } else {
             $variationManager->setSimpleType();
         }
@@ -94,15 +99,12 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
         return true;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     private function checkVariationStructureChanges(Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
         /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager $variationManager */
         $variationManager = $listingProduct->getChildObject()->getVariationManager();
-
-        /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager_Abstract $typeModel */
-        $typeModel = $variationManager->getTypeModel();
 
         if ($variationManager->isRelationParentType()) {
             $this->parentListingsProductsForProcessing[$listingProduct->getId()] = $listingProduct;
@@ -110,6 +112,13 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
         }
 
         /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager_PhysicalUnit $typeModel */
+        $typeModel = $variationManager->getTypeModel();
+
+        if (!$listingProduct->getMagentoProduct()->isSimpleType() &&
+            !$listingProduct->getMagentoProduct()->isDownloadableType()
+        ) {
+            $typeModel->inspectAndFixProductOptionsIds();
+        }
 
         if (!$typeModel->isActualProductAttributes()) {
 
@@ -140,7 +149,18 @@ class Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Updater
 
             $typeModel->unsetProductVariation();
         }
+
+        /** @var Ess_M2ePro_Model_Amazon_Listing_Product_Variation_Manager_Type_Relation_Child $typeModel */
+
+        if ($variationManager->isRelationChildType() &&
+            $typeModel->getParentTypeModel()->getVirtualChannelAttributes()
+        ) {
+            if (!$typeModel->getParentTypeModel()->isActualVirtualChannelAttributes()) {
+                $this->parentListingsProductsForProcessing[$typeModel->getParentListingProduct()->getId()]
+                    = $typeModel->getParentListingProduct();
+            }
+        }
     }
 
-    // ########################################
+    //########################################
 }

@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Mysql4_Order_Change_Collection
     extends Ess_M2ePro_Model_Mysql4_Collection_Abstract
 {
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -15,7 +17,7 @@ class Ess_M2ePro_Model_Mysql4_Order_Change_Collection
         $this->_init('M2ePro/Order_Change');
     }
 
-    // ########################################
+    //########################################
 
     public function addAccountFilter($accountId)
     {
@@ -28,7 +30,7 @@ class Ess_M2ePro_Model_Mysql4_Order_Change_Collection
         );
     }
 
-    // ########################################
+    //########################################
 
     public function addProcessingAttemptDateFilter($interval = 3600)
     {
@@ -46,5 +48,20 @@ class Ess_M2ePro_Model_Mysql4_Order_Change_Collection
         );
     }
 
-    // ########################################
+    //########################################
+
+    public function addProcessingLockFilter($tag)
+    {
+        $mysqlTag = $this->getConnection()->quote($tag);
+        $this->getSelect()->joinLeft(
+            array('lo' => Mage::getResourceModel('M2ePro/Processing_Lock')->getMainTable()),
+            '(`lo`.`object_id` = `main_table`.`order_id` AND `lo`.`tag` = '.$mysqlTag.')',
+            array()
+        );
+        $this->getSelect()->where(
+            '`lo`.`object_id` IS NULL'
+        );
+    }
+
+    //########################################
 }

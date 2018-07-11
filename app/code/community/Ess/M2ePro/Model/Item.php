@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Item
 {
-    // ########################################
+    //########################################
 
     public function removeDeletedProduct($product, $component = null)
     {
@@ -25,7 +27,8 @@ class Ess_M2ePro_Model_Item
         }
 
         foreach ($components as $component) {
-            $itemTable = $resource->getTableName("m2epro_{$component}_item");
+            $itemTable = Mage::helper('M2ePro/Module_Database_Structure')
+                ->getTableNameWithPrefix("m2epro_{$component}_item");
             if (!in_array($itemTable, $existTables)) {
                 continue;
             }
@@ -33,5 +36,5 @@ class Ess_M2ePro_Model_Item
         }
     }
 
-    // ########################################
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Connector_Ebay_OrderItem_Update_Status
@@ -16,6 +18,8 @@ class Ess_M2ePro_Model_Connector_Ebay_OrderItem_Update_Status
     /** @var $orderItem Ess_M2ePro_Model_Order_Item */
     private $orderItem;
 
+    //########################################
+
     public function __construct(array $params = array(), Ess_M2ePro_Model_Order_Item $orderItem)
     {
         parent::__construct($params, null, $orderItem->getOrder()->getAccount(), null);
@@ -25,7 +29,7 @@ class Ess_M2ePro_Model_Connector_Ebay_OrderItem_Update_Status
 
     protected function getCommand()
     {
-        return array('sales', 'update', 'status');
+        return array('orders', 'update', 'status');
     }
 
     protected function isNeedSendRequest()
@@ -100,6 +104,19 @@ class Ess_M2ePro_Model_Connector_Ebay_OrderItem_Update_Status
         }
 
         if (!empty($this->params['tracking_number']) && !empty($this->params['carrier_code'])) {
+
+            if (!$this->orderItem->getChildObject()->isTrackingNumberExists($this->params['tracking_number'])) {
+                /** @var Ess_M2ePro_Model_Ebay_Order_Item $ebayOrderItem */
+                $ebayOrderItem = $this->orderItem->getChildObject();
+
+                $trackingDetails = $ebayOrderItem->getTrackingDetails();
+                $trackingDetails[] = array(
+                    'title'  => $this->params['carrier_code'],
+                    'number' => $this->params['tracking_number'],
+                );
+                $this->orderItem->setSettings('tracking_details', $trackingDetails)->save();
+            }
+
             $message = 'Tracking number "%num%" for "%code%" has been sent to eBay '.
                        '(Item: %item_id%, Transaction: %trn_id%).';
             $this->orderItem->getOrder()->addSuccessLog($message, array(
@@ -124,4 +141,6 @@ class Ess_M2ePro_Model_Connector_Ebay_OrderItem_Update_Status
 
         return true;
     }
+
+    //########################################
 }

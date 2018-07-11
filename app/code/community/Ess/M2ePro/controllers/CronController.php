@@ -1,69 +1,55 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_CronController extends Mage_Core_Controller_Varien_Action
 {
-    //#############################################
+    //########################################
 
     public function preDispatch()
     {
-        $this->getLayout()->setArea('frontend');
+        $this->getLayout()->setArea(Mage_Core_Model_App_Area::AREA_FRONTEND);
         parent::preDispatch();
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
-        $this->closeConnection();
-
-        $cron = Mage::getModel('M2ePro/Cron_Type_Service');
-        $cron->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION);
+        $cronRunner = Mage::getModel('M2ePro/Cron_Runner_Service');
 
         $authKey = $this->getRequest()->getPost('auth_key',false);
-        $authKey && $cron->setRequestAuthKey($authKey);
+        $authKey && $cronRunner->setRequestAuthKey($authKey);
 
         $connectionId = $this->getRequest()->getPost('connection_id',false);
-        $connectionId && $cron->setRequestConnectionId($connectionId);
+        $connectionId && $cronRunner->setRequestConnectionId($connectionId);
 
-        $cron->process();
+        $cronRunner->process();
 
-        exit();
+        $this->getResponse()->setBody('processing...');
+        return $this->getResponse();
     }
 
     public function testAction()
     {
-        exit('ok');
+        $installationKey = Mage::helper('M2ePro/Module')->getInstallationKey();
+        if (empty($installationKey)) {
+            return $this->getResponse()->setBody('ok');
+        }
+
+        return $this->getResponse()->setBody($installationKey);
     }
 
-    // --------------------------------------------
+    // ---------------------------------------
 
     public function resetAction()
     {
-        Mage::getModel('M2ePro/Cron_Type_Service')->resetTasksStartFrom();
+        Mage::getModel('M2ePro/Cron_Runner_Service')->resetTasksStartFrom();
     }
 
-    //#############################################
-
-    private function closeConnection()
-    {
-        header('Connection: Close');
-        header('Content-Length: 13');
-        echo 'processing...';
-
-        while(ob_get_level()) {
-            if (!$result = @ob_end_flush()) {
-                break;
-            }
-        }
-
-        flush();
-
-        $this->getResponse()->headersSentThrowsException = false;
-    }
-
-    //#############################################
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent_Abstract
@@ -27,11 +29,9 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
     const STATUS_CHANGER_COMPONENT = 3;
     const STATUS_CHANGER_OBSERVER = 4;
 
-    const SYNCH_STATUS_OK    = 0;
-    const SYNCH_STATUS_NEED  = 1;
-    const SYNCH_STATUS_SKIP  = 2;
+    protected $_eventPrefix = 'm2epro_listing_product';
 
-    // ########################################
+    //########################################
 
     /**
      * @var Ess_M2ePro_Model_Listing
@@ -43,7 +43,7 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
      */
     protected $magentoProductModel = NULL;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -51,16 +51,20 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
         $this->_init('M2ePro/Listing_Product');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function isLocked()
     {
-        if (parent::isLocked()) {
-            return true;
-        }
-
         if ($this->isComponentModeEbay() && $this->getAccount()->getChildObject()->isModeSandbox()) {
             return false;
+        }
+
+        if (parent::isLocked()) {
+            return true;
         }
 
         if ($this->getStatus() == self::STATUS_LISTED) {
@@ -79,6 +83,22 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
         $variations = $this->getVariations(true);
         foreach ($variations as $variation) {
             $variation->deleteInstance();
+        }
+
+        /** @var Ess_M2ePro_Model_Listing_Product_Instruction[] $instructions */
+        $instructions = $this->getRelatedSimpleItems(
+            'Listing_Product_Instruction', 'listing_product_id', true
+        );
+        foreach ($instructions as $instruction) {
+            $instruction->deleteInstance();
+        }
+
+        /** @var Ess_M2ePro_Model_Listing_Product_ScheduledAction[] $scheduledActions */
+        $scheduledActions = $this->getRelatedSimpleItems(
+            'Listing_Product_ScheduledAction', 'listing_product_id', true
+        );
+        foreach ($scheduledActions as $scheduledAction) {
+            $scheduledAction->deleteInstance();
         }
 
         $tempLog = Mage::getModel('M2ePro/Listing_Log');
@@ -104,7 +124,7 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
         return true;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Listing
@@ -128,21 +148,19 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
          $this->listingModel = $instance;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Magento_Product_Cache
      */
     public function getMagentoProduct()
     {
-        if ($this->magentoProductModel) {
-            return $this->magentoProductModel;
+        if (is_null($this->magentoProductModel)) {
+            $this->magentoProductModel = Mage::getModel('M2ePro/Magento_Product_Cache');
+            $this->magentoProductModel->setProductId($this->getProductId());
         }
 
-        return $this->magentoProductModel = Mage::getModel('M2ePro/Magento_Product_Cache')
-                                                    ->setStoreId($this->getListing()->getStoreId())
-                                                    ->setProductId($this->getData('product_id'))
-                                                    ->setStatisticId($this->getId());
+        return $this->prepareMagentoProduct($this->magentoProductModel);
     }
 
     /**
@@ -150,10 +168,22 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
      */
     public function setMagentoProduct(Ess_M2ePro_Model_Magento_Product_Cache $instance)
     {
-        $this->magentoProductModel = $instance;
+        $this->magentoProductModel = $this->prepareMagentoProduct($instance);
     }
 
-    // ########################################
+    protected function prepareMagentoProduct(Ess_M2ePro_Model_Magento_Product_Cache $instance)
+    {
+        $instance->setStoreId($this->getListing()->getStoreId());
+        $instance->setStatisticId($this->getId());
+
+        if (method_exists($this->getChildObject(), 'prepareMagentoProduct')) {
+            $instance = $this->getChildObject()->prepareMagentoProduct($instance);
+        }
+
+        return $instance;
+    }
+
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -171,10 +201,23 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
         return $this->getListing()->getMarketplace();
     }
 
-    // ########################################
+    //########################################
 
-    public function getVariations($asObjects = false, array $filters = array())
+    /**
+     * @param bool $asObjects
+     * @param array $filters
+     * @param bool $tryToGetFromStorage
+     * @return Ess_M2ePro_Model_Listing_Product_Variation[]
+     */
+    public function getVariations($asObjects = false, array $filters = array(), $tryToGetFromStorage = true)
     {
+        $storageKey = "listing_product_{$this->getId()}_variations_" .
+                      md5((string)$asObjects . Mage::helper('M2ePro')->jsonEncode($filters));
+
+        if ($tryToGetFromStorage && ($cacheData = Mage::helper('M2ePro/Data_Cache_Session')->getValue($storageKey))) {
+            return $cacheData;
+        }
+
         $variations = $this->getRelatedComponentItems(
             'Listing_Product_Variation','listing_product_id',$asObjects,$filters
         );
@@ -186,131 +229,146 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
             }
         }
 
+        Mage::helper('M2ePro/Data_Cache_Session')->setValue($storageKey, $variations, array(
+            'listing_product',
+            "listing_product_{$this->getId()}",
+            "listing_product_{$this->getId()}_variations"
+        ));
+
         return $variations;
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getListingId()
     {
         return (int)$this->getData('listing_id');
     }
 
+    /**
+     * @return int
+     */
     public function getProductId()
     {
         return (int)$this->getData('product_id');
     }
 
-    public function isTriedToList()
-    {
-        return (bool)$this->getData('tried_to_list');
-    }
+    // ---------------------------------------
 
-    //----------------------------------------
-
+    /**
+     * @return int
+     */
     public function getStatus()
     {
         return (int)$this->getData('status');
     }
 
+    /**
+     * @return int
+     */
     public function getStatusChanger()
     {
         return (int)$this->getData('status_changer');
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function getAdditionalData()
     {
         return $this->getSettings('additional_data');
     }
 
-    //----------------------------------------
+    //########################################
 
-    public function getSynchStatus()
-    {
-        return (int)$this->getData('synch_status');
-    }
-
-    public function isSynchStatusOk()
-    {
-        return $this->getSynchStatus() == self::SYNCH_STATUS_OK;
-    }
-
-    public function isSynchStatusNeed()
-    {
-        return $this->getSynchStatus() == self::SYNCH_STATUS_NEED;
-    }
-
-    public function isSynchStatusSkip()
-    {
-        return $this->getSynchStatus() == self::SYNCH_STATUS_SKIP;
-    }
-
-    //----------------------------------------
-
-    public function getSynchReasons()
-    {
-        $reasons = $this->getData('synch_reasons');
-        $reasons = explode(',',$reasons);
-
-        return array_unique(array_filter($reasons));
-    }
-
-    // ########################################
-
+    /**
+     * @return bool
+     */
     public function isNotListed()
     {
         return $this->getStatus() == self::STATUS_NOT_LISTED;
     }
 
+    /**
+     * @return bool
+     */
     public function isUnknown()
     {
         return $this->getStatus() == self::STATUS_UNKNOWN;
     }
 
+    /**
+     * @return bool
+     */
     public function isBlocked()
     {
         return $this->getStatus() == self::STATUS_BLOCKED;
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isListed()
     {
         return $this->getStatus() == self::STATUS_LISTED;
     }
 
+    /**
+     * @return bool
+     */
     public function isHidden()
     {
         return $this->getStatus() == self::STATUS_HIDDEN;
     }
 
+    /**
+     * @return bool
+     */
     public function isSold()
     {
         return $this->getStatus() == self::STATUS_SOLD;
     }
 
+    /**
+     * @return bool
+     */
     public function isStopped()
     {
         return $this->getStatus() == self::STATUS_STOPPED;
     }
 
+    /**
+     * @return bool
+     */
     public function isFinished()
     {
         return $this->getStatus() == self::STATUS_FINISHED;
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isListable()
     {
         return ($this->isNotListed() || $this->isSold() ||
                 $this->isStopped() || $this->isFinished() ||
-                $this->isUnknown()) &&
+                $this->isHidden() || $this->isUnknown()) &&
                 !$this->isBlocked();
     }
 
+    /**
+     * @return bool
+     */
     public function isRelistable()
     {
         return ($this->isSold() || $this->isStopped() ||
@@ -318,19 +376,25 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
                 !$this->isBlocked();
     }
 
+    /**
+     * @return bool
+     */
     public function isRevisable()
     {
         return ($this->isListed() || $this->isHidden() || $this->isUnknown()) &&
                 !$this->isBlocked();
     }
 
+    /**
+     * @return bool
+     */
     public function isStoppable()
     {
         return ($this->isListed() || $this->isHidden() || $this->isUnknown()) &&
                 !$this->isBlocked();
     }
 
-    // ########################################
+    //########################################
 
     public function listAction(array $params = array())
     {
@@ -357,7 +421,7 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
         return $this->getChildObject()->deleteAction($params);
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     public static function getActionTitle($action)
     {
@@ -374,12 +438,5 @@ class Ess_M2ePro_Model_Listing_Product extends Ess_M2ePro_Model_Component_Parent
         return $title;
     }
 
-    // ########################################
-
-    public function getTrackingAttributes()
-    {
-        return $this->getChildObject()->getTrackingAttributes();
-    }
-
-    // ########################################
+    //########################################
 }

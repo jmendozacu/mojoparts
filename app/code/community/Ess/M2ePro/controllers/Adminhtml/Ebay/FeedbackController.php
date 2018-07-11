@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Ebay_FeedbackController extends Ess_M2ePro_Controller_Adminhtml_Ebay_MainController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
@@ -16,6 +18,8 @@ class Ess_M2ePro_Adminhtml_Ebay_FeedbackController extends Ess_M2ePro_Controller
         $this->getLayout()->getBlock('head')
              ->addJs('M2ePro/Ebay/FeedbackHandler.js');
 
+        $this->setPageHelpLink(NULL, 'pages/viewpage.action?pageId=17367096');
+
         return $this;
     }
 
@@ -24,7 +28,7 @@ class Ess_M2ePro_Adminhtml_Ebay_FeedbackController extends Ess_M2ePro_Controller
         return Mage::getSingleton('admin/session')->isAllowed('m2epro_ebay/configuration');
     }
 
-    //#############################################
+    //########################################
 
     public function indexAction()
     {
@@ -43,7 +47,7 @@ class Ess_M2ePro_Adminhtml_Ebay_FeedbackController extends Ess_M2ePro_Controller
         $this->getResponse()->setBody($response);
     }
 
-    //#############################################
+    //########################################
 
     public function saveAction()
     {
@@ -56,10 +60,12 @@ class Ess_M2ePro_Adminhtml_Ebay_FeedbackController extends Ess_M2ePro_Controller
         $feedback = Mage::getModel('M2ePro/Ebay_Feedback')->loadInstance($feedbackId);
         $result = $feedback->sendResponse($feedbackText, Ess_M2ePro_Model_Ebay_Feedback::TYPE_POSITIVE);
 
-        $this->getResponse()->setBody(json_encode(array('result' => ($result ? 'success' : 'failure'))));
+        $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(
+            array('result' => ($result ? 'success' : 'failure'))
+        ));
     }
 
-    //#############################################
+    //########################################
 
     public function getFeedbackTemplatesAction()
     {
@@ -68,12 +74,12 @@ class Ess_M2ePro_Adminhtml_Ebay_FeedbackController extends Ess_M2ePro_Controller
         $account = Mage::getModel('M2ePro/Ebay_Feedback')->loadInstance($feedbackId)->getAccount();
         $feedbacksTemplates = $account->getChildObject()->getFeedbackTemplates(false);
 
-        return $this->getResponse()->setBody(json_encode(array(
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array(
             'feedbacks_templates' => $feedbacksTemplates
         )));
     }
 
-    //#############################################
+    //########################################
 
     public function goToOrderAction()
     {
@@ -96,7 +102,7 @@ class Ess_M2ePro_Adminhtml_Ebay_FeedbackController extends Ess_M2ePro_Controller
         $this->_redirect('*/adminhtml_ebay_order/view', array('id' => $order->getId()));
     }
 
-    //#############################################
+    //########################################
 
     public function goToItemAction()
     {
@@ -142,5 +148,5 @@ class Ess_M2ePro_Adminhtml_Ebay_FeedbackController extends Ess_M2ePro_Controller
         return $this->_redirect('*/*/index');
     }
 
-    //#############################################
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Buy_Listing_Other_Moving
@@ -14,7 +16,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
 
     protected $tempObjectsCache = array();
 
-    // ########################################
+    //########################################
 
     public function initialize(Ess_M2ePro_Model_Account $account = NULL)
     {
@@ -22,8 +24,12 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         $this->tempObjectsCache = array();
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param array $otherListings
+     * @return bool
+     */
     public function autoMoveOtherListingsProducts(array $otherListings)
     {
         $otherListingsFiltered = array();
@@ -63,6 +69,11 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         return $result;
     }
 
+    /**
+     * @param Ess_M2ePro_Model_Listing_Other $otherListing
+     * @return bool
+     * @throws Ess_M2ePro_Model_Exception_Logic
+     */
     public function autoMoveOtherListingProduct(Ess_M2ePro_Model_Listing_Other $otherListing)
     {
         $this->setAccountByOtherListingProduct($otherListing);
@@ -77,7 +88,8 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
             return false;
         }
 
-        $listingProduct = $listing->addProduct($otherListing->getProductId());
+        $listingProduct = $listing->addProduct($otherListing->getProductId(),
+                                               Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION);
 
         if (!($listingProduct instanceof Ess_M2ePro_Model_Listing_Product)) {
             return false;
@@ -100,7 +112,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         $listingProduct->addData($dataForUpdate)->save();
 
         // Set listing store id to Buy Item
-        //---------------------------------
+        // ---------------------------------------
         $itemsCollection = Mage::getModel('M2ePro/Buy_Item')->getCollection();
 
         $itemsCollection->addFieldToFilter(
@@ -127,7 +139,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
             );
             Mage::getModel('M2ePro/Buy_Item')->setData($dataForAdd)->save();
         }
-        //---------------------------------
+        // ---------------------------------------
 
         $logModel = Mage::getModel('M2ePro/Listing_Other_Log');
         $logModel->setComponentMode(Ess_M2ePro_Helper_Component_Buy::NICK);
@@ -158,7 +170,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         if (!$this->getAccount()->getChildObject()->isOtherListingsMoveToListingsSynchModeNone()) {
             Mage::getModel('M2ePro/ProductChange')
                 ->addUpdateAction( $otherListing->getProductId(),
-                                   Ess_M2ePro_Model_ProductChange::INITIATOR_UNKNOWN );
+                                   Ess_M2ePro_Model_ProductChange::INITIATOR_UNKNOWN);
         }
 
         $otherListing->deleteInstance();
@@ -166,7 +178,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         return true;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param Ess_M2ePro_Model_Listing_Other $otherListing
@@ -226,7 +238,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         return $tempModel;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     /**
      * @param Ess_M2ePro_Model_Listing_Other $otherListing
@@ -282,19 +294,32 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         if ($this->getAccount()->getChildObject()->isOtherListingsMoveToListingsSynchModePrice() ||
             $this->getAccount()->getChildObject()->isOtherListingsMoveToListingsSynchModeAll()
         ) {
-            $dataForAdd['revise_update_price'] =
-                Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_UPDATE_PRICE_YES;
+            $additionalPriceSettings = array(
+                'revise_update_price' => Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_UPDATE_PRICE_YES,
+                'revise_update_price_max_allowed_deviation_mode' =>
+                    Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_MAX_ALLOWED_PRICE_DEVIATION_MODE_ON,
+                'revise_update_price_max_allowed_deviation'      =>
+                    Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_UPDATE_PRICE_MAX_ALLOWED_DEVIATION_DEFAULT,
+            );
+
+            $dataForAdd = array_merge($dataForAdd, $additionalPriceSettings);
         }
 
         if ($this->getAccount()->getChildObject()->isOtherListingsMoveToListingsSynchModeQty() ||
             $this->getAccount()->getChildObject()->isOtherListingsMoveToListingsSynchModeAll()
         ) {
-            $dataForAdd['revise_update_qty'] = Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_UPDATE_QTY_YES;
-            $dataForAdd['relist_mode'] = Ess_M2ePro_Model_Buy_Template_Synchronization::RELIST_MODE_YES;
-            $dataForAdd['stop_status_disabled'] =
-                Ess_M2ePro_Model_Buy_Template_Synchronization::STOP_STATUS_DISABLED_YES;
-            $dataForAdd['stop_out_off_stock'] =
-                Ess_M2ePro_Model_Buy_Template_Synchronization::STOP_OUT_OFF_STOCK_YES;
+            $additionalQtySettings = array(
+                'revise_update_qty'    => Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_UPDATE_QTY_YES,
+                'revise_update_qty_max_applied_value_mode' =>
+                    Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_MAX_AFFECTED_QTY_MODE_ON,
+                'revise_update_qty_max_applied_value' =>
+                    Ess_M2ePro_Model_Buy_Template_Synchronization::REVISE_UPDATE_QTY_MAX_APPLIED_VALUE_DEFAULT,
+                'relist_mode'          => Ess_M2ePro_Model_Buy_Template_Synchronization::RELIST_MODE_YES,
+                'stop_status_disabled' => Ess_M2ePro_Model_Buy_Template_Synchronization::STOP_STATUS_DISABLED_YES,
+                'stop_out_off_stock'   => Ess_M2ePro_Model_Buy_Template_Synchronization::STOP_OUT_OFF_STOCK_YES,
+            );
+
+            $dataForAdd = array_merge($dataForAdd, $additionalQtySettings);
         }
 
         $tempModel->addData($dataForAdd)->save();
@@ -332,7 +357,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
             'qty_mode' => Ess_M2ePro_Model_Template_SellingFormat::QTY_MODE_PRODUCT,
             'qty_custom_value' => 1,
 
-            'price_mode' => Ess_M2ePro_Model_Template_SellingFormat::PRICE_PRODUCT,
+            'price_mode' => Ess_M2ePro_Model_Template_SellingFormat::PRICE_MODE_PRODUCT,
             'price_variation_mode' => Ess_M2ePro_Model_Buy_Template_SellingFormat::PRICE_VARIATION_MODE_PARENT
         );
 
@@ -342,7 +367,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         return $tempModel;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -352,7 +377,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         return $this->account;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     protected function setAccountByOtherListingProduct(Ess_M2ePro_Model_Listing_Other $otherListing)
     {
@@ -365,5 +390,5 @@ class Ess_M2ePro_Model_Buy_Listing_Other_Moving
         );
     }
 
-    // ########################################
+    //########################################
 }

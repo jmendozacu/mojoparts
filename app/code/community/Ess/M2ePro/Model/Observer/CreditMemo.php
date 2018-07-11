@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Observer_Creditmemo extends Ess_M2ePro_Model_Observer_Abstract
 {
-    //####################################
+    //########################################
 
     public function process()
     {
@@ -39,7 +41,7 @@ class Ess_M2ePro_Model_Observer_Creditmemo extends Ess_M2ePro_Model_Observer_Abs
                 return;
             }
 
-            Mage::getSingleton('M2ePro/Order_Log_Manager')->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION);
+            $order->getLog()->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_EXTENSION);
 
             $itemsForCancel = array();
 
@@ -69,13 +71,17 @@ class Ess_M2ePro_Model_Observer_Creditmemo extends Ess_M2ePro_Model_Observer_Abs
                     $amazonOrderItemCollection = Mage::helper('M2ePro/Component_Amazon')->getCollection('Order_Item');
                     $amazonOrderItemCollection->addFieldToFilter('amazon_order_item_id', $amazonOrderItemId);
 
-                    $amazonOrderItem = $amazonOrderItemCollection->getFirstItem();
+                    /** @var Ess_M2ePro_Model_Order_Item $orderItem */
+                    $orderItem = $amazonOrderItemCollection->getFirstItem();
 
-                    if (is_null($amazonOrderItem) || !$amazonOrderItem->getId()) {
+                    if (is_null($orderItem) || !$orderItem->getId()) {
                         continue;
                     }
 
-                    $price = $creditmemoItem->getPrice();
+                    /** @var Ess_M2ePro_Model_Amazon_Order_Item $amazonOrderItem */
+                    $amazonOrderItem = $orderItem->getChildObject();
+
+                    $price = $creditmemoItem->getPriceInclTax();
                     if ($price > $amazonOrderItem->getPrice()) {
                         $price = $amazonOrderItem->getPrice();
                     }
@@ -98,13 +104,7 @@ class Ess_M2ePro_Model_Observer_Creditmemo extends Ess_M2ePro_Model_Observer_Abs
                 }
             }
 
-            $result = $amazonOrder->refund($itemsForCancel);
-
-            if ($result) {
-                $this->addSessionSuccessMessage();
-            } else {
-                $this->addSessionErrorMessage($order);
-            }
+            $amazonOrder->refund($itemsForCancel);
 
         } catch (Exception $exception) {
 
@@ -113,31 +113,5 @@ class Ess_M2ePro_Model_Observer_Creditmemo extends Ess_M2ePro_Model_Observer_Abs
         }
     }
 
-    //####################################
-
-    private function addSessionSuccessMessage()
-    {
-        Mage::getSingleton('adminhtml/session')->addSuccess(
-            Mage::helper('M2ePro')->__('Cancel Amazon Order in Progress...')
-        );
-    }
-
-    private function addSessionErrorMessage(Ess_M2ePro_Model_Order $order)
-    {
-        $url = Mage::helper('adminhtml')
-            ->getUrl('M2ePro/adminhtml_common_log/order', array('order_id' => $order->getId()));
-
-        // M2ePro_TRANSLATIONS
-        // Cancel for Amazon Order was not performed. View <a href="%url%" target="_blank" >order log</a> for more details.
-        $message = Mage::helper('M2ePro')->__(
-            'Cancel for Amazon Order was not performed.'.
-            ' View <a href="%url% target="_blank" >order log</a>'.
-            ' for more details.',
-            $url
-        );
-
-        Mage::getSingleton('adminhtml/session')->addError($message);
-    }
-
-    //####################################
+    //########################################
 }

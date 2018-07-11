@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Template_Category_Specific_Source
@@ -16,42 +18,59 @@ class Ess_M2ePro_Model_Ebay_Template_Category_Specific_Source
      */
     private $categorySpecificTemplateModel = null;
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param Ess_M2ePro_Model_Magento_Product $magentoProduct
+     * @return $this
+     */
     public function setMagentoProduct(Ess_M2ePro_Model_Magento_Product $magentoProduct)
     {
         $this->magentoProduct = $magentoProduct;
         return $this;
     }
 
+    /**
+     * @return Ess_M2ePro_Model_Magento_Product
+     */
     public function getMagentoProduct()
     {
         return $this->magentoProduct;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @param Ess_M2ePro_Model_Ebay_Template_Category_Specific $instance
+     * @return $this
+     */
     public function setCategorySpecificTemplate(Ess_M2ePro_Model_Ebay_Template_Category_Specific $instance)
     {
         $this->categorySpecificTemplateModel = $instance;
         return $this;
     }
 
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Template_Category_Specific
+     */
     public function getCategorySpecificTemplate()
     {
         return $this->categorySpecificTemplateModel;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return Ess_M2ePro_Model_Ebay_Template_Category
+     */
     public function getCategoryTemplate()
     {
         return $this->getCategorySpecificTemplate()->getCategoryTemplate();
     }
 
-    // ########################################
+    //########################################
 
-    public  function getLabel()
+    public function getLabel()
     {
         if ($this->getCategorySpecificTemplate()->isCustomItemSpecificsMode() &&
             $this->getCategorySpecificTemplate()->isCustomAttributeValueMode()) {
@@ -70,58 +89,61 @@ class Ess_M2ePro_Model_Ebay_Template_Category_Specific_Source
         }
 
         if ($this->getCategorySpecificTemplate()->isEbayRecommendedValueMode()) {
-            $valueData = json_decode($this->getCategorySpecificTemplate()->getData('value_ebay_recommended'),true);
+            $valueData = Mage::helper('M2ePro')->jsonDecode(
+                $this->getCategorySpecificTemplate()->getData('value_ebay_recommended')
+            );
         }
 
         if ($this->getCategorySpecificTemplate()->isCustomValueValueMode()) {
-            $valueData[] = $this->getCategorySpecificTemplate()->getData('value_custom_value');
+            $valueData = Mage::helper('M2ePro')->jsonDecode(
+                $this->getCategorySpecificTemplate()->getData('value_custom_value')
+            );
         }
 
-        if ($this->getCategorySpecificTemplate()->isCustomAttributeValueMode() ||
-            $this->getCategorySpecificTemplate()->isCustomLabelAttributeValueMode()) {
+        if (!$this->getCategorySpecificTemplate()->isCustomAttributeValueMode() &&
+            !$this->getCategorySpecificTemplate()->isCustomLabelAttributeValueMode()) {
+            return $valueData;
+        }
 
-            $attributeCode = $this->getCategorySpecificTemplate()->getData('value_custom_attribute');
-            $valueTemp = $this->getAttributeValue($attributeCode);
+        $attributeCode = $this->getCategorySpecificTemplate()->getData('value_custom_attribute');
+        $valueTemp = $this->getAttributeValue($attributeCode);
 
-            $categoryId = $this->getCategoryTemplate()->getCategoryMainId();
-            $marketplaceId = $this->getCategoryTemplate()->getMarketplaceId();
+        $categoryId = $this->getCategoryTemplate()->getCategoryMainId();
+        $marketplaceId = $this->getCategoryTemplate()->getMarketplaceId();
 
-            if(!empty($categoryId) && !empty($marketplaceId) && strpos($valueTemp, ',') &&
-                $this->getMagentoProduct()->getAttributeFrontendInput($attributeCode) === 'multiselect') {
+        if (empty($categoryId) || empty($marketplaceId) || strpos($valueTemp, ',') === false ||
+            $this->getMagentoProduct()->getAttributeFrontendInput($attributeCode) !== 'multiselect') {
 
-                $specifics = Mage::helper('M2ePro/Component_Ebay_Category_Ebay')
-                                    ->getSpecifics($categoryId, $marketplaceId);
+            $valueData[] = $valueTemp;
+            return $valueData;
+        }
 
-                $usedAsMultiple = false;
-                foreach($specifics as $specific) {
+        $specifics = Mage::helper('M2ePro/Component_Ebay_Category_Ebay')
+            ->getSpecifics($categoryId, $marketplaceId);
 
-                    if ($specific['title'] === $this->getCategorySpecificTemplate()->getData('attribute_title') &&
-                        in_array($specific['type'],array('select_multiple_or_text','select_multiple'))) {
+        if (empty($specifics)) {
+            $valueData[] = $valueTemp;
+            return $valueData;
+        }
 
-                        $valuesTemp = explode(',', $valueTemp);
+        foreach ($specifics as $specific) {
 
-                        foreach($valuesTemp as $val) {
-                            $valueData[] =  trim($val);
-                        }
+            if ($specific['title'] === $this->getCategorySpecificTemplate()->getData('attribute_title') &&
+                in_array($specific['type'],array('select_multiple_or_text','select_multiple'))) {
 
-                        $usedAsMultiple = true;
-                        break;
-                    }
+                foreach (explode(',', $valueTemp) as $val) {
+                    $valueData[] =  trim($val);
                 }
 
-                if (!$usedAsMultiple) {
-                    $valueData[] = $valueTemp;
-                }
-
-            } else {
-                $valueData[] = $valueTemp;
+                return $valueData;
             }
         }
 
+        $valueData[] = $valueTemp;
         return $valueData;
     }
 
-    // ########################################
+    //########################################
 
     private function getAttributeLabel()
     {
@@ -148,5 +170,5 @@ class Ess_M2ePro_Model_Ebay_Template_Category_Specific_Source
         return $attributeValue;
     }
 
-    // ########################################
+    //########################################
 }

@@ -1,20 +1,25 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Connector_Amazon_Product_Stop_MultipleRequester
     extends Ess_M2ePro_Model_Connector_Amazon_Product_Requester
 {
-    // ########################################
+    //########################################
 
+    /**
+     * @return array
+     */
     public function getCommand()
     {
         return array('product','update','entities');
     }
 
-    // ########################################
+    //########################################
 
     protected function getActionType()
     {
@@ -39,7 +44,7 @@ class Ess_M2ePro_Model_Connector_Amazon_Product_Stop_MultipleRequester
                Ess_M2ePro_Model_Listing_Log::ACTION_STOP_PRODUCT_ON_COMPONENT;
     }
 
-    // ########################################
+    //########################################
 
     protected function validateAndFilterListingsProducts()
     {
@@ -100,7 +105,7 @@ class Ess_M2ePro_Model_Connector_Amazon_Product_Stop_MultipleRequester
         }
     }
 
-    // ########################################
+    //########################################
 
     protected function validateAndProcessParentListingsProducts()
     {
@@ -194,7 +199,7 @@ class Ess_M2ePro_Model_Connector_Amazon_Product_Stop_MultipleRequester
         }
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param Ess_M2ePro_Model_Listing_Product[] $listingProducts
@@ -217,5 +222,39 @@ class Ess_M2ePro_Model_Connector_Amazon_Product_Stop_MultipleRequester
         return $resultListingProducts;
     }
 
-    // ########################################
+    protected function filterLockedListingsProducts()
+    {
+        parent::filterLockedListingsProducts();
+
+        if (empty($this->params['remove'])) {
+            return;
+        }
+
+        foreach ($this->listingsProducts as $key => $listingProduct) {
+
+            /** @var Ess_M2ePro_Model_Amazon_Listing_Product $amazonListingProduct */
+            $amazonListingProduct = $listingProduct->getChildObject();
+
+            if (!$amazonListingProduct->getVariationManager()->isRelationParentType()) {
+                continue;
+            }
+
+            if (!$listingProduct->isLockedObject('child_products_in_action')) {
+                continue;
+            }
+
+            // M2ePro_TRANSLATIONS
+            // Another Action is being processed. Try again when the Action is completed.
+            $this->getLogger()->logListingProductMessage(
+                $listingProduct,
+                'Stop and Remove action is not supported if Child Products are in Action.',
+                Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR,
+                Ess_M2ePro_Model_Log_Abstract::PRIORITY_MEDIUM
+            );
+
+            unset($this->listingsProducts[$key]);
+        }
+    }
+
+    //########################################
 }

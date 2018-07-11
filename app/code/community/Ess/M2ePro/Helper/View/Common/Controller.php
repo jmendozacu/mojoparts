@@ -1,16 +1,18 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_View_Common_Controller extends Mage_Core_Helper_Abstract
 {
-    // ########################################
+    //########################################
 
     public function addMessages(Ess_M2ePro_Controller_Adminhtml_BaseController $controller)
     {
-        if (Mage::helper('M2ePro/Module_Cron')->isReadyToRun() &&
+        if (Mage::helper('M2ePro/Module')->isReadyToWork() &&
             Mage::helper('M2ePro/Module_Cron')->isLastRunMoreThan(1,true) &&
             !Mage::helper('M2ePro/Module')->isDevelopmentEnvironment()) {
 
@@ -25,17 +27,16 @@ class Ess_M2ePro_Helper_View_Common_Controller extends Mage_Core_Helper_Abstract
         }
     }
 
-    // ########################################
+    //########################################
 
     private function addCronErrorMessage(Ess_M2ePro_Controller_Adminhtml_BaseController $controller)
     {
-        $url = 'http://support.m2epro.com/knowledgebase/articles/';
-        $url .= '162927-why-cron-job-is-required-for-amazon-and-rakuten-co';
+        $url = 'https://support.m2epro.com/knowledgebase/692955-why-cron-service-is-not-working-in-my-magento/';
 
         // M2ePro_TRANSLATIONS
-        // Attention! AUTOMATIC Synchronization is not running at the moment.<br/>Please check this <a href="%url% target="_blank">article</a> to learn why it is required.
+        // Attention! AUTOMATIC Synchronization is not running at the moment.<br/>Please check this <a href="%url%" target="_blank">article</a> to learn why it is required.
         $message = 'Attention! AUTOMATIC Synchronization is not running at the moment.';
-        $message .= '<br/>Please check this <a href="%url% target="_blank">article</a> ';
+        $message .= '<br/>Please check this <a href="%url%" target="_blank">article</a> ';
         $message .= 'to learn why it is required.';
         $message = Mage::helper('M2ePro')->__($message, $url);
 
@@ -86,16 +87,17 @@ class Ess_M2ePro_Helper_View_Common_Controller extends Mage_Core_Helper_Abstract
         }
 
 // M2ePro_TRANSLATIONS
-// %marketplace_title% data was changed on Amazon. You need to synchronize it the Extension works properly. Please, go to %menu_label% > <a href="%url%" target="_blank">Marketplaces</a> and click the Update All Button.
+// %marketplace_title% data was changed on Amazon. You need to synchronize it the Extension works properly. Please, go to %menu_label% > <a href="%url%" target="_blank">Marketplaces</a> and click the Update All Now Button.
 
-        $message = '%marketplace_title% data was changed on Amazon. You need to synchronize it '.
-                   'the Extension works properly. Please, go to %menu_path% > '.
-                   '<a href="%url%" target="_blank">Marketplaces</a> and click the Update All Button.';
+        $message = '%marketplace_title% data was changed on Amazon. ' .
+            'You need to resynchronize it for the proper Extension work. '.
+            'Please, go to %menu_path% > <a href="%url%" target="_blank">Marketplaces</a> ' .
+            'and press an <b>Update All Now</b> button.';
 
         $controller->getSession()->addNotice(Mage::helper('M2ePro')->__(
             $message,
             implode(', ',$outdatedMarketplaces),
-            Mage::helper('M2ePro/View_Common')->getMenuPath('configuration'),
+            Mage::helper('M2ePro/View_Common')->getPageNavigationPath('configuration'),
             $controller->getUrl(
                 '*/adminhtml_common_marketplace',
                 array('tab' => Ess_M2ePro_Helper_Component_Amazon::NICK)
@@ -103,5 +105,5 @@ class Ess_M2ePro_Helper_View_Common_Controller extends Mage_Core_Helper_Abstract
         ));
     }
 
-    // ########################################
+    //########################################
 }

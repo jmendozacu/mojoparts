@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
     extends Ess_M2ePro_Model_Ebay_Template_Builder_Abstract
 {
-    // ########################################
+    //########################################
 
     public function build(array $data)
     {
@@ -15,18 +17,10 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             return NULL;
         }
 
-        // validate input data
-        //------------------------------
         $this->validate($data);
-        //------------------------------
 
-        // prepare input data
-        //------------------------------
         $data = $this->prepareData($data);
-        //------------------------------
 
-        // create template
-        //------------------------------
         $template = Mage::helper('M2ePro/Component_Ebay')->getModel('Template_SellingFormat');
 
         if (isset($data['id'])) {
@@ -35,18 +29,16 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
 
         $template->addData($data);
         $template->save();
-        //------------------------------
 
         return $template;
     }
 
-    // ########################################
+    //########################################
 
     protected function prepareData(array &$data)
     {
         $prepared = parent::prepareData($data);
 
-        //------------------------------
         $isSimpleMode = Mage::helper('M2ePro/View_Ebay')->isSimpleMode();
 
         $defaultData = $isSimpleMode ?
@@ -54,7 +46,6 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             Mage::getSingleton('M2ePro/Ebay_Template_SellingFormat')->getDefaultSettingsAdvancedMode();
 
         $data = array_merge($defaultData, $data);
-        //------------------------------
 
         if (isset($data['listing_type'])) {
             $prepared['listing_type'] = (int)$data['listing_type'];
@@ -108,6 +99,18 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             $prepared['qty_max_posted_value'] = (int)$data['qty_max_posted_value'];
         }
 
+        if (isset($data['lot_size_mode'])) {
+            $prepared['lot_size_mode'] = (int)$data['lot_size_mode'];
+        }
+
+        if (isset($data['lot_size_custom_value'])) {
+            $prepared['lot_size_custom_value'] = (int)$data['lot_size_custom_value'];
+        }
+
+        if (isset($data['lot_size_attribute'])) {
+            $prepared['lot_size_attribute'] = $data['lot_size_attribute'];
+        }
+
         if (isset($data['vat_percent'])) {
             $prepared['vat_percent'] = (float)$data['vat_percent'];
         }
@@ -136,7 +139,24 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             $prepared['price_variation_mode'] = (int)$data['price_variation_mode'];
         }
 
-        //------------------------------
+        // ---------------------------------------
+
+        if (isset($data['fixed_price_mode'])) {
+            $prepared['fixed_price_mode'] = (int)$data['fixed_price_mode'];
+        }
+
+        if (isset($data['fixed_price_coefficient'], $data['fixed_price_coefficient_mode'])) {
+
+            $prepared['fixed_price_coefficient'] = $this->getFormattedPriceCoefficient(
+                $data['fixed_price_coefficient'], $data['fixed_price_coefficient_mode']
+            );
+        }
+
+        if (isset($data['fixed_price_custom_attribute'])) {
+            $prepared['fixed_price_custom_attribute'] = $data['fixed_price_custom_attribute'];
+        }
+
+        // ---------------------------------------
 
         if (isset($data['start_price_mode'])) {
             $prepared['start_price_mode'] = (int)$data['start_price_mode'];
@@ -153,7 +173,7 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             $prepared['start_price_custom_attribute'] = $data['start_price_custom_attribute'];
         }
 
-        //------------------------------
+        // ---------------------------------------
 
         if (isset($data['reserve_price_mode'])) {
             $prepared['reserve_price_mode'] = (int)$data['reserve_price_mode'];
@@ -170,7 +190,7 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             $prepared['reserve_price_custom_attribute'] = $data['reserve_price_custom_attribute'];
         }
 
-        //------------------------------
+        // ---------------------------------------
 
         if (isset($data['buyitnow_price_mode'])) {
             $prepared['buyitnow_price_mode'] = (int)$data['buyitnow_price_mode'];
@@ -187,7 +207,7 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             $prepared['buyitnow_price_custom_attribute'] = $data['buyitnow_price_custom_attribute'];
         }
 
-        //------------------------------
+        // ---------------------------------------
 
         if (isset($data['price_discount_stp_mode'])) {
             $prepared['price_discount_stp_mode'] = (int)$data['price_discount_stp_mode'];
@@ -201,7 +221,7 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             $prepared['price_discount_stp_type'] = (int)$data['price_discount_stp_type'];
         }
 
-        //------------------------------
+        // ---------------------------------------
 
         if (isset($data['price_discount_map_mode'])) {
             $prepared['price_discount_map_mode'] = (int)$data['price_discount_map_mode'];
@@ -219,7 +239,7 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
             $prepared['restricted_to_business'] = (int)$data['restricted_to_business'];
         }
 
-        //------------------------------
+        // ---------------------------------------
 
         if (isset($data['best_offer_mode'])) {
             $prepared['best_offer_mode'] = (int)$data['best_offer_mode'];
@@ -257,7 +277,7 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
                 'percentage'    => (int)$data['charity_percentage'],
             );
 
-            $prepared['charity'] = json_encode($src);
+            $prepared['charity'] = Mage::helper('M2ePro')->jsonEncode($src);
         }
 
         if (isset($data['ignore_variations'])) {
@@ -267,7 +287,7 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
         return $prepared;
     }
 
-    // ########################################
+    //########################################
 
     private function getFormattedPriceCoefficient($priceCoeff, $priceCoeffMode)
     {
@@ -289,5 +309,5 @@ class Ess_M2ePro_Model_Ebay_Template_SellingFormat_Builder
         return $sign . $priceCoeff . $measuringSystem;
     }
 
-    // ########################################
+    //########################################
 }

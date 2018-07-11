@@ -1,12 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
     private $listing;
+
+    //########################################
 
     public function __construct()
     {
@@ -17,29 +21,29 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
         $listingData = $this->getListing()->getData();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('listingProductGrid'.(isset($listingData['id'])?$listingData['id']:''));
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('product_id');
         $this->setDefaultDir('DESC');
         $this->setSaveParametersInSession(true);
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
 
-        $this->isAjax = json_encode($this->getRequest()->isXmlHttpRequest());
+        $this->isAjax = Mage::helper('M2ePro')->jsonEncode($this->getRequest()->isXmlHttpRequest());
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareCollection()
     {
         $listingData = $this->getListing()->getData();
 
         // Get collection
-        //----------------------------
+        // ---------------------------------------
         /* @var $collection Mage_Catalog_Model_Resource_Product_Collection */
         $collection = Mage::getModel('catalog/product')->getCollection()
             ->addAttributeToSelect('sku')
@@ -63,23 +67,23 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
             '(cisi.product_id = e.entity_id) AND (cisi.stock_id = 1)',
             array('qty','is_in_stock')
         );*/
-        //----------------------------
+        // ---------------------------------------
 
-        //----------------------------
+        // ---------------------------------------
         $collection->getSelect()->distinct();
-        //----------------------------
+        // ---------------------------------------
 
         // Set filter store
-        //----------------------------
+        // ---------------------------------------
         $store = $this->_getStore();
 
         if ($store->getId()) {
-            $collection->joinAttribute('custom_name',
+            $collection->joinAttribute('name',
                                        'catalog_product/name',
                                        'entity_id',
                                        null,
                                        'inner',
-                                       $store->getId());
+                                       0);
             $collection->joinAttribute('status',
                                        'catalog_product/status',
                                        'entity_id',
@@ -103,17 +107,17 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
                                        'entity_id',
                                        null,
                                        'left',
-                                       $store->getId());
+                                       0);
         } else {
             $collection->addAttributeToSelect('price');
             $collection->addAttributeToSelect('status');
             $collection->addAttributeToSelect('visibility');
             $collection->addAttributeToSelect('thumbnail');
         }
-        //----------------------------
+        // ---------------------------------------
 
         // Hide products others listings
-        //----------------------------
+        // ---------------------------------------
         $prefix = Mage::helper('M2ePro/Data_Global')->getValue('hide_products_others_listings_prefix');
         is_null($hideParam = Mage::helper('M2ePro/Data_Session')->getValue($prefix)) && $hideParam = true;
 
@@ -139,30 +143,23 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
                 $dbExcludeSelect->where('`listing_id` = ?',(int)$listingData['id']);
             }
 
-            // default sql select
-            $collection->getSelect()
-                ->joinLeft(array('sq' => $dbExcludeSelect), 'sq.product_id = e.entity_id', array())
-                ->where('sq.product_id IS NULL');
+            $useAlternativeSelect = (bool)(int)Mage::helper('M2ePro/Module')->getConfig()->getGroupValue(
+                '/view/products_grid/', 'use_alternative_mysql_select'
+            );
 
-            // alternatively sql select (for mysql v.5.1)
-            // $collection->getSelect()->where('`e`.`entity_id` NOT IN ('.$dbExcludeSelect->__toString().')');
+            if ($useAlternativeSelect) {
+
+                $collection->getSelect()
+                    ->where('`e`.`entity_id` NOT IN ('.$dbExcludeSelect->__toString().')');
+
+            } else {
+
+                $collection->getSelect()
+                   ->joinLeft(array('sq' => $dbExcludeSelect), 'sq.product_id = e.entity_id', array())
+                   ->where('sq.product_id IS NULL');
+            }
         }
-        //----------------------------
-
-        // Add categories filter
-        //----------------------------
-        $categoriesData = Mage::helper('M2ePro/Data_Global')->getValue('temp_listing_categories');
-
-        if (count($categoriesData) > 0) {
-            $dbSelect = Mage::getResourceModel('core/config')->getReadConnection()
-                                 ->select()
-                                 ->from(Mage::getSingleton('core/resource')->getTableName('catalog_category_product'),
-                                        new Zend_Db_Expr('DISTINCT `product_id`'))
-                                 ->where('`category_id` IN ('.implode(',',$categoriesData).')');
-
-            $collection->getSelect()->where('`e`.`entity_id` IN ('.$dbSelect->__toString().')');
-        }
-        //----------------------------
+        // ---------------------------------------
 
         $collection->addFieldToFilter(
             array(
@@ -176,9 +173,6 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
         $ruleModel = Mage::helper('M2ePro/Data_Global')->getValue('rule_model');
         $ruleModel->setAttributesFilterToCollection($collection);
 
-        //exit($collection->getSelect()->__toString());
-
-        // Set collection to grid
         $this->setCollection($collection);
 
         parent::_prepareCollection();
@@ -202,7 +196,6 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
         $this->addColumn('name', array(
             'header'    => Mage::helper('M2ePro')->__('Title'),
             'align'     => 'left',
-            //'width'     => '100px',
             'type'      => 'text',
             'index'     => 'name',
             'filter_index' => 'name',
@@ -315,21 +308,21 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
     protected function _prepareMassaction()
     {
         // Set massaction identifiers
-        //--------------------------------
+        // ---------------------------------------
         $this->setMassactionIdField('entity_id');
         $this->getMassactionBlock()->setFormFieldName('ids');
-        //--------------------------------
+        // ---------------------------------------
 
         // Set fake action
-        //--------------------------------
+        // ---------------------------------------
         $this->getMassactionBlock()->addItem('attributes', array(
             'label' => '&nbsp;&nbsp;&nbsp;&nbsp;',
             'url'   => $this->getUrl(
                 '*/adminhtml_common_' . $this->getData('component') . '_listing/massStatus',
-                array( '_current' => true )
+                array('_current' => true)
             ),
         ));
-        //--------------------------------
+        // ---------------------------------------
 
         return parent::_prepareMassaction();
     }
@@ -343,14 +336,11 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
         return $advancedFilterBlock->toHtml() . parent::getMassactionBlockHtml();
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnProductId($value, $row, $column, $isExport)
     {
-        $listingData = $this->getListing()->getData();
-
         $productId = (int)$value;
-        $storeId = (int)$listingData['store_id'];
 
         $withoutImageHtml = '<a href="'
                             .$this->getUrl('adminhtml/catalog_product/edit',
@@ -369,14 +359,15 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
         /** @var $magentoProduct Ess_M2ePro_Model_Magento_Product */
         $magentoProduct = Mage::getModel('M2ePro/Magento_Product');
         $magentoProduct->setProductId($productId);
-        $magentoProduct->setStoreId($storeId);
+        $magentoProduct->setStoreId(0);
 
-        $imageUrlResized = $magentoProduct->getThumbnailImageLink();
-        if (is_null($imageUrlResized)) {
+        $imageResized = $magentoProduct->getThumbnailImage();
+        if (is_null($imageResized)) {
             return $withoutImageHtml;
         }
 
-        $imageHtml = $productId.'<hr/><img src="'.$imageUrlResized.'" />';
+        $imageHtml = $productId.'<hr/><img style="max-width: 100px; max-height: 100px;" src="'.
+            $imageResized->getUrl().'" />';
         $withImageHtml = str_replace('>'.$productId.'<','>'.$imageHtml.'<',$withoutImageHtml);
 
         return $withImageHtml;
@@ -426,7 +417,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
         return $value;
     }
 
-    // ####################################
+    //########################################
 
     protected function _addColumnFilterToCollection($column)
     {
@@ -448,12 +439,12 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
         $listingData = $this->getListing()->getData();
 
         // Get store filter
-        //----------------------------
+        // ---------------------------------------
         $storeId = 0;
         if (isset($listingData['store_id'])) {
             $storeId = (int)$listingData['store_id'];
         }
-        //----------------------------
+        // ---------------------------------------
 
         return Mage::app()->getStore((int)$storeId);
     }
@@ -463,7 +454,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Listing_Product_Grid extends Mage_Adminh
         return false;
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
@@ -477,7 +468,7 @@ STYLE;
 
         $helper = Mage::helper('M2ePro');
 
-        $isShowRuleBlock = json_encode($this->isShowRuleBlock());
+        $isShowRuleBlock = Mage::helper('M2ePro')->jsonEncode($this->isShowRuleBlock());
 
         $selectItemsMessage = $helper->escapeJs(
             $helper->__('Please select the Products you want to perform the Action on.')
@@ -487,9 +478,6 @@ STYLE;
         $showAdvancedFilterButtonText = $helper->escapeJs($helper->__('Show Advanced Filter'));
         $hideAdvancedFilterButtonText = $helper->escapeJs($helper->__('Hide Advanced Filter'));
 
-        $getProductsUrl = $this->getUrl(
-            '*/adminhtml_common_' . $this->getData('component') . '_listing/getProductsFromCategories'
-        );
         $addProductsUrl = $this->getUrl(
             '*/adminhtml_common_listing_productAdd/addProducts', array(
                 'component' => $this->getData('component')
@@ -497,7 +485,7 @@ STYLE;
         );
         $backUrl = $this->getUrl('*/*/index');
 
-        $javascript = <<<JAVASCRIPT
+        $javascript = <<<HTML
 <script type="text/javascript">
     if (typeof M2ePro == 'undefined') {
         M2ePro = {};
@@ -511,15 +499,14 @@ STYLE;
     M2ePro.text.create_empty_listing_message = '{$createEmptyListingMessage}';
     M2ePro.text.show_advanced_filter = '{$showAdvancedFilterButtonText}';
     M2ePro.text.hide_advanced_filter = '{$hideAdvancedFilterButtonText}';
-    M2ePro.url.get_products_from_categories = '{$getProductsUrl}';
     M2ePro.url.add_products = '{$addProductsUrl}';
     M2ePro.url.back = '{$backUrl}';
 
     WrapperObj = new AreaWrapper('add_products_container');
     ProgressBarObj = new ProgressBar('add_products_progress_bar');
-    AddListingObj = new AddListingHandler(M2ePro, ProgressBarObj, WrapperObj);
+    AddListingObj = new CommonListingAddListingHandler(M2ePro, ProgressBarObj, WrapperObj);
     AddListingObj.listing_id = '{$this->getRequest()->getParam('id')}';
-    ProductGridHandlerObj = new ProductGridHandler(AddListingObj);
+    ProductGridHandlerObj = new ListingProductGridHandler(AddListingObj);
     ProductGridHandlerObj.setGridId('{$this->getId()}');
 
     var init = function () {
@@ -536,17 +523,17 @@ STYLE;
     {$this->isAjax} ? init()
                     : Event.observe(window, 'load', init);
 </script>
-JAVASCRIPT;
+HTML;
 
         return $cssBefore.parent::_toHtml().$javascript;
     }
 
-    // ####################################
+    //########################################
 
     public function getAdvancedFilterButtonHtml()
     {
         if (!$this->getChild('advanced_filter_button')) {
-            //------------------------------
+            // ---------------------------------------
             $data = array(
                 'label'   => Mage::helper('adminhtml')->__('Show Advanced Filter'),
                 'onclick' => 'ProductGridHandlerObj.advancedFilterToggle()',
@@ -555,7 +542,7 @@ JAVASCRIPT;
             );
             $buttonBlock = $this->getLayout()->createBlock('adminhtml/widget_button')->setData($data);
             $this->setChild('advanced_filter_button', $buttonBlock);
-            //------------------------------
+            // ---------------------------------------
         }
 
         return $this->getChildHtml('advanced_filter_button');
@@ -564,7 +551,7 @@ JAVASCRIPT;
     public function getMainButtonsHtml()
     {
         $html = '';
-        if($this->getFilterVisibility()){
+        if ($this->getFilterVisibility()) {
             $html.= $this->getResetFilterButtonHtml();
             if (!$this->isShowRuleBlock()) {
                 $html.= $this->getAdvancedFilterButtonHtml();
@@ -574,7 +561,7 @@ JAVASCRIPT;
         return $html;
     }
 
-    // ####################################
+    //########################################
 
     private function isShowRuleBlock()
     {
@@ -589,12 +576,12 @@ JAVASCRIPT;
         return !empty($ruleData) || is_null($showHideProductsOption) || $showHideProductsOption;
     }
 
-    // ####################################
+    //########################################
 
     private function getListing()
     {
         if (!$listingId = $this->getRequest()->getParam('id')) {
-            throw new Exception('Listing is not defined');
+            throw new Ess_M2ePro_Model_Exception('Listing is not defined');
         }
 
         if (is_null($this->listing)) {
@@ -605,5 +592,5 @@ JAVASCRIPT;
         return $this->listing;
     }
 
-    // ####################################
+    //########################################
 }

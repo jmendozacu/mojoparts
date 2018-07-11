@@ -1,12 +1,16 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2011 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Ebay_Template_SellingFormatController
     extends Ess_M2ePro_Controller_Adminhtml_Ebay_MainController
 {
+    //########################################
+
     public function getSearchCharityPopUpHtmlAction()
     {
         $this->loadLayout();
@@ -17,7 +21,7 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_SellingFormatController
             );
             $this->getResponse()->setBody($searchBlock->toHtml());
         } catch (Exception $e) {
-            $this->getResponse()->setBody(json_encode(array('error' => $e->getMessage())));
+            $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode(array('error' => $e->getMessage())));
         }
     }
 
@@ -35,14 +39,19 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_SellingFormatController
         );
 
         try {
-            $responseData = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher')
-                ->processVirtual('marketplace', 'get', 'charity',
-                    $params, NULL,
-                    $marketplaceId);
+
+            $dispatcherObject = Mage::getModel('M2ePro/Ebay_Connector_Dispatcher');
+            $connectorObj = $dispatcherObject->getVirtualConnector('marketplace', 'get', 'charity',
+                                                                   $params, NULL,
+                                                                   $marketplaceId);
+
+            $dispatcherObject->process($connectorObj);
+            $responseData = $connectorObj->getResponseData();
+
         } catch (Exception $e) {
             $message = Mage::helper('M2ePro')->__('Error search charity');
             $response = array('result' => 'error','data' => $message);
-            return $this->getResponse()->setBody(json_encode($response));
+            return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($response));
         }
 
         $grid = $this->getLayout()->createBlock(
@@ -59,7 +68,8 @@ class Ess_M2ePro_Adminhtml_Ebay_Template_SellingFormatController
             $response['count'] = (int)$responseData['total_count'];
         }
 
-        return $this->getResponse()->setBody(json_encode($response));
+        return $this->getResponse()->setBody(Mage::helper('M2ePro')->jsonEncode($response));
     }
 
+    //########################################
 }

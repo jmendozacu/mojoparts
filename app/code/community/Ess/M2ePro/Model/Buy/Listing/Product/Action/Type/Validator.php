@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
@@ -29,8 +31,11 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
      */
     protected $data = array();
 
-    // ########################################
+    //########################################
 
+    /**
+     * @param array $params
+     */
     public function setParams(array $params)
     {
         $this->params = $params;
@@ -44,8 +49,11 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->params;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @param Ess_M2ePro_Model_Listing_Product $listingProduct
+     */
     public function setListingProduct(Ess_M2ePro_Model_Listing_Product $listingProduct)
     {
         $this->listingProduct = $listingProduct;
@@ -59,8 +67,12 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->listingProduct;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @param Ess_M2ePro_Model_Buy_Listing_Product_Action_Configurator $configurator
+     * @return $this
+     */
     public function setConfigurator(Ess_M2ePro_Model_Buy_Listing_Product_Action_Configurator $configurator)
     {
         $this->configurator = $configurator;
@@ -75,7 +87,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->configurator;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Marketplace
@@ -93,7 +105,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->getMarketplace()->getChildObject();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -111,7 +123,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->getAccount()->getChildObject();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Listing
@@ -129,7 +141,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->getListing()->getChildObject();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Buy_Listing_Product
@@ -147,7 +159,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->getListingProduct()->getMagentoProduct();
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Buy_Listing_Product_Variation_Manager
@@ -157,11 +169,11 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->getBuyListingProduct()->getVariationManager();
     }
 
-    // ########################################
+    //########################################
 
     abstract public function validate();
 
-    protected function addMessage($message, $type = Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR)
+    protected function addMessage($message, $type = Ess_M2ePro_Model_Connector_Connection_Response_Message::TYPE_ERROR)
     {
         $this->messages[] = array(
             'text' => $message,
@@ -169,7 +181,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         );
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @return array
@@ -179,7 +191,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->messages;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     /**
      * @param $key
@@ -200,7 +212,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this;
     }
 
-    // ########################################
+    //########################################
 
     protected function validateSku()
     {
@@ -216,24 +228,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return true;
     }
 
-    // ----------------------------------------
-
-    protected function validateLockedObject()
-    {
-        if ($this->getListingProduct()->isLockedObject(NULL) ||
-            $this->getListingProduct()->isLockedObject('in_action')) {
-
-            // M2ePro_TRANSLATIONS
-            // Another Action is being processed. Try again when the Action is completed.
-            $this->addMessage('Another Action is being processed. Try again when the Action is completed.');
-
-            return false;
-        }
-
-        return true;
-    }
-
-    // ########################################
+    //########################################
 
     protected function validateVariationProductMatching()
     {
@@ -248,11 +243,11 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return true;
     }
 
-    // ----------------------------------------
+    // ---------------------------------------
 
     protected function validateQty()
     {
-        if (!$this->getConfigurator()->isSelling()) {
+        if (!$this->getConfigurator()->isQtyAllowed()) {
             return true;
         }
 
@@ -275,7 +270,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
 
     protected function validatePrice()
     {
-        if (!$this->getConfigurator()->isSelling()) {
+        if (!$this->getConfigurator()->isPriceAllowed()) {
             return true;
         }
 
@@ -296,7 +291,7 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return true;
     }
 
-    // ########################################
+    //########################################
 
     protected function getPrice()
     {
@@ -316,14 +311,5 @@ abstract class Ess_M2ePro_Model_Buy_Listing_Product_Action_Type_Validator
         return $this->getBuyListingProduct()->getQty();
     }
 
-    protected function getCondition()
-    {
-        if (isset($this->data['condition'])) {
-            return $this->data['condition'];
-        }
-
-        return $this->getBuyListingProduct()->getListingSource()->getCondition();
-    }
-
-    // ########################################
+    //########################################
 }

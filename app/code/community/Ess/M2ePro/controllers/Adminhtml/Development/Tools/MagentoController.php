@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Development_Tools_MagentoController
     extends Ess_M2ePro_Controller_Adminhtml_Development_CommandController
 {
-    //#############################################
+    //########################################
 
     /**
      * @title "Show Overwritten Models"
@@ -18,8 +20,7 @@ class Ess_M2ePro_Adminhtml_Development_Tools_MagentoController
         $overwrittenModels = Mage::helper('M2ePro/Magento')->getRewrites();
 
         if (count ($overwrittenModels) <= 0) {
-            echo $this->getEmptyResultsHtml('No Overwritten Models');
-            return;
+            return $this->getResponse()->setBody($this->getEmptyResultsHtml('No Overwritten Models'));
         }
 
         $html = $this->getStyleHtml();
@@ -47,7 +48,7 @@ HTML;
         }
 
         $html .= '</table>';
-        print str_replace('%count%',count($overwrittenModels),$html);
+        return $this->getResponse()->setBody(str_replace('%count%',count($overwrittenModels),$html));
     }
 
     /**
@@ -60,8 +61,7 @@ HTML;
         $localPoolOverwrites = Mage::helper('M2ePro/Magento')->getLocalPoolOverwrites();
 
         if (count($localPoolOverwrites) <= 0) {
-            echo $this->getEmptyResultsHtml('No Local Pool Overwrites');
-            return;
+            return $this->getResponse()->setBody($this->getEmptyResultsHtml('No Local Pool Overwrites'));
         }
 
         $html = $this->getStyleHtml();
@@ -101,7 +101,7 @@ HTML;
         }
 
         $html .= '</table>';
-        print str_replace('%count%',count($localPoolOverwrites),$html);
+        return $this->getResponse()->setBody(str_replace('%count%',count($localPoolOverwrites),$html));
     }
 
     /**
@@ -164,7 +164,7 @@ HTML;
 
         $html .= '</table>';
 
-        print $html;
+        return $this->getResponse()->setBody($html);
     }
 
     /**
@@ -177,8 +177,7 @@ HTML;
         $installedModules = Mage::getConfig()->getNode('modules')->asArray();
 
         if (count($installedModules) <= 0) {
-            echo $this->getEmptyResultsHtml('No Installed Modules.');
-            return;
+            return $this->getResponse()->setBody($this->getEmptyResultsHtml('No Installed Modules.'));
         }
 
         $html = $this->getStyleHtml();
@@ -217,7 +216,7 @@ HTML;
         }
 
         $html .= '</table>';
-        print str_replace('%count%',count($installedModules),$html);
+        return $this->getResponse()->setBody(str_replace('%count%',count($installedModules),$html));
     }
 
     /**
@@ -268,7 +267,7 @@ HTML;
         $this->_redirectUrl(Mage::helper('M2ePro/View_Development')->getPageToolsTabUrl());
     }
 
-    //#############################################
+    //########################################
 
     private function getEmptyResultsHtml($messageText)
     {
@@ -282,5 +281,5 @@ HTML;
 HTML;
     }
 
-    //#############################################
+    //########################################
 }

@@ -84,7 +84,6 @@ class shipping_import {
 			$body[$muid] = imap_body($mBox, $muid, FT_UID|FT_PEEK);
 			$counter++;
 		}
-// RWH		imap_close($mBox);
 		return $body;
 	}
 	
@@ -95,7 +94,6 @@ class shipping_import {
 		if(!is_array($muids)){
 			$muids = array($muids);
 		}
-// RWH		imap_close($mBox);
 		return imap_setflag_full($mBox, implode(',',$muids), '\\Seen', ST_UID);
 	}
 	
@@ -136,32 +134,121 @@ class shipping_import {
 		$lines = array();
 		$messages1 = $this->grabMailLike('wos mojo parts','tracking@mojoparts.com','Y7iO3qY2','{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX');
 		foreach($messages1 as $muid => $body){
+			$body = preg_replace("/=\s|\r|\n/", "", $body); // remove any line breaks gmail adds, since these can appear anywhere and cause preg_match to fail
 			$matches = array();
-			if(preg_match('/=3D([0-9]*)&action=3Dtrack&language=3D/', $body, $matches)){
+			$carrier = '';
+			$tNum = '';
+
+			if (preg_match('/bers=3D([0-9]*)&action=3Dtrack&language=3D/s', $body, $matches)) {
+				$carrier = 'Federal Express';
 				$tNum = $matches[1];
-				if (substr($tNum, 0, 7) == '9611019') $tNum = substr($tNum, 7);
+					if (substr($tNum, 0, 7) == '9611019') $tNum = substr($tNum, 7);
+			} elseif ((preg_match('/PublicTrackingResultsList=2Easpx\?billnumber=3D0000000000([0-9]*)=22 target=3D=22_blank=22>/s', $body, $matches))
+				|| (preg_match('/PublicTrackingResultsList=2Easpx\?billnumber=3D([0-9]*)=22 target=3D=22_blank=22>/s', $body, $matches))) {
+					$carrier = 'AGS';
+					$tNum = $matches[1];
+			} elseif (preg_match('/app\/manifestrpts_p_app\/shipmentTracking=2Edo=22 target=3D=22_blank=22>([0-9]*)<\/a>/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} elseif (preg_match('/<br>Tracking Number: <br><a href=3D=22(XPO-[0-9]*)=22 target=3D=22_blank=22>/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} elseif (preg_match('/<br>Tracking Number: <br><a href=3D=22([0-9]*)=22 target=3D=22_blank=22>/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} elseif (preg_match('/<br>Tracking Number: <br><a href=3D=22https:\/\/www=2Expo=2Ecom\/tracking\/XPO-([0-9]*)\/0\/CON_WAY=22 target=3D=22_blank=22>XPO-[0-9]*<\/a><br><br>/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} elseif (preg_match('/<br>Tracking Number: <br><a href=3D=22https:\/\/www=2Expo=2Ecom\/tracking\/([0-9]*)\/0\/CON_WAY=22 target=3D=22_blank=22>[0-9]*<\/a><br><br>/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} else {
+				mail('ryan.hand@mojoparts.com', 'Unknown tracking number/carrier [PFG - WOS MOJO PARTS]', $body);
+			}
+
+			if ($carrier != '') {
 				$matches = array();
-				if(preg_match('/Customer PO: ([0-9]*)<br>/', $body, $matches)){
-					$lines[$matches[1]] = array('',$matches[1],'',$tNum,'Federal Express');
-//	RWH: moved lower				$emailsToMark[] = $muid;
+				if(preg_match('/Customer PO: ([CJ-]*[0-9]*)<br>/', $body, $matches)){
+					$lines[$matches[1]] = array('',$matches[1],'',$tNum,$carrier);
 				}
 			}
-			$emailsToMark[] = $muid; // RWH: moved here because I want everything marked as read
+			$emailsToMark[] = $muid;
 		}
-		
+	
 		$messages2 = $this->grabMailLike('Your tracking number for order ','tracking@mojoparts.com','Y7iO3qY2','{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX');
 		foreach($messages2 as $muid => $body){
+			$body = preg_replace("/=\s|\r|\n/", "", $body); // remove any line breaks gmail adds, since these can appear anywhere and cause preg_match to fail
 			$matches = array();
-			if(preg_match('/bers=3D([0-9]*)&action=3Dtrack&language=3D/', $body, $matches)){
+			$carrier = NULL;
+			$tNum = NULL;
+
+			if (preg_match('/bers=3D([0-9]*)&action=3Dtrack&language=3D/s', $body, $matches)) {
+				$carrier = 'Federal Express';
 				$tNum = $matches[1];
 				if (substr($tNum, 0, 7) == '9611019') $tNum = substr($tNum, 7);
+			} elseif ((preg_match('/PublicTrackingResultsList=2Easpx\?billnumber=3D0000000000([0-9]*)=22 target=3D=22_blank=22>/s', $body, $matches)) 
+				|| (preg_match('/PublicTrackingResultsList=2Easpx\?billnumber=3D([0-9]*)=22 target=3D=22_blank=22>/s', $body, $matches))) {
+					$carrier = 'AGS';
+					$tNum = $matches[1];
+			} elseif (preg_match('/app\/manifestrpts_p_app\/shipmentTracking=2Edo=22 target=3D=22_blank=22>([0-9]*)<\/a>/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} elseif (preg_match('/<br>Here are the tracking number\(s\) for your package\(s\)<br><br><b>Freight carrier: <\/b><br><br>.*<a href=3D=22(XPO-[0-9]*)=22 target=3D=22_blank=22>/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} elseif (preg_match('/<br>Here are the tracking number\(s\) for your package\(s\)<br><br><b>Freight carrier: <\/b><br><br>.*XPO: <a href=3D=22([0-9]*)=22 target=3D=22_blank=22>/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} elseif (preg_match('/<br>Here are the tracking number\(s\) for your package\(s\)<br><br><b>Freight carrier: <\/b><br><br>.*XPO: <a href=3D=22https:\/\/www=2Expo=2Ecom\/tracking\/[XPO-]*([0-9]*)\/0\/CON_WAY/s', $body, $matches)) {
+					$carrier = 'CNWY';
+					$tNum = $matches[1];
+			} else {
+				mail('ryan.hand@mojoparts.com', 'Unknown tracking number/carrier [PFG - Your Tracking Number]', $body);
+			}
+
+			if (!empty($carrier)) {
 				$matches = array();
-				if(preg_match('/<b>Cross Reference No: <\/b>([0-9]*)<br>/', $body, $matches)){
-					$lines[$matches[1]] = array('',$matches[1],'',$tNum,'Federal Express');
-// RWH: moved lower					$emailsToMark[] = $muid;
+				if(preg_match('/<b>Cross Reference No: <\/b>([CJ-]*[0-9]*)<br>/', $body, $matches)){
+					$lines[$matches[1]] = array('',$matches[1],'',$tNum,$carrier);
 				}
 			}
-			$emailsToMark[] = $muid; // RWH: moved here because I want everything marked as read
+			$emailsToMark[] = $muid;
+		}
+
+		$messages3 = $this->grabMailLike('Brock Supply Invoice','tracking@mojoparts.com','Y7iO3qY2','{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX');
+		foreach($messages3 as $muid => $body){
+			$body = preg_replace("/=\s|\r|\n/", "", $body); // remove any line breaks gmail adds, since these can appear anywhere and cause preg_match to fail
+			$matches = array();
+			$carrier = '';
+			$tNum = '';
+			if (preg_match('/Thank you! Your order has shipped and your invoice is below.*>([0-9A-Z]*)<\/a><\/p>/s', $body, $matches)){
+echo "email body: ".$body.PHP_EOL;
+				$tNum = $matches[1];
+echo "BROCK tracking#: ".$tNum.PHP_EOL;
+				if (substr($tNum,0,2) == '1Z'){
+					$carrier = 'United Parcel Service';	
+				} elseif (substr($tNum,0,3) == 'C11'){
+					$carrier = 'OnTrac';	
+				} elseif (substr($tNum,0,3) == '940'){
+					$carrier = 'United States Postal Service';	
+				} elseif (substr($tNum,0,4) == '6129' || substr($tNum,0,4) == '7489'){
+					$carrier = 'Federal Express';	
+				} elseif (substr($tNum,0,2) == 'BS'){
+					$carrier = 'LoneStar Overnight';	
+				} else {
+					mail('ryan.hand@mojoparts.com', 'Unknown tracking number/carrier [Brock]', $body);
+				}
+			}
+echo "BROCK carrier: ".$carrier.PHP_EOL;
+
+			if ($carrier != '') {
+				$matches = array();
+				if (preg_match('/>PO#<\/td>.*<td align=3D"left">([0-9]*) <\/td>/s', $body, $matches)) {
+					$lines[$matches[1]] = array('',$matches[1],'',$tNum,$carrier);
+echo "BROCK PO#: ".print_r($matches).PHP_EOL;
+				}
+			}
+			$emailsToMark[] = $muid;
 		}
 		
 		$this->markMUIDsRead($emailsToMark,'tracking@mojoparts.com','Y7iO3qY2','{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX');
@@ -175,6 +262,7 @@ class shipping_import {
 	//////////////////////////////////////////////////
 
 	public function brocksupply_run() {
+/*		THIS IS NOW BEING HANDLED AS PART OF THE PFG TRACKING # EMAIL PROCESSING
 		try{
 			$file = $this->brocksupply_downloadXls();
 			$data = $this->brocksupply_readXls($file);
@@ -188,7 +276,7 @@ class shipping_import {
 				error_log('Shipping Import Error [Brocksupply]: ' . $e->getMessage());
 			}
 		}
-
+*/
 
 	}
 

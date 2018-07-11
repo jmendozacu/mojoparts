@@ -17,7 +17,7 @@
 <?php
 
     $notificationIndex = 1;
-    $migrationModel = Mage::getSingleton('M2ePro/Wizard_MigrationToV6');
+    $migrationModel = Mage::helper('M2ePro/Module_Wizard')->getWizard('migrationToV6');
     $renameAccountsData = $migrationModel->getMigrationData('accounts_rename', 'ebay');
 
 ?>
@@ -194,7 +194,7 @@
 ?>
 
 <?php if (!empty($commonRelistScheduleData)): ?>
-    <strong><?php echo $notificationIndex; ?>) <?php echo Mage::helper('M2ePro')->__('Schedule has been removed from Amazon, Rakuten.com and Play.com.
+    <strong><?php echo $notificationIndex; ?>) <?php echo Mage::helper('M2ePro')->__('Schedule has been removed from Amazon and Rakuten.com.
     <br/>&nbsp;&nbsp;&nbsp;&nbsp;The Schedule was used in the listings below.
     ') ?></strong>
     <div class="block_notices_module" title="" subtitle="" collapseable="no" hideblock="no" always_show="yes">

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Module_Translation extends Mage_Core_Helper_Abstract
@@ -16,7 +18,7 @@ class Ess_M2ePro_Helper_Module_Translation extends Mage_Core_Helper_Abstract
     private $processedPlaceholders = array();
     private $processedArgs = array();
 
-    // ##################################
+    //########################################
 
     public function translate(array $args)
     {
@@ -32,18 +34,18 @@ class Ess_M2ePro_Helper_Module_Translation extends Mage_Core_Helper_Abstract
 
         $this->translatedText = parent::__($this->text);
 
-        $this->replacePlaceholdersByValue();
-        $this->replacePlaceholdersByArgs();
+        !empty($this->values) && $this->replacePlaceholdersByValue();
+        !empty($this->args)   && $this->replacePlaceholdersByArgs();
 
         $unprocessedArgs = array_diff($this->args, $this->processedArgs);
-        if(!$unprocessedArgs) {
+        if (!$unprocessedArgs) {
             return $this->translatedText;
         }
 
         return vsprintf($this->translatedText, $unprocessedArgs);
     }
 
-    // ##################################
+    //########################################
 
     private function reset()
     {
@@ -56,7 +58,7 @@ class Ess_M2ePro_Helper_Module_Translation extends Mage_Core_Helper_Abstract
         $this->translatedText = null;
     }
 
-    // ----------------------------------
+    // ---------------------------------------
 
     private function parseInput(array $input)
     {
@@ -75,7 +77,7 @@ class Ess_M2ePro_Helper_Module_Translation extends Mage_Core_Helper_Abstract
         $this->placeholders = array_unique($placeholders[0]);
     }
 
-    // ##################################
+    //########################################
 
     private function replacePlaceholdersByValue()
     {
@@ -99,11 +101,11 @@ class Ess_M2ePro_Helper_Module_Translation extends Mage_Core_Helper_Abstract
 
         foreach ($unprocessedPlaceholders as $placeholder) {
 
-            $value = array_shift($unprocessedArgs);
-
-            if (is_null($value)) {
+            if (empty($unprocessedArgs)) {
                 break;
             }
+
+            $value = (string)array_shift($unprocessedArgs);
 
             $this->translatedText = str_replace($placeholder, $value, $this->translatedText);
 
@@ -112,5 +114,5 @@ class Ess_M2ePro_Helper_Module_Translation extends Mage_Core_Helper_Abstract
         }
     }
 
-    // ##################################
+    //########################################
 }

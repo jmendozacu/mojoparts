@@ -1,12 +1,14 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
 {
-    // ########################################
+    //########################################
 
     public function getName()
     {
@@ -24,13 +26,10 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         return 'undefined';
     }
 
-    // ########################################
+    //########################################
 
     public function getEditionName()
     {
-        if ($this->isProfessionalEdition()) {
-            return 'professional';
-        }
         if ($this->isEnterpriseEdition()) {
             return 'enterprise';
         }
@@ -38,37 +37,10 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
             return 'community';
         }
 
-        if ($this->isGoUsEdition()) {
-            return 'magento go US';
-        }
-        if ($this->isGoUkEdition()) {
-            return 'magento go UK';
-        }
-        if ($this->isGoAuEdition()) {
-            return 'magento go AU';
-        }
-
-        if ($this->isGoEdition()) {
-            return 'magento go';
-        }
-
         return 'undefined';
     }
 
-    //----------------------------------------
-
-    public function isGoEdition()
-    {
-        return class_exists('Saas_Db',false);
-    }
-
-    public function isProfessionalEdition()
-    {
-        return Mage::getConfig()->getModuleConfig('Enterprise_Enterprise') &&
-               !Mage::getConfig()->getModuleConfig('Enterprise_AdminGws') &&
-               !Mage::getConfig()->getModuleConfig('Enterprise_Checkout') &&
-               !Mage::getConfig()->getModuleConfig('Enterprise_Customer');
-    }
+    // ---------------------------------------
 
     public function isEnterpriseEdition()
     {
@@ -80,57 +52,10 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
 
     public function isCommunityEdition()
     {
-        return !$this->isGoEdition() &&
-               !$this->isProfessionalEdition() &&
-               !$this->isEnterpriseEdition();
+        return !$this->isEnterpriseEdition();
     }
 
-    //----------------------------------------
-
-    public function isGoUsEdition()
-    {
-        if (!$this->isGoEdition()) {
-            return false;
-        }
-
-        $region = Mage::getConfig()->getOptions()->getTenantRegion();
-        return strtolower($region) == 'en_us';
-    }
-
-    public function isGoUkEdition()
-    {
-        if (!$this->isGoEdition()) {
-            return false;
-        }
-
-        $region = Mage::getConfig()->getOptions()->getTenantRegion();
-        return strtolower($region) == 'en_gb';
-    }
-
-    public function isGoAuEdition()
-    {
-        if (!$this->isGoEdition()) {
-            return false;
-        }
-
-        $region = Mage::getConfig()->getOptions()->getTenantRegion();
-        return strtolower($region) == 'en_au';
-    }
-
-    //----------------------------------------
-
-    public function isGoCustomEdition()
-    {
-        if (!$this->isGoEdition()) {
-            return false;
-        }
-
-        return $this->isGoUsEdition() ||
-               $this->isGoUkEdition() ||
-               $this->isGoAuEdition();
-    }
-
-    // ########################################
+    //########################################
 
     public function getMySqlTables()
     {
@@ -147,7 +72,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         return (string)Mage::getConfig()->getNode('global/resources/default_setup/connection/dbname');
     }
 
-    // ########################################
+    //########################################
 
     public function getModules()
     {
@@ -179,7 +104,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
             '/Unirgy_Dropship/i' => 'Rewrites stock item and in some cases return
                                      always in stock for all products',
 
-            '/Aitoc_Aitquantitymanager/i' => 'Stock management conflicts.',
+            '/Aitoc_Aitquantitymanager/i' => 'Stock management conflicts. Wrong statuses, "In\OUT Stock". During Auto.',
 
             '/Eternalsoft_Ajaxcart/i' => 'Broke some ajax responses.',
             '/Amasty_Shiprestriction/i' => '"Please specify a shipping method" error for some orders.',
@@ -194,7 +119,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         );
 
         $result = array();
-        foreach($conflictedModules as $expression=>$description) {
+        foreach ($conflictedModules as $expression=>$description) {
 
             foreach ($modules as $module => $data) {
                 if (preg_match($expression, $module)) {
@@ -219,7 +144,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         return (string)Mage::getStoreConfig(Mage_Directory_Model_Currency::XML_PATH_CURRENCY_BASE);
     }
 
-    //----------------------------------------
+    // ---------------------------------------
 
     public function isSecretKeyToUrl()
     {
@@ -234,7 +159,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         return Mage::getSingleton('adminhtml/url')->getSecretKey();
     }
 
-    // ########################################
+    //########################################
 
     public function isDeveloper()
     {
@@ -280,15 +205,15 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         $unsortedCountries = Mage::getModel('directory/country_api')->items();
 
         $unsortedCountriesNames = array();
-        foreach($unsortedCountries as $country) {
+        foreach ($unsortedCountries as $country) {
             $unsortedCountriesNames[] = $country['name'];
         }
 
         sort($unsortedCountriesNames, SORT_STRING);
 
         $sortedCountries = array();
-        foreach($unsortedCountriesNames as $name) {
-            foreach($unsortedCountries as $country) {
+        foreach ($unsortedCountriesNames as $name) {
+            foreach ($unsortedCountries as $country) {
                 if ($country['name'] == $name) {
                     $sortedCountries[] = $country;
                     break;
@@ -297,6 +222,52 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         }
 
         return $sortedCountries;
+    }
+
+    public function getRegionsByCountryCode($countryCode)
+    {
+        $result = array();
+
+        try {
+            $country = Mage::getModel('directory/country')->loadByCode($countryCode);
+        } catch (Mage_Core_Exception $e) {
+            return $result;
+        }
+
+        if (!$country->getId()) {
+            return $result;
+        }
+
+        $result = array();
+        foreach ($country->getRegions() as $region) {
+            $region->setName($region->getName());
+            $result[] = $region->toArray(array('region_id', 'code', 'name'));
+        }
+
+        if (empty($result) && $countryCode == 'AU') {
+            $result = array(
+                array('region_id' => '','code' => 'NSW','name' => 'New South Wales'),
+                array('region_id' => '','code' => 'QLD','name' => 'Queensland'),
+                array('region_id' => '','code' => 'SA','name' => 'South Australia'),
+                array('region_id' => '','code' => 'TAS','name' => 'Tasmania'),
+                array('region_id' => '','code' => 'VIC','name' => 'Victoria'),
+                array('region_id' => '','code' => 'WA','name' => 'Western Australia'),
+            );
+        } else if (empty($result) && $countryCode == 'GB') {
+            $result = array(
+                array('region_id' => '','code' => 'UKH','name' => 'East of England'),
+                array('region_id' => '','code' => 'UKF','name' => 'East Midlands'),
+                array('region_id' => '','code' => 'UKI','name' => 'London'),
+                array('region_id' => '','code' => 'UKC','name' => 'North East'),
+                array('region_id' => '','code' => 'UKD','name' => 'North West'),
+                array('region_id' => '','code' => 'UKJ','name' => 'South East'),
+                array('region_id' => '','code' => 'UKK','name' => 'South West'),
+                array('region_id' => '','code' => 'UKG','name' => 'West Midlands'),
+                array('region_id' => '','code' => 'UKE','name' => 'Yorkshire and the Humber'),
+            );
+        }
+
+        return $result;
     }
 
     public function addGlobalNotification($title,
@@ -315,7 +286,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         Mage::getModel('adminnotification/inbox')->parse(array($dataForAdd));
     }
 
-    // ########################################
+    //########################################
 
     public function getRewrites($entity = 'models')
     {
@@ -348,7 +319,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         return $rewrites;
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getLocalPoolOverwrites()
     {
@@ -394,7 +365,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         return $isOriginalCoreFileExist || $isOriginalCommunityFileExist || $isOriginalLibFileExist;
     }
 
-    // ########################################
+    //########################################
 
     public function getAreas()
     {
@@ -437,14 +408,13 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
 
                     $eventObservers[$area][$eventName][] = $observerName;
                 }
-
             }
         }
 
         return $eventObservers;
     }
 
-    // ########################################
+    //########################################
 
     public function getNextMagentoOrderId()
     {
@@ -496,7 +466,7 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         return false;
     }
 
-    // ########################################
+    //########################################
 
     public function clearMenuCache()
     {
@@ -511,5 +481,5 @@ class Ess_M2ePro_Helper_Magento extends Mage_Core_Helper_Abstract
         Mage::app()->getCache()->clean(Zend_Cache::CLEANING_MODE_ALL);
     }
 
-    // ########################################
+    //########################################
 }

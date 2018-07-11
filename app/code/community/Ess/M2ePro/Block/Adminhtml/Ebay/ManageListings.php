@@ -1,35 +1,35 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2012 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
-class Ess_M2ePro_Block_Adminhtml_Ebay_ManageListings extends Mage_Adminhtml_Block_Widget_Container
+class Ess_M2ePro_Block_Adminhtml_Ebay_ManageListings extends Ess_M2ePro_Block_Adminhtml_Widget_Container
 {
-    // ########################################
-
     const TAB_ID_LISTING = 'listing';
     const TAB_ID_LISTING_OTHER = 'listing_other';
     const TAB_ID_SEARCH = 'search';
 
-    // ########################################
+    //########################################
 
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('ebayManageListings');
-        //------------------------------
+        // ---------------------------------------
 
         // Set header text
-        //------------------------------
+        // ---------------------------------------
         $this->_headerText = Mage::helper('M2ePro')->__('Listings');
-        //------------------------------
+        // ---------------------------------------
 
         // Set buttons actions
-        //------------------------------
+        // ---------------------------------------
         $this->removeButton('back');
         $this->removeButton('reset');
         $this->removeButton('delete');
@@ -37,12 +37,12 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_ManageListings extends Mage_Adminhtml_Bloc
         $this->removeButton('save');
         $this->removeButton('edit');
 
-        //------------------------------
+        // ---------------------------------------
         $this->setTemplate('M2ePro/ebay/manageListings.phtml');
-        //------------------------------
+        // ---------------------------------------
     }
 
-    // ########################################
+    //########################################
 
     protected function _toHtml()
     {
@@ -52,7 +52,9 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_ManageListings extends Mage_Adminhtml_Bloc
 
         $tabsContainer->addTab(self::TAB_ID_LISTING, $this->prepareListingTab());
 
-        if (Mage::helper('M2ePro/View_Ebay')->isAdvancedMode()) {
+        if (Mage::helper('M2ePro/View_Ebay')->isAdvancedMode() &&
+            Mage::helper('M2ePro/View_Ebay')->is3rdPartyShouldBeShown()) {
+
             $tabsContainer->addTab(self::TAB_ID_LISTING_OTHER, $this->prepareListingOtherTab());
         }
 
@@ -65,14 +67,14 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_ManageListings extends Mage_Adminhtml_Bloc
                '<div id="tabs_container"></div>';
     }
 
-    // ########################################
+    //########################################
 
     protected function getActiveTab()
     {
         return $this->getRequest()->getParam('tab', self::TAB_ID_LISTING);
     }
 
-    // ########################################
+    //########################################
 
     private function prepareListingTab()
     {
@@ -125,5 +127,5 @@ class Ess_M2ePro_Block_Adminhtml_Ebay_ManageListings extends Mage_Adminhtml_Bloc
         return $tab;
     }
 
-    // ########################################
+    //########################################
 }

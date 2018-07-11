@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Templates
@@ -12,33 +14,50 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Templates
      */
     private $runner = NULL;
 
+    /**
+     * @var Ess_M2ePro_Model_Ebay_Synchronization_Templates_Inspector
+     */
+    private $inspector = NULL;
+
     private $cache = array();
 
-    //####################################
+    //########################################
 
+    /**
+     * @return string
+     */
     protected function getNick()
     {
         return '/templates/';
     }
 
+    /**
+     * @return string
+     */
     protected function getTitle()
     {
         return 'Inventory';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     protected function getPercentsStart()
     {
         return 50;
     }
 
+    /**
+     * @return int
+     */
     protected function getPercentsEnd()
     {
         return 100;
     }
 
-    //####################################
+    //########################################
 
     protected function beforeStart()
     {
@@ -52,6 +71,8 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Templates
         $this->runner->setLockItem($this->getActualLockItem());
         $this->runner->setPercentsStart($this->getPercentsStart() + $this->getPercentsInterval()/2);
         $this->runner->setPercentsEnd($this->getPercentsEnd());
+
+        $this->inspector = Mage::getModel('M2ePro/Ebay_Synchronization_OtherListings_Templates_Inspector');
     }
 
     protected function afterEnd()
@@ -62,7 +83,7 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Templates
         parent::afterEnd();
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function performActions()
     {
@@ -80,12 +101,13 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Templates
         $task = parent::makeTask($taskPath);
 
         $task->setRunner($this->runner);
+        $task->setInspector($this->inspector);
         $task->setCache($this->cache);
 
         return $task;
     }
 
-    //####################################
+    //########################################
 
     private function executeRunner()
     {
@@ -115,20 +137,17 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_OtherListings_Templates
             return;
         }
 
+        // M2ePro_TRANSLATIONS
+        // Task "Update 3rd Party Listings" has completed with %result%. View Listings Log for details.
         $this->getLog()->addMessage(
             Mage::getModel('M2ePro/Log_Abstract')->encodeDescription(
-                'Task "Update 3rd Party Listings" has completed with %result%. View %sl%Listings Log%el% for details.',
-                array(
-                    '!sl'=>'<a target="_blank" href="route:*/adminhtml_ebay_log/listingOther/;'.
-                        'back:*/adminhtml_ebay_log/synchronization/;">',
-                    '!el'=>'</a>',
-                    '!result'=>$resultString
-                )
+                'Task "Update 3rd Party Listings" has completed with %result%. View Listings Log for details.',
+                array('!result'=>$resultString)
             ), $resultType, $resultPriority
         );
 
         $this->getActualOperationHistory()->addText('Updating Products on eBay ended with '.$resultString.'.');
     }
 
-    //####################################
+    //########################################
 }

@@ -1,120 +1,123 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Helper_View_Ebay_Component extends Mage_Core_Helper_Abstract
 {
-    // ########################################
+    //########################################
 
     public function getComponents()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getComponents());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getComponents());
     }
 
     public function getComponentsTitles()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getComponentsTitles());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getComponentsTitles());
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     public function getEnabledComponents()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getEnabledComponents());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getEnabledComponents());
     }
 
     public function getEnabledComponentsTitles()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getEnabledComponentsTitles());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getEnabledComponentsTitles());
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     public function getDisabledComponents()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getDisabledComponents());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getDisabledComponents());
     }
 
     public function getDisabledComponentsTitles()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getDisabledComponentsTitles());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getDisabledComponentsTitles());
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     public function getAllowedComponents()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getAllowedComponents());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getAllowedComponents());
     }
 
     public function getAllowedComponentsTitles()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getAllowedComponentsTitles());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getAllowedComponentsTitles());
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     public function getForbiddenComponents()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getForbiddenComponents());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getForbiddenComponents());
     }
 
     public function getForbiddenComponentsTitles()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getForbiddenComponentsTitles());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getForbiddenComponentsTitles());
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     public function getActiveComponents()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getActiveComponents());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getActiveComponents());
     }
 
     public function getActiveComponentsTitles()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getActiveComponentsTitles());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getActiveComponentsTitles());
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     public function getInactiveComponents()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getInactiveComponents());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getInactiveComponents());
     }
 
     public function getInactiveComponentsTitles()
     {
-        return $this->removeCommonFromComponentsArray(Mage::helper('M2ePro/Component')->getInactiveComponentsTitles());
+        return $this->removeAmazonFromComponentsArray(Mage::helper('M2ePro/Component')->getInactiveComponentsTitles());
     }
 
-    // ########################################
+    //########################################
 
     public function isSingleActiveComponent()
     {
         return count($this->getActiveComponents()) == 1;
     }
 
-    // ########################################
+    //########################################
 
-    private function removeCommonFromComponentsArray($components)
+    private function removeAmazonFromComponentsArray($components)
     {
-        if (isset($components[Ess_M2ePro_Helper_Component_Ebay::NICK])) {
-            return array(
-                Ess_M2ePro_Helper_Component_Ebay::NICK => $components[Ess_M2ePro_Helper_Component_Ebay::NICK]
-            );
+        if (!array_key_exists(0, $components)) {
+            unset($components[Ess_M2ePro_Helper_Component_Amazon::NICK]);
+            return $components;
         }
 
+        $resultComponents = array();
         foreach ($components as $component) {
-            if ($component == Ess_M2ePro_Helper_Component_Ebay::NICK) {
-                return array(Ess_M2ePro_Helper_Component_Ebay::NICK);
+            if ($component == Ess_M2ePro_Helper_Component_Amazon::NICK) {
+                continue;
             }
+            $resultComponents[] = $component;
         }
 
-        return array();
+        return $resultComponents;
     }
 
-    // ########################################
+    //########################################
 }

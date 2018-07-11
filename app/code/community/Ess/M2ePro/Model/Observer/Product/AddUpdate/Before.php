@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2015 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Observer_Product_AddUpdate_Before extends Ess_M2ePro_Model_Observer_Product_AddUpdate_Abstract
@@ -13,7 +15,7 @@ class Ess_M2ePro_Model_Observer_Product_AddUpdate_Before extends Ess_M2ePro_Mode
      */
     private $proxy = NULL;
 
-    //####################################
+    //########################################
 
     public function beforeProcess()
     {
@@ -27,7 +29,7 @@ class Ess_M2ePro_Model_Observer_Product_AddUpdate_Before extends Ess_M2ePro_Mode
         $this->storeProxy();
     }
 
-    // ------------------------------------
+    // ---------------------------------------
 
     public function process()
     {
@@ -51,18 +53,19 @@ class Ess_M2ePro_Model_Observer_Product_AddUpdate_Before extends Ess_M2ePro_Mode
         $this->getProxy()->setData('special_price',(float)$this->getProduct()->getSpecialPrice());
         $this->getProxy()->setData('special_price_from_date',$this->getProduct()->getSpecialFromDate());
         $this->getProxy()->setData('special_price_to_date',$this->getProduct()->getSpecialToDate());
+        $this->getProxy()->setData('tier_price',$this->getProduct()->getTierPrice());
 
         $this->getProxy()->setAttributes($this->getTrackingAttributesWithValues());
     }
 
-    //####################################
+    //########################################
 
     protected function isAddingProductProcess()
     {
         return $this->getProductId() <= 0 || (string)$this->getEvent()->getProduct()->getOrigData('sku') == '';
     }
 
-    //####################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Observer_Product_AddUpdate_Before_Proxy
@@ -82,7 +85,7 @@ class Ess_M2ePro_Model_Observer_Product_AddUpdate_Before extends Ess_M2ePro_Mode
         return $this->proxy = $object;
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     private function clearStoredProxy()
     {
@@ -104,20 +107,21 @@ class Ess_M2ePro_Model_Observer_Product_AddUpdate_Before extends Ess_M2ePro_Mode
         self::$proxyStorage[$key] = $this->getProxy();
     }
 
-    //####################################
+    //########################################
 
     private function getTrackingAttributes()
     {
         $attributes = array();
 
         foreach ($this->getAffectedListingsProducts() as $listingProduct) {
-            /** @var Ess_M2ePro_Model_Listing_Product $listingProduct */
-            $tempAttributes = $listingProduct->getTrackingAttributes();
-            $attributes = array_merge($attributes, $tempAttributes);
-        }
+            /** @var Ess_M2ePro_Model_Magento_Product_ChangeProcessor_Abstract $changeProcessor */
+            $changeProcessor = Mage::getModel(
+                'M2ePro/'.ucfirst($listingProduct->getComponentMode()).'_Magento_Product_ChangeProcessor'
+            );
+            $changeProcessor->setListingProduct($listingProduct);
 
-        $tempAttributes = Mage::getModel('M2ePro/Ebay_Listing_Other_Source')->getTrackingAttributes();
-        $attributes = array_merge($attributes, $tempAttributes);
+            $attributes = array_merge($attributes, $changeProcessor->getTrackingAttributes());
+        }
 
         return array_values(array_unique($attributes));
     }
@@ -133,5 +137,5 @@ class Ess_M2ePro_Model_Observer_Product_AddUpdate_Before extends Ess_M2ePro_Mode
         return $attributes;
     }
 
-    //####################################
+    //########################################
 }

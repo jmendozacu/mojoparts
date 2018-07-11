@@ -26,4 +26,26 @@
         </tr>
     <?php endif; ?>
 
+    <?php if ($this->isZendOpcacheAvailable()) : ?>
+        <tr>
+            <td class="label">
+                <label><?php echo Mage::helper('M2ePro')->__('Zend Opcache'); ?>: </label>
+            </td>
+            <td class="value">
+                <span style="color: red"><b>Enabled</b></span>
+            </td>
+        </tr>
+    <?php endif; ?>
+
+    <?php if ($this->isSystemLogNotEmpty()) : ?>
+            <tr>
+                <td class="label">
+                    <label><?php echo Mage::helper('M2ePro')->__('System Log'); ?>: </label>
+                </td>
+                <td class="value">
+                    <a style="margin-left: 10px;" href="<?php echo $this->getUrl('*/adminhtml_development_database/manageTable', array('table' => 'm2epro_system_log')); ?>">Show</a>
+                </td>
+            </tr>
+        <?php endif; ?>
+
 </table>

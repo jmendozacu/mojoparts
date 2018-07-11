@@ -1,23 +1,26 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Template_SellingFormat extends Ess_M2ePro_Model_Component_Parent_Abstract
 {
-    const PRICE_NONE      = 0;
-    const PRICE_PRODUCT   = 1;
-    const PRICE_SPECIAL   = 2;
-    const PRICE_ATTRIBUTE = 3;
-
     const QTY_MODE_PRODUCT       = 1;
     const QTY_MODE_SINGLE        = 2;
     const QTY_MODE_NUMBER        = 3;
     const QTY_MODE_ATTRIBUTE     = 4;
     const QTY_MODE_PRODUCT_FIXED = 5;
 
-    // ########################################
+    const PRICE_MODE_NONE      = 0;
+    const PRICE_MODE_PRODUCT   = 1;
+    const PRICE_MODE_SPECIAL   = 2;
+    const PRICE_MODE_ATTRIBUTE = 3;
+    const PRICE_MODE_TIER      = 4;
+
+    //########################################
 
     public function _construct()
     {
@@ -25,7 +28,7 @@ class Ess_M2ePro_Model_Template_SellingFormat extends Ess_M2ePro_Model_Component
         $this->_init('M2ePro/Template_SellingFormat');
     }
 
-    // ########################################
+    //########################################
 
     public function deleteInstance()
     {
@@ -39,14 +42,14 @@ class Ess_M2ePro_Model_Template_SellingFormat extends Ess_M2ePro_Model_Component
         return true;
     }
 
-    // ########################################
+    //########################################
 
     public function getTitle()
     {
         return $this->getData('title');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getCreateDate()
     {
@@ -58,19 +61,7 @@ class Ess_M2ePro_Model_Template_SellingFormat extends Ess_M2ePro_Model_Component
         return $this->getData('update_date');
     }
 
-    // ########################################
-
-    public function getTrackingAttributes()
-    {
-        return $this->getChildObject()->getTrackingAttributes();
-    }
-
-    public function getUsedAttributes()
-    {
-        return $this->getChildObject()->getUsedAttributes();
-    }
-
-    // #######################################
+    //########################################
 
     public function save()
     {
@@ -84,5 +75,5 @@ class Ess_M2ePro_Model_Template_SellingFormat extends Ess_M2ePro_Model_Component
         return parent::delete();
     }
 
-    // #######################################
+    //########################################
 }

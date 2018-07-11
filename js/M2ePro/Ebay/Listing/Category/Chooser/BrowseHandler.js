@@ -1,7 +1,7 @@
 EbayListingCategoryChooserBrowseHandler = Class.create();
 EbayListingCategoryChooserBrowseHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function()
     {
@@ -13,7 +13,7 @@ EbayListingCategoryChooserBrowseHandler.prototype = Object.extend(new CommonHand
         };
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     setMarketplaceId: function(marketplaceId)
     {
@@ -34,11 +34,13 @@ EbayListingCategoryChooserBrowseHandler.prototype = Object.extend(new CommonHand
 
     getCategoriesSelectElementId: function(categoryId)
     {
+        if (categoryId === null) categoryId = 0;
         return 'category_chooser_select_' + categoryId;
     },
 
     getCategoryChildrenElementId: function(categoryId)
     {
+        if (categoryId === null) categoryId = 0;
         return 'category_chooser_children_' + categoryId;
     },
 
@@ -67,12 +69,12 @@ EbayListingCategoryChooserBrowseHandler.prototype = Object.extend(new CommonHand
         return selectedCategories;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     renderTopLevelCategories: function(containerId)
     {
-        this.prepareDomStructure(0, $(containerId));
-        this.renderChildCategories(0);
+        this.prepareDomStructure(null, $(containerId));
+        this.renderChildCategories(null);
     },
 
     renderChildCategories: function(parentCategoryId)
@@ -161,7 +163,7 @@ EbayListingCategoryChooserBrowseHandler.prototype = Object.extend(new CommonHand
         parentDiv.appendChild(childrenDiv);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     observe: function(event, observer)
     {
@@ -204,5 +206,5 @@ EbayListingCategoryChooserBrowseHandler.prototype = Object.extend(new CommonHand
         });
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

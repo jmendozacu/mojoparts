@@ -1,50 +1,39 @@
 CommonHandler = Class.create();
 CommonHandler.prototype = {
 
-    // --------------------------------
+    // ---------------------------------------
 
     initialize: function() {},
 
-    //----------------------------------
+    // ---------------------------------------
 
     initCommonValidators: function()
     {
+        var self = this;
         Validation.add('M2ePro-required-when-visible', M2ePro.translator.translate('This is a required field.'), function(value, el) {
 
-            var hidden = false;
-            hidden = !$(el).visible();
-
-            while (!hidden) {
-                el = $(el).up();
-                hidden = !el.visible();
-                if ($(el).up() == document || el.hasClassName('entry-edit')) {
-                    break;
-                }
+            if (self.isElementHiddenFromPage(el)) {
+                return true;
             }
 
-            return hidden ? true : !!value;
+            if (typeof value === 'string') {
+                value = value.trim();
+            }
+
+            return value != null && value.length > 0;
         });
 
         Validation.add('M2ePro-required-when-visible-and-enabled', M2ePro.translator.translate('This is a required field.'), function(value, el) {
 
-            var hidden = false;
-            var disabled = false;
-            hidden = !$(el).visible();
-            disabled = !$(el).disabled;
-
-            while (!hidden) {
-                el = $(el).up();
-                hidden = !el.visible();
-                if (el == document || el.hasClassName('entry-edit')) {
-                    break;
-                }
-            }
-
-            if (disabled) {
+            if (self.isElementHiddenFromPage(el)) {
                 return true;
             }
 
-            return hidden ? true : !!value;
+            if (!$(el).disabled) {
+                return true;
+            }
+
+            return value != null && value.length > 0;
         });
 
         Validation.add('M2ePro-validation-float', M2ePro.translator.translate('Invalid input data. Decimal value required. Example 12.05'), function(value, element) {
@@ -73,7 +62,22 @@ CommonHandler.prototype = {
         });
     },
 
-    //----------------------------------
+    isElementHiddenFromPage: function(el)
+    {
+        var hidden = !$(el).visible();
+
+        while (!hidden) {
+            el = $(el).up();
+            hidden = !el.visible();
+            if ($(el).up() == document || el.hasClassName('entry-edit')) {
+                break;
+            }
+        }
+
+        return hidden;
+    },
+
+    // ---------------------------------------
 
     scroll_page_to_top: function()
     {
@@ -89,7 +93,7 @@ CommonHandler.prototype = {
         setLocation(url.replace(/#$/, ''));
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     save_click: function(url)
     {
@@ -113,7 +117,7 @@ CommonHandler.prototype = {
         this.submitForm(url);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     duplicate_click: function($headId, chapter_when_duplicate_text)
     {
@@ -141,7 +145,7 @@ CommonHandler.prototype = {
         setLocation(M2ePro.url.get('deleteAction'));
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     submitForm: function(url, newWindow)
     {
@@ -175,7 +179,7 @@ CommonHandler.prototype = {
         setTimeout(form.submit.bind(form), 250);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     openWindow: function(url)
     {
@@ -184,7 +188,7 @@ CommonHandler.prototype = {
         return w;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     updateHiddenValue : function(elementMode, elementHidden)
     {
@@ -206,7 +210,7 @@ CommonHandler.prototype = {
         $(el) && $(el).removeClassName('required-entry');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     setConstants: function(data)
     {
@@ -216,9 +220,11 @@ CommonHandler.prototype = {
         }
     },
 
-    setValidationCheckRepetitionValue: function(idInput, textError, model, dataField, idField, idValue, component)
+    setValidationCheckRepetitionValue: function(idInput, textError, model, dataField, idField, idValue, component, filterField, filterValue)
     {
         component = component || null;
+        filterField = filterField || null;
+        filterValue = filterValue || null;
 
         Validation.add(idInput, textError, function(value) {
             var checkResult = false;
@@ -232,7 +238,9 @@ CommonHandler.prototype = {
                     data_value: value,
                     id_field: idField,
                     id_value: idValue,
-                    component: component
+                    component: component,
+                    filter_field: filterField,
+                    filter_value: filterValue
                 },
                 onSuccess: function(transport) {
                     checkResult = transport.responseText.evalJSON()['result'];
@@ -241,7 +249,17 @@ CommonHandler.prototype = {
 
             return checkResult;
         });
+    },
+
+    // ---------------------------------------
+
+    autoHeightFix: function()
+    {
+        setTimeout(function() {
+            Windows.getFocusedWindow().content.style.height = '';
+            Windows.getFocusedWindow().content.style.maxHeight = '650px';
+        }, 50);
     }
 
-    //----------------------------------
+    // ---------------------------------------
 }

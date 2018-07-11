@@ -1,12 +1,12 @@
 CommonListingSettingsHandler = Class.create();
 CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
 
-    //----------------------------------
+    // ---------------------------------------
 
     storeId: null,
     marketplaceId: null,
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function() {
 
@@ -26,7 +26,7 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     save_click: function(url)
     {
@@ -73,7 +73,7 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         CommonListingSettingsHandlerObj.reload(M2ePro.url.getSynchronizationTemplates, 'template_synchronization_id');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     initSellingFormatTemplateAutocomplete: function()
     {
@@ -109,7 +109,7 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         $('template_selling_format_id').value = $('template_selling_format_autocomplete').readAttribute('selected_id');
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     selling_format_template_id_simulate_change: function()
     {
@@ -137,7 +137,7 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         CommonListingSettingsHandlerObj.hideEmptyOption(this);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     checkMessages: function()
     {
@@ -172,14 +172,14 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         );
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     synchronization_template_id_change: function()
     {
         CommonListingSettingsHandlerObj.hideEmptyOption(this);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     reload: function(url, id)
     {
@@ -216,12 +216,17 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
                         $(id).value = firstItemValue;
                     }
                 }
-                $(id).simulate('change');
+
+                var simulateConditions = {
+                    template_selling_format_id: M2ePro.autoCompleteData.flags.sellingFormatTemplatesDropDown,
+                    template_synchronization_id: M2ePro.autoCompleteData.flags.synchronizationsTemplatesDropDown
+                };
+                simulateConditions[id] && $(id).simulate('change');
             }
         });
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     addNewTemplate: function(url, callback)
     {
@@ -240,7 +245,7 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         }, 1000);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     newSellingFormatTemplateCallback: function()
     {
@@ -250,7 +255,7 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         if ($('template_selling_format_id').children.length > 0) {
             $('template_selling_format_id').show();
             noteEl && $('template_selling_format_note').show();
-            $('template_selling_format_label').hide();
+            M2ePro.autoCompleteData.flags.sellingFormatTemplatesDropDown && $('template_selling_format_label').hide();
         } else {
             $('template_selling_format_id').hide();
             noteEl && $('template_selling_format_note').hide();
@@ -258,7 +263,7 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         }
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     newSynchronizationTemplateCallback: function()
     {
@@ -268,7 +273,7 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         if ($('template_synchronization_id').children.length > 0) {
             $('template_synchronization_id').show();
             noteEl &&  $('template_synchronization_note').show();
-            $('template_synchronization_label').hide();
+            M2ePro.autoCompleteData.flags.synchronizationsTemplatesDropDown && $('template_synchronization_label').hide();
         } else {
             $('template_synchronization_id').hide();
             noteEl &&  $('template_synchronization_note').hide();
@@ -276,5 +281,5 @@ CommonListingSettingsHandler.prototype = Object.extend(new CommonHandler(), {
         }
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

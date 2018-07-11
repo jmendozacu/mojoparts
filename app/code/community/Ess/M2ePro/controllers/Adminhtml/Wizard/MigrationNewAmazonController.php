@@ -1,71 +1,72 @@
 <?php
 
 /*
-* @copyright  Copyright (c) 2013 by  ESS-UA.
-*/
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
+ */
 
 class Ess_M2ePro_Adminhtml_Wizard_MigrationNewAmazonController
-    extends Ess_M2ePro_Controller_Adminhtml_Common_WizardController
+    extends Ess_M2ePro_Controller_Adminhtml_Amazon_WizardController
 {
-    //#############################################
+    //########################################
 
     protected function _initAction()
     {
         parent::_initAction();
         $this->getLayout()->getBlock('head')
+                          ->addJs('M2ePro/Wizard/Amazon/CustomHandler.js')
                           ->addJs('M2ePro/Wizard/MigrationNewAmazonHandler.js');
 
         return $this;
     }
 
-    //#############################################
+    //########################################
 
     protected function getNick()
     {
         return 'migrationNewAmazon';
     }
 
-    //#############################################
+    //########################################
+
+    public function indexAction()
+    {
+        $this->getWizardHelper()->setStatus(
+            'fullAmazonCategories', Ess_M2ePro_Helper_Module_Wizard::STATUS_SKIPPED
+        );
+
+        parent::indexAction();
+    }
 
     public function welcomeAction()
     {
-        /* @var $wizardHelper Ess_M2ePro_Helper_Module_Wizard */
-        $wizardHelper = Mage::helper('M2ePro/Module_Wizard');
-        $wizardHelper->setStatus(
-            $this->getNick(),
-            Ess_M2ePro_Helper_Module_Wizard::STATUS_ACTIVE
-        );
+        $this->setStatus(Ess_M2ePro_Helper_Module_Wizard::STATUS_ACTIVE);
 
         return $this->_redirect('*/*/index');
     }
 
     public function installationAction()
     {
-        /* @var $wizardHelper Ess_M2ePro_Helper_Module_Wizard */
-        $wizardHelper = Mage::helper('M2ePro/Module_Wizard');
-
-        if ($wizardHelper->isFinished($this->getNick())) {
+        if ($this->isFinished()) {
             return $this->_redirect('*/*/congratulation');
         }
 
-        if (!$wizardHelper->getStep($this->getNick())) {
-            $wizardHelper->setStep(
-                $this->getNick(),
-                $wizardHelper->getWizard($this->getNick())->getFirstStep()
-            );
+        if (!$this->getCurrentStep() || !in_array($this->getCurrentStep(), $this->getSteps())) {
+            $this->setStep($this->getFirstStep());
         }
 
         return $this->_initAction()
-            ->_addContent($wizardHelper->createBlock('installation',$this->getNick()))
-            ->renderLayout();
+                    ->_addContent($this->getWizardHelper()->createBlock('installation',$this->getNick()))
+                    ->renderLayout();
     }
 
     public function congratulationAction()
     {
-        return $this->_redirect('*/adminhtml_common_listing/index/');
+        return $this->_redirect('*/adminhtml_amazon_listing/index/');
     }
 
-    //#############################################
+    //########################################
 
     public function marketplacesSynchronizationAction()
     {
@@ -79,7 +80,9 @@ class Ess_M2ePro_Adminhtml_Wizard_MigrationNewAmazonController
         $dispatcher = Mage::getModel('M2ePro/Synchronization_Dispatcher');
 
         $dispatcher->setAllowedComponents(array(Ess_M2ePro_Helper_Component_Amazon::NICK));
-        $dispatcher->setAllowedTasksTypes(array(Ess_M2ePro_Model_Synchronization_Task::MARKETPLACES));
+        $dispatcher->setAllowedTasksTypes(array(
+            Ess_M2ePro_Model_Synchronization_Task_Component_Abstract::MARKETPLACES
+        ));
 
         $dispatcher->setInitiator(Ess_M2ePro_Helper_Data::INITIATOR_USER);
         $dispatcher->setParams(array('marketplace_id' => $marketplaceId));
@@ -89,5 +92,5 @@ class Ess_M2ePro_Adminhtml_Wizard_MigrationNewAmazonController
         return $this->getResponse()->setBody('success');
     }
 
-    //#############################################
+    //########################################
 }

@@ -1,44 +1,61 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 final class Ess_M2ePro_Model_Ebay_Synchronization_Feedbacks_Receive
     extends Ess_M2ePro_Model_Ebay_Synchronization_Feedbacks_Abstract
 {
-    //####################################
+    //########################################
 
+    /**
+     * @return string
+     */
     protected function getNick()
     {
         return '/receive/';
     }
 
+    /**
+     * @return string
+     */
     protected function getTitle()
     {
         return 'Receive';
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     protected function getPercentsStart()
     {
         return 0;
     }
 
+    /**
+     * @return int
+     */
     protected function getPercentsEnd()
     {
         return 50;
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     protected function intervalIsEnabled()
     {
         return true;
     }
 
-    //####################################
+    //########################################
 
     protected function performActions()
     {
@@ -79,7 +96,7 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Feedbacks_Receive
         }
     }
 
-    //####################################
+    //########################################
 
     protected function getPermittedAccounts()
     {
@@ -89,7 +106,7 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Feedbacks_Receive
         return $collection->getItems();
     }
 
-    // -----------------------------------
+    // ---------------------------------------
 
     protected function processAccount(Ess_M2ePro_Model_Account $account)
     {
@@ -125,10 +142,14 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Feedbacks_Receive
 
     protected function receiveFromEbay(Ess_M2ePro_Model_Account $account, array $paramsConnector = array())
     {
-        $feedbacks = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher')
-                                ->processVirtual('feedback','get','entity',
-                                                 $paramsConnector,'feedbacks',
-                                                 NULL,$account->getId(),NULL);
+        $dispatcherObj = Mage::getModel('M2ePro/Connector_Ebay_Dispatcher');
+        $connectorObj = $dispatcherObj->getVirtualConnector('feedback','get','entity',
+                                                            $paramsConnector,'feedbacks',
+                                                            NULL,$account->getId(),NULL);
+
+        $feedbacks = $dispatcherObj->process($connectorObj);
+        $this->processResponseMessages($connectorObj);
+
         is_null($feedbacks) && $feedbacks = array();
 
         $countNewFeedbacks = 0;
@@ -188,5 +209,24 @@ final class Ess_M2ePro_Model_Ebay_Synchronization_Feedbacks_Receive
         );
     }
 
-    //####################################
+    private function processResponseMessages(Ess_M2ePro_Model_Connector_Protocol $connectorObj)
+    {
+        foreach ($connectorObj->getErrorMessages() as $message) {
+
+            if (!$connectorObj->isMessageError($message) && !$connectorObj->isMessageWarning($message)) {
+                continue;
+            }
+
+            $logType = $connectorObj->isMessageError($message) ? Ess_M2ePro_Model_Log_Abstract::TYPE_ERROR
+                                                               : Ess_M2ePro_Model_Log_Abstract::TYPE_WARNING;
+
+            $this->getLog()->addMessage(
+                Mage::helper('M2ePro')->__($message[Ess_M2ePro_Model_Connector_Protocol::MESSAGE_TEXT_KEY]),
+                $logType,
+                Ess_M2ePro_Model_Log_Abstract::PRIORITY_HIGH
+            );
+        }
+    }
+
+    //########################################
 }

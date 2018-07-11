@@ -1,17 +1,17 @@
 EbayListingTransferringPaymentHandler = Class.create(CommonHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     initialize: function() {},
 
-    // --------------------------------
+    // ---------------------------------------
 
     payNowAction: function(amount, currency, account, closeCallback)
     {
         var content =
             '<div style="padding-bottom: 20px; padding-top: 20px;">' +
                 '<div id="block_notice_ebay_translation_account" class="block_notices_module" title="' + M2ePro.translator.translate('Payment for Translation Service. Help') + '" subtitle="" collapseable="no" hideblock="no" always_show="yes">' +
-                    M2ePro.translator.translate('Specify a sum to be credited to an account.') +
+                    M2ePro.translator.translate('Specify a sum to be credited to an Account.') +
                 '</div>' +
                 '<form action="' + M2ePro.url.get('adminhtml_ebay_listing_transferring/getPaymentUrl') + '" method="post" id="edit_form">' +
                 '<input id="transferring_ebay_account" type="hidden" name="account" value="' + account + '">' +
@@ -29,7 +29,7 @@ EbayListingTransferringPaymentHandler = Class.create(CommonHandler, {
                                 '<img src="' + M2ePro.url.get('m2epro_skin_url') + '/images/tool-tip-icon.png' + '" class="tool-tip-image">' +
                                 '<span class="tool-tip-message" style="display: none;">' +
                                     '<img src="' + M2ePro.url.get('m2epro_skin_url') + '/images/help.png' + '">' +
-                                    '<span>' + M2ePro.translator.translate('Insert amount to be credited to an account') + '</span>' +
+                                    '<span>' + M2ePro.translator.translate('Insert amount to be credited to an Account') + '</span>' +
                                 '</span>' +
                             '</div>' +
                         '</td>' +
@@ -49,7 +49,7 @@ EbayListingTransferringPaymentHandler = Class.create(CommonHandler, {
         initializationMagentoBlocks();
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     openPopUp: function(title, content, closeCallback)
     {
@@ -89,7 +89,7 @@ EbayListingTransferringPaymentHandler = Class.create(CommonHandler, {
         }, 50);
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     validate: function()
     {
@@ -106,7 +106,7 @@ EbayListingTransferringPaymentHandler = Class.create(CommonHandler, {
         return true;
     },
 
-    //----------------------------------
+    // ---------------------------------------
 
     confirm: function()
     {
@@ -150,5 +150,5 @@ EbayListingTransferringPaymentHandler = Class.create(CommonHandler, {
         });
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

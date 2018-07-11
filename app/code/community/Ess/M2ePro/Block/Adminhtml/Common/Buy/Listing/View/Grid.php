@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
@@ -14,7 +16,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
 
     private $lockedDataCache = array();
 
-    // ####################################
+    //########################################
 
     public function __construct()
     {
@@ -23,9 +25,9 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('buyListingViewGrid'.$listingData['id']);
-        //------------------------------
+        // ---------------------------------------
 
         $this->showAdvancedFilterProductsOption = false;
 
@@ -35,14 +37,14 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
         );
     }
 
-    // ####################################
+    //########################################
 
     protected function _prepareCollection()
     {
         $listingData = Mage::helper('M2ePro/Data_Global')->getValue('temp_data');
 
         // Get collection
-        //----------------------------
+        // ---------------------------------------
         /* @var $collection Mage_Core_Model_Mysql4_Collection_Abstract */
         $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
             Mage::getModel('catalog/product')->getResource());
@@ -58,13 +60,14 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
                 'left'
             );
 
-        //----------------------------
+        // ---------------------------------------
 
         $collection->joinTable(
             array('lp' => 'M2ePro/Listing_Product'),
             'product_id=entity_id',
             array(
                 'id'              => 'id',
+                'listing_id'      => 'listing_id',
                 'component_mode'  => 'component_mode',
                 'buy_status'      => 'status',
                 'additional_data' => 'additional_data'
@@ -86,11 +89,8 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
             ),
             null
         );
-        //----------------------------
+        // ---------------------------------------
 
-        //exit($collection->getSelect()->__toString());
-
-        // Set collection to grid
         $this->setCollection($collection);
 
         return parent::_prepareCollection();
@@ -105,13 +105,12 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
             'type'      => 'number',
             'index'     => 'entity_id',
             'filter_index' => 'entity_id',
-            'frame_callback' => array($this, 'callbackColumnProductId')
+            'frame_callback' => array($this, 'callbackColumnListingProductId')
         ));
 
         $this->addColumn('name', array(
             'header'    => Mage::helper('M2ePro')->__('Product Title / Product SKU'),
             'align'     => 'left',
-            //'width'     => '300px',
             'type'      => 'text',
             'index'     => 'name',
             'filter_index' => 'name',
@@ -194,16 +193,16 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
     protected function _prepareMassaction()
     {
         // Set massaction identifiers
-        //--------------------------------
+        // ---------------------------------------
         $this->setMassactionIdField('id');
         $this->setMassactionIdFieldOnlyIndexValue(true);
-        //--------------------------------
+        // ---------------------------------------
 
         // Set mass-action
-        //--------------------------------
+        // ---------------------------------------
         $groups = array(
             'actions'    => Mage::helper('M2ePro')->__('Actions'),
-            'rekuten_sku' => Mage::helper('M2ePro')->__('Rakuten.com SKU'),
+            'rakuten_sku' => Mage::helper('M2ePro')->__('Rakuten.com SKU'),
             'other'      => Mage::helper('M2ePro')->__('Other')
         );
 
@@ -239,23 +238,17 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
             'confirm'  => Mage::helper('M2ePro')->__('Are you sure?')
         ), 'actions');
 
-        $this->getMassactionBlock()->addItem('newGeneralId', array(
-                'label'    => Mage::helper('M2ePro')->__('Add New'),
-                'url'      => '',
-                'confirm'  => Mage::helper('M2ePro')->__('Are you sure?')
-        ), 'rekuten_sku');
-
         $this->getMassactionBlock()->addItem('assignGeneralId', array(
-            'label'    => Mage::helper('M2ePro')->__('Assign'),
+            'label'    => Mage::helper('M2ePro')->__('Search Automatically'),
             'url'      => '',
             'confirm'  => Mage::helper('M2ePro')->__('Are you sure?')
-        ), 'rekuten_sku');
+        ), 'rakuten_sku');
 
         $this->getMassactionBlock()->addItem('unassignGeneralId', array(
-            'label'    => Mage::helper('M2ePro')->__('Unassign'),
+            'label'    => Mage::helper('M2ePro')->__('Reset Information'),
             'url'      => '',
             'confirm'  => Mage::helper('M2ePro')->__('Are you sure?')
-        ), 'rekuten_sku');
+        ), 'rakuten_sku');
 
         $this->getMassactionBlock()->addItem('moving', array(
             'label'    => Mage::helper('M2ePro')->__('Move Item(s) to Another Listing'),
@@ -268,7 +261,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
             'url'      => '',
             'confirm'  => Mage::helper('M2ePro')->__('Are you sure?')
         ), 'other');
-        //--------------------------------
+        // ---------------------------------------
 
         return parent::_prepareMassaction();
     }
@@ -278,7 +271,7 @@ class Ess_M2ePro_Block_Adminhtml_Common_Buy_Listing_View_Grid
         return 'M2ePro/adminhtml_grid_massaction';
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnProductTitle($productTitle, $row, $column, $isExport)
     {
@@ -347,10 +340,10 @@ HTML;
             return $value;
         }
 
-        // ---------------------------------
+        // ---------------------------------------
         $hasInActionLock = $this->getLockedData($row);
         $hasInActionLock = $hasInActionLock['in_action'];
-        // ---------------------------------
+        // ---------------------------------------
 
         if (!$hasInActionLock) {
 
@@ -393,6 +386,10 @@ HTML;
 
     public function callbackColumnSku($value, $row, $column, $isExport)
     {
+        if ($row->getData('buy_status') == Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED) {
+            return '<span style="color: gray;">' . Mage::helper('M2ePro')->__('Not Listed') . '</span>';
+        }
+
         if (is_null($value) || $value === '') {
             return Mage::helper('M2ePro')->__('N/A');
         }
@@ -410,14 +407,12 @@ HTML;
 
     public function callbackColumnAvailableQty($value, $row, $column, $isExport)
     {
-        if ((int)$row->getData('buy_status') == Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED) {
-            if (is_null($value) || $value === '') {
-                return Mage::helper('M2ePro')->__('N/A');
-            }
-        } else {
-            if (is_null($value) || $value === '') {
-                return '<i style="color:gray;">receiving...</i>';
-            }
+        if ($row->getData('buy_status') == Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED) {
+            return '<span style="color: gray;">' . Mage::helper('M2ePro')->__('Not Listed') . '</span>';
+        }
+
+        if (is_null($value) || $value === '') {
+            return '<i style="color:gray;">receiving...</i>';
         }
 
         if ($value <= 0) {
@@ -429,14 +424,12 @@ HTML;
 
     public function callbackColumnPrice($value, $row, $column, $isExport)
     {
-        if ((int)$row->getData('buy_status') == Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED) {
-            if (is_null($value) || $value === '') {
-                return Mage::helper('M2ePro')->__('N/A');
-            }
-        } else {
-            if (is_null($value) || $value === '') {
-                return '<i style="color:gray;">receiving...</i>';
-            }
+        if ($row->getData('buy_status') == Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED) {
+            return '<span style="color: gray;">' . Mage::helper('M2ePro')->__('Not Listed') . '</span>';
+        }
+
+        if (is_null($value) || $value === '') {
+            return '<i style="color:gray;">receiving...</i>';
         }
 
         if ((float)$value <= 0) {
@@ -505,10 +498,6 @@ HTML;
 
             switch ($lock->getTag()) {
 
-                case 'new_sku_action':
-                    $html .= '<br/><span style="color: #605fff">[Add New SKU in Progress...]</span>';
-                    break;
-
                 case 'list_action':
                     $html .= '<br/><span style="color: #605fff">[List in Progress...]</span>';
                     break;
@@ -553,23 +542,18 @@ HTML;
         );
     }
 
-    // ############################################
+    //########################################
 
     private function getGeneralIdColumnValueEmptyGeneralId($row)
     {
-        // ---------------------------------
         if ((int)$row->getData('buy_status') != Ess_M2ePro_Model_Listing_Product::STATUS_NOT_LISTED) {
             return <<<HTML
 <i style="color:gray;">receiving...</i>
 HTML;
         }
-        // ---------------------------------
 
-        // ---------------------------------
+        $na = Mage::helper('M2ePro')->__('N/A');
         $iconPath = $this->getSkinUrl('M2ePro/images/search_statuses/');
-        // ---------------------------------
-
-        // ---------------------------------
         $lpId = $row->getData('id');
 
         $productTitle = Mage::helper('M2ePro')->escapeHtml($row->getData('name'));
@@ -579,59 +563,9 @@ HTML;
         $productTitle = Mage::helper('M2ePro')->__('Assign Rakuten.com SKU For &quot;%product_title%&quot;',
                                                    $productTitle);
         $productTitle = Mage::helper('M2ePro')->escapeJs($productTitle);
-        // ---------------------------------
 
-        // ---------------------------------
-        $hasInActionLock = $this->getLockedData($row);
-        $hasInActionLock = $hasInActionLock['in_action'];
-        // ---------------------------------
-
-        $na = Mage::helper('M2ePro')->__('N/A');
-
-        $templateNewProductId = $row->getData('template_new_product_id');
-        if (!empty($templateNewProductId)) {
-
-            $newSkuTemplateUrl = $this->getUrl(
-                '*/adminhtml_common_buy_template_newProduct/edit/',
-                array(
-                    'id' => $templateNewProductId,
-                    'listing_product_id' => $lpId,
-                    'save_and_assign' => 0,
-                    'back' => Mage::helper('M2ePro')->makeBackUrlParam('*/adminhtml_common_buy_listing/view',array(
-                        'id' => $row->getData('listing_id'),
-                    ))
-                )
-            );
-
-            $newSkuTemplateTitle = Mage::getModel('M2ePro/Buy_Template_NewProduct')
-                ->load($templateNewProductId)
-                ->getData('title');
-
-            if ($hasInActionLock) {
-                return $newSkuTemplateTitle;
-            }
-
-            $tip = Mage::helper('M2ePro')->__('Unassign New SKU Policy');
-            $iconSrc = $iconPath.'unassign.png';
-
-            return <<<HTML
-&nbsp;
-<a href="{$newSkuTemplateUrl}">{$newSkuTemplateTitle}</a>
-<a href="javascript:;" title="{$tip}"
-   onclick="ListingGridHandlerObj.productSearchHandler.showUnmapFromGeneralIdPrompt('{$lpId}');">
-    <img src="{$iconSrc}" alt="" width="16" height="16">
-</a>
-HTML;
-        }
-        // ---------------------------------
-
-        // ---------------------------------
         $searchSettingsData = $row->getData('search_settings_data');
-
-        if (!is_null($searchSettingsData)) {
-            $searchSettingsData = @json_decode($searchSettingsData,true);
-        }
-        // ---------------------------------
+        !is_null($searchSettingsData) && $searchSettingsData = Mage::helper('M2ePro')->jsonDecode($searchSettingsData);
 
         if (!empty($searchSettingsData['data'])) {
 
@@ -715,7 +649,7 @@ HTML;
 
         $iconPath = $this->getSkinUrl('M2ePro/images/search_statuses/');
 
-        $generalIdSearchInfo = @json_decode($row->getData('general_id_search_info'), true);
+        $generalIdSearchInfo = Mage::helper('M2ePro')->jsonDecode($row->getData('general_id_search_info'));
 
         if (!empty($generalIdSearchInfo['is_set_automatic'])) {
 
@@ -730,13 +664,12 @@ HTML;
             $text = <<<HTML
 <a href="{$url}" target="_blank">{$generalId}</a>
 HTML;
-
         }
 
-        // ---------------------------------
+        // ---------------------------------------
         $hasInActionLock = $this->getLockedData($row);
         $hasInActionLock = $hasInActionLock['in_action'];
-        // ---------------------------------
+        // ---------------------------------------
 
         if ($hasInActionLock) {
             return $text;
@@ -757,14 +690,14 @@ HTML;
         return $text;
     }
 
-    // ############################################
+    //########################################
 
     public function getViewLogIconHtml($listingProductId)
     {
         $listingProductId = (int)$listingProductId;
 
         // Get last messages
-        //--------------------------
+        // ---------------------------------------
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
 
@@ -779,10 +712,10 @@ HTML;
             ->limit(30);
 
         $logRows = $connRead->fetchAll($dbSelect);
-        //--------------------------
+        // ---------------------------------------
 
         // Get grouped messages by action_id
-        //--------------------------
+        // ---------------------------------------
         $actionsRows = array();
         $tempActionRows = array();
         $lastActionId = false;
@@ -850,9 +783,6 @@ HTML;
         $string = '';
 
         switch ($actionRows['action']) {
-            case Ess_M2ePro_Model_Listing_Log::ACTION_NEW_SKU_PRODUCT_ON_COMPONENT:
-                $string = Mage::helper('M2ePro')->__('New SKU');
-                break;
             case Ess_M2ePro_Model_Listing_Log::ACTION_LIST_PRODUCT_ON_COMPONENT:
                 $string = Mage::helper('M2ePro')->__('List');
                 break;
@@ -868,8 +798,11 @@ HTML;
             case Ess_M2ePro_Model_Listing_Log::ACTION_STOP_AND_REMOVE_PRODUCT:
                 $string = Mage::helper('M2ePro')->__('Stop on Channel / Remove from Listing');
                 break;
-            case Ess_M2ePro_Model_Listing_Log::ACTION_CHANGE_STATUS_ON_CHANNEL:
-                $string = Mage::helper('M2ePro')->__('Status Change');
+            case Ess_M2ePro_Model_Listing_Log::ACTION_DELETE_PRODUCT_FROM_LISTING:
+                $string = Mage::helper('M2ePro')->__('Remove from Listing');
+                break;
+            case Ess_M2ePro_Model_Listing_Log::ACTION_CHANNEL_CHANGE:
+                $string = Mage::helper('M2ePro')->__('Channel Change');
                 break;
         }
 
@@ -918,7 +851,7 @@ HTML;
         return Mage::app()->getLocale()->date(strtotime($actionRows[0]['create_date']))->toString($format);
     }
 
-    // ####################################
+    //########################################
 
     public function getGridUrl()
     {
@@ -930,11 +863,11 @@ HTML;
         return false;
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
-        $javascriptsMain = <<<JAVASCRIPT
+        $javascriptsMain = <<<HTML
 <script type="text/javascript">
 
     if (typeof ListingGridHandlerObj != 'undefined') {
@@ -948,18 +881,18 @@ HTML;
     });
 
 </script>
-JAVASCRIPT;
+HTML;
 
         return parent::_toHtml().$javascriptsMain;
     }
 
-    // ####################################
+    //########################################
 
     private function getLockedData($row)
     {
         $listingProductId = $row->getData('id');
         if (!isset($this->lockedDataCache[$listingProductId])) {
-            $objectLocks = Mage::getModel('M2ePro/Listing_Product')->load($listingProductId)->getObjectLocks();
+            $objectLocks = Mage::getModel('M2ePro/Listing_Product')->load($listingProductId)->getProcessingLocks();
             $tempArray = array(
                 'object_locks' => $objectLocks,
                 'in_action' => !empty($objectLocks),
@@ -970,5 +903,5 @@ JAVASCRIPT;
         return $this->lockedDataCache[$listingProductId];
     }
 
-    // ####################################
+    //########################################
 }

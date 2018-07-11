@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -9,8 +11,6 @@
  */
 class Ess_M2ePro_Model_Ebay_Listing_Auto_Category_Group extends Ess_M2ePro_Model_Component_Child_Ebay_Abstract
 {
-    // ########################################
-
     /**
      * @var Ess_M2ePro_Model_Ebay_Template_Category
      */
@@ -26,7 +26,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Auto_Category_Group extends Ess_M2ePro_Model
      */
     private $magentoProductModel = NULL;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -34,7 +34,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Auto_Category_Group extends Ess_M2ePro_Model
         $this->_init('M2ePro/Ebay_Listing_Auto_Category_Group');
     }
 
-    // ########################################
+    //########################################
 
     public function deleteInstance()
     {
@@ -50,7 +50,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Auto_Category_Group extends Ess_M2ePro_Model
         return true;
     }
 
-    // #######################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_Category
@@ -83,7 +83,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Auto_Category_Group extends Ess_M2ePro_Model
         $this->categoryTemplateModel = $instance;
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_OtherCategory
@@ -117,7 +117,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Auto_Category_Group extends Ess_M2ePro_Model
         $this->otherCategoryTemplateModel = $instance;
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     /**
      * @return Ess_M2ePro_Model_Magento_Product
@@ -135,7 +135,7 @@ class Ess_M2ePro_Model_Ebay_Listing_Auto_Category_Group extends Ess_M2ePro_Model
         $this->magentoProductModel = $instance;
     }
 
-    // ########################################
+    //########################################
 
     public function getAddingTemplateCategoryId()
     {
@@ -147,13 +147,16 @@ class Ess_M2ePro_Model_Ebay_Listing_Auto_Category_Group extends Ess_M2ePro_Model
         return $this->getData('adding_template_other_category_id');
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return bool
+     */
     public function isAddingModeAddAndAssignCategory()
     {
         return $this->getParentObject()->getAddingMode() ==
                Ess_M2ePro_Model_Ebay_Listing::ADDING_MODE_ADD_AND_ASSIGN_CATEGORY;
     }
 
-    // ########################################
+    //########################################
 }

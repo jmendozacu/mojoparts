@@ -1,46 +1,62 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Listing_Other_Mapping_Grid extends Mage_Adminhtml_Block_Widget_Grid
 {
+    //########################################
+
     public function __construct()
     {
         parent::__construct();
 
         // Initialization block
-        //------------------------------
+        // ---------------------------------------
         $this->setId('listingOtherMappingGrid');
-        //------------------------------
+        // ---------------------------------------
 
         // Set default values
-        //------------------------------
+        // ---------------------------------------
         $this->setDefaultSort('product_id');
         $this->setDefaultDir('DESC');
         $this->setUseAjax(true);
-        //------------------------------
+        // ---------------------------------------
     }
 
     protected function _prepareCollection()
     {
-        $collection = Mage::getModel('catalog/product')->getCollection()
-            ->addAttributeToSelect('sku')
+        /** @var Ess_M2ePro_Model_Account $account */
+        $accountId = $this->getRequest()->getParam('account');
+        $marketplaceId = $this->getRequest()->getParam('marketplace');
+
+        $storeId = Mage_Catalog_Model_Abstract::DEFAULT_STORE_ID;
+        if ($account = Mage::helper('M2ePro/Component')->getCachedUnknownObject('Account', $accountId)) {
+            $storeId = $account->getChildObject()->getRelatedStoreId($marketplaceId);
+        }
+
+        /* @var $collection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                          Mage::getModel('catalog/product')->getResource());
+
+        $collection->setStoreId($storeId)
             ->addAttributeToSelect('name')
-            ->addAttributeToSelect('type_id')
-            ->joinField('qty',
-                        'cataloginventory/stock_item',
-                        'qty',
-                        'product_id=entity_id',
-                        '{{table}}.stock_id=1',
-                        'left')
-            ->joinField('is_in_stock',
-                        'cataloginventory/stock_item',
-                        'is_in_stock',
-                        'product_id=entity_id',
-                        '{{table}}.stock_id=1',
-                        'left');
+            ->addAttributeToSelect('sku')
+            ->addAttributeToSelect('type_id');
+
+        $collection->joinStockItem(array(
+            'qty' => 'qty',
+            'is_in_stock' => 'is_in_stock'
+        ));
+
+        $collection->addFieldToFilter(
+            array(
+                array('attribute'=>'type_id','neq'=>'virtual'),
+            )
+        );
 
         $this->setCollection($collection);
 
@@ -86,6 +102,20 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Other_Mapping_Grid extends Mage_Adminht
             'options' => $tempTypes
         ));
 
+        $this->addColumn('stock_availability', array(
+            'header'=> Mage::helper('M2ePro')->__('Stock Availability'),
+            'width' => '100px',
+            'index' => 'is_in_stock',
+            'filter_index' => 'is_in_stock',
+            'type'  => 'options',
+            'sortable'  => false,
+            'options' => array(
+                1 => Mage::helper('M2ePro')->__('In Stock'),
+                0 => Mage::helper('M2ePro')->__('Out of Stock')
+            ),
+            'frame_callback' => array($this, 'callbackColumnStockAvailability')
+        ));
+
         $this->addColumn('actions', array(
             'header'       => Mage::helper('M2ePro')->__('Actions'),
             'align'        => 'left',
@@ -98,7 +128,7 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Other_Mapping_Grid extends Mage_Adminht
 
     }
 
-    // ####################################
+    //########################################
 
     public function callbackColumnProductId($productId, $product, $column, $isExport)
     {
@@ -116,12 +146,13 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Other_Mapping_Grid extends Mage_Adminht
         $magentoProduct = Mage::getModel('M2ePro/Magento_Product');
         $magentoProduct->setProduct($product);
 
-        $imageUrlResized = $magentoProduct->getThumbnailImageLink();
-        if (is_null($imageUrlResized)) {
+        $imageResized = $magentoProduct->getThumbnailImage();
+        if (is_null($imageResized)) {
             return $withoutImageHtml;
         }
 
-        $imageHtml = $productId.'<hr /><img src="'.$imageUrlResized.'" />';
+        $imageHtml = $productId.'<hr /><img style="max-width: 100px; max-height: 100px;" src="'.
+            $imageResized->getUrl().'" />';
         $withImageHtml = str_replace('>'.$productId.'<','>'.$imageHtml.'<',$withoutImageHtml);
 
         return $withImageHtml;
@@ -145,6 +176,15 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Other_Mapping_Grid extends Mage_Adminht
     public function callbackColumnType($value, $row, $column, $isExport)
     {
         return '<div style="margin-left: 3px">'.Mage::helper('M2ePro')->escapeHtml($value).'</div>';
+    }
+
+    public function callbackColumnStockAvailability($value, $row, $column, $isExport)
+    {
+        if ((int)$row->getData('is_in_stock') <= 0) {
+            return '<span style="color: red;">'.$value.'</span>';
+        }
+
+        return $value;
     }
 
     public function callbackColumnActions($value, $row, $column, $isExport)
@@ -175,28 +215,28 @@ class Ess_M2ePro_Block_Adminhtml_Listing_Other_Mapping_Grid extends Mage_Adminht
 
     }
 
-    // ####################################
+    //########################################
 
     protected function _toHtml()
     {
-        $javascriptsMain = <<<JAVASCRIPT
+        $javascriptsMain = <<<HTML
 <script type="text/javascript">
 
-    $$('#listingOtherMappingGrid div.grid th').each(function(el){
+    $$('#listingOtherMappingGrid div.grid th').each(function(el) {
         el.style.padding = '2px 4px';
     });
 
-    $$('#listingOtherMappingGrid div.grid td').each(function(el){
+    $$('#listingOtherMappingGrid div.grid td').each(function(el) {
         el.style.padding = '2px 4px';
     });
 
 </script>
-JAVASCRIPT;
+HTML;
 
         return parent::_toHtml() . $javascriptsMain;
     }
 
-    // ####################################
+    //########################################
 
     public function getGridUrl()
     {
@@ -208,5 +248,5 @@ JAVASCRIPT;
         return false;
     }
 
-    // ####################################
+    //########################################
 }

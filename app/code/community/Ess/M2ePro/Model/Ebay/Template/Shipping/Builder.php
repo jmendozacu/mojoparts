@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
     extends Ess_M2ePro_Model_Ebay_Template_Builder_Abstract
 {
-    // ########################################
+    //########################################
 
     public function build(array $data)
     {
@@ -15,26 +17,14 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
             return NULL;
         }
 
-        // validate input data
-        //------------------------------
         $this->validate($data);
-        //------------------------------
 
-        // prepare input data
-        //------------------------------
         $generalData = $this->prepareGeneralData($data);
-        //------------------------------
 
-        //------------------------------
-        $marketplace = Mage::helper('M2ePro/Component')->getCachedComponentObject(
-            Ess_M2ePro_Helper_Component_Ebay::NICK,
-            'Marketplace',
-            $generalData['marketplace_id']
+        $marketplace = Mage::helper('M2ePro/Component_Ebay')->getCachedObject(
+            'Marketplace', $generalData['marketplace_id']
         );
-        //------------------------------
 
-        // create template
-        //------------------------------
         $template = Mage::getModel('M2ePro/Ebay_Template_Shipping');
 
         if (isset($generalData['id'])) {
@@ -44,67 +34,63 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
         $template->addData($generalData);
         $template->save();
         $template->setMarketplace($marketplace);
-        //------------------------------
 
-        // create calculated
-        //------------------------------
         if ($this->canSaveCalculatedData($data)) {
             $calculatedData = $this->prepareCalculatedData($template->getId(), $data);
             $this->createCalculated($template->getId(), $calculatedData);
         }
-        //------------------------------
 
-        // create shipping methods
-        //------------------------------
         $servicesData = $this->prepareServicesData($template->getId(), $data);
         $this->createServices($template->getId(), $servicesData);
-        //------------------------------
 
         return $template;
     }
 
-    // ########################################
+    //########################################
 
     protected function validate(array $data)
     {
-        //------------------------------
         if (empty($data['marketplace_id'])) {
-            throw new LogicException('Marketplace ID is empty.');
+            throw new Ess_M2ePro_Model_Exception_Logic('Marketplace ID is empty.');
         }
-        //------------------------------
 
-        //------------------------------
-        if (empty($data['country'])) {
-            throw new LogicException('Country is empty.');
+        if ($data['country_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::COUNTRY_MODE_CUSTOM_VALUE &&
+            empty($data['country_custom_value']) ||
+            $data['country_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::COUNTRY_MODE_CUSTOM_ATTRIBUTE &&
+            empty($data['country_custom_attribute'])) {
+
+            throw new Ess_M2ePro_Model_Exception_Logic('Country is empty.');
         }
-        //------------------------------
 
         parent::validate($data);
     }
 
-    // ########################################
+    //########################################
 
     protected function prepareGeneralData(array &$data)
     {
         $prepared = parent::prepareData($data);
 
-        //------------------------------
         $prepared['marketplace_id'] = (int)$data['marketplace_id'];
-        //------------------------------
 
-        //------------------------------
         $keys = array(
-            'country',
-            'postal_code',
-            'address',
-            'dispatch_time',
+            'country_mode',
+            'country_custom_value',
+            'country_custom_attribute',
+            'postal_code_mode',
+            'postal_code_custom_attribute',
+            'postal_code_custom_value',
+            'address_mode',
+            'address_custom_attribute',
+            'address_custom_value',
+            'dispatch_time_mode',
+            'dispatch_time_value',
+            'dispatch_time_attribute',
             'global_shipping_program',
-            'local_shipping_rate_table_mode',
-            'international_shipping_rate_table_mode',
             'local_shipping_mode',
-            'local_shipping_discount_mode',
+            'local_shipping_discount_promotional_mode',
             'international_shipping_mode',
-            'international_shipping_discount_mode',
+            'international_shipping_discount_promotional_mode',
             'cross_border_trade',
         );
 
@@ -112,18 +98,37 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
             $prepared[$key] = isset($data[$key]) ? $data[$key] : '';
         }
 
-        if (isset($data['local_shipping_discount_profile_id'])) {
-            $prepared['local_shipping_discount_profile_id'] =
-                json_encode(array_diff($data['local_shipping_discount_profile_id'], array('')));
+        if (isset($data['local_shipping_rate_table'])) {
+            $prepared['local_shipping_rate_table'] = Mage::helper('M2ePro')->jsonEncode(
+                $data['local_shipping_rate_table']
+            );
         } else {
-            $prepared['local_shipping_discount_profile_id'] = json_encode(array());
+            $prepared['local_shipping_rate_table'] = Mage::helper('M2ePro')->jsonEncode(array());
         }
 
-        if (isset($data['international_shipping_discount_profile_id'])) {
-            $prepared['international_shipping_discount_profile_id'] =
-                json_encode(array_diff($data['international_shipping_discount_profile_id'], array('')));
+        if (isset($data['international_shipping_rate_table'])) {
+            $prepared['international_shipping_rate_table'] = Mage::helper('M2ePro')->jsonEncode(
+                $data['international_shipping_rate_table']
+            );
         } else {
-            $prepared['international_shipping_discount_profile_id'] = json_encode(array());
+            $prepared['international_shipping_rate_table'] = Mage::helper('M2ePro')->jsonEncode(array());
+        }
+
+        if (isset($data['local_shipping_discount_combined_profile_id'])) {
+            $prepared['local_shipping_discount_combined_profile_id'] = Mage::helper('M2ePro')->jsonEncode(
+                array_diff($data['local_shipping_discount_combined_profile_id'], array(''))
+            );
+        } else {
+            $prepared['local_shipping_discount_combined_profile_id'] = Mage::helper('M2ePro')->jsonEncode(array());
+        }
+
+        if (isset($data['international_shipping_discount_combined_profile_id'])) {
+            $prepared['international_shipping_discount_combined_profile_id'] = Mage::helper('M2ePro')->jsonEncode(
+                array_diff($data['international_shipping_discount_combined_profile_id'], array(''))
+            );
+        } else {
+            $prepared['international_shipping_discount_combined_profile_id']
+                = Mage::helper('M2ePro')->jsonEncode(array());
         }
 
         if (isset($data['excluded_locations'])) {
@@ -138,24 +143,21 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
         $prepared[$key] = (isset($data[$key]) && $data[$key] != '') ? $data[$key] : NULL;
 
         $modes = array(
-            'local_shipping_rate_table_mode',
-            'international_shipping_rate_table_mode',
             'local_shipping_mode',
-            'local_shipping_discount_mode',
+            'local_shipping_discount_promotional_mode',
             'international_shipping_mode',
-            'international_shipping_discount_mode',
+            'international_shipping_discount_promotional_mode',
             'cross_border_trade',
         );
 
         foreach ($modes as $mode) {
             $prepared[$mode] = (int)$prepared[$mode];
         }
-        //------------------------------
 
         return $prepared;
     }
 
-    // ########################################
+    //########################################
 
     private function prepareCalculatedData($templateShippingId, array $data)
     {
@@ -215,14 +217,16 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
 
         if ($isLocalRateTableEnabled
             && $data['local_shipping_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_TYPE_FLAT
-            && !empty($data['local_shipping_rate_table_mode'])
+            && isset($data['local_shipping_rate_table'])
+            && $this->isRateTableEnabled($data['local_shipping_rate_table'])
         ) {
             return true;
         }
 
         if ($isInternationalRateTableEnabled
             && $data['international_shipping_mode'] == Ess_M2ePro_Model_Ebay_Template_Shipping::SHIPPING_TYPE_FLAT
-            && !empty($data['international_shipping_rate_table_mode'])
+            && isset($data['international_shipping_rate_table'])
+            && $this->isRateTableEnabled($data['international_shipping_rate_table'])
         ) {
             return true;
         }
@@ -254,11 +258,10 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
         Mage::getModel('M2ePro/Ebay_Template_Shipping_Calculated')->setData($data)->save();
     }
 
-    // ########################################
+    //########################################
 
     private function prepareServicesData($templateShippingId, array $data)
     {
-        //------------------------------
         if (isset($data['shipping_type']['%i%'])) {
             unset($data['shipping_type']['%i%']);
         }
@@ -282,7 +285,8 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
         if (isset($data['shipping_cost_additional_value']['%i%'])) {
             unset($data['shipping_cost_additional_value']['%i%']);
         }
-        //------------------------------
+
+        // ---------------------------------------
 
         $services = array();
         foreach ($data['cost_mode'] as $i => $costMode) {
@@ -344,7 +348,7 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
                 'cost_additional_value' => $costAdditional,
                 'cost_surcharge_value'  => $costSurcharge,
                 'priority'              => $data['shipping_priority'][$i],
-                'locations'             => json_encode($locations)
+                'locations'             => Mage::helper('M2ePro')->jsonEncode($locations)
             );
         }
 
@@ -368,9 +372,28 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Builder
         }
 
         $connWrite->insertMultiple(
-            $coreRes->getTableName('M2ePro/Ebay_Template_Shipping_Service'), $data
+            Mage::helper('M2ePro/Module_Database_Structure')
+                ->getTableNameWithPrefix('M2ePro/Ebay_Template_Shipping_Service'),
+            $data
         );
     }
 
-    // ########################################
+    //########################################
+
+    private function isRateTableEnabled(array $rateTableData)
+    {
+        if (empty($rateTableData)) {
+            return false;
+        }
+
+        foreach ($rateTableData as $data) {
+            if (!empty($data['value'])) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    //########################################
 }

@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 /**
@@ -9,7 +11,9 @@
  */
 class Ess_M2ePro_Model_Buy_Listing_Other extends Ess_M2ePro_Model_Component_Child_Buy_Abstract
 {
-    // ########################################
+    const EMPTY_TITLE_PLACEHOLDER = '--';
+
+    //########################################
 
     public function _construct()
     {
@@ -17,7 +21,7 @@ class Ess_M2ePro_Model_Buy_Listing_Other extends Ess_M2ePro_Model_Component_Chil
         $this->_init('M2ePro/Buy_Listing_Other');
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Account
@@ -43,39 +47,51 @@ class Ess_M2ePro_Model_Buy_Listing_Other extends Ess_M2ePro_Model_Component_Chil
         return $this->getParentObject()->getMagentoProduct();
     }
 
-    // ########################################
+    //########################################
 
     public function getSku()
     {
         return $this->getData('sku');
     }
 
+    /**
+     * @return int
+     */
     public function getGeneralId()
     {
         return (int)$this->getData('general_id');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
     public function getTitle()
     {
         return $this->getData('title');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return float
+     */
     public function getOnlinePrice()
     {
         return (float)$this->getData('online_price');
     }
 
+    /**
+     * @return int
+     */
     public function getOnlineQty()
     {
         return (int)$this->getData('online_qty');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return int
+     */
     public function getCondition()
     {
         return (int)$this->getData('condition');
@@ -86,31 +102,40 @@ class Ess_M2ePro_Model_Buy_Listing_Other extends Ess_M2ePro_Model_Component_Chil
         return $this->getData('condition_note');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return float
+     */
     public function getShippingStandardRate()
     {
         return (float)$this->getData('shipping_standard_rate');
     }
 
+    /**
+     * @return int
+     */
     public function getShippingExpeditedMode()
     {
         return (int)$this->getData('shipping_expedited_mode');
     }
 
+    /**
+     * @return float
+     */
     public function getShippingExpeditedRate()
     {
         return (float)$this->getData('shipping_expedited_rate');
     }
 
-    // ########################################
+    //########################################
 
     public function getRelatedStoreId()
     {
         return $this->getAccount()->getChildObject()->getRelatedStoreId();
     }
 
-    // ########################################
+    //########################################
 
     public function afterMapProduct()
     {
@@ -127,6 +152,23 @@ class Ess_M2ePro_Model_Buy_Listing_Other extends Ess_M2ePro_Model_Component_Chil
 
     public function beforeUnmapProduct()
     {
+        $existedRelation = Mage::getSingleton('core/resource')->getConnection('core_read')
+            ->select()
+            ->from(array('bi' => Mage::getResourceModel('M2ePro/Buy_Item')->getMainTable()),
+                   array())
+            ->join(array('blp' => Mage::getResourceModel('M2ePro/Buy_Listing_Product')->getMainTable()),
+                   '(`blp`.`sku` = `bi`.`sku`)',
+                   array('blp.listing_product_id'))
+            ->where('`bi`.`sku` = ?', $this->getSku())
+            ->where('`bi`.`account_id` = ?', $this->getParentObject()->getAccountId())
+            ->where('`bi`.`marketplace_id` = ?', $this->getParentObject()->getMarketplaceId())
+            ->query()
+            ->fetchColumn();
+
+        if ($existedRelation) {
+            return;
+        }
+
         Mage::getSingleton('core/resource')->getConnection('core_write')
             ->delete(Mage::getResourceModel('M2ePro/Buy_Item')->getMainTable(),
             array(
@@ -137,5 +179,5 @@ class Ess_M2ePro_Model_Buy_Listing_Other extends Ess_M2ePro_Model_Component_Chil
             ));
     }
 
-    // ########################################
+    //########################################
 }

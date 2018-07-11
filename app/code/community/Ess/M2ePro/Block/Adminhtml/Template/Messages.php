@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2011 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_Widget
@@ -13,20 +15,28 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
     protected $templateNick = NULL;
     protected $componentMode = NULL;
 
-    // ########################################
+    //########################################
 
     public function getResultBlock($templateNick, $componentMode)
     {
         $block = $this;
 
         switch ($templateNick) {
+            case Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SHIPPING:
+
+                $isPriceConvertEnabled = (int)Mage::helper('M2ePro/Module')->getConfig()->getGroupValue(
+                    '/magento/attribute/','price_type_converting'
+                );
+
+                if ($isPriceConvertEnabled && $componentMode == Ess_M2ePro_Helper_Component_Ebay::NICK) {
+                    $block = $this->getLayout()
+                        ->createBlock('M2ePro/adminhtml_ebay_template_shipping_messages');
+                }
+                break;
             case Ess_M2ePro_Model_Ebay_Template_Manager::TEMPLATE_SELLING_FORMAT:
                 if ($componentMode == Ess_M2ePro_Helper_Component_Ebay::NICK) {
                     $block = $this->getLayout()
                         ->createBlock('M2ePro/adminhtml_ebay_template_sellingFormat_messages');
-                } else if ($componentMode == Ess_M2ePro_Helper_Component_Play::NICK) {
-                    $block = $this->getLayout()
-                        ->createBlock('M2ePro/adminhtml_common_play_template_sellingFormat_messages');
                 } else {
                     $block = $this->getLayout()
                         ->createBlock('M2ePro/adminhtml_template_sellingFormat_messages');
@@ -40,22 +50,22 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
         return $block;
     }
 
-    // ########################################
+    //########################################
 
     public function getMessages()
     {
         $messages = array();
 
-        //------------------------------
+        // ---------------------------------------
         if (!is_null($message = $this->getAttributesAvailabilityMessage())) {
             $messages[self::TYPE_ATTRIBUTES_AVAILABILITY] = $message;
         }
-        //------------------------------
+        // ---------------------------------------
 
         return $messages;
     }
 
-    // ########################################
+    //########################################
 
     public function getMessagesHtml(array $messages = array())
     {
@@ -72,7 +82,7 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
         return $this->toHtml();
     }
 
-    // ########################################
+    //########################################
 
     public function getAttributesAvailabilityMessage()
     {
@@ -103,7 +113,7 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
         );
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Marketplace|null
@@ -114,15 +124,12 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
             return NULL;
         }
 
-        return Mage::helper('M2ePro/Component')
-            ->getCachedComponentObject(
-                $this->getComponentMode(),
-                'Marketplace',
-                (int)$this->_data['marketplace_id']
-            );
+        return Mage::helper('M2ePro/Component')->getCachedComponentObject(
+            $this->getComponentMode(),'Marketplace',(int)$this->_data['marketplace_id']
+        );
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Mage_Core_Model_Store|null
@@ -136,7 +143,7 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
         return Mage::app()->getStore((int)$this->_data['store_id']);
     }
 
-    // ########################################
+    //########################################
 
     public function setTemplateNick($templateNick)
     {
@@ -147,13 +154,13 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
     public function getTemplateNick()
     {
         if (is_null($this->templateNick)) {
-            throw new LogicException('Policy nick is not set.');
+            throw new Ess_M2ePro_Model_Exception_Logic('Policy nick is not set.');
         }
 
         return $this->templateNick;
     }
 
-    // ########################################
+    //########################################
 
     public function setComponentMode($componentMode)
     {
@@ -164,31 +171,31 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
     public function getComponentMode()
     {
         if (is_null($this->componentMode)) {
-            throw new LogicException('Component Mode is not set.');
+            throw new Ess_M2ePro_Model_Exception_Logic('Component Mode is not set.');
         }
 
         return $this->componentMode;
     }
 
-    // ########################################
+    //########################################
 
     protected function getTemplateData()
     {
         if (empty($this->_data['template_data']) || !is_array($this->_data['template_data'])) {
-            throw new LogicException('Policy data is not set.');
+            throw new Ess_M2ePro_Model_Exception_Logic('Policy data is not set.');
         }
 
         return $this->_data['template_data'];
     }
 
-    // ########################################
+    //########################################
 
     protected function getUsedAttributes()
     {
         return isset($this->_data['used_attributes']) ? $this->_data['used_attributes'] : array();
     }
 
-    // ########################################
+    //########################################
 
     protected function getListingProductIds()
     {
@@ -198,7 +205,7 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
         return $listingProductIds ? $listingProductIds : array();
     }
 
-    // ########################################
+    //########################################
 
     protected function canDisplayAttributesAvailabilityMessage()
     {
@@ -219,5 +226,5 @@ class Ess_M2ePro_Block_Adminhtml_Template_Messages extends Mage_Adminhtml_Block_
         return true;
     }
 
-    // ########################################
+    //########################################
 }

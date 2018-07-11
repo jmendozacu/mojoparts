@@ -1,13 +1,13 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  2011-2015 ESS-UA [M2E Pro]
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Model_Component_Abstract
 {
-    // ########################################
-
     const ATTRIBUTE_MODE_NONE              = 0;
     const ATTRIBUTE_MODE_CUSTOM_VALUE      = 1;
     const ATTRIBUTE_MODE_CUSTOM_ATTRIBUTE  = 2;
@@ -31,7 +31,7 @@ class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Mode
      */
     private $newProductAttributeSourceModels = array();
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -39,7 +39,7 @@ class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Mode
         $this->_init('M2ePro/Buy_Template_NewProduct_Attribute');
     }
 
-    // ########################################
+    //########################################
 
     public function deleteInstance()
     {
@@ -49,7 +49,7 @@ class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Mode
         return $temp;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Buy_Template_NewProduct
@@ -74,7 +74,7 @@ class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Mode
         $this->newProductTemplateModel = $instance;
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     /**
      * @param Ess_M2ePro_Model_Magento_Product $magentoProduct
@@ -97,8 +97,11 @@ class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Mode
         return $this->newProductAttributeSourceModels[$productId];
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getTemplateNewProductId()
     {
         return (int)$this->getData('template_new_product_id');
@@ -109,6 +112,9 @@ class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Mode
         return $this->getData('attribute_name');
     }
 
+    /**
+     * @return int
+     */
     public function getMode()
     {
         return (int)$this->getData('mode');
@@ -130,6 +136,9 @@ class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Mode
         return $this->getData('custom_attribute');
     }
 
+    /**
+     * @return array
+     */
     public function getAttributeSource()
     {
         return array(
@@ -141,5 +150,5 @@ class Ess_M2ePro_Model_Buy_Template_NewProduct_Attribute extends Ess_M2ePro_Mode
         );
     }
 
-    // ########################################
+    //########################################
 }

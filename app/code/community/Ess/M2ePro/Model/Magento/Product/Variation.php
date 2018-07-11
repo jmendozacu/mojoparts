@@ -1,45 +1,53 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2014 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Magento_Product_Variation
 {
-    // ##########################################################
-
-    const GROUPED_PRODUCT_ATTRIBUTE_LABEL = 'Option';
-
-    // ##########################################################
+    const GROUPED_PRODUCT_ATTRIBUTE_LABEL              = 'Option';
+    const DOWNLOADABLE_PRODUCT_DEFAULT_ATTRIBUTE_LABEL = 'Links';
 
     /** @var Ess_M2ePro_Model_Magento_Product $magentoProduct */
-    private $magentoProduct;
+    protected $magentoProduct = null;
 
-    // ##########################################################
+    //########################################
 
+    /**
+     * @return Ess_M2ePro_Model_Magento_Product
+     */
     public function getMagentoProduct()
     {
         return $this->magentoProduct;
     }
 
+    /**
+     * @param Ess_M2ePro_Model_Magento_Product $magentoProduct
+     * @return $this
+     */
     public function setMagentoProduct(Ess_M2ePro_Model_Magento_Product $magentoProduct)
     {
         $this->magentoProduct = $magentoProduct;
         return $this;
     }
 
-    // ##########################################################
+    //########################################
 
     public function getVariationTypeStandard(array $options)
     {
         $variations = $this->getVariationsTypeStandard();
+
         foreach ($variations['variations'] as $variation) {
+
             $tempOption = array();
             foreach ($variation as $variationOption) {
                 $tempOption[$variationOption['attribute']] = $variationOption['option'];
             }
 
-            if (count(array_diff($options, $tempOption)) <= 0) {
+            if ($options == $tempOption) {
                 return $variation;
             }
         }
@@ -47,18 +55,23 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         return null;
     }
 
-    // ------------------------------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     */
     public function getVariationsTypeStandard()
     {
         $variations = array();
         $variationsSet = array();
+        $additional = array();
 
         if ($this->getMagentoProduct()->isConfigurableType()) {
 
             $tempInfo = $this->getConfigurableVariationsTypeStandard();
             isset($tempInfo['set']) && $variationsSet = $tempInfo['set'];
             isset($tempInfo['variations']) && $variations = $tempInfo['variations'];
+            isset($tempInfo['additional']) && $additional = $tempInfo['additional'];
 
         } else {
 
@@ -79,6 +92,11 @@ class Ess_M2ePro_Model_Magento_Product_Variation
                 $tempInfo = $this->getGroupedVariationsTypeStandard();
                 isset($tempInfo['set']) && $variationsSet = $tempInfo['set'];
                 isset($tempInfo['variations']) && $variations = $tempInfo['variations'];
+            } elseif ($this->getMagentoProduct()->isDownloadableType()) {
+
+                $tempInfo = $this->getDownloadableVariationsTypeStandard();
+                isset($tempInfo['set']) && $variationsSet = $tempInfo['set'];
+                isset($tempInfo['variations']) && $variations = $tempInfo['variations'];
             }
 
             $countOfCombinations = 1;
@@ -96,12 +114,29 @@ class Ess_M2ePro_Model_Magento_Product_Variation
             }
         }
 
+        if ($this->getMagentoProduct()->getVariationVirtualAttributes() &&
+            !$this->getMagentoProduct()->isIgnoreVariationVirtualAttributes()
+        ) {
+            $this->injectVirtualAttributesTypeStandard($variations, $variationsSet);
+        }
+
+        if ($this->getMagentoProduct()->getVariationFilterAttributes() &&
+            !$this->getMagentoProduct()->isIgnoreVariationFilterAttributes()
+        ) {
+            $this->filterByAttributesTypeStandard($variations, $variationsSet);
+        }
+
         return array(
             'set'        => $variationsSet,
             'variations' => $variations,
+            'additional' => $additional
         );
     }
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception
+     */
     protected function getSimpleVariationsTypeStandard()
     {
         if (!$this->getMagentoProduct()->isSimpleType()) {
@@ -152,6 +187,10 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         );
     }
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception
+     */
     protected function getConfigurableVariationsTypeStandard()
     {
         if (!$this->getMagentoProduct()->isConfigurableType()) {
@@ -173,11 +212,16 @@ class Ess_M2ePro_Model_Magento_Product_Variation
 
             /** @var Mage_Catalog_Model_Resource_Eav_Attribute $attribute */
             $attribute = $configurableAttribute->getProductAttribute();
+            if (!$attribute) {
+                $message = "Configurable Magento Product (ID {$this->getMagentoProduct()->getProductId()})";
+                $message .= ' has no selected configurable attribute.';
+                throw new \Ess_M2ePro_Model_Exception($message);
+            }
             $attribute->setStoreId($this->getMagentoProduct()->getStoreId());
 
             $attributeLabel = '';
 
-            if (!(int)$configurableAttribute->getData('use_default')) {
+            if (!(int)$configurableAttribute->getData('use_default') && $configurableAttribute->getData('label')) {
                 $attributeLabel = $configurableAttribute->getData('label');
             }
 
@@ -248,10 +292,17 @@ class Ess_M2ePro_Model_Magento_Product_Variation
 
         return array(
             'set'        => $resultSet,
-            'variations' => $variations
+            'variations' => $variations,
+            'additional' => array(
+                'attributes' => $attributes
+            )
         );
     }
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception
+     */
     protected function getGroupedVariationsTypeStandard()
     {
         if (!$this->getMagentoProduct()->isGroupedType()) {
@@ -286,6 +337,10 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         );
     }
 
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception
+     */
     protected function getBundleVariationsTypeStandard()
     {
         if (!$this->getMagentoProduct()->isBundleType()) {
@@ -322,6 +377,10 @@ class Ess_M2ePro_Model_Magento_Product_Variation
                 array(0 => $singleOption->getId()), $product
             )->getItems();
 
+            if (empty($selectionsCollectionItems)) {
+                continue;
+            }
+
             foreach ($selectionsCollectionItems as $item) {
                 $optionCombinationTitle[] = $item->getName();
                 $possibleVariationProductOptions[] = array(
@@ -335,6 +394,68 @@ class Ess_M2ePro_Model_Magento_Product_Variation
             $variationOptionsTitle[$optionTitle] = $optionCombinationTitle;
             $variationOptionsList[] = $possibleVariationProductOptions;
         }
+
+        return array(
+            'set'        => $variationOptionsTitle,
+            'variations' => $variationOptionsList,
+        );
+    }
+
+    /**
+     * @return array
+     * @throws Ess_M2ePro_Model_Exception
+     */
+    protected function getDownloadableVariationsTypeStandard()
+    {
+        if (!$this->getMagentoProduct()->isDownloadableTypeWithSeparatedLinks()) {
+            return array();
+        }
+
+        $product = $this->getMagentoProduct()->getProduct();
+
+        $attributeTitle = $product->getData('links_title');
+
+        if (empty($attributeTitle)) {
+            $attributeTitle = Mage::getStoreConfig(
+                Mage_Downloadable_Model_Link::XML_PATH_LINKS_TITLE, $this->getMagentoProduct()->getStoreId()
+            );
+        }
+
+        if (empty($attributeTitle)) {
+            $attributeTitle = $this->getMagentoProduct()->getProduct()->getAttributeDefaultValue('links_title');
+        }
+
+        if (empty($attributeTitle)) {
+            $attributeTitle = Mage::getStoreConfig(Mage_Downloadable_Model_Link::XML_PATH_LINKS_TITLE);
+        }
+
+        if (empty($attributeTitle)) {
+            $attributeTitle = self::DOWNLOADABLE_PRODUCT_DEFAULT_ATTRIBUTE_LABEL;
+        }
+
+        $optionCombinationTitle          = array();
+        $possibleVariationProductOptions = array();
+
+        /** @var Mage_Downloadable_Model_Link[] $links */
+        $links = $this->getMagentoProduct()->getTypeInstance()->getLinks();
+
+        foreach ($links as $link) {
+            $linkTitle = $link->getStoreTitle();
+            if (empty($linkTitle)) {
+                $linkTitle = $link->getDefaultTitle();
+            }
+
+            $optionCombinationTitle[] = $linkTitle;
+            $possibleVariationProductOptions[] = array(
+                'product_id'   => $product->getId(),
+                'product_type' => $product->getTypeId(),
+                'attribute'    => $attributeTitle,
+                'option'       => $linkTitle,
+            );
+        }
+
+        $variationOptionsTitle[$attributeTitle] = $optionCombinationTitle;
+        $variationOptionsList[] = $possibleVariationProductOptions;
 
         return array(
             'set'        => $variationOptionsTitle,
@@ -382,7 +503,7 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         foreach ($optionsScope[$optionScopeIndex] as $option) {
 
             if (!isset($set[$option['attribute']]) ||
-                !in_array($option['option'],$set[$option['attribute']])) {
+                !in_array($option['option'],$set[$option['attribute']],true)) {
                 continue;
             }
 
@@ -407,8 +528,8 @@ class Ess_M2ePro_Model_Magento_Product_Variation
 
         $sortedOptions = array();
         foreach ($optionCollection as $option) {
-            if (!in_array($option->getValue(), $options) ||
-                in_array($option->getValue(), $sortedOptions)) {
+            if (!in_array($option->getValue(), $options, true) ||
+                in_array($option->getValue(), $sortedOptions, true)) {
                 continue;
             }
 
@@ -418,7 +539,76 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         return $sortedOptions;
     }
 
-    // ----------------------------------------------------------
+    protected function injectVirtualAttributesTypeStandard(&$variations, &$set)
+    {
+        $virtualAttributes = $this->getMagentoProduct()->getVariationVirtualAttributes();
+        if (empty($virtualAttributes)) {
+            return;
+        }
+
+        foreach ($variations as $variationKey => $variation) {
+            foreach ($virtualAttributes as $virtualAttribute => $virtualValue) {
+                $existOption = reset($variation);
+
+                $virtualOption = array(
+                    'product_id'   => null,
+                    'product_type' => $existOption['product_type'],
+                    'attribute'    => $virtualAttribute,
+                    'option'       => $virtualValue,
+                );
+
+                $variations[$variationKey][] = $virtualOption;
+            }
+        }
+
+        foreach ($virtualAttributes as $virtualAttribute => $virtualValue) {
+            $set[$virtualAttribute] = array($virtualValue);
+        }
+    }
+
+    protected function filterByAttributesTypeStandard(&$variations, &$set)
+    {
+        $filterAttributes = $this->getMagentoProduct()->getVariationFilterAttributes();
+        if (empty($filterAttributes)) {
+            return;
+        }
+
+        foreach ($variations as $variationKey => $variation) {
+
+            foreach ($variation as $optionKey => $option) {
+
+                if (!isset($filterAttributes[$option['attribute']])) {
+                    continue;
+                }
+
+                $filterValue = $filterAttributes[$option['attribute']];
+                if ($option['option'] == $filterValue) {
+                    continue;
+                }
+
+                unset($variations[$variationKey]);
+                break;
+            }
+        }
+
+        $variations = array_values($variations);
+
+        foreach ($set as $attribute => $values) {
+            if (!isset($filterAttributes[$attribute])) {
+                continue;
+            }
+
+            $filterValue = $filterAttributes[$attribute];
+            if (!in_array($filterValue, $values)) {
+                $set[$attribute] = array();
+                continue;
+            }
+
+            $set[$attribute] = array($filterValue);
+        }
+    }
+
+    // ---------------------------------------
 
     public function getVariationsTypeRaw()
     {
@@ -438,6 +628,10 @@ class Ess_M2ePro_Model_Magento_Product_Variation
             return $this->getBundleVariationsTypeRaw();
         }
 
+        if ($this->getMagentoProduct()->isDownloadableType()) {
+            return $this->getDownloadableVariationTypeRaw();
+        }
+
         return array();
     }
 
@@ -455,6 +649,10 @@ class Ess_M2ePro_Model_Magento_Product_Variation
 
         foreach ($productOptions as $option) {
             if (!(bool)(int)$option->getData('is_require')) {
+                continue;
+            }
+
+            if (!in_array($option->getType(), $this->getCustomOptionsAllowedTypes())) {
                 continue;
             }
 
@@ -506,7 +704,13 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         $configurableOptions = array();
 
         foreach ($productTypeInstance->getConfigurableAttributes($product) as $attribute) {
+
             $productAttribute = $attribute->getProductAttribute();
+            if (!$productAttribute) {
+                $message = "Configurable Magento Product (ID {$this->getMagentoProduct()->getProductId()})";
+                $message .= ' has no selected configurable attribute.';
+                throw new \Ess_M2ePro_Model_Exception($message);
+            }
             $productAttribute->setStoreId($this->getMagentoProduct()->getStoreId());
 
             $configurableOption = array(
@@ -514,7 +718,7 @@ class Ess_M2ePro_Model_Magento_Product_Variation
                 'labels' => array_filter(array(
                     trim($attribute->getData('label')),
                     trim($productAttribute->getFrontendLabel()),
-                    trim($productAttribute->getStoreLabel()),
+                    trim($productAttribute->getStoreLabel($this->getMagentoProduct()->getStoreId())),
                 )),
                 'values' => $this->getConfigurableAttributeValues($attribute),
             );
@@ -590,6 +794,50 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         return $bundleOptions;
     }
 
+    protected function getDownloadableVariationTypeRaw()
+    {
+        if (!$this->getMagentoProduct()->isDownloadableType()) {
+            return array();
+        }
+
+        /** @var Mage_Downloadable_Model_Link[] $links */
+        $links = $this->getMagentoProduct()->getTypeInstance()->getLinks();
+        if (empty($links)) {
+            return array();
+        }
+
+        $product = $this->getMagentoProduct()->getProduct();
+
+        $labels = array();
+
+        $labels[] = $product->getData('links_title');
+        $labels[] = Mage::getStoreConfig(
+            Mage_Downloadable_Model_Link::XML_PATH_LINKS_TITLE, $this->getMagentoProduct()->getStoreId()
+        );
+        $labels[] = $this->getMagentoProduct()->getProduct()->getAttributeDefaultValue('links_title');
+        $labels[] = Mage::getStoreConfig(Mage_Downloadable_Model_Link::XML_PATH_LINKS_TITLE);
+        $labels[] = self::DOWNLOADABLE_PRODUCT_DEFAULT_ATTRIBUTE_LABEL;
+
+        $resultOptions = array(
+            'option_id' => $product->getId(),
+            'values'    => array(),
+            'labels'    => array_values(array_filter($labels))
+        );
+
+        foreach ($links as $link) {
+            $resultOptions['values'][] = array(
+                'product_ids' => array($product->getId()),
+                'value_id'    => $link->getId(),
+                'labels'      => array_filter(array(
+                    $link->getStoreTitle(),
+                    $link->getDefaultTitle(),
+                )),
+            );
+        }
+
+        return array($resultOptions);
+    }
+
     protected function getConfigurableAttributeValues($attribute)
     {
         $product = $this->getMagentoProduct()->getProduct();
@@ -597,6 +845,11 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         $productTypeInstance = $this->getMagentoProduct()->getTypeInstance();
 
         $productAttribute = $attribute->getProductAttribute();
+        if (!$productAttribute) {
+            $message = "Configurable Magento Product (ID {$this->getMagentoProduct()->getProductId()})";
+            $message .= ' has no selected configurable attribute.';
+            throw new \Ess_M2ePro_Model_Exception($message);
+        }
 
         $options = $this->getConfigurableAttributeOptions($productAttribute);
         $values = array();
@@ -647,7 +900,7 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         return $mergedOptions;
     }
 
-    // ----------------------------------------------------------
+    // ---------------------------------------
 
     public function getTitlesVariationSet()
     {
@@ -665,6 +918,10 @@ class Ess_M2ePro_Model_Magento_Product_Variation
 
         if ($this->getMagentoProduct()->isBundleType()) {
             return $this->getBundleTitlesVariationSet();
+        }
+
+        if ($this->getMagentoProduct()->isDownloadableType()) {
+            return $this->getDownloadableTitlesVariationSet();
         }
 
         return array();
@@ -767,8 +1024,13 @@ class Ess_M2ePro_Model_Magento_Product_Variation
 
         $resultTitles = array();
         foreach ($this->getMagentoProduct()->getTypeInstance()->getConfigurableAttributes() as $configurableAttribute) {
-            $productAttribute = $configurableAttribute->getProductAttribute();
 
+            $productAttribute = $configurableAttribute->getProductAttribute();
+            if (!$productAttribute) {
+                $message = "Configurable Magento Product (ID {$this->getMagentoProduct()->getProductId()})";
+                $message .= ' has no selected configurable attribute.';
+                throw new \Ess_M2ePro_Model_Exception($message);
+            }
             $attributeStoreTitles = $productAttribute->getStoreLabels();
 
             $attributeKeyTitle = $productAttribute->getFrontendLabel();
@@ -776,7 +1038,7 @@ class Ess_M2ePro_Model_Magento_Product_Variation
                 $attributeKeyTitle = $attributeStoreTitles[$this->getMagentoProduct()->getStoreId()];
             }
 
-            if (!(int)$configurableAttribute->getData('use_default')) {
+            if (!(int)$configurableAttribute->getData('use_default') && $configurableAttribute->getData('label')) {
                 $attributeKeyTitle = $configurableAttribute->getData('label');
                 $attributeStoreTitles[] = $configurableAttribute->getData('label');
             }
@@ -795,19 +1057,16 @@ class Ess_M2ePro_Model_Magento_Product_Variation
 
                 $storeId = (int)$store->getId();
 
-                $valuesCollection = Mage::getResourceModel('eav/entity_attribute_option_collection')
-                    ->setAttributeFilter($productAttribute->getId())
-                    ->setStoreFilter($storeId, false);
-
-                foreach ($valuesCollection as $attributeValue) {
-                    $valueId = (int)$attributeValue->getId();
+                foreach ($productAttribute->getSource()->getAllOptions() as $option) {
+                    $valueId = $option['value'];
+                    $value   = $option['label'];
 
                     if (!isset($attributeValues[$valueId])) {
                         $attributeValues[$valueId] = array();
                     }
 
-                    if (!in_array($attributeValue->getValue(), $attributeValues[$valueId])) {
-                        $attributeValues[$valueId][$storeId] = $attributeValue->getValue();
+                    if (!in_array($value, $attributeValues[$valueId], true)) {
+                        $attributeValues[$valueId][$storeId] = $value;
                     }
                 }
             }
@@ -939,13 +1198,13 @@ class Ess_M2ePro_Model_Magento_Product_Variation
 
             $values = array();
             foreach ($storeOption['values'] as $valueStoreTitles) {
-                $valueStoreTitles = array_unique($valueStoreTitles);
-                $valueStoreTitles = array_values($valueStoreTitles);
-
                 $keyValue = $valueStoreTitles[Mage_Core_Model_App::ADMIN_STORE_ID];
                 if (isset($valueStoreTitles[$this->getMagentoProduct()->getStoreId()])) {
                     $keyValue = $valueStoreTitles[$this->getMagentoProduct()->getStoreId()];
                 }
+
+                $valueStoreTitles = array_unique($valueStoreTitles);
+                $valueStoreTitles = array_values($valueStoreTitles);
 
                 $values[$keyValue] = $valueStoreTitles;
             }
@@ -964,12 +1223,84 @@ class Ess_M2ePro_Model_Magento_Product_Variation
         return $resultTitles;
     }
 
-    // ##########################################################
+    protected function getDownloadableTitlesVariationSet()
+    {
+        if (!$this->getMagentoProduct()->isDownloadableType()) {
+            return array();
+        }
+
+        $storesTitles  = array();
+        $storesOptions = array();
+
+        foreach (Mage::app()->getStores(true) as $store) {
+            /** @var Mage_Core_Model_Store $store */
+
+            $storeId = (int)$store->getId();
+
+            $productValue = Mage::getResourceModel('catalog/product')->getAttributeRawValue(
+                $this->getMagentoProduct()->getProductId(), 'links_title', $storeId
+            );
+            $configValue = Mage::getStoreConfig(
+                Mage_Downloadable_Model_Link::XML_PATH_LINKS_TITLE, $storeId
+            );
+
+            $storesTitles[$storeId] = array(
+                $productValue,
+                $configValue
+            );
+
+            $linkCollection = Mage::getModel('downloadable/link')->getCollection()
+                ->addProductToFilter($this->getMagentoProduct()->getProductId())
+                ->addTitleToResult($storeId);
+
+            /** @var Mage_Downloadable_Model_Link[] $links */
+            $links = $linkCollection->getItems();
+
+            foreach ($links as $link) {
+                $linkId = (int)$link->getId();
+                $storeTitle = $link->getStoreTitle();
+                if (!empty($storeTitle)) {
+                    $storesOptions[$linkId][$storeId] = $storeTitle;
+                }
+            }
+        }
+
+        $titleKeyValue = reset($storesTitles[Mage_Core_Model_App::ADMIN_STORE_ID]);
+        if (!empty($storesTitles[$this->getMagentoProduct()->getStoreId()])) {
+            $titleKeyValue = reset($storesTitles[$this->getMagentoProduct()->getStoreId()]);
+        }
+
+        $resultTitles = array(
+            $titleKeyValue => array(
+                'titles' => array(self::DOWNLOADABLE_PRODUCT_DEFAULT_ATTRIBUTE_LABEL),
+                'values' => array(),
+            )
+        );
+
+        foreach ($storesTitles as $storeTitles) {
+            $resultTitles[$titleKeyValue]['titles'] = array_values(array_unique(array_merge(
+                $resultTitles[$titleKeyValue]['titles'], $storeTitles
+            )));
+        }
+
+        foreach ($storesOptions as $optionValues) {
+            $optionKeyValue = $optionValues[Mage_Core_Model_App::ADMIN_STORE_ID];
+            if (!empty($optionValues[$this->getMagentoProduct()->getStoreId()])) {
+                $optionKeyValue = $optionValues[$this->getMagentoProduct()->getStoreId()];
+            }
+
+            $resultTitles[$titleKeyValue]['values'][$optionKeyValue] = array_values(array_unique($optionValues));
+        }
+
+        return $resultTitles;
+    }
+
+    //########################################
 
     protected function getCustomOptionsAllowedTypes()
     {
         return array('drop_down', 'radio', 'multiple', 'checkbox');
     }
 
-    // ##########################################################
+    //########################################
 }

@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Development_Tools_AdditionalController
     extends Ess_M2ePro_Controller_Adminhtml_Development_CommandController
 {
-    //#############################################
+    //########################################
 
     /**
      * @title "Memory Limit Test"
@@ -26,7 +28,7 @@ class Ess_M2ePro_Adminhtml_Development_Tools_AdditionalController
         $i = 0;
         $array = array();
 
-        while (1)  {
+        while (1) {
             ($array[] = $array) && ((++$i % 100) == 0) && Mage::log(memory_get_usage(true) / 1000000 ,null,$file,1);
         }
     }
@@ -47,6 +49,8 @@ class Ess_M2ePro_Adminhtml_Development_Tools_AdditionalController
 
         $isLogFileExists = is_file($logDir . $fileName);
 
+        $resultHtml = '';
+
         if ($seconds) {
 
             $isLogFileExists && unlink($logDir . $fileName);
@@ -57,7 +61,7 @@ class Ess_M2ePro_Adminhtml_Development_Tools_AdditionalController
                 ((++$i % 10) == 0) && Mage::log("{$i} seconds passed",null,$fileName,1);
             }
 
-            echo "<div>{$seconds} seconds passed successfully!</div><br/>";
+            $resultHtml .= "<div>{$seconds} seconds passed successfully!</div><br/>";
         }
 
         if ($isLogFileExists) {
@@ -66,36 +70,49 @@ class Ess_M2ePro_Adminhtml_Development_Tools_AdditionalController
 
             if (count($contentsRows) >= 2) {
                 $lastRecord = trim($contentsRows[count($contentsRows)-2], "\r\n");
-                echo "<button onclick=\"alert('{$lastRecord}')\">show prev. log</button>";
+                $resultHtml .= "<button onclick=\"alert('{$lastRecord}')\">show prev. log</button>";
             }
         }
 
         $url = Mage::helper('adminhtml')->getUrl('*/*/*');
 
-        return print <<<HTML
+        $resultHtml .= <<<HTML
 <form action="{$url}" method="get">
     <input type="text" name="seconds" class="input-text" value="180" style="text-align: right; width: 100px" />
     <button type="submit">Test</button>
 </form>
 HTML;
+
+        return $this->getResponse()->setBody($resultHtml);
     }
 
     /**
-     * @title "Clear APC Opcode"
-     * @description "Clear APC Opcode"
-     * @confirm "Are you sure?"
+     * @title "Clear Opcode"
+     * @description "Clear Opcode (APC and Zend Optcache Extension)"
      */
-    public function clearApcOpcodeAction()
+    public function clearOpcodeAction()
     {
-        if (!Mage::helper('M2ePro/Client_Cache')->isApcAvailable()) {
-            $this->_getSession()->addError('APC not installed');
+        $messages = array();
+
+        if (!Mage::helper('M2ePro/Client_Cache')->isApcAvailable() &&
+            !Mage::helper('M2ePro/Client_Cache')->isZendOpcacheAvailable()) {
+
+            $this->_getSession()->addError('Opcode extensions are not installed.');
             $this->_redirectUrl(Mage::helper('M2ePro/View_Development')->getPageToolsTabUrl());
             return;
         }
 
-        apc_clear_cache('system');
+        if (Mage::helper('M2ePro/Client_Cache')->isApcAvailable()) {
+            $messages[] = 'APC opcode';
+            apc_clear_cache('system');
+        }
 
-        $this->_getSession()->addSuccess('APC opcode cache has been cleared');
+        if (Mage::helper('M2ePro/Client_Cache')->isZendOpcacheAvailable()) {
+            $messages[] = 'Zend Optcache';
+            opcache_reset();
+        }
+
+        $this->_getSession()->addSuccess(implode(' and ', $messages) . ' caches are cleared.');
         $this->_redirectUrl(Mage::helper('M2ePro/View_Development')->getPageToolsTabUrl());
     }
 
@@ -106,12 +123,12 @@ HTML;
      */
     public function clearCookiesAction()
     {
-        foreach ($_COOKIE as $name => $value) {
+        foreach (Mage::app()->getRequest()->getCookie() as $name => $value) {
             setcookie($name, '', 0, '/');
         }
         $this->_getSession()->addSuccess('Cookies was successfully cleared.');
         $this->_redirectUrl(Mage::helper('M2ePro/View_Development')->getPageToolsTabUrl());
     }
 
-    //#############################################
+    //########################################
 }

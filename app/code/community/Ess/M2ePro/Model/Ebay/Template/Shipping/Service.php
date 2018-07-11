@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_Component_Abstract
@@ -14,8 +16,6 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
     const COST_MODE_CUSTOM_ATTRIBUTE = 2;
     const COST_MODE_CALCULATED       = 3;
 
-    // ########################################
-
     /**
      * @var Ess_M2ePro_Model_Ebay_Template_Shipping
      */
@@ -26,7 +26,7 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
      */
     private $shippingServiceSourceModels = NULL;
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -34,7 +34,7 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
         $this->_init('M2ePro/Ebay_Template_Shipping_Service');
     }
 
-    // ########################################
+    //########################################
 
     public function deleteInstance()
     {
@@ -44,7 +44,7 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
         return $temp;
     }
 
-    // #######################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Ebay_Template_Shipping
@@ -68,7 +68,7 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
          $this->shippingTemplateModel = $instance;
     }
 
-    //------------------------------------------
+    // ---------------------------------------
 
     /**
      * @param Ess_M2ePro_Model_Magento_Product $magentoProduct
@@ -89,25 +89,37 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
         return $this->shippingServiceSourceModels[$productId];
     }
 
-    // #######################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getTemplateShippingId()
     {
         return (int)$this->getData('template_shipping_id');
     }
 
+    /**
+     * @return array
+     */
     public function getLocations()
     {
-        return json_decode($this->getData('locations'),true);
+        return Mage::helper('M2ePro')->jsonDecode($this->getData('locations'));
     }
 
+    /**
+     * @return int
+     */
     public function getPriority()
     {
         return (int)$this->getData('priority');
     }
 
-    // #######################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getShippingType()
     {
         return (int)$this->getData('shipping_type');
@@ -118,43 +130,61 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
         return $this->getData('shipping_value');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isShippingTypeLocal()
     {
         return $this->getShippingType() == self::SHIPPING_TYPE_LOCAL;
     }
 
+    /**
+     * @return bool
+     */
     public function isShippingTypeInternational()
     {
         return $this->getShippingType() == self::SHIPPING_TYPE_INTERNATIONAL;
     }
 
-    // #######################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getCostMode()
     {
         return (int)$this->getData('cost_mode');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return bool
+     */
     public function isCostModeFree()
     {
         return $this->getCostMode() == self::COST_MODE_FREE;
     }
 
+    /**
+     * @return bool
+     */
     public function isCostModeCustomValue()
     {
         return $this->getCostMode() == self::COST_MODE_CUSTOM_VALUE;
     }
 
+    /**
+     * @return bool
+     */
     public function isCostModeCustomAttribute()
     {
         return $this->getCostMode() == self::COST_MODE_CUSTOM_ATTRIBUTE;
     }
 
-    // #######################################
+    //########################################
 
     public function getCostValue()
     {
@@ -171,8 +201,11 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
         return $this->getData('cost_surcharge_value');
     }
 
-    //-----------------------------------------
+    // ---------------------------------------
 
+    /**
+     * @return array
+     */
     public function getCostAttributes()
     {
         $attributes = array();
@@ -184,6 +217,9 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
         return $attributes;
     }
 
+    /**
+     * @return array
+     */
     public function getCostAdditionalAttributes()
     {
         $attributes = array();
@@ -195,6 +231,9 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
         return $attributes;
     }
 
+    /**
+     * @return array
+     */
     public function getCostSurchargeAttributes()
     {
         $attributes = array();
@@ -206,21 +245,5 @@ class Ess_M2ePro_Model_Ebay_Template_Shipping_Service extends Ess_M2ePro_Model_C
         return $attributes;
     }
 
-    // #######################################
-
-    public function getTrackingAttributes()
-    {
-        return array();
-    }
-
-    public function getUsedAttributes()
-    {
-        return array_unique(array_merge(
-            $this->getCostAttributes(),
-            $this->getCostAdditionalAttributes(),
-            $this->getCostSurchargeAttributes()
-        ));
-    }
-
-    // #######################################
+    //########################################
 }

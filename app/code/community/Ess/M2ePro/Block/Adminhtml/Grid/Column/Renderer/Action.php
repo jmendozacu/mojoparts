@@ -1,18 +1,26 @@
 <?php
 
+/*
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
+ */
+
 class Ess_M2ePro_Block_Adminhtml_Grid_Column_Renderer_Action
     extends Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Action
 {
+    //########################################
+
     public function render(Varien_Object $row)
     {
         $actions = $this->getColumn()->getActions();
-        if ( empty($actions) || !is_array($actions) ) {
+        if (empty($actions) || !is_array($actions) ) {
             return '&nbsp;';
         }
 
-        if(sizeof($actions)==1 && !$this->getColumn()->getNoLink()) {
+        if (sizeof($actions)==1 && !$this->getColumn()->getNoLink()) {
             foreach ($actions as $action) {
-                if ( is_array($action) ) {
+                if (is_array($action)) {
                     return $this->_toLinkHtml($action, $row);
                 }
             }
@@ -30,7 +38,7 @@ class Ess_M2ePro_Block_Adminhtml_Grid_Column_Renderer_Action
             $actions = $this->sortActionsByGroupsOrder($groupOrder, $actions);
         }
 
-        return ' <select class="action-select" onchange="ActionColumnObj.callAction(this, ' . $itemId . ');">'
+        return ' <select class="action-select" onchange="ActionColumnObj.callAction(this, ' . (int)$itemId . ');">'
                . '<option value=""></option>'
                . $this->renderOptions($actions, $row)
                . '</select>';
@@ -84,4 +92,32 @@ class Ess_M2ePro_Block_Adminhtml_Grid_Column_Renderer_Action
 
         return $outHtml . $notGroupedOptions;
     }
+
+    //########################################
+
+    /**
+     * In some causes default Magento logic in foreach method is not working.
+     * In result variables located in $action['url']['params'] will not we replaced.
+     *
+     * @param array $action
+     * @param string $actionCaption
+     * @param Varien_Object $row
+     * @return Mage_Adminhtml_Block_Widget_Grid_Column_Renderer_Action
+     */
+    protected function _transformActionData(&$action, &$actionCaption, Varien_Object $row)
+    {
+        if (!empty($action['url']['params']) && is_array($action['url']['params'])) {
+            foreach ($action['url']['params'] as $paramKey => $paramValue) {
+
+                if (strpos($paramValue, '$') === 0) {
+                    $paramValue = str_replace('$', '', $paramValue);
+                    $action['url']['params'][$paramKey] = $row->getData($paramValue);
+                }
+            }
+        }
+
+        return parent::_transformActionData($action, $actionCaption, $row);
+    }
+
+    //########################################
 }

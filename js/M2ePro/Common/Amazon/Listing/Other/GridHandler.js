@@ -1,11 +1,11 @@
-AmazonListingOtherGridHandler = Class.create(CommonListingOtherGridHandler, {
+CommonAmazonListingOtherGridHandler = Class.create(CommonListingOtherGridHandler, {
 
-    //----------------------------------
+    // ---------------------------------------
 
     getComponent: function()
     {
         return 'amazon';
     }
 
-    //----------------------------------
+    // ---------------------------------------
 });

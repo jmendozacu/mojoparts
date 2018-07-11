@@ -1,13 +1,15 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Adminhtml_Listing_Other_MappingController
     extends Ess_M2ePro_Controller_Adminhtml_BaseController
 {
-    //#############################################
+    //########################################
 
     public function mapGridAction()
     {
@@ -15,7 +17,7 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MappingController
         $this->getResponse()->setBody($block->toHtml());
     }
 
-    //#############################################
+    //########################################
 
     public function mapAction()
     {
@@ -28,10 +30,12 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MappingController
             return;
         }
 
-        $collection = Mage::getModel('catalog/product')->getCollection();
+        /* @var $collection Ess_M2ePro_Model_Mysql4_Magento_Product_Collection */
+        $collection = Mage::getConfig()->getModelInstance('Ess_M2ePro_Model_Mysql4_Magento_Product_Collection',
+                                                           Mage::getModel('catalog/product')->getResource());
 
         $productId && $collection->addFieldToFilter('entity_id', $productId);
-        $sku && $collection->addFieldToFilter('sku', $sku);
+        $sku       && $collection->addFieldToFilter('sku', $sku);
 
         $tempData = $collection->getSelect()->query()->fetch();
         if (!$tempData) {
@@ -116,5 +120,5 @@ class Ess_M2ePro_Adminhtml_Listing_Other_MappingController
         return $this->getResponse()->setBody('1');
     }
 
-    //#############################################
+    //########################################
 }

@@ -1,13 +1,13 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Ebay_Order_Helper
 {
-    // ##########################################################
-
     const EBAY_ORDER_STATUS_ACTIVE    = 'Active';
     const EBAY_ORDER_STATUS_COMPLETED = 'Completed';
     const EBAY_ORDER_STATUS_CANCELLED = 'Cancelled';
@@ -18,7 +18,7 @@ class Ess_M2ePro_Model_Ebay_Order_Helper
     const EBAY_PAYMENT_METHOD_NONE      = 'None';
     const EBAY_PAYMENT_STATUS_SUCCEEDED = 'NoPaymentFailure';
 
-    // ##########################################################
+    //########################################
 
     public function getOrderStatus($orderStatusEbay)
     {
@@ -45,7 +45,7 @@ class Ess_M2ePro_Model_Ebay_Order_Helper
         return $orderStatus;
     }
 
-    // ##########################################################
+    //########################################
 
     public function getCheckoutStatus($checkoutStatusEbay)
     {
@@ -75,7 +75,6 @@ class Ess_M2ePro_Model_Ebay_Order_Helper
                     ? Ess_M2ePro_Model_Ebay_Order::PAYMENT_STATUS_COMPLETED
                     : Ess_M2ePro_Model_Ebay_Order::PAYMENT_STATUS_PROCESS;
             }
-
         }
 
         return Ess_M2ePro_Model_Ebay_Order::PAYMENT_STATUS_ERROR;
@@ -92,7 +91,7 @@ class Ess_M2ePro_Model_Ebay_Order_Helper
         return Ess_M2ePro_Model_Ebay_Order::SHIPPING_STATUS_COMPLETED;
     }
 
-    // ##########################################################
+    //########################################
 
     public function getPaymentMethodNameByCode($code, $marketplaceId)
     {
@@ -102,7 +101,8 @@ class Ess_M2ePro_Model_Ebay_Order_Helper
 
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $tableDictMarketplace = Mage::getSingleton('core/resource')->getTableName('m2epro_ebay_dictionary_marketplace');
+        $tableDictMarketplace = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('m2epro_ebay_dictionary_marketplace');
 
         $dbSelect = $connRead->select()
             ->from($tableDictMarketplace, 'payments')
@@ -113,7 +113,7 @@ class Ess_M2ePro_Model_Ebay_Order_Helper
             return $code;
         }
 
-        $payments = (array)json_decode($marketplace['payments'], true);
+        $payments = (array)Mage::helper('M2ePro')->jsonDecode($marketplace['payments']);
 
         foreach ($payments as $payment) {
             if ($payment['ebay_id'] == $code) {
@@ -132,7 +132,8 @@ class Ess_M2ePro_Model_Ebay_Order_Helper
 
         /** @var $connRead Varien_Db_Adapter_Pdo_Mysql */
         $connRead          = Mage::getSingleton('core/resource')->getConnection('core_read');
-        $tableDictShipping = Mage::getSingleton('core/resource')->getTableName('m2epro_ebay_dictionary_shipping');
+        $tableDictShipping = Mage::helper('M2ePro/Module_Database_Structure')
+            ->getTableNameWithPrefix('m2epro_ebay_dictionary_shipping');
 
         $dbSelect = $connRead->select()
             ->from($tableDictShipping, 'title')
@@ -143,5 +144,5 @@ class Ess_M2ePro_Model_Ebay_Order_Helper
         return !empty($shipping['title']) ? $shipping['title'] : $code;
     }
 
-    // ##########################################################
+    //########################################
 }

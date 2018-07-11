@@ -1,7 +1,9 @@
 <?php
 
 /*
- * @copyright  Copyright (c) 2013 by  ESS-UA.
+ * @author     M2E Pro Developers Team
+ * @copyright  M2E LTD
+ * @license    Commercial use is forbidden
  */
 
 class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_Model_Component_Abstract
@@ -15,6 +17,10 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
     const DICTIONARY_MODE_CUSTOM_ATTRIBUTE  = 'custom_attribute';
     const DICTIONARY_MODE_NONE              = 'none';
 
+    const TYPE_INT      = 'int';
+    const TYPE_FLOAT    = 'float';
+    const TYPE_DATETIME = 'date_time';
+
     /**
      * @var Ess_M2ePro_Model_Template_Description
      */
@@ -25,7 +31,7 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
      */
     private $descriptionSpecificSourceModels = array();
 
-    // ########################################
+    //########################################
 
     public function _construct()
     {
@@ -33,7 +39,7 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
         $this->_init('M2ePro/Amazon_Template_Description_Specific');
     }
 
-    // ########################################
+    //########################################
 
     public function deleteInstance()
     {
@@ -43,7 +49,7 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
         return $temp;
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @return Ess_M2ePro_Model_Template_Description
@@ -53,8 +59,8 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
     {
         if (is_null($this->descriptionTemplateModel)) {
 
-            $this->descriptionTemplateModel = Mage::helper('M2ePro')->getCachedObject(
-                'Amazon_Template_Description', $this->getTemplateDescriptionId(), NULL, array('template')
+            $this->descriptionTemplateModel = Mage::helper('M2ePro/Component_Amazon')->getCachedObject(
+                'Template_Description', $this->getTemplateDescriptionId(), NULL, array('template')
             );
         }
 
@@ -78,7 +84,7 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
         $this->getDescriptionTemplate()->getChildObject();
     }
 
-    // ########################################
+    //########################################
 
     /**
      * @param Ess_M2ePro_Model_Magento_Product $magentoProduct
@@ -101,13 +107,19 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
         return $this->descriptionSpecificSourceModels[$productId];
     }
 
-    // ########################################
+    //########################################
 
+    /**
+     * @return int
+     */
     public function getTemplateDescriptionId()
     {
         return (int)$this->getData('template_description_id');
     }
 
+    /**
+     * @return string
+     */
     public function getXpath()
     {
         return trim($this->getData('xpath'), '/');
@@ -116,6 +128,11 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
     public function getMode()
     {
         return $this->getData('mode');
+    }
+
+    public function getIsRequired()
+    {
+        return $this->getData('is_required');
     }
 
     public function getRecommendedValue()
@@ -138,29 +155,60 @@ class Ess_M2ePro_Model_Amazon_Template_Description_Specific extends Ess_M2ePro_M
         return $this->getData('type');
     }
 
+    /**
+     * @return array
+     */
     public function getAttributes()
     {
         $value = $this->getData('attributes');
-        return is_string($value) ? (array)json_decode($value, true) : array();
+        return is_string($value) ? (array)Mage::helper('M2ePro')->jsonDecode($value) : array();
     }
 
-    // ########################################
+    //########################################
 
-    public function getTrackingAttributes()
+    public function isRequired()
     {
-        return $this->getUsedAttributes();
+        return (bool)$this->getIsRequired();
     }
 
-    public function getUsedAttributes()
+    //----------------------------------------
+
+    public function isModeNone()
     {
-        $attribute = $this->getCustomAttribute();
-
-        if (empty($attribute)) {
-            return array();
-        }
-
-        return array($attribute);
+        return $this->getMode() == self::DICTIONARY_MODE_NONE;
     }
 
-    // #######################################
+    public function isModeCustomValue()
+    {
+        return $this->getMode() == self::DICTIONARY_MODE_CUSTOM_VALUE;
+    }
+
+    public function isModeCustomAttribute()
+    {
+        return $this->getMode() == self::DICTIONARY_MODE_CUSTOM_ATTRIBUTE;
+    }
+
+    public function isModeRecommended()
+    {
+        return $this->getMode() == self::DICTIONARY_MODE_RECOMMENDED_VALUE;
+    }
+
+    //----------------------------------------
+
+    public function isTypeInt()
+    {
+        return $this->getType() == self::TYPE_INT;
+    }
+
+    public function isTypeFloat()
+    {
+        return $this->getType() == self::TYPE_FLOAT;
+    }
+
+    public function isTypeDateTime()
+    {
+        return $this->getType() == self::TYPE_DATETIME;
+    }
+
+    //########################################
 }

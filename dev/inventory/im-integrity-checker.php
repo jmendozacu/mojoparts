@@ -1,4 +1,7 @@
 <?php
+
+// @TODO: UNCOMMENT THE BASIC SANITY CHECK QUERIES
+
 error_reporting(E_ALL);
 
 echo "INFO: Initializing the connections".PHP_EOL;
@@ -175,17 +178,17 @@ echo "INFO: COMPLETE".PHP_EOL;
 //****************************************************************************************************
 // mainline
 //****************************************************************************************************
-$query = "select cpe.sku, v.value as 'vendor', vi.value as 'vendor_item_number'
+$loopquery = "select cpe.sku, v.value as 'vendor', vi.value as 'vendor_item_number'
 from catalog_product_entity cpe
 inner join catalog_product_entity_int sts on cpe.entity_id = sts.entity_id and sts.attribute_id=96 and sts.value=1
 inner join catalog_product_entity_varchar vi on cpe.entity_id = vi.entity_id and vi.attribute_id = 164
 inner join catalog_product_entity_int v on cpe.entity_id = v.entity_id and v.attribute_id = 163;";
-$result = mysqli_query($magento_con, $query);
-if (!$result) {
-	echo "ERROR: ".$query.PHP_EOL;
+$loopresult = mysqli_query($magento_con, $loopquery);
+if (!$loopresult) {
+	echo "ERROR: ".$loopquery.PHP_EOL;
 	exit(1);
 }
-while ($row = mysqli_fetch_array($result)) { 
+while ($row = mysqli_fetch_array($loopresult)) { 
 	$item_number = $row['sku'];
 	$vendor = ($row['vendor'] == 36) ? 'PFG' : 'Brock';
 	$vendor_item_number = $row['vendor_item_number'];
@@ -194,9 +197,12 @@ while ($row = mysqli_fetch_array($result)) {
 	$base_item_number = $item_number; // initialize this... but next, we'll remove the side if there is one
 	if (preg_match('/([A-Z0-9\-]*[0-9])(LR|L|R|B|$)/', $item_number, $matches)) { // this removes the L|R|LR|B from the end of the item number 
 		$base_item_number = $matches[1];
+		$suffix = $matches[2];
 //		echo "INFO: base item number for ".$vendor."|".$vendor_item_number." - ".$item_number." is ".$base_item_number."... ";
 	
-		if ($matches[2] <> 'LR') {
+		# SINGLES first
+		#######################
+		if ($suffix <> 'LR') {
 //			echo "it's a single.".PHP_EOL;
 
 		// validate internally first
@@ -204,24 +210,34 @@ while ($row = mysqli_fetch_array($result)) {
 				echo "ERROR: Since it's not a pair, there shouldn't be any comma in the PFG item#.".PHP_EOL; 
 				$array = array('ERROR', $item_number, $vendor, $vendor_item_number, 'Missing comma in PFG item number for pair.');
 				fputcsv($imIntegrityCSV, $array);
-			} 
-			if ($vendor == 'Brock') {
+			} else if ($vendor == 'Brock') {
 				if (preg_match('/([A-Za-z0-9\-]*LR)/', $vendor_item_number, $matches)) { 
 					echo "ERROR: Since it's not a pair, the Brock item# shouldn't end in LR.".PHP_EOL; 
 					$array = array('ERROR', $item_number, $vendor, $vendor_item_number, 'Since it is not a pair, the Brock item# shouldn NOT end in LR.');
 					fputcsv($imIntegrityCSV, $array);
 				}
 			}
-/*			
+			
 			# validate against other magento skus
 			#####################
-			if there were no errors...
-				if it is L/R
-					find the matching other side
-					keep track of the other side
-					if it doesn't have a matching other side
-						error
-					else
+			else if ($suffix == "L" || $suffix == "R") {
+				$opposite_item_number = ($suffix == "L") ? $base_item_number."R" : $base_item_number."L";
+				$query = "select cpe.sku, v.value as 'vendor', vi.value as 'vendor_item_number'
+				from catalog_product_entity cpe
+				inner join catalog_product_entity_int sts on cpe.entity_id = sts.entity_id and sts.attribute_id=96 and sts.value=1
+				inner join catalog_product_entity_varchar vi on cpe.entity_id = vi.entity_id and vi.attribute_id = 164
+				inner join catalog_product_entity_int v on cpe.entity_id = v.entity_id and v.attribute_id = 163
+				where cpe.sku = '{$opposite_item_number}'";
+				$result = mysqli_query($magento_con, $query);
+				if ($result && mysqli_num_rows($result) == 1) {
+						// @TODO: continue logic here
+				} else {
+						echo "ERROR: No matching opposite side for ".$item_number.".".PHP_EOL; 
+						$array = array('ERROR', $item_number, $vendor, $vendor_item_number, 'There is no matching other side for item# '.$item_number.'.');
+						fputcsv($imIntegrityCSV, $array);
+				}
+
+/*					else
 						if the other side's vendor item# is off by more than 1 character
 							error
 				if it is L/R/B
@@ -262,7 +278,7 @@ while ($row = mysqli_fetch_array($result)) {
 					if a match was found
 						error (the mojo item# is assigned to the wrong vendor item)
 	*/
-
+			}
 		} else { // it's a pair
 //			echo "it's a pair.".PHP_EOL;
 /*	else (it's a pair)

@@ -24,6 +24,7 @@ mvi.item_cost as 'new_item_cost',
 mvi.shipping_cost as 'new_shipping_cost',
 mvi.handling_cost as 'new_handling_cost'
 FROM catalog_product_entity a
+inner join catalog_product_entity_varchar f on f.entity_id=a.entity_id and f.attribute_id=202 and f.value=178
 inner join catalog_product_entity_varchar b on a.entity_id = b.entity_id and b.attribute_id = 164
 inner join catalog_product_entity_int d on a.entity_id = d.entity_id and d.attribute_id = 163 and d.value=36
 inner join cataloginventory_stock_item c on a.entity_id = c.product_id and c.is_in_stock=1
@@ -62,6 +63,7 @@ mvi1.item_cost + mvi2.item_cost as 'new_item_cost',
 greatest(mvi1.shipping_cost,mvi2.shipping_cost) as 'new_shipping_cost',
 mvi1.handling_cost+mvi2.handling_cost as 'new_handling_cost'
 FROM catalog_product_entity a
+inner join catalog_product_entity_varchar f on f.entity_id=a.entity_id and f.attribute_id=202 and f.value=178
 inner join catalog_product_entity_varchar b on a.entity_id = b.entity_id and b.attribute_id = 164
 inner join catalog_product_entity_int d on a.entity_id = d.entity_id and d.attribute_id = 163 and d.value=36
 inner join cataloginventory_stock_item c on a.entity_id = c.product_id and c.is_in_stock=1
@@ -89,9 +91,9 @@ if (!$result) {
 }
 
 if (mysqli_num_rows($result)) {
-	$pfgPriceCSVName = "/var/www/html/var/import/pfg-price.csv";
+	$pfgPriceCSVName = "/var/www/html/var/import/pfg-price-cj.csv";
 	$pfgPriceCSV = fopen($pfgPriceCSVName, "w");
-	fputcsv($pfgPriceCSV, array('sku','price','floor_price','cost','shipping_cost','handling_cost','msrp','markup_pct','price_update_date','price_diff','price_update_reason_code','price_update_reason'));
+	fputcsv($pfgPriceCSV, array('sku','price_franchise1','profit_pct_franchise1','price_update_date','price_diff','price_update_reason_code','price_update_reason'));
 	$today = date('Y-m-d');
 	
 	while ($row = mysqli_fetch_array($result)) { 
@@ -264,7 +266,7 @@ if (mysqli_num_rows($result)) {
 		$priceDiff = $finalPrice - $currentPrice;
 
 		if ($finalPrice <> $currentPrice || $finalProfitPct <> $currentProfitPct || $newTotalCost <> $currentTotalCost) {
-			$array = array($sku, $finalPrice, $calcedMinPrice, $newItemCost, $newShippingCost, $newHandlingCost, $msrp, $finalProfitPct, $today, $priceDiff, $reasonCode, $reason);
+			$array = array($sku, $finalPrice, $finalProfitPct, $today, $priceDiff, $reasonCode, $reason);
 			fputcsv($pfgPriceCSV, $array);
 		}
 	} // while loop

@@ -163,11 +163,11 @@ while ($loopRow = mysqli_fetch_array($loopResult)) {
 	if ($skuB!=NULL && $skuLR==NULL) {
 		if ($vendorB == 'Brock') {
 			// I'm not concerned about this situation.  It's too hard to get a picture & compats to create the LR for a brock item.
-		} 	else {
+		} else {
 			$query = "select description_scrubbed 
 				from mojo_vendor_item_master im
 				where im.vendor='PFG' 
-				and im.item_number='{$skuLR}'
+				and im.item_number='{$skuB}'
 				and im.description_scrubbed is not null;";
 			$result = mysqli_query($magento_con, $query);
 			if ($result && mysqli_num_rows($result) == 1) {
@@ -182,7 +182,7 @@ while ($loopRow = mysqli_fetch_array($loopResult)) {
 
 	// L&R is in magento, LR isn't
 	if ($skuL!=NULL && $skuR!=NULL && $skuLR==NULL) {
-		// @todo
+		// @todo - actually, the loop query doesn't include LRs, so I need to look at this again.
 	}
 }
 

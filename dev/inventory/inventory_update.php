@@ -163,7 +163,9 @@ echo "...delete any bad rows".PHP_EOL;
 $query = "delete from mojo_pfg_inv_import
 where cost=0
 	or shipping_cost=0
-	or handling_cost=0;";
+	or handling_cost=0
+	or sku=''
+	or sku is null;";
 $result = mysqli_query($magento_con, $query);
 if (!$result) {
 	echo "ERROR: ".mysqli_error($magento_con)."\r\n".$query.PHP_EOL;
@@ -224,7 +226,7 @@ if (!mysqli_query($magento_con, $query)) {
 	exit(1);
 }
 
-echo "...update any existing items on the vendor item master".PHP_EOL;
+echo "...update any existing items on the vendor inventory file".PHP_EOL;
 $query = "update mojo_vendor_inventory mvi
 inner join mojo_pfg_inv mpi 
 	on mvi.vendor_item_number=mpi.sku 
@@ -485,6 +487,7 @@ inner join catalog_product_entity_int sts on cpe.entity_id = sts.entity_id and s
 left join mojo_pfg_patents pat1 on pat1.pfg_item=inv1.vendor_item_number
 left join mojo_pfg_patents pat2 on pat2.pfg_item=inv2.vendor_item_number
 where im.component_1 is not null
+and im.component_1 is not ''
 and least(greatest(inv1.stock_days, inv3.stock_days), greatest(inv2.stock_days, inv4.stock_days)) < 3
 and pat1.pfg_item is null
 and pat2.pfg_item is null;";
@@ -530,7 +533,7 @@ if (!$result) {
 }
 if (mysqli_num_rows($result)) {
 	if (mysqli_num_rows($result) > 1000) {
-		echo "ERROR: too many pair in stock records... please check manually.".PHP_EOL;
+		echo "ERROR: too many single in stock records... please check manually.".PHP_EOL;
 		exit(1);
 	} else {
 		$isCSVName = '/var/www/html/var/import/pfg-is-singles.csv';

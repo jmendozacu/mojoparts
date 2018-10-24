@@ -44,26 +44,10 @@ if (!$loopResult) {
 }
 echo "Number of rows in main loop: ".mysqli_num_rows($loopResult).PHP_EOL;
 
+	
 while ($loopRow = mysqli_fetch_array($loopResult)) { 
+	$itemArray = array();
 	$baseItemNumber = $loopRow['base_sku'];
-	$baseVendor = NULL;
-
-	$skuL = NULL;
-	$descScrubL = NULL;
-	$vendorL = NULL;
-	$vendorItemL = NULL;
-	$skuR = NULL;
-	$descScrubR = NULL;
-	$vendorR = NULL;
-	$vendorItemR = NULL;
-	$skuB = NULL;
-	$descScrubB = NULL;
-	$vendorB = NULL;
-	$vendorItemB = NULL;
-	$skuLR = NULL;
-	$descScrubLR = NULL;
-	$vendorLR = NULL;
-	$vendorItemLR = NULL;
 	$continue = TRUE;
 	
 	$query = "select cpe.sku, v.value as 'vendor', vi.value as 'vendor_item_number'
@@ -76,51 +60,22 @@ while ($loopRow = mysqli_fetch_array($loopResult)) {
 	while ($row = mysqli_fetch_array($result)) {
 		$sku = $row['sku'];
 		$vendor = ($row['vendor'] == 36) ? 'PFG' : 'Brock';
-		$vendor_item_number = $row['vendor_item_number'];
+		$vendorItemNumber = $row['vendor_item_number'];
 		preg_match('/([A-Z0-9\-]*[0-9])(LR|L|R|B|$)/', $sku, $matches); // this removes the L|R|LR|B from the end of the item number 
 		$suffix = $matches[2];
-		switch ($suffix) {
-			case "L": 
-				$skuL = $sku;
-				$vendorL = $vendor;
-				$vendorItemL = $vendor_item_number;
-				break;
-			case "R": 
-				$skuR = $sku;
-				$vendorR = $vendor;
-				$vendorItemR = $vendor_item_number;
-				break;
-			case "B": 
-				$skuB = $sku;
-				$vendorB = $vendor;
-				$vendorItemB = $vendor_item_number;
-				break;
-			case "LR": 
-				$skuLR = $sku;
-				$vendorLR = $vendor;
-				$vendorItemLR = $vendor_item_number;
-				break;
-		}
+		$itemArray[$suffix] = array($sku, $vendor, $vendorItemNumber);
 	}
 
 //*******************************************************************************************************
 // PASS 1
 //*******************************************************************************************************
 	// make sure they all have the same vendor
-	if ($vendorB != NULL) $baseVendor = $vendorB;
-	if ($vendorL != NULL) $baseVendor = $vendorL;
-	if ($vendorR != NULL) {
-		if ($baseVendor != NULL) {
-			if ($vendorR != $baseVendor) $continue = FALSE;
-			}
-		else $baseVendor = $vendorR;
+	$baseVendor = NULL;
+	foreach($itemArray as $side => $item) {
+		if ($baseVendor == NULL) $baseVendor = $item[1]; 
+		else if ($item[1] == $baseVendor) $continue = TRUE;
+		else $continue = FALSE;
 	}
-	if ($vendorLR != NULL) {
-		if ($baseVendor != NULL) {
-			if ($vendorLR != $baseVendor) $continue = FALSE;
-		}
-	}
-
 	if ($continue == FALSE) {
 		fputcsv($csv, array('ERROR', $baseItemNumber, $baseVendor, '', 'Mismatched vendor.', 'Manually investigate and fix by running fixVendorMismatch.php to generate fixVendorMistmatch.csv.'));
 
@@ -149,6 +104,27 @@ while ($loopRow = mysqli_fetch_array($loopResult)) {
 			$wQuery = "INSERT INTO mojo.vendor_mismatches_work (sku, vendor, vendor_item, is_in_stock, price, item_cost, shipping_cost, handling_cost, markup_pct) 
 			VALUES ('{$wSku}', '{$wVendor}', '{$wVendorItem}', {$row['is_in_stock']}, {$wPrice}, {$wItemCost}, {$wShippingCost}, {$wHandlingCost}, {$wMarkupPct});";
 			mysqli_query($magento_con, $wQuery);
+		}
+	}
+
+	// make sure PFG items are present in the mojo_vendor_item_master
+	if ($continue == TRUE) {
+		if ($baseVendor == 'PFG') {
+//			foreach($itemArray as $side => $item) {
+				$query = "SELECT im.item_number FROM mojo_vendor_item_master im
+				WHERE im.item_number like '{$baseItemNumber}%'";
+				$result = mysqli_query($magento_con, $query);
+				if (mysqli_num_rows($result) == 0) {
+					$continue = FALSE;
+					fputcsv($csv, array('ERROR', $baseItemNumber, $baseVendor, '', 'No sides of base item# were found in mojo_vendor_item_master.', ''));
+//					echo "No sides of base item# ".$baseItemNumber." were found in mojo_vendor_item_master.".PHP_EOL;
+				}
+				else if (mysqli_num_rows($result) <> count($itemArray)) {
+					$continue = FALSE;
+//					echo "One or more sides of base item# ".$baseItemNumber." is not found in mojo_vendor_item_master.".PHP_EOL;
+					fputcsv($csv, array('ERROR', $baseItemNumber, $baseVendor, '', 'One or more sides of base item# is not found in mojo_vendor_item_master.', ''));
+				}
+//			}
 		}
 	}
 	

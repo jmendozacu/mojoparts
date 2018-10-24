@@ -487,7 +487,6 @@ inner join catalog_product_entity_int sts on cpe.entity_id = sts.entity_id and s
 left join mojo_pfg_patents pat1 on pat1.pfg_item=inv1.vendor_item_number
 left join mojo_pfg_patents pat2 on pat2.pfg_item=inv2.vendor_item_number
 where im.component_1 is not null
-and im.component_1 is not ''
 and least(greatest(inv1.stock_days, inv3.stock_days), greatest(inv2.stock_days, inv4.stock_days)) < 3
 and pat1.pfg_item is null
 and pat2.pfg_item is null;";

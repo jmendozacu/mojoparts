@@ -9,7 +9,6 @@ $query = "SELECT
 a.entity_id,
 a.sku, 
 b.value as 'vendor_item',
-c.is_in_stock,
 p.value as 'price',
 cost.value as 'item_cost',
 ship.value as 'shipping_cost',
@@ -27,7 +26,6 @@ pud.value as 'price_update_date'
 FROM catalog_product_entity a
 inner join catalog_product_entity_varchar b on a.entity_id = b.entity_id and b.attribute_id = 164
 inner join catalog_product_entity_int d on a.entity_id = d.entity_id and d.attribute_id = 163 and d.value=36
-inner join cataloginventory_stock_item c on a.entity_id = c.product_id and c.is_in_stock=1
 inner join catalog_product_entity_decimal p on a.entity_id = p.entity_id and p.attribute_id=75
 inner join catalog_product_entity_int sts on a.entity_id = sts.entity_id and sts.attribute_id=96 and sts.value=1
 inner join mojo_vendor_inventory mvi on mvi.item_number=a.sku and mvi.warehouse='VA'
@@ -49,7 +47,6 @@ SELECT
 a.entity_id,
 a.sku, 
 b.value as 'vendor_item',
-c.is_in_stock,
 p.value as 'price',
 cost.value as 'item_cost',
 ship.value as 'shipping_cost',
@@ -67,7 +64,6 @@ pud.value as 'price_update_date'
 FROM catalog_product_entity a
 inner join catalog_product_entity_varchar b on a.entity_id = b.entity_id and b.attribute_id = 164
 inner join catalog_product_entity_int d on a.entity_id = d.entity_id and d.attribute_id = 163 and d.value=36
-inner join cataloginventory_stock_item c on a.entity_id = c.product_id and c.is_in_stock=1
 inner join catalog_product_entity_decimal p on a.entity_id = p.entity_id and p.attribute_id=75
 inner join catalog_product_entity_int sts on a.entity_id = sts.entity_id and sts.attribute_id=96 and sts.value=1
 inner join mojo_vendor_item_master im on im.item_number=a.sku

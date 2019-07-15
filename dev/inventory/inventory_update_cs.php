@@ -120,7 +120,7 @@ if (!mysqli_query($magento_con, $query)) {
 echo "...import the data from the ftp file".PHP_EOL;
 $filename = null;
 $yesterday = date('Ymd', strtotime('-1 day', strtotime(date('Y-m-d'))));
-$files = glob("/var/www/html/var/import/usautoparts_{$yesterday}*.txt");
+$files = glob("/var/www/html/var/import/usautoparts_inv_noquotes.txt");
 
 if (count($files) == 1) {
 	$filename = $files[0];
@@ -341,17 +341,13 @@ inner join (
 	inner join catalog_product_entity_varchar b 
 		on a.entity_id = b.entity_id 
 		and b.attribute_id = 164
-	inner join catalog_product_entity_int d 
-		on a.entity_id = d.entity_id 
-		and d.value=36 
-		and d.attribute_id = 163
 	inner join catalog_product_entity_int sts 
 		on a.entity_id = sts.entity_id 
 		and sts.attribute_id=96 
 		and sts.value=1
 ) sub on sub.vendor_item_number=mvi.vendor_item_number
 set mvi.item_number=sub.sku
-where mvi.vendor='PFG';";
+;";
 if (!mysqli_query($magento_con, $query)) {
 	echo "ERROR: ".$query.PHP_EOL;
 	exit(1);
@@ -452,7 +448,7 @@ and mviv.warehouse='VA'
 and mviv.item_cost>0
 and mviv.shipping_cost>0
 and mviv.handling_cost>0
-and greatest(mviv.stock_days, mvii.stock_days) < 3
+and mviv.qty+mvii.qty <= 2
 and pat.pfg_item is null;";
 $result = mysqli_query($magento_con, $query);
 if (!$result) {
@@ -460,10 +456,6 @@ if (!$result) {
 	exit(1);
 }
 if (mysqli_num_rows($result)) {
-	if (mysqli_num_rows($result) > 1000) {
-		echo "ERROR: too many single OOS records... please check manually.".PHP_EOL;
-		exit(1);
-	} else {
 		$oosCSVName = '/var/www/html/var/import/pfg-oos-singles.csv';
 		$oosCSV = fopen($oosCSVName, "w");
 		fputcsv($oosCSV, array('sku','is_in_stock','qty'));
@@ -471,7 +463,6 @@ if (mysqli_num_rows($result)) {
 			$array = array($row['sku'], $row['is_in_stock'], $row['qty']);
 			fputcsv($oosCSV, $array);
 		}
-	}
 }
 
 echo "... perform PFG OOS for pairs".PHP_EOL;
@@ -487,7 +478,7 @@ inner join catalog_product_entity_int sts on cpe.entity_id = sts.entity_id and s
 left join mojo_pfg_patents pat1 on pat1.pfg_item=inv1.vendor_item_number
 left join mojo_pfg_patents pat2 on pat2.pfg_item=inv2.vendor_item_number
 where im.component_1 is not null
-and least(greatest(inv1.stock_days, inv3.stock_days), greatest(inv2.stock_days, inv4.stock_days)) < 3
+and least(inv1.qty+inv3.qty, inv2.qty+inv4.qty) <= 2
 and pat1.pfg_item is null
 and pat2.pfg_item is null;";
 $result = mysqli_query($magento_con, $query);
@@ -496,18 +487,13 @@ if (!$result) {
 	exit(1);
 }
 if (mysqli_num_rows($result)) {
-	if (mysqli_num_rows($result) > 1000) {
-		echo "ERROR: too many pair OOS records... please check manually.".PHP_EOL;
-		exit(1);
-	} else {
-		$oosPairCSVName = '/var/www/html/var/import/pfg-oos-pairs.csv';
-		$oosPairCSV = fopen($oosPairCSVName, "w");
-		fputcsv($oosPairCSV, array('sku','is_in_stock','qty'));
+		$oosCSVName = '/var/www/html/var/import/pfg-oos-pairs.csv';
+		$oosCSV = fopen($oosCSVName, "w");
+		fputcsv($oosCSV, array('sku','is_in_stock','qty'));
 		while ($row = mysqli_fetch_array($result)) { 
 			$array = array($row['sku'], $row['is_in_stock'], $row['qty']);
-			fputcsv($oosPairCSV, $array);
+			fputcsv($oosCSV, $array);
 		}
-	}
 }
 
 echo "... perform PFG IS for singles".PHP_EOL;
@@ -523,7 +509,7 @@ and mviv.warehouse='VA'
 and mviv.item_cost>0
 and mviv.shipping_cost>0
 and mviv.handling_cost>0
-and greatest(mviv.stock_days, mvii.stock_days) >= 3
+and mviv.qty+mvii.qty > 2
 and pat.pfg_item is null;";
 $result = mysqli_query($magento_con, $query);
 if (!$result) {
@@ -531,18 +517,13 @@ if (!$result) {
 	exit(1);
 }
 if (mysqli_num_rows($result)) {
-	if (mysqli_num_rows($result) > 1000) {
-		echo "ERROR: too many single in stock records... please check manually.".PHP_EOL;
-		exit(1);
-	} else {
-		$isCSVName = '/var/www/html/var/import/pfg-is-singles.csv';
-		$isCSV = fopen($isCSVName, "w");
-		fputcsv($isCSV, array('sku','is_in_stock','qty'));
+		$oosCSVName = '/var/www/html/var/import/pfg-is-singles.csv';
+		$oosCSV = fopen($oosCSVName, "w");
+		fputcsv($oosCSV, array('sku','is_in_stock','qty'));
 		while ($row = mysqli_fetch_array($result)) { 
 			$array = array($row['sku'], $row['is_in_stock'], $row['qty']);
-			fputcsv($isCSV, $array);
+			fputcsv($oosCSV, $array);
 		}
-	}
 }
 
 echo "... perform PFG IS for pairs".PHP_EOL;
@@ -558,7 +539,7 @@ inner join catalog_product_entity_int sts on cpe.entity_id = sts.entity_id and s
 left join mojo_pfg_patents pat1 on pat1.pfg_item=inv1.vendor_item_number
 left join mojo_pfg_patents pat2 on pat2.pfg_item=inv2.vendor_item_number
 where im.component_1 is not null
-and least(greatest(inv1.stock_days, inv3.stock_days), greatest(inv2.stock_days, inv4.stock_days)) >= 3
+and least(inv1.qty+inv3.qty, inv2.qty+inv4.qty) > 2
 and pat1.pfg_item is null
 and pat2.pfg_item is null;";
 $result = mysqli_query($magento_con, $query);
@@ -567,18 +548,13 @@ if (!$result) {
 	exit(1);
 }
 if (mysqli_num_rows($result)) {
-	if (mysqli_num_rows($result) > 1000) {
-		echo "ERROR: too many pair in stock records... please check manually.".PHP_EOL;
-		exit(1);
-	} else {
-		$isPairCSVName = '/var/www/html/var/import/pfg-is-pairs.csv';
-		$isPairCSV = fopen($isPairCSVName, "w");
-		fputcsv($isPairCSV, array('sku','is_in_stock','qty'));
+		$oosCSVName = '/var/www/html/var/import/pfg-is-pairs.csv';
+		$oosCSV = fopen($oosCSVName, "w");
+		fputcsv($oosCSV, array('sku','is_in_stock','qty'));
 		while ($row = mysqli_fetch_array($result)) { 
 			$array = array($row['sku'], $row['is_in_stock'], $row['qty']);
-			fputcsv($isPairCSV, $array);
+			fputcsv($oosCSV, $array);
 		}
-	}
 }
 
 // Process Brock inventory emails
@@ -834,6 +810,30 @@ if (mysqli_num_rows($result)) {
 		$sku = $row['sku'];
 		$array = array($sku, 1);
 		fputcsv($ysCSV, $array);
+	}
+}
+
+echo "... create brock inventory file for channel spyder".PHP_EOL;
+$query = "	SELECT i.vendor_item_number AS 'brocksku',
+	i.item_cost AS 'productcost',
+	i.qty AS 'qty'
+	FROM mojo_vendor_inventory i
+	WHERE i.vendor='brock'
+	AND i.item_status='enabled';";
+$result = mysqli_query($magento_con, $query);
+if (!$result) {
+	echo "ERROR: ".$query.PHP_EOL;
+	exit(1);
+}
+if (mysqli_num_rows($result)) {
+	echo "... updating ".mysqli_num_rows($result)." brock-price-qty.".PHP_EOL;
+	$biCSVName = '/var/www/html/var/import/brock-price-qty.csv';
+	$biCSV = fopen($biCSVName, "w");
+	fputcsv($biCSV, array('brock sku','product cost','qty'));
+	
+	while ($row = mysqli_fetch_array($result)) { 
+		$array = array($row['brocksku'], $row['productcost'], $row['qty']);
+		fputcsv($biCSV, $array);
 	}
 }
 

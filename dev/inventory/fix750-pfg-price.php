@@ -164,106 +164,18 @@ if (mysqli_num_rows($result)) {
 		$reasonCode = 0;
 		$reason = NULL;
 		
-		if ($newTotalCost < $currentTotalCost) { // costs have gone down
-			if ($maxNewPrice < $currentPrice) { // best case scenario - lower costs, we can get back to trying full profit
-				$newPrice = $maxNewPrice;
-				$reasonCode = 8;
-				$reason = "The PFG costs decreased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), there are no recent sales (60d), and the new price @ 20% (".$newPrice.") is below the current price (".$currentPrice.") So we can lower the price AND make more profit - great!.";
+		if ($maxNewPrice >= 750) {
+			$profitAmt750 = round(750 - $newTotalCost - 750*0.1215 - 0.3, 2);
+			$profitPct750 = round(($profitAmt750 / 750)*100, 2);
+			if ($profitPct750 > $minProfitPct) { // it's still ok to drop the price below 750, so let's do that rather than not sell this
+				$newPrice = 749.99;
+				$reasonCode = 20;
+				$reason = "The PFG costs increased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), but the new price is more than 750, but it's still minimally profitable at 750, so let's drop it to 749.99.";
 			}
-			else { // the max price is more than the current price, so shoot lower
-				if ($prevMinNewPrice > $currentPrice) { // (sanity check) currently underpriced (mistakenly) (based on previous profit calcs) despite costs being lower
-					$newPrice = $minNewPrice;
-					$reasonCode = 9;
-					$reason = "The PFG costs decreased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), but the current price (".$currentPrice.") is below the new floor (".$minNewPrice.") so we have to fix this (this should never happen though).";
-				}
-				else { // it's priced above the old floor
-					// do nothing - this is a good compromise - leave price alone but get more profit from lower costs
-					$reasonCode = 10;
-					$reason = "The PFG costs decreased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), and the current price (".$currentPrice.") is above the new floor (".$minNewPrice.") so we can leave it alone and just make more profit - great again!";
-				}
-			}
-		}
-		else if ($newTotalCost > $currentTotalCost) { // costs have gone up
-			if ($daysSinceLastSale < 30) { // has had recent sales 
-				if ($prevMinNewPrice > $currentPrice) { // the previous pricing's floor is higher than the current price... we can't have that, so...
-					$newPrice = $minNewPrice; // disturb the price as little as possible, but we have to at least get up the new floor price
-					$reasonCode = 1;
-					$reason = "The PFG costs increased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), and the minimum price (based on previous profit calcs) (".$minNewPrice.") is now above the current price (".$currentPrice.") But since it has had recent sales (most recent sale: ".$latestOrderDate.", ".$daysSinceLastSale." days ago), we don't want to disturb that.  So we will just set the new price = the NEW minimum price.";
-				}
-				else  { // lucky, we can leave the price alone and just adjust the profit% value
-					$newPrice = $currentPrice; // redundant code since this was done in the initialization, but I'm leaving it just in case
-					$reasonCode = 2;
-					$reason = "The PFG costs increased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), but the minimum price based on old profit calcs (".$minNewPrice.") is no greater than the current price (".$currentPrice.") Since it has had recent sales (most recent sale: ".$latestOrderDate.", ".$daysSinceLastSale." days ago), we don't want to disturb that.  So we will just leave it alone.";
-				}
-			}
-			else { // has not had recent sales
-				if ($maxNewPrice >= 750) {
-					$profitAmt750 = round(750 - $newTotalCost - 750*0.1215 - 0.3, 2);
-					$profitPct750 = round(($profitAmt750 / 750)*100, 2);
-					if ($profitPct750 > $minProfitPct) { // it's still ok to drop the price below 750, so let's do that rather than not sell this
-						$newPrice = 749.99;
-						$reasonCode = 20;
-						$reason = "The PFG costs increased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), but the new price is more than 750, but it's still minimally profitable at 750, so let's drop it to 749.99.";
-					}
-					else {
-						$newPrice = $maxNewPrice; 
-						$reasonCode = 21; 
-						$reason = "The PFG costs increased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), and it can't be sold profitably for less than $750, so we need to set the price normally (above $750) and end the listing.";
-					}
-				}
-				else {
-					$newPrice = $maxNewPrice; 
-					$reasonCode = 16; // replaced old reason codes 3 & 4
-					$reason = "The PFG costs increased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), and it has NOT had recent sales, so let's put it back to max pricing.";
-				}
-			}
-		}
-		else { // costs are the same, so let's re-evaluate the situation with this one
-			// this was manually stopped (GTC) or finished (FP30)
-			// we need to change the price a little if we want to refresh the listing,
-			// only if it hasn't already been recently randomized and is just stuck in stopped/finished due to some error
-			if ($listingStatus == 3 || $listingStatus == 4) { 
-				if ($startDateStr > $priceUpdateDate) { // make sure we're only doing an update 1 time (if the listing is stuck in stopped/finished for many days
-					if ($minNewPrice > $currentPrice) {
-						$newPrice = $maxNewPrice; // yes this is correct - if we already have to raise the price since it's below floor, we might as well go all the way up to max pricing since it's stopped/finished
-						$reasonCode = 17;
-						$reason = "The PFG costs are the same, the listing is manually stopped because it hasn't sold, but it's currently priced (".$currentPrice.") below floor (".$minNewPrice."). So since we're raising prices, we might as well go to the max.";
-					} else if ($minNewPrice == $currentPrice) {
-						$randomIncrease = rand(25,75);
-						$newPrice = $currentPrice + $randomIncrease/100;
-						$reasonCode = 18;
-						$reason = "The PFG costs are the same, the listing is manually stopped or finished due to no recent sales, so randomly adjust the price to cause it to refresh.";
-					}
-					else { // we can only lower it if it is not already at the floor price
-						$newPrice = round(($newTotalCost + 0.3) / (0.8785 - ($currentProfitPct-1) / 100),2); // reduce the current profit by 1
-						if ($newPrice < $minNewPrice) {
-							$newPrice = $minNewPrice;
-						}
-						$reasonCode = 19;
-						$reason = "The PFG costs are the same, the listing is manually stopped or finished, and it's currently priced (".$currentPrice.") above floor (".$minNewPrice."). So let's try reducing the profit% (".$currentProfitPct.") by 1%.";
-					}
-				}
-			}
-			else { // the listing was not manually stopped or finished, there was no cost change, so this is an existing active listing that should just be double-checked to make sure the pricing is ok
-				if ($prevMinNewPrice > $currentPrice) { // if it is underpriced even at the old floor pricing, then might as well bring it all the way up to the new floor
-					$newPrice = $minNewPrice;
-					$reasonCode = 11;
-					$reason = "The PFG costs are the same, the listing NOT manually stopped, but it's currently priced (".$currentPrice.") below floor (".$minNewPrice."). So we need to at least set the new price = the minimum price.";
-				}
-				// otherwise, let's just wait to raise to the new floor until this listing gets ended due to no sales
-				else { 
-					// price is the dummy initial value, before we had the actual costs
-					if ($currentPrice >= 99999.99) { 
-						$newPrice = $maxNewPrice; 
-						$reasonCode = 14;
-						$reason = "The listing NOT manually stopped, and it's currently priced with the dummy starting price of $99999.99, so set it to the 15% profit price.";
-					} 
-					else {
-						// leave the price alone (newPrice already initialized as currentPrice)
-						$reasonCode = 12;
-						$reason = "The PFG costs are the same, the listing NOT manually stopped, and it's currently priced (".$currentPrice.") at or above floor (".$minNewPrice."). So will leave it alone, except to update the profit%.";
-					}
-				}
+			else {
+				$newPrice = $maxNewPrice; 
+				$reasonCode = 21; 
+				$reason = "The PFG costs increased (old:".$currentTotalCost."=".$currentItemCost."+".$currentShippingCost."+".$currentHandlingCost.", vs new:".$newTotalCost."=".$newItemCost."+".$newShippingCost."+".$newHandlingCost."), and it can't be sold profitably for less than $750, so we need to set the price normally (above $750) and end the listing.";
 			}
 		}
 

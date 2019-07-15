@@ -1,0 +1,46 @@
+#!/bin/bash
+current_date=$(date "+%Y.%m.%d")
+log_name=logs/update_inv_cs.log
+exec &> $log_name.$current_date
+
+cd /var/www/html/var/import/
+wget ftp://ryanh_pfg:wf30laqc@ftp.channelspyder.com/usautoparts_inv.txt
+awk '{gsub(/\"/,"")};1' usautoparts_inv.txt > usautoparts_inv_noquotes.txt
+ 
+cd /var/www/html/dev/inventory/
+php_log_name=logs/inventory_update_cs.log
+php inventory_update_cs.php > $php_log_name.$current_date
+rc=$? # this is the return code from php job, since it always returns 0 on exit(<some message>);
+
+set -o errexit
+
+	cd /var/www/html/magmi/cli/
+	sudo chown ec2-user ../state/progress.txt
+	sudo chmod 755 ../state/progress.txt
+
+	echo magmi import PFG oos singles
+	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/pfg-oos-singles.csv"
+	echo magmi import PFG oos pairs
+	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/pfg-oos-pairs.csv"
+	echo magmi import PFG in stock singles
+	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/pfg-is-singles.csv"
+	echo magmi import PFG in stock pairs
+	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/pfg-is-pairs.csv"
+	echo magmi import Brock stock changes
+	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/brock-stock.csv"
+	echo magmi import Brock price changes
+	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/brock-price.csv"
+
+	echo magmi import days without sales
+	php magmi.cli.php -profile=DefaultNOM2e -mode=update -CSV:filename="/var/www/html/var/import/dws.csv"
+	php magmi.cli.php -profile=DefaultNOM2e -mode=update -CSV:filename="/var/www/html/var/import/yesterday-sales.csv"
+
+	echo copying the brock inventory to channel spyder
+	cd /var/www/html/var/import/
+	curl -T brock-price-qty.csv ftp://ryanh_bw:s43ybfts@ftp.channelspyder.com
+
+	echo zipping up inventory files
+	zip -m "daily-inv-archive-$(date +"%Y-%m-%d").zip" usautoparts_*.txt pfg-oos-singles.csv pfg-oos-pairs.csv pfg-is-singles.csv pfg-is-pairs.csv dws.csv yesterday-sales.csv brock-stock.csv brock-price.csv brock-price-qty.csv
+	cd archive/
+	mv ../daily-inv-archive-*.zip .
+

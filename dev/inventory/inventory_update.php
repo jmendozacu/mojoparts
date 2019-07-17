@@ -1,4 +1,5 @@
 <?php
+include 'config.php';
 error_reporting(E_ALL);
 require_once dirname(__FILE__).'/excel_reader2.php';
 
@@ -584,7 +585,7 @@ if (mysqli_num_rows($result)) {
 }
 
 // Process Brock inventory emails
-$mBox = imap_open('{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX','ryan.hand@mojoparts.com','L3tm31ngm41l');
+$mBox = imap_open('{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX', $email_user, $email_pwd);
 if ($mBox === false) throw new Exception('Unable to connect to mailbox. '.imap_last_error());
 
 grab_attachment($mBox, "Brock Supply - Stock Availability Notification");

@@ -79,12 +79,12 @@ if (!$magento_con || !$mojo_con) {
     echo "Failed to initialize the mysql objects.";
     exit(1);
 }
-mysqli_real_connect($magento_con, '$host','$user','$password','$magento-database');
+mysqli_real_connect($magento_con, '$host','$user','$password','$magento_db');
 if (!$magento_con) {
     echo "Cannot connect to magento database.";
     exit(1);
 }
-mysqli_real_connect($magento_con, '$host','$user','$password','$custom-database');
+mysqli_real_connect($magento_con, '$host','$user','$password','$custom_db');
 if (!$mojo_con) {
     echo "Cannot connect to mojo database.";
     exit(1);
@@ -559,7 +559,7 @@ if (mysqli_num_rows($result)) {
 }
 
 // Process Brock inventory emails
-$mBox = imap_open('{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX','ryan.hand@mojoparts.com','L3tm31ngm41l');
+$mBox = imap_open('{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX', $email_user, $email_pwd);
 if ($mBox === false) throw new Exception('Unable to connect to mailbox. '.imap_last_error());
 
 grab_attachment($mBox, "Brock Supply - Stock Availability Notification");

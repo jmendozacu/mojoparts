@@ -79,12 +79,12 @@ if (!$magento_con || !$mojo_con) {
     echo "Failed to initialize the mysql objects.";
     exit(1);
 }
-mysqli_real_connect($magento_con, '$host','$user','$password','$magento_db');
+mysqli_real_connect($magento_con, $host,$username,$password,$magento_db);
 if (!$magento_con) {
     echo "Cannot connect to magento database.";
     exit(1);
 }
-mysqli_real_connect($magento_con, '$host','$user','$password','$custom_db');
+mysqli_real_connect($mojo_con, $host,$username,$password,$custom_db);
 if (!$mojo_con) {
     echo "Cannot connect to mojo database.";
     exit(1);

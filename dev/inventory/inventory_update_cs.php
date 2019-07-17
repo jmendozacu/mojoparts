@@ -1,4 +1,5 @@
 <?php
+include 'config.php';
 error_reporting(E_ALL);
 require_once dirname(__FILE__).'/excel_reader2.php';
 
@@ -78,12 +79,12 @@ if (!$magento_con || !$mojo_con) {
     echo "Failed to initialize the mysql objects.";
     exit(1);
 }
-mysqli_real_connect($magento_con, 'mojomysql2.c6orzbehh7d1.us-east-1.rds.amazonaws.com','mojo','3^-4Grj,;pF7[3kN','mojomagento');
+mysqli_real_connect($magento_con, '$host','$user','$password','$magento-database');
 if (!$magento_con) {
     echo "Cannot connect to magento database.";
     exit(1);
 }
-mysqli_real_connect($mojo_con, 'mojomysql2.c6orzbehh7d1.us-east-1.rds.amazonaws.com','mojo','3^-4Grj,;pF7[3kN','mojo');
+mysqli_real_connect($magento_con, '$host','$user','$password','$custom-database');
 if (!$mojo_con) {
     echo "Cannot connect to mojo database.";
     exit(1);

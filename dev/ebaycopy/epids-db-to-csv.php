@@ -4,7 +4,8 @@ $con = mysqli_init();
 if (!$con) {
     die('mysqli_init failed');
 }
-mysqli_real_connect($con, 'mojomysql2.c6orzbehh7d1.us-east-1.rds.amazonaws.com','mojo','3^-4Grj,;pF7[3kN','mojo');
+// TODO: use an included config file for db connection.  The hard-coded connection was removed for better security.
+// mysqli_real_connect($con, '$server','$user','$passord','$database');
 if (mysqli_connect_errno()) {
 	echo "Failed to connect to MySQL: " . mysqli_connect_error();
 }

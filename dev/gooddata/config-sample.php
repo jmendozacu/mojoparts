@@ -1,5 +1,6 @@
 <?php
-// connect to db
+// Copy this file to config.php and fill in the local data and remove this comment
+// NOTE: make sure to update config-sample.php with any changes
 $con = mysqli_init();
 if (!$con) {
     die('mysqli_init failed');

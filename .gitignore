@@ -25,6 +25,7 @@ var/full_page_cache
 /export
 magmi/state/progress.txt
 magmi/state/trace.txt
+magmi/conf
 
 # Microsoft
 *.phpproj

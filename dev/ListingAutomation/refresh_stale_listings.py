@@ -71,8 +71,6 @@ with open("active-listings.csv", "r") as input_file, \
 
             # for non-catalog listings, build a bulk upload to recreate listings
             if cs_sku[:3] == "366":
-# FIXME: This is an inefficient way to do this.  It would be better to execute
-#        the query once to fetch all the records, then loop through them.
                 cursor.execute(product_query, (cs_sku,))
                 record = cursor.fetchone()
                 if record != None:
@@ -86,5 +84,31 @@ with open("active-listings.csv", "r") as input_file, \
                                           "StoresFixedPrice", \
                                           "46074", \
                                           "GTC", \
+                                          row[15], \
+                                          row[16], \
+                                          record[4], \
+                                          "TODO: category name", \
+                                          "TODO: images", \
+                                          "TODO: item description", \
+                                          "1000||New", \
+                                          "2", \
+                                          "US", \
+                                          "", \
+                                          "US", \
+                                          "TODO: fulfillment policy id", \
+                                          "TODO: payment policy id", \
+                                          "TODO: return policy id", \
+                                          "Aftermarket Replacement", \
+                                          "1 Year", \
+                                          "Direct Replacement", \
+                                          "DOT/SAE", \
+                                          "TODO: placement on vehicle", \
+                                          "TODO: mpn", \
+                                          "TODO: interchange", \
+                                          "TODO: surface finish", \
+                                          "TODO: superseded part #", \
+                                          "TODO: partslink", \
+                                          "TODO: oem", \
+                                          "TODO: color", \
                                           ])
 connection.close()

@@ -1,7 +1,5 @@
-# TODO: get_image_string needs to be changed so that position 0 is first
-#       and that only 5 images are added
-
 import database_config as config
+#TODO: move queries to separate import file
 import pymysql
 import csv
 import os
@@ -10,19 +8,45 @@ from datetime import timedelta
 
 
 def get_image_string(mage_sku_, cursor):
-    image_query = " \
+    base_image_query = " \
+            SELECT bi.value \
+            FROM catalog_product_entity cpe \
+            LEFT JOIN catalog_product_entity_varchar bi ON bi.entity_id=cpe.entity_id AND bi.attribute_id=85 \
+            WHERE cpe.sku= %s \
+    ;"
+    gallery_query = " \
             SELECT mg.value \
             FROM catalog_product_entity cpe \
             left join catalog_product_entity_media_gallery mg ON mg.entity_id=cpe.entity_id AND mg.attribute_id=88 \
+            left join catalog_product_entity_media_gallery_value mgv ON mgv.value_id=mg.value_id \
             WHERE cpe.sku= %s \
+            AND mgv.disabled=0 \
+            ORDER BY mgv.position \
     ;"
-    img_string = ""
+    img_list = []
+
+    # add the base image to the beginning of the image string
+    cursor.execute(base_image_query, (mage_sku,))
+    base_image_record = cursor.fetchone()
+    if base_image_record != None:
+        img_list.append(base_image_record[0])
+
+    # add the remaining gallery images to the end of the image string
+    cursor.execute(gallery_query, (mage_sku,))
+    for gallery_record in cursor.fetchall():
+        if gallery_record[0] not in img_list:
+            img_list.append(gallery_record[0])
+
+    # build the formatted image string
     img_url_prefix = "http://mojoparts.com/media/catalog/product"
-    cursor.execute(image_query, (mage_sku,))
-    for img_record in cursor.fetchall():
+    img_string = ""
+    i = 0
+    for img in img_list:
         if img_string != "":
             img_string = img_string + "||"
-        img_string = img_string + img_url_prefix + img_record[0]
+        img_string = img_string + img_url_prefix + img
+        if i == 4: # this list can't have more than 5 images
+            break
     return img_string
 
 
@@ -64,10 +88,8 @@ product_query = " \
         ORDER BY cpe.sku \
         ;"
 
-###############################################################################    
-# mainline
-###############################################################################    
 
+# mainline
 with open("active-listings.csv", "r") as input_file, \
     open(f"{today}-listings-to-end.csv", "w+", newline="") as end_listings_file, \
     open(f"{today}-diy-pfg-eBay.csv", "w+", newline="") as bulk_listings_file:
@@ -83,6 +105,7 @@ with open("active-listings.csv", "r") as input_file, \
     bulk_writer.writerow(["CS-LINE CODE","PART NUMBER","STORE ID","TITLE","subtitle","epid","LISTING TYPE","POSTAL CODE","LISTING DURATION","START PRICE","QUANTITY","CATEGORY","category Name","images","item description","CONDITION","HANDLING TIME","COUNTRY","CURRENCY","upc","SITE","FULFILLMENTPOLICYID","PAYMENTPOLICYID","RETURNPOLICYID","item id","Brand","Warranty","Fitment Type","Certifications","Placement on Vehicle","Manufacturer Part Number","Interchange Part Number","Surface Finish","Superseded Part Number","Partslink","OEM Number","Color"])
 
     for row in input_reader:
+        # TODO: use a nametuple as the data structure for csv and row data
         cs_sku = row[4]
         cs_partno = cs_sku[4:]
         listing_sku = row[5]
@@ -108,6 +131,9 @@ with open("active-listings.csv", "r") as input_file, \
                     ebay_title = record[2]
                     epid = cs_partno.replace("-", "").strip() 
                     img_string = get_image_string(mage_sku, cursor)
+                    item_description = record[12]
+                    if item_description == "":
+                        item_description = "none"
                     bulk_writer.writerow(
                             [cs_sku[:3], \
                             cs_partno, \
@@ -122,7 +148,7 @@ with open("active-listings.csv", "r") as input_file, \
                             record[4], \
                             record[13], \
                             img_string, \
-                            "TODO: item description", \
+                            item_description, \
                             "1000||New", \
                             "2", \
                             "US", \

@@ -1,9 +1,9 @@
-import database_config as config
-#TODO: move queries to separate import file
-import pymysql
 import csv
-import os
+import database_config as config
 from datetime import datetime
+import os
+from collections import namedtuple
+import pymysql
 from datetime import timedelta
 
 
@@ -55,7 +55,7 @@ today = datetime.date(datetime.today())
 tomorrow = datetime.date(datetime.today() + timedelta(days=1))
 db_connection = pymysql.connect(host=config.mysql["host"], user=config.mysql["user"], password=config.mysql["passwd"], db=config.mysql["db"])
 product_query = " \
-        SELECT cpe.sku, \
+        SELECT cpe.sku as 'sku', \
         css.VALUE AS 'cs_sku', \
         ttl.VALUE AS 'ebay_title', \
         cat.VALUE AS 'ebay_category', \
@@ -90,62 +90,65 @@ product_query = " \
 
 
 # mainline
-with open("active-listings.csv", "r") as input_file, \
+with open("active-listings-test.csv", "r") as input_file, \
     open(f"{today}-listings-to-end.csv", "w+", newline="") as end_listings_file, \
     open(f"{today}-diy-pfg-eBay.csv", "w+", newline="") as bulk_listings_file:
 
-    input_reader = csv.reader(input_file)
+    reader = csv.reader(input_file)
     end_writer = csv.writer(end_listings_file)
     bulk_writer = csv.writer(bulk_listings_file)
     cursor = db_connection.cursor()
 
-    next(input_reader)
+    # build a data structure to hold the csv row data based on the column names
+    Listing = namedtuple("Listing", "rownum, store, ebay_status, pf_status, cs_sku, listing_sku, brand_name, partno, last_sale, sold_qty, ebay_item, item_title, item_location, gsp, start_date, list_price, stock_qty, hit_count")
+
+    #TODO: use namedtuple for product record
+    #Product = namedtuple("Product", "sku, cs_sku, ebay_title, ebay_category, base_image, mpn, interchange, placement, surface_finish, partslink, oem, color, additional_notes, category_name")
+    
+    next(reader)
     end_writer.writerow(["itemID", "cs-sku", "sold_qty", "stock_qty", "start_date", "end_date"])
     bulk_writer.writerow(["DO NOT REMOVE THIS ROW","Required Fields in ALL CAPS","","","","","","","Choose ONE per listing"," ","","","","","","Chose ONE per listing","Chose ONE per listing","Copy/Paste","Copy/Paste","","Copy/Paste","","","","","Add Remove or Rename UP TO 20 Item Specifics fields as needed. (Item Specifics fields limited to 65 characters.)","","","","","","","","","","",""])
     bulk_writer.writerow(["CS-LINE CODE","PART NUMBER","STORE ID","TITLE","subtitle","epid","LISTING TYPE","POSTAL CODE","LISTING DURATION","START PRICE","QUANTITY","CATEGORY","category Name","images","item description","CONDITION","HANDLING TIME","COUNTRY","CURRENCY","upc","SITE","FULFILLMENTPOLICYID","PAYMENTPOLICYID","RETURNPOLICYID","item id","Brand","Warranty","Fitment Type","Certifications","Placement on Vehicle","Manufacturer Part Number","Interchange Part Number","Surface Finish","Superseded Part Number","Partslink","OEM Number","Color"])
 
-    for row in input_reader:
-        # TODO: use a nametuple as the data structure for csv and row data
-        cs_sku = row[4]
-        cs_partno = cs_sku[4:]
-        listing_sku = row[5]
-        sold_qty = int(row[9])
-        stock_qty = int(row[16])
-        start_date = datetime.date(datetime.strptime(row[14], "%Y-%m-%d"))
-        end_date = start_date + timedelta(days=30)
 
-        # calculate the next end date
+    for row in map(Listing._make, reader):
+        linecode = row.cs_sku[:3]
+        
+        # calculate the next end date based on the most recent start date
+        start_date = datetime.date(datetime.strptime(row.start_date, "%Y-%m-%d"))
+        end_date = start_date + timedelta(days=30)
         while (end_date + timedelta(days=30)) < tomorrow:
            end_date = end_date + timedelta(days=30)
 
-        if sold_qty == 0 and stock_qty > 0 and end_date == tomorrow:
-            ebay_item = row[10]
-            end_writer.writerow([ebay_item, cs_sku, sold_qty, stock_qty, start_date, end_date])
+        if int(row.sold_qty) == 0\
+                and int(row.stock_qty) > 0\
+                and end_date == tomorrow:
+            end_writer.writerow([row.ebay_item, row.cs_sku, row.sold_qty, row.stock_qty, start_date, end_date])
 
             # for non-catalog listings, build a bulk upload to recreate listings
-            if cs_sku[:3] == "366":
-                cursor.execute(product_query, (listing_sku))
+            if linecode == "366":
+                cursor.execute(product_query, (row.listing_sku))
                 record = cursor.fetchone()
                 if record != None:
                     mage_sku = record[0]
                     ebay_title = record[2]
-                    epid = cs_partno.replace("-", "").strip() 
+                    epid = row.partno.replace("-", "").strip() 
                     img_string = get_image_string(mage_sku, cursor)
                     item_description = record[12]
                     if item_description == "":
                         item_description = "none"
                     bulk_writer.writerow(
-                            [cs_sku[:3], \
-                            cs_partno, \
+                            [linecode, \
+                            row.partno, \
                             "1", \
                             ebay_title, \
                             epid, \
                             "StoresFixedPrice", \
                             "46074", \
                             "GTC", \
-                            row[15], \
-                            row[16], \
-                            record[4], \
+                            row.list_price, \
+                            row.stock_qty, \
+                            record[3], \
                             record[13], \
                             img_string, \
                             item_description, \
@@ -155,8 +158,8 @@ with open("active-listings.csv", "r") as input_file, \
                             "", \
                             "US", \
                             "TODO: fulfillment policy id", \
-                            "TODO: payment policy id", \
-                            "TODO: return policy id", \
+                            "127723857020", \
+                            "127723856020", \
                             "Aftermarket Replacement", \
                             "1 Year", \
                             "Direct Replacement", \
@@ -170,4 +173,5 @@ with open("active-listings.csv", "r") as input_file, \
                             "TODO: oem", \
                             "TODO: color", \
                             ])
+
 db_connection.close()

@@ -68,7 +68,8 @@ product_query = " \
         oem.value as 'OEM Number', \
         clr.value as 'Color', \
         adn.value as 'additional notes', \
-        ecn.category_name \
+        ecn.category_name, \
+        lp.listing_id \
         FROM catalog_product_entity cpe inner join catalog_product_entity_int sts on cpe.entity_id = sts.entity_id and sts.attribute_id=96 and sts.value=1\
         inner JOIN catalog_product_entity_int v ON v.entity_id=cpe.entity_id AND v.attribute_id=163 AND v.VALUE=36  \
         LEFT JOIN catalog_product_entity_varchar css ON css.entity_id=cpe.entity_id AND css.attribute_id=223 \
@@ -84,9 +85,14 @@ product_query = " \
         left JOIN catalog_product_entity_int clr ON clr.entity_id=cpe.entity_id AND clr.attribute_id=92 \
         left JOIN catalog_product_entity_text adn ON adn.entity_id=cpe.entity_id AND adn.attribute_id=168 \
         left JOIN mojo_ebay_category_names ecn ON ecn.category_number=cat.VALUE \
+        LEFT JOIN m2epro_listing_product lp ON lp.product_id=cpe.entity_id \
         WHERE css.value = %s \
         ORDER BY cpe.sku \
         ;"
+policy_dict = {59:84611513020,
+                60:142133024020,
+                61:142132942020,
+                62:142133024020}
 
 
 # mainline
@@ -102,7 +108,6 @@ with open("active-listings-test.csv", "r") as input_file, \
     # build a data structure to hold the csv row data based on the column names
     Listing = namedtuple("Listing", "rownum, store, ebay_status, pf_status, cs_sku, listing_sku, brand_name, partno, last_sale, sold_qty, ebay_item, item_title, item_location, gsp, start_date, list_price, stock_qty, hit_count")
 
-    #TODO: use namedtuple for product record
     #Product = namedtuple("Product", "sku, cs_sku, ebay_title, ebay_category, base_image, mpn, interchange, placement, surface_finish, partslink, oem, color, additional_notes, category_name")
     
     next(reader)
@@ -157,21 +162,21 @@ with open("active-listings-test.csv", "r") as input_file, \
                             "US", \
                             "", \
                             "US", \
-                            "TODO: fulfillment policy id", \
+                            policy_dict[record[14]], \
                             "127723857020", \
                             "127723856020", \
                             "Aftermarket Replacement", \
                             "1 Year", \
                             "Direct Replacement", \
                             "DOT/SAE", \
-                            "TODO: placement on vehicle", \
-                            "TODO: mpn", \
-                            "TODO: interchange", \
-                            "TODO: surface finish", \
-                            "TODO: superseded part #", \
-                            "TODO: partslink", \
-                            "TODO: oem", \
-                            "TODO: color", \
+                            record[7], \
+                            record[5], \
+                            record[6], \
+                            record[8], \
+                            record[10], \
+                            record[9], \
+                            record[10], \
+                            record[11] \
                             ])
 
 db_connection.close()

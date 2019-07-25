@@ -1,9 +1,9 @@
 import csv
+import os
+import pymysql
 import database_config as config
 from datetime import datetime
-import os
 from collections import namedtuple
-import pymysql
 from datetime import timedelta
 
 
@@ -63,10 +63,10 @@ product_query = " \
         mpn.value as 'Manufacturer Part Number', \
         hol.value as 'Interchange Part Number', \
         plc.value as 'Placement on Vehicle', \
-        sfc.value as 'Surface Finish', \
+        sfcv.value as 'Surface Finish', \
         plk.value as 'Partslink', \
         oem.value as 'OEM Number', \
-        clr.value as 'Color', \
+        clrv.value as 'Color', \
         adn.value as 'additional notes', \
         ecn.category_name, \
         lp.listing_id \
@@ -80,9 +80,11 @@ product_query = " \
         left JOIN catalog_product_entity_varchar hol ON hol.entity_id=cpe.entity_id AND hol.attribute_id=138 \
         left JOIN catalog_product_entity_varchar plc ON plc.entity_id=cpe.entity_id AND plc.attribute_id=143 \
         left JOIN catalog_product_entity_int sfc ON sfc.entity_id=cpe.entity_id AND sfc.attribute_id=155 \
+        left JOIN eav_attribute_option_value sfcv ON sfcv.option_id=sfc.value \
         left JOIN catalog_product_entity_varchar plk ON plk.entity_id=cpe.entity_id AND plk.attribute_id=142 \
         left JOIN catalog_product_entity_varchar oem ON oem.entity_id=cpe.entity_id AND oem.attribute_id=140 \
         left JOIN catalog_product_entity_int clr ON clr.entity_id=cpe.entity_id AND clr.attribute_id=92 \
+        left JOIN eav_attribute_option_value clrv ON clrv.option_id=clr.value \
         left JOIN catalog_product_entity_text adn ON adn.entity_id=cpe.entity_id AND adn.attribute_id=168 \
         left JOIN mojo_ebay_category_names ecn ON ecn.category_number=cat.VALUE \
         LEFT JOIN m2epro_listing_product lp ON lp.product_id=cpe.entity_id \
@@ -93,12 +95,16 @@ policy_dict = {59:84611513020,
                 60:142133024020,
                 61:142132942020,
                 62:142133024020}
+placement_dict = {"10":"Rear",
+                  "11":"Front",
+                  "12":"Right",
+                  "13":"Left"}
 
 
 # mainline
-with open("active-listings-test.csv", "r") as input_file, \
-    open(f"{today}-listings-to-end.csv", "w+", newline="") as end_listings_file, \
-    open(f"{today}-diy-pfg-eBay.csv", "w+", newline="") as bulk_listings_file:
+with open("data/active-listings-test.csv", "r") as input_file, \
+    open(f"data/{today}-listings-to-end.csv", "w+", newline="") as end_listings_file, \
+    open(f"data/{today}-diy-pfg-eBay.csv", "w+", newline="") as bulk_listings_file:
 
     reader = csv.reader(input_file)
     end_writer = csv.writer(end_listings_file)
@@ -108,10 +114,7 @@ with open("active-listings-test.csv", "r") as input_file, \
     # build a data structure to hold the csv row data based on the column names
     Listing = namedtuple("Listing", "rownum, store, ebay_status, pf_status, cs_sku, listing_sku, brand_name, partno, last_sale, sold_qty, ebay_item, item_title, item_location, gsp, start_date, list_price, stock_qty, hit_count")
 
-    #Product = namedtuple("Product", "sku, cs_sku, ebay_title, ebay_category, base_image, mpn, interchange, placement, surface_finish, partslink, oem, color, additional_notes, category_name")
-    
     next(reader)
-    end_writer.writerow(["itemID", "cs-sku", "sold_qty", "stock_qty", "start_date", "end_date"])
     bulk_writer.writerow(["DO NOT REMOVE THIS ROW","Required Fields in ALL CAPS","","","","","","","Choose ONE per listing"," ","","","","","","Chose ONE per listing","Chose ONE per listing","Copy/Paste","Copy/Paste","","Copy/Paste","","","","","Add Remove or Rename UP TO 20 Item Specifics fields as needed. (Item Specifics fields limited to 65 characters.)","","","","","","","","","","",""])
     bulk_writer.writerow(["CS-LINE CODE","PART NUMBER","STORE ID","TITLE","subtitle","epid","LISTING TYPE","POSTAL CODE","LISTING DURATION","START PRICE","QUANTITY","CATEGORY","category Name","images","item description","CONDITION","HANDLING TIME","COUNTRY","CURRENCY","upc","SITE","FULFILLMENTPOLICYID","PAYMENTPOLICYID","RETURNPOLICYID","item id","Brand","Warranty","Fitment Type","Certifications","Placement on Vehicle","Manufacturer Part Number","Interchange Part Number","Surface Finish","Superseded Part Number","Partslink","OEM Number","Color"])
 
@@ -128,7 +131,7 @@ with open("active-listings-test.csv", "r") as input_file, \
         if int(row.sold_qty) == 0\
                 and int(row.stock_qty) > 0\
                 and end_date == tomorrow:
-            end_writer.writerow([row.ebay_item, row.cs_sku, row.sold_qty, row.stock_qty, start_date, end_date])
+            end_writer.writerow([row.ebay_item])
 
             # for non-catalog listings, build a bulk upload to recreate listings
             if linecode == "366":
@@ -137,16 +140,23 @@ with open("active-listings-test.csv", "r") as input_file, \
                 if record != None:
                     mage_sku = record[0]
                     ebay_title = record[2]
-                    epid = row.partno.replace("-", "").strip() 
+                    epid = "C"+mage_sku.replace("-", "").strip() 
                     img_string = get_image_string(mage_sku, cursor)
                     item_description = record[12]
                     if item_description == "":
                         item_description = "none"
+                    placement = ""
+                    if record[7] != None:
+                        for p in record[7].split(","):
+                            if placement != "":
+                                placement = placement + ","
+                            placement = placement + placement_dict[p]
                     bulk_writer.writerow(
                             [linecode, \
                             row.partno, \
                             "1", \
                             ebay_title, \
+                            "", \
                             epid, \
                             "StoresFixedPrice", \
                             "46074", \
@@ -156,20 +166,22 @@ with open("active-listings-test.csv", "r") as input_file, \
                             record[3], \
                             record[13], \
                             img_string, \
-                            item_description, \
+                            item_description.replace("\r\n","<br>").replace("\n","<br>"), \
                             "1000||New", \
                             "2", \
                             "US", \
+                            "USD", \
                             "", \
                             "US", \
                             policy_dict[record[14]], \
                             "127723857020", \
                             "127723856020", \
+                            "", \
                             "Aftermarket Replacement", \
                             "1 Year", \
                             "Direct Replacement", \
                             "DOT/SAE", \
-                            record[7], \
+                            placement, \
                             record[5], \
                             record[6], \
                             record[8], \

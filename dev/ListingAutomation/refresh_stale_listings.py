@@ -102,7 +102,7 @@ placement_dict = {"10":"Rear",
 
 
 # mainline
-with open("data/active-listings-test.csv", "r") as input_file, \
+with open("data/active-listings.csv", "r") as input_file, \
     open(f"data/{today}-listings-to-end.csv", "w+", newline="") as end_listings_file, \
     open(f"data/{today}-diy-pfg-eBay.csv", "w+", newline="") as bulk_listings_file:
 
@@ -121,14 +121,23 @@ with open("data/active-listings-test.csv", "r") as input_file, \
 
     for row in map(Listing._make, reader):
         linecode = row.cs_sku[:3]
-        
+        sold_recently = True
+        if row.last_sale != "":
+            last_sale = datetime.date(datetime.strptime(row.last_sale, "%m-%d-%Y"))
+            if (last_sale+timedelta(days=30) < tomorrow):
+                sold_recently = False
+
         # calculate the next end date based on the most recent start date
         start_date = datetime.date(datetime.strptime(row.start_date, "%Y-%m-%d"))
         end_date = start_date + timedelta(days=30)
-        while (end_date + timedelta(days=30)) < tomorrow:
-           end_date = end_date + timedelta(days=30)
+        while (end_date + timedelta(days=30)) <= tomorrow:
+            end_date = end_date + timedelta(days=30)
 
-        if int(row.sold_qty) == 0\
+################################################################################
+# TODO: spread things out so that an even number get ended & relisted daily
+################################################################################
+        if (int(row.sold_qty) == 0\
+                or not sold_recently)\
                 and int(row.stock_qty) > 0\
                 and end_date == tomorrow:
             end_writer.writerow([row.ebay_item])

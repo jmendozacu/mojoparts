@@ -132,7 +132,7 @@ def process_refresh(tgt_end_date, row, cursor):
         if linecode == PFG:
            cursor.execute(product_query, (row.listing_sku))
            record = cursor.fetchone()
-            if record != None:
+           if record != None:
                 mage_sku = record[0]
                 ebay_title = record[2]
                 epid = "C"+mage_sku.replace("-", "").strip() 

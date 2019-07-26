@@ -2,6 +2,7 @@
 # TODO: add unit testing
 # TODO: add logging
 # TODO: add the ability to pass config file options on command line
+# TODO: add the ability to restart where it left off, in case of a problem
 
 import csv
 import os
@@ -126,7 +127,7 @@ def process_refresh(tgt_end_date, row, cursor):
     if not recently_sold\
             and int(row.stock_qty) > 0\
             and end_date == target_end_date:
-        end_writer.writerow([row.ebay_item, end_date])
+        end_writer.writerow([row.ebay_item])
 
         # for non-catalog listings, build a bulk upload to recreate listings
         if linecode == PFG:
@@ -138,8 +139,8 @@ def process_refresh(tgt_end_date, row, cursor):
                 epid = "C"+mage_sku.replace("-", "").strip() 
                 img_string = get_image_string(mage_sku, cursor)
                 item_description = record[12]
-                if item_description == "":
-                    item_description = "none"
+                if item_description == None or item_description == "":
+                    item_description = "No further information"
                 placement = ""
                 if record[7] != None:
                     for p in record[7].split(","):

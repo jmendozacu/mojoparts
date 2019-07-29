@@ -1,3 +1,4 @@
 *.csv
-database_config.py
 __pycache__/
+base_config.ini
+test_config.ini

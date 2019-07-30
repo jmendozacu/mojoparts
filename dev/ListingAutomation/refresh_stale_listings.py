@@ -216,7 +216,7 @@ def refresh_listing(row, cursor, r_end_writer, r_bulk_writer):
                     record[10], \
                     record[11] \
                     ])
-            print("+", end="")
+            print("+", end="", flush=True)
 
 
 def main():
@@ -260,7 +260,7 @@ def main():
         if other_total < 30 and other_total > 0: other_goal = 1  
 
         print(f"Total PFG listings = {pfg_total:,}, goal = {pfg_goal:,}")
-        print(f"Total other listings = {other_total:,}, goal = {other_goal:,}")
+        print(f"Total other listings = {other_total:,}, goal = {other_goal:,}", flush=True)
 
     pfg_count = 0
     other_count = 0
@@ -306,7 +306,7 @@ def main():
                 for csv_row in map(Listing._make, reader):
                     i = i + 1
                     if i % 10000 == 0:
-                        print(".", end="")
+                        print(".", end="", flush=True)
 
                     csv_linecode = csv_row.cs_sku[:3]
                     if (csv_linecode == PFG and pfg_count < pfg_goal) or\

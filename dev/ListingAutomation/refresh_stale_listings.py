@@ -11,14 +11,12 @@
 # on a given day is less "lumpy".  
 
 # TODO: add unit testing
-# TODO: add the ability to pass config file options on command line
 # TODO: add the ability to restart where it left off, in case of a problem
 
 import csv
 import os
 import sys
 import pymysql
-import database_config as config
 from datetime import datetime
 from collections import namedtuple
 from datetime import timedelta

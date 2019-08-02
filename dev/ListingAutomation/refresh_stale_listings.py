@@ -240,13 +240,13 @@ def main():
     # soonest, and if they haven't performed well then we'll refresh them.
     pfg_goal = 0
     other_goal = 0
-    with open(f"data/{config['FILES']['ActiveListings']}", "r") as input_file:
+    with open(f"{config['FILES']['ActiveListings']}.csv", "r") as input_file:
         reader = csv.reader(input_file)
         next(reader)
         pfg_total = 0
         other_total = 0
-        for row in map(Listing._make, reader):
-            if row.cs_sku[:3] == PFG:
+        for csv_row in map(Listing._make, reader):
+            if csv_row.cs_sku[:3] == PFG:
                 pfg_total = pfg_total + 1
             else:
                 other_total = other_total + 1
@@ -262,9 +262,9 @@ def main():
 
     pfg_count = 0
     other_count = 0
-    with open(f"data/{TODAY}-{config['FILES']['ListingsToEnd']}", "w+", \
+    with open(f"{config['FILES']['ListingsToEnd']}-{TODAY}.csv", "w+", \
             newline="") as end_listings_file, \
-        open(f"data/{TODAY}-{config['FILES']['ListingsToRecreate']}", "w+", \
+        open(f"{config['FILES']['ListingsToRecreate']}-{TODAY}.csv", "w+", \
                 newline="") as bulk_listings_file:
         end_writer = csv.writer(end_listings_file)
         bulk_writer = csv.writer(bulk_listings_file)
@@ -296,7 +296,7 @@ def main():
             print(f"\nProcessing listings ending {target_end_date}...")
             print(f"\tPFG:{pfg_count:,}/{pfg_goal:,}")
             print(f"\tOther:{other_count:,}/{other_goal:,}")
-            with open(f"data/{config['FILES']['ActiveListings']}", "r") \
+            with open(f"{config['FILES']['ActiveListings']}.csv", "r") \
                      as input_file:
                 reader = csv.reader(input_file)
                 next(reader)  # ignore the csv header row
@@ -313,14 +313,14 @@ def main():
                         # Calculate the next end date based on the calculated
                         # most recent start date.
                         start_date = datetime.date(\
-                            datetime.strptime(row.start_date, "%Y-%m-%d"))
+                            datetime.strptime(csv_row.start_date, "%Y-%m-%d"))
                         end_date = start_date + timedelta(days=30)
                         while end_date < target_end_date:
                             end_date = end_date + timedelta(days=30)
 
                         if end_date == target_end_date:
-                            if not is_recently_sold(row.last_sale, row.sold_qty) \
-                                    and int(row.stock_qty) > 0:
+                            if not is_recently_sold(csv_row.last_sale, csv_row.sold_qty) \
+                                    and int(csv_row.stock_qty) > 0:
                                 refresh_listing(csv_row,\
                                                 db_cursor,\
                                                 end_writer,\

@@ -214,7 +214,7 @@ def refresh_listing(row, cursor, r_end_writer, r_bulk_writer):
                  record[10],
                  record[11]
                  ])
-            print("+", end="")
+            print("+", end="", flush=True)
 
 
 def main():

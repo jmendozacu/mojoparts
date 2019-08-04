@@ -1,4 +1,4 @@
 *.csv
 __pycache__/
-base-config.ini
-test-config.ini
+base_config.ini
+test_config.ini

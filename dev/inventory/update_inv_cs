@@ -4,7 +4,8 @@ log_name=logs/update_inv_cs.log
 exec &> $log_name.$current_date
 
 cd /var/www/html/var/import/
-wget ftp://ryanh_pfg:wf30laqc@ftp.channelspyder.com/usautoparts_inv.txt
+wget ftp://ryanh_pfg:wf30laqc@ftp.channelspyder.com/usautoparts_inv.zip
+unzip -P GAchLtR1p0 usautoparts_inv.zip
 awk '{gsub(/\"/,"")};1' usautoparts_inv.txt > usautoparts_inv_noquotes.txt
  
 cd /var/www/html/dev/inventory/

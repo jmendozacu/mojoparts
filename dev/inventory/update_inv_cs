@@ -1,13 +1,19 @@
 #!/bin/bash
+
 current_date=$(date "+%Y.%m.%d")
+yesterday=$(date -d "1 days ago" "+%Y%m%d")
 log_name=logs/update_inv_cs.log
 exec &> $log_name.$current_date
 
 cd /var/www/html/var/import/
-wget ftp://ryanh_pfg:wf30laqc@ftp.channelspyder.com/usautoparts_inv.zip
+ftp_url=ftp://ryanh_pfg:wf30laqc@ftp.channelspyder.com/usautoparts_$yesterday\*.zip
+wget $ftp_url 
+mv usautoparts_$yesterday*.zip usautoparts_inv.zip
 unzip -P GAchLtR1p0 usautoparts_inv.zip
+mv usautoparts_$yesterday*.txt usautoparts_inv.txt
 awk '{gsub(/\"/,"")};1' usautoparts_inv.txt > usautoparts_inv_noquotes.txt
- 
+rm usautoparts_inv.zip
+
 cd /var/www/html/dev/inventory/
 php_log_name=logs/inventory_update_cs.log
 php inventory_update_cs.php > $php_log_name.$current_date

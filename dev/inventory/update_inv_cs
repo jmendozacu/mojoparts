@@ -1,19 +1,25 @@
 #!/bin/bash
 
+echo Starting update_inv_cs script...
 current_date=$(date "+%Y.%m.%d")
 yesterday=$(date -d "1 days ago" "+%Y%m%d")
 log_name=logs/update_inv_cs.log
 exec &> $log_name.$current_date
 
+echo 1. getting PFG inventory file from CS
 cd /var/www/html/var/import/
 ftp_url=ftp://ryanh_pfg:wf30laqc@ftp.channelspyder.com/usautoparts_$yesterday\*.zip
 wget $ftp_url 
+
+echo 2. unzipping downloaded PFG inventory file, unzipping, and removing quotes
 mv usautoparts_$yesterday*.zip usautoparts_inv.zip
 unzip -P GAchLtR1p0 usautoparts_inv.zip
 mv usautoparts_$yesterday*.txt usautoparts_inv.txt
 awk '{gsub(/\"/,"")};1' usautoparts_inv.txt > usautoparts_inv_noquotes.txt
 rm usautoparts_inv.zip
 
+echo 3. running inventory_update_cs.php script... log file in
+logs/inventory_update_cs.log.<date>
 cd /var/www/html/dev/inventory/
 php_log_name=logs/inventory_update_cs.log
 php inventory_update_cs.php > $php_log_name.$current_date
@@ -25,29 +31,31 @@ set -o errexit
 	sudo chown ec2-user ../state/progress.txt
 	sudo chmod 755 ../state/progress.txt
 
-	echo magmi import PFG oos singles
+	echo 4. magmi import PFG oos singles
 	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/pfg-oos-singles.csv"
-	echo magmi import PFG oos pairs
+	echo 5. import PFG oos pairs
 	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/pfg-oos-pairs.csv"
-	echo magmi import PFG in stock singles
+	echo 6. magmi import PFG in stock singles
 	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/pfg-is-singles.csv"
-	echo magmi import PFG in stock pairs
+	echo 7. magmi import PFG in stock pairs
 	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/pfg-is-pairs.csv"
-	echo magmi import Brock stock changes
+	echo 8. magmi import Brock stock changes
 	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/brock-stock.csv"
-	echo magmi import Brock price changes
+	echo 9. magmi import Brock price changes
 	php magmi.cli.php -mode=update -CSV:filename="/var/www/html/var/import/brock-price.csv"
 
-	echo magmi import days without sales
+	echo 10. magmi import days without sales
 	php magmi.cli.php -profile=DefaultNOM2e -mode=update -CSV:filename="/var/www/html/var/import/dws.csv"
 	php magmi.cli.php -profile=DefaultNOM2e -mode=update -CSV:filename="/var/www/html/var/import/yesterday-sales.csv"
 
-	echo copying the brock inventory to channel spyder
+	echo 11. copying the brock inventory to channel spyder
 	cd /var/www/html/var/import/
-	curl -T brock-price-qty.csv ftp://ryanh_bw:s43ybfts@ftp.channelspyder.com
+    if test -f "brock-price-qty.csv"; then
+       curl -T brock-price-qty.csv ftp://ryanh_bw:s43ybfts@ftp.channelspyder.com
+    fi	
 
-	echo zipping up inventory files
-	zip -m "daily-inv-archive-$(date +"%Y-%m-%d").zip" usautoparts_*.txt pfg-oos-singles.csv pfg-oos-pairs.csv pfg-is-singles.csv pfg-is-pairs.csv dws.csv yesterday-sales.csv brock-stock.csv brock-price.csv brock-price-qty.csv
+	echo 12. zipping up inventory files
+	zip -m "daily-inv-archive-$(date +"%Y-%m-%d").zip" usautoparts_*.txt pfg-oos-singles.csv pfg-oos-pairs.csv pfg-is-singles.csv pfg-is-pairs.csv dws.csv yesterday-sales.csv brock-price-qty.csv Brock_Stock_Change.xlsx Brock_Price_Change.xlsx
 	cd archive/
 	mv ../daily-inv-archive-*.zip .
 

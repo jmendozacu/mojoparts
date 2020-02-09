@@ -562,11 +562,11 @@ if (mysqli_num_rows($result)) {
 $mBox = imap_open('{imap.gmail.com:993/imap/ssl/novalidate-cert}INBOX', $email_user, $email_pwd);
 if ($mBox === false) throw new Exception('Unable to connect to mailbox. '.imap_last_error());
 
-grab_attachment($mBox, "Brock Supply - Stock Availability Notification");
-grab_attachment($mBox, "Brock Supply - Price Change Notification");
+grab_attachment($mBox, "Brock Supply Stock Availability Report");
+grab_attachment($mBox, "Brock Supply Price Change Report");
 
 // Read the Brock stock file and update the vendor inventory table
-$files = glob("/var/www/html/var/import/stockreport_*.xls");
+$files = glob("/var/www/html/var/import/Brock_Stock_Change.xlsx");
 if (count($files) != 1) {
 	echo "ERROR: today's brock inventory file not found".PHP_EOL;
 } 
@@ -657,7 +657,7 @@ else {
 }
 
 // Read the Brock price file and update the vendor inventory table
-$files = glob("/var/www/html/var/import/pricing_*.xls");
+$files = glob("/var/www/html/var/import/Brock_Price_Change.xls");
 if (count($files) != 1) {
 	echo "INFO: today's brock price file not found".PHP_EOL;
 } 

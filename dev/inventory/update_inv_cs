@@ -18,8 +18,7 @@ mv usautoparts_$yesterday*.txt usautoparts_inv.txt
 awk '{gsub(/\"/,"")};1' usautoparts_inv.txt > usautoparts_inv_noquotes.txt
 rm usautoparts_inv.zip
 
-echo 3. running inventory_update_cs.php script... log file in
-logs/inventory_update_cs.log.<date>
+echo 3. running inventory_update_cs.php script... log file in logs/inventory_update_cs.log.date
 cd /var/www/html/dev/inventory/
 php_log_name=logs/inventory_update_cs.log
 php inventory_update_cs.php > $php_log_name.$current_date
